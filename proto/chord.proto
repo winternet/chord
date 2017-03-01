@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "onezero.chord";
+option java_outer_classname = "ChordProto";
+option objc_class_prefix = "CRD";
+
+package chord;
+
+// The greeting service definition.
+service Chord {
+  // send a greeting
+  rpc say_hello (HelloRequest)      returns (HelloReply) {}
+  rpc successor (SuccessorRequest)  returns (SuccessorResponse) {}
+  rpc join      (JoinRequest)       returns (JoinResponse) {}
+  rpc stablize  (StabilizeRequest)  returns (StabilizeResponse) {}
+  rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
+}
+
+/**
+ * COMMON
+ */
+message Header {
+  string src = 1;
+  string dst = 2;
+}
+
+/**
+ * SUCCESSOR 
+ */
+message SuccessorRequest {
+  Header header = 1;
+}
+
+message SuccessorResponse { 
+  Header header = 1;
+}
+
+/**
+ * JOIN
+ */
+message JoinRequest {
+  Header header = 1;
+}
+
+message JoinResponse { 
+  Header header = 1;
+}
+
+/**
+ * STABILIZE
+ */
+message StabilizeRequest {
+  Header header = 1;
+}
+message StabilizeResponse {
+  Header header = 1;
+}
+
+/**
+ * NOTIFY
+ */
+message NotifyRequest {
+  Header header = 1;
+}
+message NotifyResponse {
+  Header header = 1;
+}
+
+
+/**
+ * HELLO
+ */
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+  string message = 1;
+}
