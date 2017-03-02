@@ -2,7 +2,7 @@ find_program(GRPC_CPP_PLUGIN grpc_cpp_plugin) # Get full path to plugin
 
 function(PROTOBUF_GENERATE_GRPC_CPP_WITH_PATH PATH SRCS HDRS)
   if(NOT ARGN)
-    message(SEND_ERROR "Error: PROTOBUF_GENERATE_GRPC_CPP() called without any proto files")
+    message(SEND_ERROR "Error: PROTOBUF_GENERATE_GRPC_CPP_WITH_PATH() called without any proto files")
     return()
   endif()
 
@@ -39,10 +39,12 @@ function(PROTOBUF_GENERATE_GRPC_CPP_WITH_PATH PATH SRCS HDRS)
     list(APPEND ${SRCS} "${CMAKE_CURRENT_BINARY_DIR}/${PATH}/${FIL_WE}.grpc.pb.cc")
     list(APPEND ${HDRS} "${CMAKE_CURRENT_BINARY_DIR}/${PATH}/${FIL_WE}.grpc.pb.h")
 
+    execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/${PATH})
+
     add_custom_command(
       OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${PATH}/${FIL_WE}.grpc.pb.cc"
              "${CMAKE_CURRENT_BINARY_DIR}/${PATH}/${FIL_WE}.grpc.pb.h"
-      COMMAND  ${Protobuf_PROTOC_EXECUTABLE}
+      COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
       ARGS --grpc_out=${CMAKE_CURRENT_BINARY_DIR}/${PATH}
            --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
            ${_protobuf_include_path} ${ABS_FIL}

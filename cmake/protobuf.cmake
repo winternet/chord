@@ -1,6 +1,6 @@
 function(PROTOBUF_GENERATE_CPP_WITH_PATH PATH SRCS HDRS)
   if(NOT ARGN)
-    message(SEND_ERROR "Error: PROTOBUF_GENERATE_CPP() called without any proto files")
+    message(SEND_ERROR "Error: PROTOBUF_GENERATE_CPP_WITH_PATH() called without any proto files")
     return()
   endif()
 
