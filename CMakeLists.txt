@@ -21,12 +21,12 @@ include(protobuf)
 #
 # find packages
 #
-find_package(Boost COMPONENTS log thread system)
+find_package(Boost COMPONENTS log thread system program_options)
 find_package(Protobuf REQUIRED)
 find_package(Threads REQUIRED)
 
 if( Boost_FOUND )
-    add_definitions(-std=c++11)
+  add_definitions(-std=c++11)
 endif()
 
 
@@ -50,6 +50,7 @@ message(STATUS "Found generated source files:\n--   ${SOURCES_GEN_OUT}")
 # add source files
 #
 file(GLOB SOURCES src/*.cc)
+include_directories(include)
 
 
 #

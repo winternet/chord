@@ -1,8 +1,5 @@
-#include <boost/asio.hpp>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
+#include "chord.uuid.h"
 
-typedef boost::uuid::uuid uuid_t;
 typedef std::string endpoint_t;
 
 struct Router {

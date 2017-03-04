@@ -3,14 +3,48 @@
 #include <iostream>
 
 #include <boost/log/trivial.hpp>
+
+#include <boost/program_options.hpp>
+
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 
-#include "chord.client.cc"
-#include "chord.service.cc"
+#include "chord.log.h"
+#include "chord.client.h"
+#include "chord.service.h"
 
-int main() {
+namespace po = boost::program_options;
+
+void parse_program_options(int ac, char* av[]) {
+  po::options_description desc("[program options]");
+
+  desc.add_options()
+    ("help,h", "produce help message")
+    ("join,j", po::value<std::string>(), "join to an existing address.")
+    ("bootstrap,b", "bootstrap peer to create a new chord ring.")
+    ;
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(ac, av, desc), vm);
+  po::notify(vm);
+
+  if(vm.count("help")) {
+    std::cout << desc << std::endl;
+    exit(1);
+  }
+
+  if(vm.count("join")) {
+    std::cout << "Compression was set to "
+      << vm["compression"].as<std::string>() << std::endl;
+  } else {
+    std::cout << "Compression level was not set." << std::endl;
+  }
+}
+
+int main(int argc, char* argv[]) {
+
+  parse_program_options(argc, argv);
 
   std::shared_ptr<Context> context(new Context());
 
