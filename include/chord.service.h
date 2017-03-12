@@ -7,8 +7,6 @@
 #include <grpc++/server_context.h>
 #include <grpc++/security/server_credentials.h>
 
-#include <boost/log/trivial.hpp>
-
 #include "chord.context.h"
 #include "chord.grpc.pb.h"
 
@@ -26,6 +24,7 @@ using chord::StabilizeResponse;
 using chord::StabilizeRequest;
 using chord::NotifyResponse;
 using chord::NotifyRequest;
+using chord::RouterEntry;
 using chord::Chord;
 
 class ChordServiceImpl final : public Chord::Service {
@@ -55,4 +54,5 @@ public:
 
 private:
   std::shared_ptr<Context> context { nullptr };
+  std::shared_ptr<Router> router { nullptr };
 };

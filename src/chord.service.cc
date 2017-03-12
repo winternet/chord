@@ -5,8 +5,8 @@
 #include <grpc++/server_context.h>
 #include <grpc++/security/server_credentials.h>
 
-#include <boost/log/trivial.hpp>
 
+#include "chord.log.h"
 #include "chord.context.h"
 #include "chord.grpc.pb.h"
 
@@ -27,41 +27,67 @@ using chord::NotifyResponse;
 using chord::NotifyRequest;
 using chord::Chord;
 
-ChordServiceImpl::ChordServiceImpl(std::shared_ptr<Context> context) :
-  context{ context }
+ChordServiceImpl::ChordServiceImpl(std::shared_ptr<Context> context)
+ : context{ context }
+ , router{ context->router }
 {}
 
-Status ChordServiceImpl::join(ServerContext* context, const JoinRequest* req, JoinResponse* res) {
-  BOOST_LOG_TRIVIAL(debug) << "Received join request";
+Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* req, JoinResponse* res) {
+  LOG(debug) << "received join request from client-id " << req->header().src().uuid()
+    << " endpoint " << req->header().src().endpoint();
+  /**
+   * find successor
+   */
+  Header header;
+  RouterEntry src;
+  header.mutable_src()->CopyFrom(req->header().src());
+
+  SuccessorRequest succReq;
+  succReq.mutable_header()->CopyFrom(header);
+  succReq.set_id(req->header().src().uuid());
+  SuccessorResponse succRes;
+
+  successor(serverContext, &succReq, &succRes);
+
+  // return successor
+  res->mutable_successor()->CopyFrom(succRes.successor());
 
   return Status::OK;
 }
 
-Status ChordServiceImpl::successor(ServerContext* context, const SuccessorRequest* req, SuccessorResponse* res) {
-  BOOST_LOG_TRIVIAL(debug) << "received find successor request";
+Status ChordServiceImpl::successor(ServerContext* serverContext, const SuccessorRequest* req, SuccessorResponse* res) {
+  LOG(debug) << "received find successor request from client-id " << req->header().src().uuid()
+    << " endpoint " << req->header().src().endpoint()
+    << " looking for successor of " << req->id();
 
-  //if( context.uuid > 
+  //--- destination of the request
+  uuid_t id(req->id());
+  uuid_t self( context->uuid );
+  uuid_t successor( router->successor() );
+
+  if( self > id && id <= successor ) {
+    LOG(trace) << "successor of " << id << " is " << to_string(successor);
+    //--- router entry
+    RouterEntry entry;
+    entry.set_uuid(to_string(successor));
+    LOG(trace) << "setting successor " << router->get(successor);
+    entry.set_endpoint(router->get(successor));
+
+    res->mutable_successor()->CopyFrom(entry);
+  } else {
+    uuid_t next = router->closest_preceding_node(id);
+    //make_stub()
+  }
+
   return Status::OK;
 }
 
 Status ChordServiceImpl::stabilize(ServerContext* context, const StabilizeRequest* req, StabilizeResponse* res) {
-  BOOST_LOG_TRIVIAL(debug) << "received stabilize request";
+  LOG(debug) << "received stabilize request";
   return Status::OK;
 }
 
 Status ChordServiceImpl::notify(ServerContext* context, const NotifyRequest* req, NotifyResponse* res) {
-  BOOST_LOG_TRIVIAL(debug) << "received notification";
+  LOG(debug) << "received notification";
   return Status::OK;
 }
-
-//void start_server(const std::string& addr) {
-//  ChordServiceImpl serviceImpl;
-
-//  ServerBuilder builder;
-//  builder.AddListeningPort(addr, grpc::InsecureServerCredentials());
-//  builder.RegisterService(&serviceImpl);
-
-//  std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
-//  BOOST_LOG_TRIVIAL(debug) << "server listening on " << addr;
-//  server->Wait();
-//}

@@ -20,9 +20,13 @@ service Chord {
 /**
  * COMMON
  */
+message RouterEntry {
+  string uuid = 1;
+  string endpoint = 2;
+}
 message Header {
-  string src = 1;
-  string dst = 2;
+  RouterEntry src = 1;
+  //RouterEntry dst = 2;
 }
 
 /**
@@ -30,10 +34,13 @@ message Header {
  */
 message SuccessorRequest {
   Header header = 1;
+  //--- id to find
+  string id = 2;
 }
 
 message SuccessorResponse { 
   Header header = 1;
+  RouterEntry successor = 2;
 }
 
 /**
@@ -45,6 +52,7 @@ message JoinRequest {
 
 message JoinResponse { 
   Header header = 1;
+  RouterEntry successor = 2;
 }
 
 /**
