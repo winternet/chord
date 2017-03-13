@@ -40,18 +40,6 @@ public:
 
   Status notify(ServerContext* context, const NotifyRequest* req, NotifyResponse* res);
 
-  //void start_server(const std::string& addr) {
-  //  ChordServiceImpl serviceImpl;
-
-  //  ServerBuilder builder;
-  //  builder.AddListeningPort(addr, grpc::InsecureServerCredentials());
-  //  builder.RegisterService(&serviceImpl);
-
-  //  std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
-  //  BOOST_LOG_TRIVIAL(debug) << "server listening on " << addr;
-  //  server->Wait();
-  //}
-
 private:
   std::shared_ptr<Context> context { nullptr };
   std::shared_ptr<Router> router { nullptr };

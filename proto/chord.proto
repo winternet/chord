@@ -13,7 +13,7 @@ service Chord {
   rpc say_hello (HelloRequest)      returns (HelloReply) {}
   rpc successor (SuccessorRequest)  returns (SuccessorResponse) {}
   rpc join      (JoinRequest)       returns (JoinResponse) {}
-  rpc stablize  (StabilizeRequest)  returns (StabilizeResponse) {}
+  rpc stabilize (StabilizeRequest)  returns (StabilizeResponse) {}
   rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
 }
 

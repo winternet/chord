@@ -62,7 +62,7 @@ void parse_program_options(int ac, char* av[], const std::shared_ptr<Context>& c
 
 int main(int argc, char* argv[]) {
 
-  std::shared_ptr<Context> context(new Context());
+  std::shared_ptr<Context> context(new Context);
   parse_program_options(argc, argv, context);
 
   ChordPeer peer(context);

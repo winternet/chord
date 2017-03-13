@@ -61,11 +61,11 @@ Status ChordServiceImpl::successor(ServerContext* serverContext, const Successor
     << " looking for successor of " << req->id();
 
   //--- destination of the request
-  uuid_t id(req->id());
+  uuid_t id( req->id() );
   uuid_t self( context->uuid );
   uuid_t successor( router->successor() );
 
-  if( self > id && id <= successor ) {
+  if( self > id and id <= successor ) {
     LOG(trace) << "successor of " << id << " is " << to_string(successor);
     //--- router entry
     RouterEntry entry;
@@ -76,7 +76,17 @@ Status ChordServiceImpl::successor(ServerContext* serverContext, const Successor
     res->mutable_successor()->CopyFrom(entry);
   } else {
     uuid_t next = router->closest_preceding_node(id);
-    //make_stub()
+    std::cerr << "next node " << to_string(next) << " self: " << to_string(self) << std::endl;
+    if( next == self ) {
+      RouterEntry entry;
+      entry.set_uuid(to_string(self));
+      entry.set_endpoint(router->get(self));
+      
+      res->mutable_successor()->CopyFrom(entry);
+    } else {
+      ChordClient client(context);
+      client.successor(req, res);
+    }
   }
 
   return Status::OK;
@@ -84,6 +94,7 @@ Status ChordServiceImpl::successor(ServerContext* serverContext, const Successor
 
 Status ChordServiceImpl::stabilize(ServerContext* context, const StabilizeRequest* req, StabilizeResponse* res) {
   LOG(debug) << "received stabilize request";
+
   return Status::OK;
 }
 

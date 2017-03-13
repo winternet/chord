@@ -28,6 +28,7 @@ using chord::Chord;
 class ChordClient {
 private:
   std::shared_ptr<Context> context { nullptr };
+  std::shared_ptr<Router> router { nullptr };
 
   /**
    * return new stub to be used within the client.
@@ -42,16 +43,17 @@ private:
 public:
   ChordClient(const std::shared_ptr<Context>& context);
 
-  void join(const endpoint_t& addr);
+  bool join(const endpoint_t& addr);
+  void stabilize();
 
-  void successor(ClientContext* context, const SuccessorRequest* req, SuccessorResponse* res);
-//  
-//  void stabilize(ServerContext* context, const StabilizeRequest* req, StabilizeResponse* res) {
-//    BOOST_LOG_TRIVIAL(debug) << "received stabilize request " << req;
-//    return Status::OK;
-//  }
+  Status successor(ClientContext* context, const SuccessorRequest* req, SuccessorResponse* res);
+  void successor(const SuccessorRequest* req, SuccessorResponse* res);
+  
+
+  Status stabilize(ClientContext* context, const StabilizeRequest* req, StabilizeResponse* res);
+  void stabilize(const StabilizeRequest* req, StabilizeResponse* res);
 //
-//  void notify(ServerContext* context, const NotifyRequest* req, NotifyResponse* res) {
+//  void notify(ClientContext* context, const NotifyRequest* req, NotifyResponse* res) {
 //    BOOST_LOG_TRIVIAL(debug) << "received notification " << req;
 //    return Status::OK;
 //  }
@@ -61,5 +63,4 @@ public:
   
 private:
   std::unique_ptr<Chord::Stub> stub;
-  uuid_t uuid;
 };

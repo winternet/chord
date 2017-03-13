@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+#include "chord.scheduler.h"
 #include "chord.router.h"
 #include "chord.client.h"
 #include "chord.service.h"
@@ -10,10 +11,13 @@
 #include <grpc++/server_builder.h>
 #include <grpc++/server_context.h>
 
+#include "chord.context.h"
+
 using grpc::ServerBuilder;
 
 class ChordPeer {
 private:
+  Scheduler scheduler;
   std::shared_ptr<Router> router { nullptr };
   std::shared_ptr<Context> context { nullptr };
   std::unique_ptr<ChordClient> client { nullptr };
@@ -43,10 +47,20 @@ public:
     } else {
       join();
     }
+    configure_scheduler();
     start_server();
+    //--- blocks
   }
 
   virtual ~ChordPeer() {}
+
+  void configure_scheduler() {
+    scheduler.schedule(std::chrono::milliseconds(context->stabilize_period_ms), [this] {
+      auto now = std::chrono::system_clock::now();
+      auto tt = std::chrono::system_clock::to_time_t(now);
+      stabilize();
+    });
+  }
 
   /**
    * join chord ring containing client-id.
@@ -57,11 +71,15 @@ public:
   }
 
   /**
-   * find successor
+   * stabilize the ring
    */
+  void stabilize() {
+    LOG(trace) << "stabilize called";
+    client->stabilize();
+  }
 
   /**
-   * closest preceeding node
+   * find successor
    */
 
   /**
@@ -69,8 +87,9 @@ public:
    */
   void create() {
     LOG(trace) << "bootstrapping new chord ring.";
-    //context->predecessor = nullptr;
-    context->router->set_successor(
+    router->reset();
+    router->set_successor(
+        0,
         context->uuid,
         context->bind_addr);
   }
