@@ -63,6 +63,7 @@ message StabilizeRequest {
 }
 message StabilizeResponse {
   Header header = 1;
+  RouterEntry predecessor = 2;
 }
 
 /**

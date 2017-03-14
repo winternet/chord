@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <memory>
 #include <string>
 #include <boost/array.hpp>
 
@@ -21,12 +22,12 @@ struct Router {
 
   std::map<uuid_t, endpoint_t> routes;
 
-  boost::array<std::unique_ptr<uuid_t>, BITS> predecessors;
-  boost::array<std::unique_ptr<uuid_t>, BITS> successors;
+  boost::array<std::shared_ptr<uuid_t>, BITS> predecessors;
+  boost::array<std::shared_ptr<uuid_t>, BITS> successors;
 
   void reset() {
-    predecessors = boost::array<std::unique_ptr<uuid_t>, BITS>();
-    successors = boost::array<std::unique_ptr<uuid_t>, BITS>();
+    predecessors = boost::array<std::shared_ptr<uuid_t>, BITS>();
+    successors = boost::array<std::shared_ptr<uuid_t>, BITS>();
   }
 
   endpoint_t get_successor(const size_t& index) {
@@ -41,6 +42,9 @@ struct Router {
   endpoint_t get(const uuid_t& uuid) {
     return routes[uuid];
   }
+  endpoint_t get(const std::shared_ptr<uuid_t>& uuid) {
+    return routes[*uuid];
+  }
 
   void set_successor(const size_t index, const uuid_t uuid, const endpoint_t endpoint) {
     routes[uuid] = endpoint;
@@ -52,12 +56,12 @@ struct Router {
     predecessors[index] = std::unique_ptr<uuid_t>(new uuid_t(uuid));
   }
 
-  uuid_t successor() {
-    return *successors[0];
+  std::shared_ptr<uuid_t> successor() {
+    return successors[0];
   }
 
-  uuid_t predecessor() {
-    return *predecessors[0];
+  std::shared_ptr<uuid_t> predecessor() {
+    return predecessors[0];
   }
 
   uuid_t closest_preceding_node(const uuid_t& uuid) {

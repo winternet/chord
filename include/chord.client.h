@@ -45,6 +45,7 @@ public:
 
   bool join(const endpoint_t& addr);
   void stabilize();
+  void notify();
 
   Status successor(ClientContext* context, const SuccessorRequest* req, SuccessorResponse* res);
   void successor(const SuccessorRequest* req, SuccessorResponse* res);

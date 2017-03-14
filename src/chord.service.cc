@@ -63,9 +63,9 @@ Status ChordServiceImpl::successor(ServerContext* serverContext, const Successor
   //--- destination of the request
   uuid_t id( req->id() );
   uuid_t self( context->uuid );
-  uuid_t successor( router->successor() );
+  uuid_t successor( *router->successor() );
 
-  if( self > id and id <= successor ) {
+  if( router->successor() and self > id and id <= successor ) {
     LOG(trace) << "successor of " << id << " is " << to_string(successor);
     //--- router entry
     RouterEntry entry;
@@ -92,13 +92,35 @@ Status ChordServiceImpl::successor(ServerContext* serverContext, const Successor
   return Status::OK;
 }
 
-Status ChordServiceImpl::stabilize(ServerContext* context, const StabilizeRequest* req, StabilizeResponse* res) {
+Status ChordServiceImpl::stabilize(ServerContext* serverContext, const StabilizeRequest* req, StabilizeResponse* res) {
   LOG(debug) << "received stabilize request";
+ 
+  std::shared_ptr<uuid_t> predecessor = router->predecessor();
+  if(predecessor) {
+    LOG(debug) << "returning predecessor " << *predecessor;
+    endpoint_t endpoint = router->get(predecessor);
+
+    RouterEntry entry;
+    entry.set_uuid(to_string(*predecessor));
+    entry.set_endpoint(endpoint);
+
+    res->mutable_predecessor()->CopyFrom(entry);
+  }
 
   return Status::OK;
 }
 
 Status ChordServiceImpl::notify(ServerContext* context, const NotifyRequest* req, NotifyResponse* res) {
-  LOG(debug) << "received notification";
+  LOG(debug) << "received notification request";
+
+  std::shared_ptr<uuid_t> predecessor = router->predecessor();
+
+  //--- validate
+  if(!req->has_header() && !req->header().has_src()) {
+    return;
+  }
+
+  uuid_t uuid = req->header().src().uuid();
+  endpoint_t endpoint = req->header().src().endpoint();
   return Status::OK;
 }

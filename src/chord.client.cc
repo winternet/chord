@@ -57,15 +57,60 @@ bool ChordClient::join(const endpoint_t& addr) {
 void ChordClient::stabilize() {
   ClientContext clientContext;
   StabilizeRequest req;
+  StabilizeResponse res;
 
   req.mutable_header()->CopyFrom(make_header());
 
-  StabilizeResponse res;
-  uuid_t successor = router->successor();
+  std::shared_ptr<uuid_t> successor = router->successor();
+
+  //--- return if join failed
+  if(!successor) {
+    LOG(trace) << "no successor found";
+    return;
+  }
+
   endpoint_t endpoint = router->get(successor);
 
   LOG(trace) << "calling stabilize on address " << endpoint;
   make_stub(endpoint)->stabilize(&clientContext, req, &res);
+
+  if(res.has_predecessor() and router->successor()) {
+    RouterEntry entry = res.predecessor();
+
+    //--- validate
+    //if( !entry.has_uuid() and !entry.has_entrypoint() ) {
+    //  LOG(warn) << "received empty routing entry";
+    //  return;
+    //}
+
+    uuid_t self(context->uuid);
+    uuid_t pred(entry.uuid());
+    uuid_t succ(*router->successor());
+
+    if( pred > self and pred < succ ) {
+      router->set_successor(0, pred, entry.endpoint());
+    }
+  } else {
+    LOG(trace) << "received empty routing entry";
+  }
+
+  notify();
+}
+
+void ChordClient::notify() {
+
+  // get successor
+  std::shared_ptr<uuid_t> successor = router->successor();
+  endpoint_t endpoint = router->get(successor);
+
+  ClientContext clientContext;
+  NotifyRequest req;
+  NotifyResponse res;
+
+  LOG(trace) << "calling notify on address " << endpoint;
+
+  req.mutable_header()->CopyFrom(make_header());
+  make_stub(endpoint)->notify(&clientContext, req, &res);
 }
 
 Status ChordClient::successor(ClientContext* context, const SuccessorRequest* req, SuccessorResponse* res) {
