@@ -44,6 +44,7 @@ public:
   ChordClient(const std::shared_ptr<Context>& context);
 
   bool join(const endpoint_t& addr);
+
   void stabilize();
   void notify();
 
@@ -51,17 +52,13 @@ public:
   void successor(const SuccessorRequest* req, SuccessorResponse* res);
   
 
+  /*
   Status stabilize(ClientContext* context, const StabilizeRequest* req, StabilizeResponse* res);
   void stabilize(const StabilizeRequest* req, StabilizeResponse* res);
+  */
 //
 //  void notify(ClientContext* context, const NotifyRequest* req, NotifyResponse* res) {
 //    BOOST_LOG_TRIVIAL(debug) << "received notification " << req;
 //    return Status::OK;
 //  }
-
-
-  void connect(const endpoint_t& addr);
-  
-private:
-  std::unique_ptr<Chord::Stub> stub;
 };

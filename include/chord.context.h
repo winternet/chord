@@ -14,7 +14,7 @@ struct Context {
   Context();
 
   //--- uuid
-  uuid_t uuid {generate_random()};
+  uuid_t _uuid {generate_random()};
   //--- program options
   bool bootstrap { false };
   //--- promoted endpoint
@@ -23,6 +23,12 @@ struct Context {
 
   size_t stabilize_period_ms { 10000 };
 
-  Router* router { nullptr };
+  std::shared_ptr<Router> router { nullptr };
+
+  uuid_t& uuid() {
+    return _uuid;
+  }
+
+  Context set_uuid(const uuid_t& uuid);
 
 };

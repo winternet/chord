@@ -1,5 +1,3 @@
-#pragma once
-
 #include <stdexcept>
 
 #include "chord.scheduler.h"
@@ -12,6 +10,8 @@
 #include <grpc++/server_context.h>
 
 #include "chord.context.h"
+
+#define PEER_LOG(level) LOG(level) << "[peer] "
 
 using grpc::ServerBuilder;
 
@@ -30,7 +30,7 @@ private:
     builder.RegisterService(service.get());
   
     std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
-    LOG(debug) << "server listening on " << bind_addr;
+    PEER_LOG(debug) << "server listening on " << bind_addr;
     server->Wait();
   }
 
@@ -41,7 +41,7 @@ public:
     , client  { new ChordClient{context} }
     , service { new ChordServiceImpl{context} }
   {
-    LOG(trace) << "peer with client-id " << context->uuid;
+    PEER_LOG(trace) << "peer with client-id " << context->uuid();
     if( context->bootstrap ) {
       create();
     } else {
@@ -59,6 +59,7 @@ public:
       auto now = std::chrono::system_clock::now();
       auto tt = std::chrono::system_clock::to_time_t(now);
       stabilize();
+      PEER_LOG(trace) << "[dump]" << *router;
     });
   }
 
@@ -66,7 +67,6 @@ public:
    * join chord ring containing client-id.
    */
   void join() {
-    //context->predecessor = nullptr;
     client->join(context->join_addr);
   }
 
@@ -74,7 +74,6 @@ public:
    * stabilize the ring
    */
   void stabilize() {
-    LOG(trace) << "stabilize called";
     client->stabilize();
   }
 
@@ -86,11 +85,11 @@ public:
    * create new chord ring
    */
   void create() {
-    LOG(trace) << "bootstrapping new chord ring.";
+    PEER_LOG(trace) << "bootstrapping new chord ring.";
     router->reset();
     router->set_successor(
         0,
-        context->uuid,
+        context->uuid(),
         context->bind_addr);
   }
 };

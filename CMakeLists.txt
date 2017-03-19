@@ -94,5 +94,5 @@ message(STATUS "Found tests:\n--   ${TEST_SOURCES_OUT}")
 
 include_directories(include)
 add_executable(test_chord ${TEST_SOURCES})
-target_link_libraries(test_chord gtest gmock_main)
+target_link_libraries(test_chord gtest gmock_main ${PROJECT_NAME}++)
 add_test(NAME test COMMAND test_chord)

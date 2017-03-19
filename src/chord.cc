@@ -21,7 +21,7 @@ void parse_program_options(int ac, char* av[], const std::shared_ptr<Context>& c
     ("help,h", "produce help message")
     ("join,j", po::value<endpoint_t>(&(context->join_addr)), "join to an existing address.")
     ("bootstrap,b", "bootstrap peer to create a new chord ring.")
-    ("uuid,u,id", po::value<uuid_t>(&(context->uuid)), "client uuid.")
+    ("uuid,u,id", po::value<uuid_t>(&(context->uuid())), "client uuid.")
     ("bind", po::value<endpoint_t>(&(context->bind_addr)), "bind address that is promoted to clients.")
     ;
 
