@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <functional>
 
 #include "chord.log.h"
 #include "chord.uuid.h"
@@ -25,15 +26,13 @@ using chord::NotifyResponse;
 using chord::NotifyRequest;
 using chord::Chord;
 
+typedef std::function<std::shared_ptr<chord::Chord::StubInterface>(const endpoint_t& endpoint)> StubFactory;
+
 class ChordClient {
 private:
   std::shared_ptr<Context> context { nullptr };
   std::shared_ptr<Router> router { nullptr };
-
-  /**
-   * return new stub to be used within the client.
-   */
-  static std::unique_ptr<Chord::Stub> make_stub(const endpoint_t& endpoint);
+  StubFactory make_stub;
 
   /**
    * return new header
@@ -42,6 +41,7 @@ private:
 
 public:
   ChordClient(const std::shared_ptr<Context>& context);
+  ChordClient(const std::shared_ptr<Context>& context, StubFactory factory);
 
   bool join(const endpoint_t& addr);
 
@@ -49,7 +49,7 @@ public:
   void notify();
 
   Status successor(ClientContext* context, const SuccessorRequest* req, SuccessorResponse* res);
-  void successor(const SuccessorRequest* req, SuccessorResponse* res);
+  Status successor(const SuccessorRequest* req, SuccessorResponse* res);
   
 
   /*

@@ -71,6 +71,13 @@ public:
   }
 
   /**
+   * successor
+   */
+  void successor(const uuid_t& uuid) {
+    service->successor(uuid);
+  }
+
+  /**
    * stabilize the ring
    */
   void stabilize() {

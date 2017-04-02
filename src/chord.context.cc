@@ -1,5 +1,6 @@
 #include "chord.context.h"
 #include "chord.router.h"
+#include <memory>
 
 Context::Context() {
   //router = new Router(this);

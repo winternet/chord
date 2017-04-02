@@ -74,13 +74,12 @@ struct Router {
     int m = BITS;
     do {
       m--;
-    //for( size_t m = BITS-1; m >= 0; m-- ) {
-      std::cerr << "\nm = " << m;
       auto candidate = successors[m];
-      if( m == 0 ) std::cerr << "\n\nCLOSEST_PREC_NODE m == 0\n\n";
+      //if( m == 0 ) std::cerr << "\n\nCLOSEST_PREC_NODE m == 0\n\n with candidate " << *candidate
+      //  << " candidate is nullptr? " << (candidate == nullptr) ? "true" : "false";
       if( candidate == nullptr ) continue;
 
-      std::cerr << "\nCLOSEST_PREC_NODE: cand " << *candidate << " uuid " << uuid << "cand < uuid?";
+      //std::cerr << "\nCLOSEST_PREC_NODE: cand " << *candidate << " uuid " << uuid << "cand < uuid?";
       if( *candidate < uuid )
         return *candidate;
     } while( m > 0 );

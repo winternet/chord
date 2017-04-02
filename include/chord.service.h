@@ -1,4 +1,5 @@
 #pragma once
+#include <functional>
 
 #include <grpc/grpc.h>
 
@@ -27,13 +28,18 @@ using chord::NotifyRequest;
 using chord::RouterEntry;
 using chord::Chord;
 
+typedef std::function<ChordClient()> ClientFactory;
+
 class ChordServiceImpl final : public Chord::Service {
 
 public:
   ChordServiceImpl(std::shared_ptr<Context> context);
 
+  ChordServiceImpl(std::shared_ptr<Context> context, ClientFactory make_client);
+
   Status join(ServerContext* context, const JoinRequest* req, JoinResponse* res);
 
+  void successor(const uuid_t& uuid);
   Status successor(ServerContext* context, const SuccessorRequest* req, SuccessorResponse* res);
 
   Status stabilize(ServerContext* context, const StabilizeRequest* req, StabilizeResponse* res);
@@ -43,4 +49,5 @@ public:
 private:
   std::shared_ptr<Context> context { nullptr };
   std::shared_ptr<Router> router { nullptr };
+  ClientFactory make_client;
 };

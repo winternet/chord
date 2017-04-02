@@ -19,13 +19,19 @@
 
 ChordClient::ChordClient(const std::shared_ptr<Context>& context) 
   :context{context}
-  //,router{context->router}
+  ,router{context->router}
 {
-  router = context->router;
+  //--- default stub factory
+  make_stub = [&](const endpoint_t& endpoint) {
+    return Chord::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
+  };
 }
 
-std::unique_ptr<Chord::Stub> ChordClient::make_stub(const endpoint_t& endpoint) {
-  return Chord::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
+ChordClient::ChordClient(const std::shared_ptr<Context>& context, StubFactory make_stub) 
+  :context{context}
+  ,make_stub{make_stub}
+  ,router {context->router}
+{
 }
 
 Header ChordClient::make_header() {
@@ -48,7 +54,7 @@ bool ChordClient::join(const endpoint_t& addr) {
   req.mutable_header()->CopyFrom(make_header());
 
   JoinResponse res;
-  grpc::Status status = make_stub(addr)->join(&clientContext, req, &res);
+  Status status = make_stub(addr)->join(&clientContext, req, &res);
 
   if(!res.has_successor()) {
     CLIENT_LOG(fatal,join) << "failed " << addr;
@@ -126,13 +132,24 @@ void ChordClient::notify() {
 
 }
 
-Status ChordClient::successor(ClientContext* context, const SuccessorRequest* req, SuccessorResponse* res) {
-  return Status::OK;
+Status ChordClient::successor(ClientContext* clientContext, const SuccessorRequest* req, SuccessorResponse* res) {
+
+  CLIENT_LOG(trace,successor) << "trying to find successor of " << req->id();
+  SuccessorRequest copy(*req);
+  copy.mutable_header()->CopyFrom(make_header());
+ 
+  uuid_t predecessor = router->closest_preceding_node(uuid_t(req->id()));
+  endpoint_t endpoint = router->get(predecessor);
+  CLIENT_LOG(trace,successor) << "forwarding request to " << endpoint;
+
+  return make_stub(endpoint)->successor(clientContext, copy, res);
+
 }
 
-void ChordClient::successor(const SuccessorRequest* req, SuccessorResponse* res) {
+/** called by chord.service **/
+Status ChordClient::successor(const SuccessorRequest* req, SuccessorResponse* res) {
   ClientContext clientContext;
-  successor(&clientContext, req, res);
+  return successor(&clientContext, req, res);
 }
 
 /*

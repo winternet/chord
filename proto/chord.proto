@@ -10,7 +10,6 @@ package chord;
 // The greeting service definition.
 service Chord {
   // send a greeting
-  rpc say_hello (HelloRequest)      returns (HelloReply) {}
   rpc successor (SuccessorRequest)  returns (SuccessorResponse) {}
   rpc join      (JoinRequest)       returns (JoinResponse) {}
   rpc stabilize (StabilizeRequest)  returns (StabilizeResponse) {}

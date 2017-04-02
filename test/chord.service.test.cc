@@ -91,9 +91,9 @@ TEST(ServiceTest, successor_two_nodes) {
  * ring with 2 nodes
  *   - 0 @ 0.0.0.0:50050
  *   - 5 @ 0.0.0.0:50055
- * node 5 tries to find successor of id 2 -> 5
+ * node 5 tries to find successor of id 10 -> 0
  */
-TEST(ServiceTest, successor_two_nodes_modulo) {
+TEST(ServiceTest, successor_two_nodes_mod) {
   std::shared_ptr<Context> context = make_context(5);
 
   std::shared_ptr<Router> router = context->router;
@@ -107,10 +107,128 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   SuccessorResponse res;
 
   req.mutable_header()->CopyFrom(make_header(5, "0.0.0.0:50055"));
-  req.set_id(to_string(2));
+  req.set_id(to_string(10));
 
   service.successor(&serverContext, &req, &res);
 
-  ASSERT_EQ(uuid_t(res.successor().uuid()), 5);
+  ASSERT_EQ(uuid_t(res.successor().uuid()), 0);
+  ASSERT_EQ(res.successor().endpoint(), "0.0.0.0:50050");
+}
+
+
+//---             ---//
+//--- mocked test ---//
+//---             ---//
+
+using ::testing::Return;
+using ::testing::_;
+using ::testing::Invoke;
+using ::testing::SaveArg;
+using ::testing::SaveArgPointee;
+using ::testing::SetArgPointee;
+using ::testing::DoAll;
+
+class MockStub : public chord::Chord::StubInterface {
+public:
+	MockStub() {}
+	MockStub(const MockStub& stub) {}
+
+  MOCK_METHOD3(successor, grpc::Status(
+			grpc::ClientContext* context,
+			const chord::SuccessorRequest&,
+			chord::SuccessorResponse*));
+
+  MOCK_METHOD3(join, grpc::Status(
+			grpc::ClientContext*, 
+			const chord::JoinRequest&,
+			chord::JoinResponse*));
+
+  MOCK_METHOD3(stabilize, grpc::Status(
+			grpc::ClientContext*, 
+			const chord::StabilizeRequest&,
+			chord::StabilizeResponse*));
+
+	MOCK_METHOD3(notify, grpc::Status(
+			grpc::ClientContext*,
+			const chord::NotifyRequest&,
+			chord::NotifyResponse*));
+
+	MOCK_METHOD3(AsyncsuccessorRaw, grpc::ClientAsyncResponseReaderInterface<chord::SuccessorResponse>*(
+			grpc::ClientContext*, 
+			const chord::SuccessorRequest&,
+			grpc::CompletionQueue*));
+
+	MOCK_METHOD3(AsyncjoinRaw, grpc::ClientAsyncResponseReaderInterface<chord::JoinResponse>*(
+			grpc::ClientContext*,
+			const chord::JoinRequest&,
+			grpc::CompletionQueue*));
+
+	MOCK_METHOD3(AsyncstabilizeRaw, grpc::ClientAsyncResponseReaderInterface<chord::StabilizeResponse>*(
+			grpc::ClientContext*,
+			const chord::StabilizeRequest&,
+			grpc::CompletionQueue*));
+
+	MOCK_METHOD3(AsyncnotifyRaw, grpc::ClientAsyncResponseReaderInterface<chord::NotifyResponse>*(
+			grpc::ClientContext*,
+			const chord::NotifyRequest&,
+			grpc::CompletionQueue*));
+
+};
+
+/**
+ * ring with 2 nodes
+ *   - 0 @ 0.0.0.0:50050
+ *   - 5 @ 0.0.0.0:50055
+ * node 5 tries to find successor of id 2 -> 5
+ * 
+ * we have to mock the client class in order to 
+ * assert that node successor(0) gets called.
+ */
+TEST(ServiceTest, successor_two_nodes_modulo) {
+  std::shared_ptr<Context> context = make_context(5);
+
+  std::shared_ptr<Router> router = context->router;
+  router->set_successor(0, 0, "0.0.0.0:50050");
+  router->set_predecessor(0, 0, "0.0.0.0:50050");
+
+  std::shared_ptr<MockStub> stub(new MockStub);
+
+	auto stub_factory = [&](const endpoint_t& endpoint){ return stub; };
+	ChordClient client(context, stub_factory);
+
+	auto client_factory = [&](){ return client; };
+  ChordServiceImpl service(context, client_factory);
+
+  ServerContext serverContext;
+  SuccessorRequest req;
+  SuccessorResponse res;
+
+  req.mutable_header()->CopyFrom(make_header(5, "0.0.0.0:50055"));
+  req.set_id(to_string(2));
+
+  //--- stub's capture parameter
+  SuccessorRequest captured_request;
+  //--- stub's mocked return parameter
+  SuccessorResponse mocked_response;
+  RouterEntry* entry = mocked_response.mutable_successor();
+  entry->set_uuid(to_string(5));
+  entry->set_endpoint("0.0.0.0:50055");
+
+  EXPECT_CALL(*stub, successor(_,_,_))
+    .Times(1)
+    .WillOnce(DoAll(
+          SaveArg<1>(&captured_request),
+          SetArgPointee<2>(mocked_response),
+          Return(Status::OK)));
+
+  service.successor(&serverContext, &req, &res);
+
+  //--- stub has been called with wanted id 2
+  ASSERT_EQ(uuid_t(captured_request.id()), 2);
+
+  //--- service returns the mocked response
+  ASSERT_EQ(res.has_successor(), true);
+  ASSERT_EQ(res.successor().uuid(), "5");
   ASSERT_EQ(res.successor().endpoint(), "0.0.0.0:50055");
+
 }

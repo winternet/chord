@@ -34,6 +34,16 @@ using chord::Chord;
 ChordServiceImpl::ChordServiceImpl(std::shared_ptr<Context> context)
  : context{ context }
  , router{ context->router }
+{
+  make_client = [&](){
+    return ChordClient(context);
+  };
+}
+
+ChordServiceImpl::ChordServiceImpl(std::shared_ptr<Context> context, ClientFactory make_client)
+ : context{ context }
+ , make_client{ make_client }
+ , router{ context->router }
 {}
 
 Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* req, JoinResponse* res) {
@@ -66,6 +76,13 @@ Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* r
 
   return Status::OK;
 }
+void ChordServiceImpl::successor(const uuid_t& uuid) {
+  ServerContext serverContext;
+  SuccessorRequest req;
+  SuccessorResponse res;
+
+  successor(&serverContext, &req, &res);
+}
 
 Status ChordServiceImpl::successor(ServerContext* serverContext, const SuccessorRequest* req, SuccessorResponse* res) {
   SERVICE_LOG(trace,successor) << "from " << req->header().src().uuid()
@@ -77,7 +94,7 @@ Status ChordServiceImpl::successor(ServerContext* serverContext, const Successor
   uuid_t self( context->uuid() );
   uuid_t successor( *router->successor() );
 
-  if( id > self and id <= successor ) {
+  if( id > self and (id <= successor or (successor < self and id > successor)) ) {
     SERVICE_LOG(trace,successor) << "of " << id << " is " << to_string(successor);
     //--- router entry
     RouterEntry entry;
@@ -86,6 +103,7 @@ Status ChordServiceImpl::successor(ServerContext* serverContext, const Successor
 
     res->mutable_successor()->CopyFrom(entry);
   } else {
+    std::cerr << "not within self <--> successor trying to forward";
     uuid_t next = router->closest_preceding_node(id);
     SERVICE_LOG(trace, successor) << "CLOSEST PRECEDING NODE: " << next;
     if( next == self ) {
@@ -93,14 +111,12 @@ Status ChordServiceImpl::successor(ServerContext* serverContext, const Successor
       entry.set_uuid(to_string(self));
       entry.set_endpoint(router->get(self));
       
-      SERVICE_LOG(trace,successor) << "ENDPOINT: " << entry.endpoint();
+      //SERVICE_LOG(trace,successor) << "ENDPOINT: " << entry.endpoint();
       res->mutable_successor()->CopyFrom(entry);
     } else {
-      ChordClient client(context);
-      SuccessorRequest  fwdReq;//(*req);
-      SuccessorResponse fwdRes;//(*res);
-      client.successor(&fwdReq, &fwdRes);
-      //res->CopyFrom(fwdRes);
+      std::cerr << "trying to spawn client to forward request";
+      make_client().successor(req, res);
+      std::cerr << "spawned client, got result";
     }
   }
 
