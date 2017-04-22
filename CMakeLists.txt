@@ -8,6 +8,10 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 set(ProtoPath "${CMAKE_CURRENT_SOURCE_DIR}/proto")
 set(ProtoGenerateTargetPath "gen")
 
+set(CMAKE_BUILD_TYPE 				Debug)
+set(CMAKE_CXX_COMPILER      "/usr/bin/clang++")
+set(CMAKE_CXX_FLAGS 				"${CMAKE_CXX_FLAGS} -Wall")
+
 #
 # custom modules
 #

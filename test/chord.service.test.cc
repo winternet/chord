@@ -153,6 +153,11 @@ public:
 			const chord::NotifyRequest&,
 			chord::NotifyResponse*));
 
+	MOCK_METHOD3(check, grpc::Status(
+			grpc::ClientContext*,
+			const chord::CheckRequest&,
+			chord::CheckResponse*));
+
 	MOCK_METHOD3(AsyncsuccessorRaw, grpc::ClientAsyncResponseReaderInterface<chord::SuccessorResponse>*(
 			grpc::ClientContext*, 
 			const chord::SuccessorRequest&,
@@ -171,6 +176,11 @@ public:
 	MOCK_METHOD3(AsyncnotifyRaw, grpc::ClientAsyncResponseReaderInterface<chord::NotifyResponse>*(
 			grpc::ClientContext*,
 			const chord::NotifyRequest&,
+			grpc::CompletionQueue*));
+
+	MOCK_METHOD3(AsynccheckRaw, grpc::ClientAsyncResponseReaderInterface<chord::CheckResponse>*(
+			grpc::ClientContext*,
+			const chord::CheckRequest&,
 			grpc::CompletionQueue*));
 
 };

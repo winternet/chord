@@ -32,6 +32,10 @@ typedef std::function<ChordClient()> ClientFactory;
 
 class ChordServiceImpl final : public Chord::Service {
 
+protected:
+
+  Header make_header();
+
 public:
   ChordServiceImpl(std::shared_ptr<Context> context);
 
@@ -45,6 +49,10 @@ public:
   Status stabilize(ServerContext* context, const StabilizeRequest* req, StabilizeResponse* res);
 
   Status notify(ServerContext* context, const NotifyRequest* req, NotifyResponse* res);
+
+  Status check(ServerContext* context, const CheckRequest* req, CheckResponse* res);
+
+  void fix_fingers(size_t index);
 
 private:
   std::shared_ptr<Context> context { nullptr };

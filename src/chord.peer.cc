@@ -17,9 +17,10 @@ using grpc::ServerBuilder;
 
 class ChordPeer {
 private:
+  size_t next { 0 };
   Scheduler scheduler;
-  std::shared_ptr<Router> router { nullptr };
   std::shared_ptr<Context> context { nullptr };
+  std::shared_ptr<Router> router { nullptr };
   std::unique_ptr<ChordClient> client { nullptr };
   std::unique_ptr<ChordServiceImpl> service { nullptr };
 
@@ -55,10 +56,22 @@ public:
   virtual ~ChordPeer() {}
 
   void configure_scheduler() {
+    //--- stabilize
     scheduler.schedule(std::chrono::milliseconds(context->stabilize_period_ms), [this] {
-      auto now = std::chrono::system_clock::now();
-      auto tt = std::chrono::system_clock::to_time_t(now);
       stabilize();
+      //PEER_LOG(trace) << "[dump]" << *router;
+    });
+
+    //--- check predecessor
+    scheduler.schedule(std::chrono::milliseconds(context->check_period_ms), [this] {
+      check_predecessor();
+      //PEER_LOG(trace) << "[dump]" << *router;
+    });
+
+    //--- fix fingers
+    scheduler.schedule(std::chrono::milliseconds(context->check_period_ms), [this] {
+      next = (next % 8) + 1;
+      fix_fingers(next);
       PEER_LOG(trace) << "[dump]" << *router;
     });
   }
@@ -85,8 +98,25 @@ public:
   }
 
   /**
-   * find successor
+   * check predecessor
    */
+  void check_predecessor() {
+     client->check();
+  }
+
+  /**
+   * fix finger table
+   */
+  void fix_fingers(size_t index) {
+    //if( router->successor() == nullptr ) {
+    //  PEER_LOG(trace) << "fixing fingers for direct successor.";
+    //  next = 1;
+    //}
+    //size_t next = std::pow(2., (double)1-1);
+    //uuid_t uuid = context->uuid() + next;
+    //PEER_LOG(trace) << "fixing finger for " << to_string(uuid) << ".";
+    service->fix_fingers(index);
+  }
 
   /**
    * create new chord ring

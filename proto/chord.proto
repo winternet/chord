@@ -7,13 +7,13 @@ option objc_class_prefix = "CRD";
 
 package chord;
 
-// The greeting service definition.
 service Chord {
-  // send a greeting
+  //--- common chord calls
   rpc successor (SuccessorRequest)  returns (SuccessorResponse) {}
   rpc join      (JoinRequest)       returns (JoinResponse) {}
   rpc stabilize (StabilizeRequest)  returns (StabilizeResponse) {}
   rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
+  rpc check     (CheckRequest)      returns (CheckResponse) {}
 }
 
 /**
@@ -75,16 +75,14 @@ message NotifyResponse {
   Header header = 1;
 }
 
-
 /**
- * HELLO
+ * CHECK
  */
-// The request message containing the user's name.
-message HelloRequest {
-  string name = 1;
+message CheckRequest {
+  Header header = 1;
+  string id = 2;
 }
-
-// The response message containing the greetings
-message HelloReply {
-  string message = 1;
+message CheckResponse {
+  Header header = 1;
+  string id = 2;
 }

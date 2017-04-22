@@ -89,9 +89,16 @@ void ChordClient::stabilize() {
   endpoint_t endpoint = router->get(successor);
 
   CLIENT_LOG(trace, stabilize) << "calling stabilize on successor " << endpoint;
-  make_stub(endpoint)->stabilize(&clientContext, req, &res);
+  Status status = make_stub(endpoint)->stabilize(&clientContext, req, &res);
+
+  if( !status.ok() ) {
+    CLIENT_LOG(warning, stabilize) << "failed - should remove endpoint " << endpoint << "?";
+    router->reset(successor);
+    return;
+  }
 
   if(res.has_predecessor()) {
+    CLIENT_LOG(trace, stabilize) << "received stabilize response with predecessor ";
     RouterEntry entry = res.predecessor();
 
     //--- validate
@@ -152,22 +159,36 @@ Status ChordClient::successor(const SuccessorRequest* req, SuccessorResponse* re
   return successor(&clientContext, req, res);
 }
 
-/*
-Status ChordClient::stabilize(ClientContext* context, const StabilizeRequest* req, StabilizeResponse* res) {
+void ChordClient::check() {
+  std::shared_ptr<uuid_t> predecessor = router->predecessor();
+  std::shared_ptr<uuid_t> successor = router->successor();
+
+  if( predecessor == nullptr ) {
+    CLIENT_LOG(trace, check) << "no predecessor, skip.";
+    return;
+  }
+  if( successor == nullptr ) {
+    CLIENT_LOG(trace, check) << "no successor, skip.";
+    return;
+  }
+
+  ClientContext clientContext;
+  CheckRequest req;
+  CheckResponse res;
+
+  req.mutable_header()->CopyFrom(make_header());
+
+  endpoint_t endpoint = router->get(predecessor);
+
+  CLIENT_LOG(trace, check) << "checking predecessor " << *predecessor << "@" << endpoint;
+  const grpc::Status status = make_stub(endpoint)->check(&clientContext, req, &res);
+
+  if( !status.ok() ) {
+    CLIENT_LOG(warning, check) << "predecessor failed.";
+    router->reset_predecessor(0);
+  }
+  if( !res.has_header() ) {
+    std::cerr << "CHECK RETURNED WITHOUT HEADER! SHOULD REMOVE " << endpoint << " ?";
+  }
 }
 
-void ChordClient::stabilize(const StabilizeRequest* req, StabilizeResponse* res) {
-  ClientContext *context;
-  stabilize(context, req, res);
-}
-*/
-//  
-//  void ChordClient::stabilize(ServerContext* context, const StabilizeRequest* req, StabilizeResponse* res) {
-//    BOOST_LOG_TRIVIAL(debug) << "received stabilize request " << req;
-//    return Status::OK;
-//  }
-//
-//  void notify(ServerContext* context, const NotifyRequest* req, NotifyResponse* res) {
-//    BOOST_LOG_TRIVIAL(debug) << "received notification " << req;
-//    return Status::OK;
-//  }

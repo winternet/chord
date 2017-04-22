@@ -40,9 +40,9 @@ struct function_timer
 class Scheduler
 {
   private:
-    std::priority_queue<function_timer> tasks;
-    std::unique_ptr<std::thread> thread;
     bool shutdown;
+    std::unique_ptr<std::thread> thread;
+    std::priority_queue<function_timer> tasks;
 
     Scheduler& operator=(const Scheduler& rhs) = delete;
     Scheduler(const Scheduler& rhs) = delete;

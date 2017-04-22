@@ -24,6 +24,8 @@ using chord::StabilizeResponse;
 using chord::StabilizeRequest;
 using chord::NotifyResponse;
 using chord::NotifyRequest;
+using chord::CheckResponse;
+using chord::CheckRequest;
 using chord::Chord;
 
 typedef std::function<std::shared_ptr<chord::Chord::StubInterface>(const endpoint_t& endpoint)> StubFactory;
@@ -47,6 +49,8 @@ public:
 
   void stabilize();
   void notify();
+  void check();
+  void fix_fingers();
 
   Status successor(ClientContext* context, const SuccessorRequest* req, SuccessorResponse* res);
   Status successor(const SuccessorRequest* req, SuccessorResponse* res);

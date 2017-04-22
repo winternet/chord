@@ -7,7 +7,7 @@
 
 uuid_t generate_random();
 
-class Router;
+struct Router;
 
 struct Context {
 
@@ -21,7 +21,9 @@ struct Context {
   endpoint_t bind_addr { "0.0.0.0:50050" };
   endpoint_t join_addr { "0.0.0.0:50050" };
 
-  size_t stabilize_period_ms { 10000 };
+  //--- scheduling
+  size_t stabilize_period_ms  { 10000 };
+  size_t check_period_ms      { 10000 };
 
   std::shared_ptr<Router> router { nullptr };
 
