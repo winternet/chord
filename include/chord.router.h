@@ -31,7 +31,8 @@ struct Router {
   void reset() {
     predecessors = boost::array<std::shared_ptr<uuid_t>, BITS>();
     successors = boost::array<std::shared_ptr<uuid_t>, BITS>();
-    set_successor(0, context->uuid(), context->bind_addr);
+    routes[context->uuid()] = context->bind_addr;
+    //set_successor(0, context->uuid(), context->bind_addr);
   }
 
   endpoint_t get_successor(const size_t& index) {
@@ -53,13 +54,13 @@ struct Router {
   void set_successor(const size_t index, const uuid_t uuid, const endpoint_t endpoint) {
     ROUTER_LOG(info) << "set_successor[" << index << "][" << to_string(uuid) << "] = " << endpoint;
     routes[uuid] = endpoint;
-    successors[index] = std::unique_ptr<uuid_t>(new uuid_t(uuid));
+    successors[index] = std::shared_ptr<uuid_t>(new uuid_t(uuid));
   }
 
   void set_predecessor(const size_t index, const uuid_t uuid, const endpoint_t endpoint) {
     ROUTER_LOG(info) << "set_predecessor[" << index << "][" << to_string(uuid) << "] = " << endpoint;
     routes[uuid] = endpoint;
-    predecessors[index] = std::unique_ptr<uuid_t>(new uuid_t(uuid));
+    predecessors[index] = std::shared_ptr<uuid_t>(new uuid_t(uuid));
   }
 
   void reset_predecessor(const size_t index) {
@@ -71,8 +72,8 @@ struct Router {
 
   void reset_successor(const size_t index) {
     ROUTER_LOG(info) << "reset_successor[" << index << "]";
-    std::shared_ptr<uuid_t> pred = successors[index];
-    routes.erase(*pred);
+    std::shared_ptr<uuid_t> succ = successors[index];
+    routes.erase(*succ);
     successors[index] = nullptr;
   }
 
@@ -107,8 +108,8 @@ struct Router {
     for( auto pred : predecessors ) {
       if( pred != nullptr ) return pred;
     }
-    return std::make_shared<uuid_t>(context->uuid());
-    //return successors[0];
+    //return nullptr;
+    return std::shared_ptr<uuid_t>(new uuid_t(context->uuid()));
   }
 
   std::shared_ptr<uuid_t> predecessor() {
@@ -126,6 +127,12 @@ struct Router {
       if( *candidate < uuid )
         return *candidate;
     } while( m > 0 );
+
+    for( auto candidate : successors ) {
+      if( candidate == nullptr ) continue;
+      if( *candidate > uuid ) return *candidate;
+    }
+
     ROUTER_LOG(info) << "no closest preceding node found, returning self " << context->uuid();
     return context->uuid();
   }
@@ -136,7 +143,7 @@ struct Router {
          << (router.successors[i] != nullptr ? to_string(*router.successors[i]) + "@" + router.get_successor(i) : "<unknown>");
     }
     //os  << "\n::router [successor  ] " << (router.successor() != nullptr ? to_string(*router.successor()) : "<unknown>") 
-    //    << "\n::router [predecessor] " << (router.predecessor() != nullptr ? to_string(*router.predecessor()) : "<unknown>");
+    os << "\n::router [predecessor] " << (router.predecessor() != nullptr ? to_string(*router.predecessor()) : "<unknown>");
     return os;
   }
 

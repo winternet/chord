@@ -39,6 +39,19 @@ TEST(RouterTest, closest_preceding_node) {
   ASSERT_EQ(predecessor, 100);
 }
 
+TEST(RouterTest, closest_preceding_node_less_1) {
+  Context context;
+  context.set_uuid(1);
+  Router router(&context);
+
+  router.set_successor(7, 100, to_string(100));
+
+  // predecessor of 1 is 100
+  uuid_t predecessor = router.closest_preceding_node(1);
+
+  ASSERT_EQ(predecessor, 100);
+}
+
 TEST(RouterTest, closest_preceding_node_mod) {
   Context context;
   context.set_uuid(999);

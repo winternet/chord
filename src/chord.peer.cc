@@ -71,6 +71,7 @@ public:
     //--- fix fingers
     scheduler.schedule(std::chrono::milliseconds(context->check_period_ms), [this] {
       next = (next % 8) + 1;
+      //next = 0;
       fix_fingers(next);
       PEER_LOG(trace) << "[dump]" << *router;
     });
@@ -115,6 +116,7 @@ public:
     //size_t next = std::pow(2., (double)1-1);
     //uuid_t uuid = context->uuid() + next;
     //PEER_LOG(trace) << "fixing finger for " << to_string(uuid) << ".";
+    //if( *router->successor() != context->uuid() )
     service->fix_fingers(index);
   }
 
@@ -124,10 +126,10 @@ public:
   void create() {
     PEER_LOG(trace) << "bootstrapping new chord ring.";
     router->reset();
-    router->set_successor(
-        0,
-        context->uuid(),
-        context->bind_addr);
+    //router->set_successor(
+    //    0,
+    //    context->uuid(),
+    //    context->bind_addr);
   }
 };
 

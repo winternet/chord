@@ -29,8 +29,8 @@ ChordClient::ChordClient(const std::shared_ptr<Context>& context)
 
 ChordClient::ChordClient(const std::shared_ptr<Context>& context, StubFactory make_stub) 
   :context{context}
-  ,make_stub{make_stub}
   ,router {context->router}
+  ,make_stub{make_stub}
 {
 }
 
@@ -98,7 +98,8 @@ void ChordClient::stabilize() {
   }
 
   if(res.has_predecessor()) {
-    CLIENT_LOG(trace, stabilize) << "received stabilize response with predecessor ";
+    CLIENT_LOG(trace, stabilize) << "received stabilize response with predecessor "
+      << res.predecessor().uuid() << "@" << res.predecessor().endpoint();
     RouterEntry entry = res.predecessor();
 
     //--- validate
@@ -111,8 +112,9 @@ void ChordClient::stabilize() {
     uuid_t pred(entry.uuid());
     uuid_t succ(*router->successor());
 
-    //if( (pred > self and pred < succ) or
-     if(   (pred > self and succ < pred)) {
+    if( (pred > self and pred < succ) or
+        (pred > self and succ < pred) ) {
+    //if(   (pred > self and succ < pred)) {
       router->set_successor(0, pred, entry.endpoint());
     }
   } else {
