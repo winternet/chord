@@ -6,3 +6,5 @@ cmake_install.cmake
 chord
 gen
 tags
+build
+.idea

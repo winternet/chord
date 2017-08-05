@@ -1,3 +1,5 @@
+#pragma once
+
 #include <functional>
 #include <chrono>
 #include <future>
@@ -6,6 +8,8 @@
 #include <memory>
 #include <sstream>
 #include <assert.h>
+
+#include "chord.i.scheduler.h"
 
 struct function_timer
 {
@@ -37,15 +41,15 @@ struct function_timer
 
 };
 
-class Scheduler
+class Scheduler : public AbstractScheduler
 {
   private:
     bool shutdown;
     std::unique_ptr<std::thread> thread;
     std::priority_queue<function_timer> tasks;
 
-    Scheduler& operator=(const Scheduler& rhs) = delete;
-    Scheduler(const Scheduler& rhs) = delete;
+    //Scheduler& operator=(const Scheduler& rhs) = delete;
+    //Scheduler(const Scheduler& rhs) = delete;
 
   public:
     Scheduler()
@@ -53,12 +57,12 @@ class Scheduler
       thread(new std::thread([this]() { loop(); }))
       { }
 
-    ~Scheduler() {
+    virtual ~Scheduler() {
       shutdown = true;
       thread->join();
     }
 
-    void schedule(const std::chrono::system_clock::time_point& time, std::function<void()>&& func) {
+    virtual void schedule(const std::chrono::system_clock::time_point& time, std::function<void()>&& func) override {
       std::function<void()> threadFunc = [func]() {
         std::thread t(func);
         t.detach();
@@ -66,7 +70,7 @@ class Scheduler
       tasks.push(function_timer(std::move(threadFunc), time));
     }
 
-    void schedule(std::chrono::system_clock::duration interval, std::function<void()> func) {
+    virtual void schedule(const std::chrono::system_clock::duration& interval, std::function<void()> func) override {
       std::function<void()> threadFunc = [func]() {
         std::thread t(func);
         t.detach();
@@ -75,7 +79,7 @@ class Scheduler
     }
 
     //in format "%s %M %H %d %m %Y" "sec min hour date month year"
-    void schedule(const std::string &time, std::function<void()> func) {
+    virtual void schedule(const std::string &time, std::function<void()> func) override {
       if (time.find("*") == std::string::npos && time.find("/") == std::string::npos) {
         std::tm tm = {};
         strptime(time.c_str(), "%s %M %H %d %m %Y", &tm);

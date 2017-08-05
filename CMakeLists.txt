@@ -9,7 +9,7 @@ set(ProtoPath "${CMAKE_CURRENT_SOURCE_DIR}/proto")
 set(ProtoGenerateTargetPath "gen")
 
 set(CMAKE_BUILD_TYPE 				Debug)
-set(CMAKE_CXX_COMPILER      "/usr/bin/clang++")
+#set(CMAKE_CXX_COMPILER      "/usr/bin/clang++")
 set(CMAKE_CXX_FLAGS 				"${CMAKE_CXX_FLAGS} -Wall")
 
 #
@@ -21,7 +21,6 @@ message(STATUS "Including custom cmake modules from ${CMAKE_MODULE_PATH}")
 include(grpc)
 include(protobuf)
 include(CTest)
-include(DownloadProject)
 
 
 
@@ -80,23 +79,14 @@ target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}++)
 
 
 ### TESTS ###
-#
-# download gtest/gmock
-#
-download_project(PROJ                googletest
-                 GIT_REPOSITORY      https://github.com/google/googletest.git
-                 GIT_TAG             master
-                 ${UPDATE_DISCONNECTED_IF_AVAILABLE}
-)
-add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
-#
-# trivial example using gtest and gmock
-#
+###
+### trivial example using gtest and gmock
+###
 file(GLOB TEST_SOURCES test/*.cc)
 string(REPLACE ";" "\n--   " TEST_SOURCES_OUT "${TEST_SOURCES}")
 message(STATUS "Found tests:\n--   ${TEST_SOURCES_OUT}")
-
+#
 include_directories(include)
 add_executable(test_chord ${TEST_SOURCES})
-target_link_libraries(test_chord gtest gmock_main ${PROJECT_NAME}++)
+target_link_libraries(test_chord gtest gmock gmock_main ${PROJECT_NAME}++)
 add_test(NAME test COMMAND test_chord)

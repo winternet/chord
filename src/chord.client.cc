@@ -17,7 +17,9 @@
 #define log(level) LOG(level) << "[client] "
 #define CLIENT_LOG(level, method) LOG(level) << "[client][" << #method << "] "
 
-ChordClient::ChordClient(const std::shared_ptr<Context>& context) 
+using namespace std;
+
+ChordClient::ChordClient(const shared_ptr<Context>& context) 
   :context{context}
   ,router{context->router}
 {
@@ -27,7 +29,7 @@ ChordClient::ChordClient(const std::shared_ptr<Context>& context)
   };
 }
 
-ChordClient::ChordClient(const std::shared_ptr<Context>& context, StubFactory make_stub) 
+ChordClient::ChordClient(const shared_ptr<Context>& context, StubFactory make_stub) 
   :context{context}
   ,router {context->router}
   ,make_stub{make_stub}
@@ -61,7 +63,7 @@ bool ChordClient::join(const endpoint_t& addr) {
     return false;
   }
 
-  CLIENT_LOG(trace,join) << "successful,  received successor " << res.successor().uuid() << "@" << res.successor().endpoint();
+  CLIENT_LOG(trace,join) << "successful, received successor " << res.successor().uuid() << "@" << res.successor().endpoint();
   router->set_successor(0, uuid_t(res.successor().uuid()), res.successor().endpoint());
 
   return true;
@@ -75,7 +77,7 @@ void ChordClient::stabilize() {
 
   req.mutable_header()->CopyFrom(make_header());
 
-  std::shared_ptr<uuid_t> successor = router->successor();
+  shared_ptr<uuid_t> successor = router->successor();
 
   //--- return if join failed or uuid == successor (create)
   if(successor == nullptr ) {
@@ -114,83 +116,83 @@ void ChordClient::stabilize() {
 
     if( (pred > self and pred < succ) or
         (pred > self and succ < pred) ) {
-    //if(   (pred > self and succ < pred)) {
+      //if(   (pred > self and succ < pred)) {
       router->set_successor(0, pred, entry.endpoint());
     }
-  } else {
-    CLIENT_LOG(trace, stabilize) << "received empty routing entry";
+    } else {
+      CLIENT_LOG(trace, stabilize) << "received empty routing entry";
+    }
+
+    notify();
   }
 
-  notify();
-}
+  void ChordClient::notify() {
 
-void ChordClient::notify() {
+    // get successor
+    shared_ptr<uuid_t> successor = router->successor();
+    endpoint_t endpoint = router->get(successor);
 
-  // get successor
-  std::shared_ptr<uuid_t> successor = router->successor();
-  endpoint_t endpoint = router->get(successor);
+    ClientContext clientContext;
+    NotifyRequest req;
+    NotifyResponse res;
 
-  ClientContext clientContext;
-  NotifyRequest req;
-  NotifyResponse res;
+    CLIENT_LOG(trace, notify) << "calling notify on address " << endpoint;
 
-  CLIENT_LOG(trace, notify) << "calling notify on address " << endpoint;
+    req.mutable_header()->CopyFrom(make_header());
+    make_stub(endpoint)->notify(&clientContext, req, &res);
 
-  req.mutable_header()->CopyFrom(make_header());
-  make_stub(endpoint)->notify(&clientContext, req, &res);
-
-}
-
-Status ChordClient::successor(ClientContext* clientContext, const SuccessorRequest* req, SuccessorResponse* res) {
-
-  CLIENT_LOG(trace,successor) << "trying to find successor of " << req->id();
-  SuccessorRequest copy(*req);
-  copy.mutable_header()->CopyFrom(make_header());
- 
-  uuid_t predecessor = router->closest_preceding_node(uuid_t(req->id()));
-  endpoint_t endpoint = router->get(predecessor);
-  CLIENT_LOG(trace,successor) << "forwarding request to " << endpoint;
-
-  return make_stub(endpoint)->successor(clientContext, copy, res);
-
-}
-
-/** called by chord.service **/
-Status ChordClient::successor(const SuccessorRequest* req, SuccessorResponse* res) {
-  ClientContext clientContext;
-  return successor(&clientContext, req, res);
-}
-
-void ChordClient::check() {
-  std::shared_ptr<uuid_t> predecessor = router->predecessor();
-  std::shared_ptr<uuid_t> successor = router->successor();
-
-  if( predecessor == nullptr ) {
-    CLIENT_LOG(trace, check) << "no predecessor, skip.";
-    return;
-  }
-  if( successor == nullptr ) {
-    CLIENT_LOG(trace, check) << "no successor, skip.";
-    return;
   }
 
-  ClientContext clientContext;
-  CheckRequest req;
-  CheckResponse res;
+  Status ChordClient::successor(ClientContext* clientContext, const SuccessorRequest* req, SuccessorResponse* res) {
 
-  req.mutable_header()->CopyFrom(make_header());
+    CLIENT_LOG(trace,successor) << "trying to find successor of " << req->id();
+    SuccessorRequest copy(*req);
+    copy.mutable_header()->CopyFrom(make_header());
 
-  endpoint_t endpoint = router->get(predecessor);
+    uuid_t predecessor = router->closest_preceding_node(uuid_t(req->id()));
+    endpoint_t endpoint = router->get(predecessor);
+    CLIENT_LOG(trace,successor) << "forwarding request to " << endpoint;
 
-  CLIENT_LOG(trace, check) << "checking predecessor " << *predecessor << "@" << endpoint;
-  const grpc::Status status = make_stub(endpoint)->check(&clientContext, req, &res);
+    return make_stub(endpoint)->successor(clientContext, copy, res);
 
-  if( !status.ok() ) {
-    CLIENT_LOG(warning, check) << "predecessor failed.";
-    router->reset_predecessor(0);
   }
-  if( !res.has_header() ) {
-    std::cerr << "CHECK RETURNED WITHOUT HEADER! SHOULD REMOVE " << endpoint << " ?";
+
+  /** called by chord.service **/
+  Status ChordClient::successor(const SuccessorRequest* req, SuccessorResponse* res) {
+    ClientContext clientContext;
+    return successor(&clientContext, req, res);
   }
-}
+
+  void ChordClient::check() {
+    shared_ptr<uuid_t> predecessor = router->predecessor();
+    shared_ptr<uuid_t> successor = router->successor();
+
+    if( predecessor == nullptr ) {
+      CLIENT_LOG(trace, check) << "no predecessor, skip.";
+      return;
+    }
+    if( successor == nullptr ) {
+      CLIENT_LOG(trace, check) << "no successor, skip.";
+      return;
+    }
+
+    ClientContext clientContext;
+    CheckRequest req;
+    CheckResponse res;
+
+    req.mutable_header()->CopyFrom(make_header());
+
+    endpoint_t endpoint = router->get(predecessor);
+
+    CLIENT_LOG(trace, check) << "checking predecessor " << *predecessor << "@" << endpoint;
+    const grpc::Status status = make_stub(endpoint)->check(&clientContext, req, &res);
+
+    if( !status.ok() ) {
+      CLIENT_LOG(warning, check) << "predecessor failed.";
+      router->reset_predecessor(0);
+    }
+    if( !res.has_header() ) {
+      cerr << "CHECK RETURNED WITHOUT HEADER! SHOULD REMOVE " << endpoint << " ?";
+    }
+  }
 
