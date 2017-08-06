@@ -3,12 +3,19 @@
 
 #include "chord.service.h"
 
-std::shared_ptr<Context> make_context(const uuid_t& self) {
-  std::shared_ptr<Context> context = std::shared_ptr<Context>(new Context);
-  context->set_uuid(self);
+Context make_context(const uuid_t& self) {
+  Context context = Context();
+  context.set_uuid(self);
+  //std::shared_ptr<Context> context = std::shared_ptr<Context>(new Context);
+  //context->set_uuid(self);
   
   return context;
 }
+
+Router make_router(Context& context) {
+  return Router(&context);
+}
+
 
 RouterEntry make_entry(const uuid_t& id, const endpoint_t& addr) {
   RouterEntry entry;
@@ -24,8 +31,9 @@ Header make_header(const uuid_t& id, const endpoint_t& addr) {
 }
 
 TEST(ServiceTest, join) {
-  std::shared_ptr<Context> context = std::shared_ptr<Context>(new Context);
-  ChordServiceImpl service(context);
+  Context context = Context();
+  Router router = Router(&context);
+  ChordServiceImpl service(context, router);
 
   //TODO assertions and request
 
@@ -41,10 +49,10 @@ TEST(ServiceTest, join) {
  * node 0 tries to find id 10 -> self
  */
 TEST(ServiceTest, successor_single_node) {
-  std::shared_ptr<Context> context = make_context(0);
-  std::shared_ptr<Router> router = context->router;
+  Context context = make_context(0);
+  Router router = Router(&context);
 
-  ChordServiceImpl service(context);
+  ChordServiceImpl service(context, router);
 
   ServerContext serverContext;
   SuccessorRequest req;
@@ -66,13 +74,13 @@ TEST(ServiceTest, successor_single_node) {
  * node 0 tries to find successor of id 2 -> 5
  */
 TEST(ServiceTest, successor_two_nodes) {
-  std::shared_ptr<Context> context = make_context(0);
+  Context context = make_context(0);
+  Router router = make_router(context);
 
-  std::shared_ptr<Router> router = context->router;
-  router->set_successor(0, 5, "0.0.0.0:50055");
-  router->set_predecessor(0, 5, "0.0.0.0:50055");
+  router.set_successor(0, 5, "0.0.0.0:50055");
+  router.set_predecessor(0, 5, "0.0.0.0:50055");
 
-  ChordServiceImpl service(context);
+  ChordServiceImpl service(context, router);
 
   ServerContext serverContext;
   SuccessorRequest req;
@@ -94,13 +102,13 @@ TEST(ServiceTest, successor_two_nodes) {
  * node 5 tries to find successor of id 10 -> 0
  */
 TEST(ServiceTest, successor_two_nodes_mod) {
-  std::shared_ptr<Context> context = make_context(5);
+  Context context = make_context(5);
+  Router router = make_router(context);
 
-  std::shared_ptr<Router> router = context->router;
-  router->set_successor(0, 0, "0.0.0.0:50050");
-  router->set_predecessor(0, 0, "0.0.0.0:50050");
+  router.set_successor(0, 0, "0.0.0.0:50050");
+  router.set_predecessor(0, 0, "0.0.0.0:50050");
 
-  ChordServiceImpl service(context);
+  ChordServiceImpl service(context, router);
 
   ServerContext serverContext;
   SuccessorRequest req;
@@ -195,19 +203,19 @@ public:
  * assert that node successor(0) gets called.
  */
 TEST(ServiceTest, successor_two_nodes_modulo) {
-  std::shared_ptr<Context> context = make_context(5);
+  Context context = make_context(5);
+  Router router = make_router(context);
 
-  std::shared_ptr<Router> router = context->router;
-  router->set_successor(0, 0, "0.0.0.0:50050");
-  router->set_predecessor(0, 0, "0.0.0.0:50050");
+  router.set_successor(0, 0, "0.0.0.0:50050");
+  router.set_predecessor(0, 0, "0.0.0.0:50050");
 
   std::shared_ptr<MockStub> stub(new MockStub);
 
 	auto stub_factory = [&](const endpoint_t& endpoint){ return stub; };
-	ChordClient client(context, stub_factory);
+	ChordClient client(context, router, stub_factory);
 
 	auto client_factory = [&](){ return client; };
-  ChordServiceImpl service(context, client_factory);
+  ChordServiceImpl service(context, router, client_factory);
 
   ServerContext serverContext;
   SuccessorRequest req;

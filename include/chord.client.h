@@ -32,8 +32,9 @@ typedef std::function<std::shared_ptr<chord::Chord::StubInterface>(const endpoin
 
 class ChordClient {
 private:
-  std::shared_ptr<Context> context { nullptr };
-  std::shared_ptr<Router> router { nullptr };
+  Context& context;
+  Router& router;
+
   StubFactory make_stub;
 
   /**
@@ -42,8 +43,8 @@ private:
   Header make_header();
 
 public:
-  ChordClient(const std::shared_ptr<Context>& context);
-  ChordClient(const std::shared_ptr<Context>& context, StubFactory factory);
+  ChordClient(Context& context, Router& router);
+  ChordClient(Context& context, Router& router, StubFactory factory);
 
   bool join(const endpoint_t& addr);
 

@@ -39,9 +39,9 @@ protected:
   Header make_header();
 
 public:
-  ChordServiceImpl(std::shared_ptr<Context> context);
+  ChordServiceImpl(Context& context, Router& router);
 
-  ChordServiceImpl(std::shared_ptr<Context> context, ClientFactory make_client);
+  ChordServiceImpl(Context& context, Router& router, ClientFactory make_client);
 
   Status join(ServerContext* context, const JoinRequest* req, JoinResponse* res);
 
@@ -57,7 +57,7 @@ public:
   void fix_fingers(size_t index);
 
 private:
-  std::shared_ptr<Context> context { nullptr };
-  std::shared_ptr<Router> router { nullptr };
+  Context& context;
+  Router& router;
   ClientFactory make_client;
 };

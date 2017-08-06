@@ -33,9 +33,9 @@ void ChordPeer::start_server() {
 ChordPeer::ChordPeer(shared_ptr<Context> context) 
   : scheduler { new Scheduler() }
   , context { context }
-  , router  { context->router }
-  , client  { new ChordClient{context} }
-  , service { new ChordServiceImpl{context} }
+  , router  { new Router{context.get()} }
+  , client  { new ChordClient{*context, *router} }
+  , service { new ChordServiceImpl{*context, *router} }
 {
   PEER_LOG(trace) << "peer with client-id " << context->uuid();
 

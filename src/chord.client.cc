@@ -19,9 +19,9 @@
 
 using namespace std;
 
-ChordClient::ChordClient(const shared_ptr<Context>& context) 
+ChordClient::ChordClient(Context& context, Router& router) 
   :context{context}
-  ,router{context->router}
+  ,router{router}
 {
   //--- default stub factory
   make_stub = [&](const endpoint_t& endpoint) {
@@ -29,9 +29,9 @@ ChordClient::ChordClient(const shared_ptr<Context>& context)
   };
 }
 
-ChordClient::ChordClient(const shared_ptr<Context>& context, StubFactory make_stub) 
+ChordClient::ChordClient(Context& context, Router& router, StubFactory make_stub) 
   :context{context}
-  ,router {context->router}
+  ,router {router}
   ,make_stub{make_stub}
 {
 }
@@ -41,8 +41,8 @@ Header ChordClient::make_header() {
 
   Header header;
   RouterEntry src;
-  src.set_uuid(to_string(context->uuid()));
-  src.set_endpoint(context->bind_addr);
+  src.set_uuid(to_string(context.uuid()));
+  src.set_endpoint(context.bind_addr);
   header.mutable_src()->CopyFrom(src);
   return header;
 }
@@ -64,7 +64,7 @@ bool ChordClient::join(const endpoint_t& addr) {
   }
 
   CLIENT_LOG(trace,join) << "successful, received successor " << res.successor().uuid() << "@" << res.successor().endpoint();
-  router->set_successor(0, uuid_t(res.successor().uuid()), res.successor().endpoint());
+  router.set_successor(0, uuid_t(res.successor().uuid()), res.successor().endpoint());
 
   return true;
 
@@ -77,25 +77,25 @@ void ChordClient::stabilize() {
 
   req.mutable_header()->CopyFrom(make_header());
 
-  shared_ptr<uuid_t> successor = router->successor();
+  shared_ptr<uuid_t> successor = router.successor();
 
   //--- return if join failed or uuid == successor (create)
   if(successor == nullptr ) {
     CLIENT_LOG(trace, stabilize) << "no successor found";
     return;
-  } else if( (*successor) == context->uuid() ) {
+  } else if( (*successor) == context.uuid() ) {
     CLIENT_LOG(trace, stabilize) << "successor is me, still bootstrapping";
     return;
   }
 
-  endpoint_t endpoint = router->get(successor);
+  endpoint_t endpoint = router.get(successor);
 
   CLIENT_LOG(trace, stabilize) << "calling stabilize on successor " << endpoint;
   Status status = make_stub(endpoint)->stabilize(&clientContext, req, &res);
 
   if( !status.ok() ) {
     CLIENT_LOG(warning, stabilize) << "failed - should remove endpoint " << endpoint << "?";
-    router->reset(successor);
+    router.reset(successor);
     return;
   }
 
@@ -110,14 +110,14 @@ void ChordClient::stabilize() {
     //  return;
     //}
 
-    uuid_t self(context->uuid());
+    uuid_t self(context.uuid());
     uuid_t pred(entry.uuid());
-    uuid_t succ(*router->successor());
+    uuid_t succ(*router.successor());
 
     if( (pred > self and pred < succ) or
         (pred > self and succ < pred) ) {
       //if(   (pred > self and succ < pred)) {
-      router->set_successor(0, pred, entry.endpoint());
+      router.set_successor(0, pred, entry.endpoint());
     }
     } else {
       CLIENT_LOG(trace, stabilize) << "received empty routing entry";
@@ -129,8 +129,8 @@ void ChordClient::stabilize() {
   void ChordClient::notify() {
 
     // get successor
-    shared_ptr<uuid_t> successor = router->successor();
-    endpoint_t endpoint = router->get(successor);
+    shared_ptr<uuid_t> successor = router.successor();
+    endpoint_t endpoint = router.get(successor);
 
     ClientContext clientContext;
     NotifyRequest req;
@@ -149,8 +149,8 @@ void ChordClient::stabilize() {
     SuccessorRequest copy(*req);
     copy.mutable_header()->CopyFrom(make_header());
 
-    uuid_t predecessor = router->closest_preceding_node(uuid_t(req->id()));
-    endpoint_t endpoint = router->get(predecessor);
+    uuid_t predecessor = router.closest_preceding_node(uuid_t(req->id()));
+    endpoint_t endpoint = router.get(predecessor);
     CLIENT_LOG(trace,successor) << "forwarding request to " << endpoint;
 
     return make_stub(endpoint)->successor(clientContext, copy, res);
@@ -164,8 +164,8 @@ void ChordClient::stabilize() {
   }
 
   void ChordClient::check() {
-    shared_ptr<uuid_t> predecessor = router->predecessor();
-    shared_ptr<uuid_t> successor = router->successor();
+    shared_ptr<uuid_t> predecessor = router.predecessor();
+    shared_ptr<uuid_t> successor = router.successor();
 
     if( predecessor == nullptr ) {
       CLIENT_LOG(trace, check) << "no predecessor, skip.";
@@ -182,14 +182,14 @@ void ChordClient::stabilize() {
 
     req.mutable_header()->CopyFrom(make_header());
 
-    endpoint_t endpoint = router->get(predecessor);
+    endpoint_t endpoint = router.get(predecessor);
 
     CLIENT_LOG(trace, check) << "checking predecessor " << *predecessor << "@" << endpoint;
     const grpc::Status status = make_stub(endpoint)->check(&clientContext, req, &res);
 
     if( !status.ok() ) {
       CLIENT_LOG(warning, check) << "predecessor failed.";
-      router->reset_predecessor(0);
+      router.reset_predecessor(0);
     }
     if( !res.has_header() ) {
       cerr << "CHECK RETURNED WITHOUT HEADER! SHOULD REMOVE " << endpoint << " ?";

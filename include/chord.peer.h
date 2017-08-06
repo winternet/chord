@@ -27,9 +27,11 @@ using grpc::ServerBuilder;
 class ChordPeer {
 private:
   size_t next { 0 };
+
   std::unique_ptr<AbstractScheduler> scheduler { nullptr };
   std::shared_ptr<Context> context      { nullptr };
-  std::shared_ptr<Router> router        { nullptr };
+
+  std::unique_ptr<Router> router        { nullptr };
   std::unique_ptr<ChordClient> client   { nullptr };
   std::unique_ptr<ChordServiceImpl> service { nullptr };
 
