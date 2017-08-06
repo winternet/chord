@@ -90,12 +90,19 @@ Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* r
     return header;
   }
 
-  void ChordServiceImpl::successor(const uuid_t& uuid) {
+  RouterEntry ChordServiceImpl::successor(const uuid_t& uuid) {
     ServerContext serverContext;
     SuccessorRequest req;
     SuccessorResponse res;
 
-    this->successor(&serverContext, &req, &res);
+    req.mutable_header()->CopyFrom(make_header());
+    req.set_id(to_string(uuid));
+
+    Status status = successor(&serverContext, &req, &res);
+
+    if(!status.ok()) throw chord::exception("failed to query succesor", status);
+
+    return res.successor();
   }
 
   Status ChordServiceImpl::successor(ServerContext* serverContext, const SuccessorRequest* req, SuccessorResponse* res) {

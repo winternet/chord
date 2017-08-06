@@ -10,6 +10,8 @@
 
 #include "chord.context.h"
 #include "chord.grpc.pb.h"
+#include "chord.i.service.h"
+#include "chord.exception.h"
 
 #include "chord.client.h"
 
@@ -30,7 +32,7 @@ using chord::Chord;
 
 typedef std::function<ChordClient()> ClientFactory;
 
-class ChordServiceImpl final : public Chord::Service {
+class ChordServiceImpl final : public Chord::Service, AbstractService {
 
 protected:
 
@@ -43,7 +45,7 @@ public:
 
   Status join(ServerContext* context, const JoinRequest* req, JoinResponse* res);
 
-  void successor(const uuid_t& uuid);
+  virtual RouterEntry successor(const uuid_t& uuid) noexcept(false);
   Status successor(ServerContext* context, const SuccessorRequest* req, SuccessorResponse* res);
 
   Status stabilize(ServerContext* context, const StabilizeRequest* req, StabilizeResponse* res);
