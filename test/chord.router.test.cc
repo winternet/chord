@@ -17,11 +17,11 @@ TEST(RouterTest, initialize) {
   EXPECT_EQ(*router.successor(), context.uuid());
 
   for(int i=1; i < BITS; i++) {
-    ASSERT_NULL(router.successors.at(i));
+    ASSERT_NULL(router.successors[i]);
   }
 
   for(int i=0; i < BITS; i++ ) {
-    ASSERT_NULL(router.predecessors.at(i));
+    ASSERT_NULL(router.predecessors[i]);
   }
 }
 
@@ -89,17 +89,16 @@ TEST(RouterTest, closest_preceding_node_mod_2) {
  */
 TEST(RouterTest, set_uuid_resets_router ) {
   Context context;
-  uuid_t uuid = context.uuid();
+  Router router(&context);
+  auto uuid = context.uuid();
 
-  std::shared_ptr<Router> router = context.router;
-
-  std::shared_ptr<uuid_t> successor = router->successor();
+  auto successor = router.successor();
   ASSERT_EQ(*successor, uuid);
 
   //--- calls router#reset() internally
   context.set_uuid(0);
 
-  successor = router->successor();
+  successor = router.successor();
   ASSERT_EQ(*successor, 0);
-  ASSERT_EQ(router->get(uuid_t(0)), context.bind_addr);
+  ASSERT_EQ(router.get(uuid_t(0)), context.bind_addr);
 }

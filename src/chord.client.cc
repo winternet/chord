@@ -77,7 +77,7 @@ void ChordClient::stabilize() {
 
   req.mutable_header()->CopyFrom(make_header());
 
-  shared_ptr<uuid_t> successor = router.successor();
+  auto successor = router.successor();
 
   //--- return if join failed or uuid == successor (create)
   if(successor == nullptr ) {
@@ -129,7 +129,7 @@ void ChordClient::stabilize() {
   void ChordClient::notify() {
 
     // get successor
-    shared_ptr<uuid_t> successor = router.successor();
+    auto successor = router.successor();
     endpoint_t endpoint = router.get(successor);
 
     ClientContext clientContext;
@@ -164,8 +164,8 @@ void ChordClient::stabilize() {
   }
 
   void ChordClient::check() {
-    shared_ptr<uuid_t> predecessor = router.predecessor();
-    shared_ptr<uuid_t> successor = router.successor();
+    auto predecessor = router.predecessor();
+    auto successor = router.successor();
 
     if( predecessor == nullptr ) {
       CLIENT_LOG(trace, check) << "no predecessor, skip.";
@@ -182,7 +182,7 @@ void ChordClient::stabilize() {
 
     req.mutable_header()->CopyFrom(make_header());
 
-    endpoint_t endpoint = router.get(predecessor);
+    auto endpoint = router.get(predecessor);
 
     CLIENT_LOG(trace, check) << "checking predecessor " << *predecessor << "@" << endpoint;
     const grpc::Status status = make_stub(endpoint)->check(&clientContext, req, &res);

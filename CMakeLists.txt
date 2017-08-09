@@ -31,9 +31,10 @@ include(CTest)
 find_package(Boost COMPONENTS log thread system program_options)
 find_package(Protobuf REQUIRED)
 find_package(Threads REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 if( Boost_FOUND )
-  add_definitions(-std=c++11)
+  add_definitions(-std=c++14)
 endif()
 
 
@@ -63,7 +64,7 @@ include_directories(include)
 # create shared library chord++
 #
 add_library(${PROJECT_NAME}++ SHARED ${SOURCES} ${SOURCES_GEN} ${ProtoSources} ${ProtoHeaders} ${GrpcSources} ${GrpcHeaders})
-target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} grpc++ grpc)
+target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} grpc++ grpc ssl crypto)
 install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 
 #

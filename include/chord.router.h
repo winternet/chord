@@ -17,22 +17,38 @@
 
 struct Router {
 
+  std::map<uuid_t, endpoint_t> routes;
+
+  std::array<uuid_t*, BITS> predecessors;
+  std::array<uuid_t*, BITS> successors;
+
+
   Router(Context* context)
     : context { context }
   {
-    reset();
+    std::fill(std::begin(predecessors), std::end(predecessors), nullptr);
+    std::fill(std::begin(successors), std::end(successors), nullptr);
+    //for(auto i=0; i < BITS; i++) successors[i] = nullptr;
+    //for(auto i=0; i < BITS; i++) predecessors[i] = nullptr;
+    routes[context->uuid()] = context->bind_addr;
+    context->set_router(this);
   }
 
-  std::map<uuid_t, endpoint_t> routes;
+  virtual ~Router() {
+    cleanup();
+  }
 
-  boost::array<std::shared_ptr<uuid_t>, BITS> predecessors;
-  boost::array<std::shared_ptr<uuid_t>, BITS> successors;
+  void cleanup() {
+    for(auto pred:predecessors)
+      if(pred != nullptr) delete pred;
+    for(auto succ:successors)
+      if(succ != nullptr) delete succ;
+  }
 
   void reset() {
-    predecessors = boost::array<std::shared_ptr<uuid_t>, BITS>();
-    successors = boost::array<std::shared_ptr<uuid_t>, BITS>();
+    cleanup();
+
     routes[context->uuid()] = context->bind_addr;
-    //set_successor(0, context->uuid(), context->bind_addr);
   }
 
   endpoint_t get_successor(const size_t& index) {
@@ -44,75 +60,84 @@ struct Router {
   }
 
   //--- get endpoint to corresponding uuid
+  endpoint_t get(const uuid_t* uuid) {
+    return routes[*uuid];
+  }
   endpoint_t get(const uuid_t& uuid) {
     return routes[uuid];
-  }
-  endpoint_t get(const std::shared_ptr<uuid_t>& uuid) {
-    return routes[*uuid];
   }
 
   void set_successor(const size_t index, const uuid_t uuid, const endpoint_t endpoint) {
     ROUTER_LOG(info) << "set_successor[" << index << "][" << to_string(uuid) << "] = " << endpoint;
     routes[uuid] = endpoint;
-    successors[index] = std::shared_ptr<uuid_t>(new uuid_t(uuid));
+    delete successors[index];
+    successors[index] = new uuid_t(uuid);
   }
 
   void set_predecessor(const size_t index, const uuid_t uuid, const endpoint_t endpoint) {
     ROUTER_LOG(info) << "set_predecessor[" << index << "][" << to_string(uuid) << "] = " << endpoint;
     routes[uuid] = endpoint;
-    predecessors[index] = std::shared_ptr<uuid_t>(new uuid_t(uuid));
+    delete predecessors[index];
+    predecessors[index] = new uuid_t(uuid);
   }
 
   void reset_predecessor(const size_t index) {
     ROUTER_LOG(info) << "reset_predecessor[" << index << "]";
-    std::shared_ptr<uuid_t> pred = predecessors[index];
+    uuid_t* pred = predecessors[index];
     routes.erase(*pred);
+    delete pred;
     predecessors[index] = nullptr;
   }
 
   void reset_successor(const size_t index) {
     ROUTER_LOG(info) << "reset_successor[" << index << "]";
-    std::shared_ptr<uuid_t> succ = successors[index];
+    uuid_t* succ = successors[index];
     routes.erase(*succ);
+    delete succ;
     successors[index] = nullptr;
   }
 
-  void reset(uuid_t uuid) {
-    reset(std::make_shared<uuid_t>(uuid));
-  }
+  //void reset(uuid_t uuid) {
+  //  reset(new uuid_t(uuid)));
+  //}
 
-  void reset(const std::shared_ptr<uuid_t>& uuid) {
+  void reset(const uuid_t* uuid) {
     if( uuid == nullptr ) {
       ROUTER_LOG(warning) << "failed to reset nullptr";
       return;
     }
 
     ROUTER_LOG(info) << "reset_successor " << *uuid << "@...";
-    routes.erase(*uuid);
+    //routes.erase(uuid);
 
     // TODO refactor
     for(int i=0; i < BITS; i++) {
       auto succ = successors[i];
-      if( succ != nullptr && *succ == *uuid) successors[i] = nullptr;
+      if( succ != nullptr && *succ == *uuid) {
+        delete succ;
+        successors[i] = nullptr;
+      }
     }
     for(int i=0; i < BITS; i++) {
       auto pred = predecessors[i];
-      if( pred != nullptr && *pred == *uuid) predecessors[i] = nullptr;
+      if( pred != nullptr && *pred == *uuid) {
+        delete pred;
+        predecessors[i] = nullptr;
+      }
     }
   }
 
-  std::shared_ptr<uuid_t> successor() {
+  uuid_t* successor() {
     for( auto succ : successors ) {
       if( succ != nullptr ) return succ;
     }
     for( auto pred : predecessors ) {
       if( pred != nullptr ) return pred;
     }
-    //return nullptr;
-    return std::shared_ptr<uuid_t>(new uuid_t(context->uuid()));
+    return &(context->uuid());
   }
 
-  std::shared_ptr<uuid_t> predecessor() {
+  uuid_t* predecessor() {
     return predecessors[0];
   }
 

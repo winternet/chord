@@ -25,12 +25,11 @@ struct Context {
   size_t stabilize_period_ms  { 10000 };
   size_t check_period_ms      { 10000 };
 
-  std::shared_ptr<Router> router { nullptr };
-
-  uuid_t& uuid() {
-    return _uuid;
-  }
+  uuid_t& uuid() { return _uuid; }
 
   Context set_uuid(const uuid_t& uuid);
+  Context set_router(Router* router);
 
+  private:
+  Router* router { nullptr };
 };

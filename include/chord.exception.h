@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include "chord.grpc.pb.h"
 
 using grpc::Status;
 

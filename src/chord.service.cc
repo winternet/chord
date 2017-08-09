@@ -152,7 +152,7 @@ Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* r
     SERVICE_LOG(trace,stabilize) << "from " << req->header().src().uuid()
       << "@" << req->header().src().endpoint();
 
-    shared_ptr<uuid_t> predecessor = router.predecessor();
+    auto predecessor = router.predecessor();
     if(predecessor != nullptr) {
       SERVICE_LOG(debug,stabilize) << "returning predecessor " << *predecessor;
       endpoint_t endpoint = router.get(predecessor);
@@ -171,7 +171,7 @@ Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* r
     SERVICE_LOG(trace,notify) << "from " << req->header().src().uuid()
       << "@" << req->header().src().endpoint();
 
-    shared_ptr<uuid_t> predecessor = router.predecessor();
+    auto predecessor = router.predecessor();
 
     //--- validate
     if(!req->has_header() && !req->header().has_src()) {
@@ -201,6 +201,8 @@ Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* r
   Status ChordServiceImpl::check(ServerContext* serverContext, const CheckRequest* req, CheckResponse* res) {
     SERVICE_LOG(trace,check) << "from " << req->header().src().uuid()
       << "@" << req->header().src().endpoint();
+    res->mutable_header()->CopyFrom(make_header());
+    res->set_id(req->id());
     return Status::OK;
   }
 
