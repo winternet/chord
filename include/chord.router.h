@@ -68,14 +68,14 @@ struct Router {
   }
 
   void set_successor(const size_t index, const uuid_t uuid, const endpoint_t endpoint) {
-    ROUTER_LOG(info) << "set_successor[" << index << "][" << to_string(uuid) << "] = " << endpoint;
+    ROUTER_LOG(info) << "set_successor[" << index << "][" << uuid << "] = " << endpoint;
     routes[uuid] = endpoint;
     delete successors[index];
     successors[index] = new uuid_t(uuid);
   }
 
   void set_predecessor(const size_t index, const uuid_t uuid, const endpoint_t endpoint) {
-    ROUTER_LOG(info) << "set_predecessor[" << index << "][" << to_string(uuid) << "] = " << endpoint;
+    ROUTER_LOG(info) << "set_predecessor[" << index << "][" << uuid << "] = " << endpoint;
     routes[uuid] = endpoint;
     delete predecessors[index];
     predecessors[index] = new uuid_t(uuid);
@@ -165,10 +165,10 @@ struct Router {
   friend std::ostream& operator<<(std::ostream& os, Router& router) {
     for( int i=0; i < 8; i++ ) {
       os << "\n::router [successor  ][" << i << "] "
-         << (router.successors[i] != nullptr ? to_string(*router.successors[i]) + "@" + router.get_successor(i) : "<unknown>");
+         << (router.successors[i] != nullptr ? *router.successors[i] + "@" + router.get_successor(i) : "<unknown>");
     }
-    //os  << "\n::router [successor  ] " << (router.successor() != nullptr ? to_string(*router.successor()) : "<unknown>") 
-    os << "\n::router [predecessor] " << (router.predecessor() != nullptr ? to_string(*router.predecessor()) : "<unknown>");
+    //os  << "\n::router [successor  ] " << (router.successor() != nullptr ? *router.successor() : "<unknown>") 
+    os << "\n::router [predecessor] " << (router.predecessor() != nullptr ? *router.predecessor() : "<unknown>");
     return os;
   }
 

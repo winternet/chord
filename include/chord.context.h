@@ -14,7 +14,7 @@ struct Context {
   Context();
 
   //--- uuid
-  uuid_t _uuid {generate_random()};
+  uuid_t _uuid {chord::uuid::random()};
   //--- program options
   bool bootstrap { false };
   //--- promoted endpoint

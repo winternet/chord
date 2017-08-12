@@ -1,6 +1,8 @@
 #pragma once
 #include <chrono>
 #include <random>
+#include <string>
+#include <sstream>
 
 #include <boost/multiprecision/cpp_int.hpp>
 
@@ -15,18 +17,20 @@ namespace chord {
       uuid(const std::string& str) {val = value_t{str};}
       template<typename T>
       uuid(const T& v) { val = value_t{v}; }
-      template<typename T>
-      uuid(const T beg, const T end) {
+      template<typename Iterator>
+      uuid(const Iterator beg, const Iterator end) {
         boost::multiprecision::import_bits(val, (unsigned int*)beg, (unsigned int*)end);
       }
 
       value_t& value() { return val; }
 
-      static const int UUID_MAX = 255;
+      static const int UUID_BITS_MAX = 256;
 
-      //todo(christoph) implement tests
+      /**
+      * generate random 256-bit number
+      */
       static uuid random() {
-        auto array = std::array<char, UUID_MAX>{};
+        auto array = std::array<char, UUID_BITS_MAX/8/sizeof(char)>{};
         const int seed = std::chrono::system_clock::now().time_since_epoch().count();
 
         std::default_random_engine generator(seed);
@@ -37,12 +41,27 @@ namespace chord {
         return uuid{ std::begin(array), std::end(array) };
       }
 
+      /**
+      * implicit string conversion operator
+      */
+      operator std::string() const {
+        std::stringstream ss;
+        ss << val;
+        return ss.str();
+      }
+
       uuid operator+=(const uuid& other) const { return uuid{val+other.val}; }
+      uuid operator-=(const uuid& other) const { return uuid{val-other.val}; }
+      uuid operator*=(const uuid& other) const { return uuid{val*other.val}; }
+      uuid operator/=(const uuid& other) const { return uuid{val/other.val}; }
       bool operator==(const uuid& other) const { return val == other.val; }
+      bool operator!=(const uuid& other) const { return val != other.val; }
       bool operator>=(const uuid& other) const { return val >= other.val; }
       bool operator<=(const uuid& other) const { return val <= other.val; }
       bool operator< (const uuid& other) const { return val <  other.val; }
       bool operator> (const uuid& other) const { return val >  other.val; }
+      uuid operator+ (const uuid& other) const { return uuid{val+other.val}; }
+      uuid operator- (const uuid& other) const { return uuid{val-other.val}; }
 
       friend std::istream& operator>>(std::istream& is, uuid& hash) {
         is >> hash.val;
@@ -56,4 +75,4 @@ namespace chord {
 };
 
 typedef chord::uuid uuid_t;
-std::string to_string(const uuid_t& uuid);
+//std::string to_string(const uuid_t& uuid);

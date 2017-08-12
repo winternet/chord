@@ -19,7 +19,7 @@ Router make_router(Context& context) {
 
 RouterEntry make_entry(const uuid_t& id, const endpoint_t& addr) {
   RouterEntry entry;
-  entry.set_uuid(to_string(id));
+  entry.set_uuid(id);
   entry.set_endpoint(addr);
   return entry;
 }
@@ -59,7 +59,7 @@ TEST(ServiceTest, successor_single_node) {
   SuccessorResponse res;
 
   req.mutable_header()->CopyFrom(make_header(0, "0.0.0.0:50050"));
-  req.set_id(to_string(10));
+  req.set_id("10");
 
   service.successor(&serverContext, &req, &res);
 
@@ -87,7 +87,7 @@ TEST(ServiceTest, successor_two_nodes) {
   SuccessorResponse res;
 
   req.mutable_header()->CopyFrom(make_header(0, "0.0.0.0:50050"));
-  req.set_id(to_string(2));
+  req.set_id("2");
 
   service.successor(&serverContext, &req, &res);
 
@@ -115,11 +115,11 @@ TEST(ServiceTest, successor_two_nodes_mod) {
   SuccessorResponse res;
 
   req.mutable_header()->CopyFrom(make_header(5, "0.0.0.0:50055"));
-  req.set_id(to_string(10));
+  req.set_id("10");
 
   service.successor(&serverContext, &req, &res);
 
-  ASSERT_EQ(uuid_t(res.successor().uuid()), 0);
+  ASSERT_EQ(res.successor().uuid(), "0");
   ASSERT_EQ(res.successor().endpoint(), "0.0.0.0:50050");
 }
 
@@ -222,14 +222,14 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   SuccessorResponse res;
 
   req.mutable_header()->CopyFrom(make_header(5, "0.0.0.0:50055"));
-  req.set_id(to_string(2));
+  req.set_id("2");
 
   //--- stub's capture parameter
   SuccessorRequest captured_request;
   //--- stub's mocked return parameter
   SuccessorResponse mocked_response;
   RouterEntry* entry = mocked_response.mutable_successor();
-  entry->set_uuid(to_string(5));
+  entry->set_uuid(uuid_t{5});
   entry->set_endpoint("0.0.0.0:50055");
 
   EXPECT_CALL(*stub, successor(_,_,_))
@@ -242,7 +242,7 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   service.successor(&serverContext, &req, &res);
 
   //--- stub has been called with wanted id 2
-  ASSERT_EQ(uuid_t(captured_request.id()), 2);
+  ASSERT_EQ(captured_request.id(), "2");
 
   //--- service returns the mocked response
   ASSERT_EQ(res.has_successor(), true);

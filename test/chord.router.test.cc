@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <string>
 
 #include "chord.router.h"
 
@@ -8,6 +9,8 @@
 
 #define EXPECT_NOT_NULL(pointer) EXPECT_TRUE(pointer != nullptr)
 #define EXPECT_NULL(pointer) EXPECT_TRUE(pointer == nullptr)
+
+using namespace std;
 
 TEST(RouterTest, initialize) {
   Context context;

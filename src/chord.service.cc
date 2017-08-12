@@ -84,7 +84,7 @@ Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* r
 
     Header header;
     RouterEntry src;
-    src.set_uuid(to_string(context.uuid()));
+    src.set_uuid(context.uuid());
     src.set_endpoint(context.bind_addr);
     header.mutable_src()->CopyFrom(src);
     return header;
@@ -96,7 +96,7 @@ Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* r
     SuccessorResponse res;
 
     req.mutable_header()->CopyFrom(make_header());
-    req.set_id(to_string(uuid));
+    req.set_id(uuid);
 
     Status status = successor(&serverContext, &req, &res);
 
@@ -116,10 +116,10 @@ Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* r
     uuid_t successor( *router.successor() );
 
     if( id > self and (id <= successor or (successor < self and id > successor)) ) {
-      SERVICE_LOG(trace,successor) << "of " << id << " is " << to_string(successor);
+      SERVICE_LOG(trace,successor) << "of " << id << " is " << successor;
       //--- router entry
       RouterEntry entry;
-      entry.set_uuid(to_string(successor));
+      entry.set_uuid(successor);
       entry.set_endpoint(router.get(successor));
 
       res->mutable_successor()->CopyFrom(entry);
@@ -129,7 +129,7 @@ Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* r
       SERVICE_LOG(trace, successor) << "CLOSEST PRECEDING NODE: " << next;
       if( next == self ) {
         RouterEntry entry;
-        entry.set_uuid(to_string(self));
+        entry.set_uuid(self);
         entry.set_endpoint(router.get(self));
 
         res->mutable_successor()->CopyFrom(entry);
@@ -158,7 +158,7 @@ Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* r
       endpoint_t endpoint = router.get(predecessor);
 
       RouterEntry entry;
-      entry.set_uuid(to_string(*predecessor));
+      entry.set_uuid(*predecessor);
       entry.set_endpoint(endpoint);
 
       res->mutable_predecessor()->CopyFrom(entry);
@@ -214,18 +214,18 @@ Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* r
       fix += uuid_t(pow(2., (double)index-1));
     }
 
-    SERVICE_LOG(trace, fix_fingers) << "fixing finger for " << to_string(fix) << ".";
+    SERVICE_LOG(trace, fix_fingers) << "fixing finger for " << fix << ".";
 
     ServerContext serverContext;
     SuccessorRequest req;
     SuccessorResponse res;
 
     req.mutable_header()->CopyFrom(make_header());
-    req.set_id(to_string(fix));
+    req.set_id(fix);
 
     Status status = successor(&serverContext, &req, &res);
     if( status.ok() ) {
-      SERVICE_LOG(trace, fix_fingers) << "fixing finger for " << to_string(fix) << ". received successor " << res.successor().uuid() 
+      SERVICE_LOG(trace, fix_fingers) << "fixing finger for " << fix << ". received successor " << res.successor().uuid() 
         << "@" << res.successor().endpoint();
       if( uuid_t(res.successor().uuid()) == context.uuid() ) return;
 

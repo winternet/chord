@@ -41,7 +41,7 @@ Header ChordClient::make_header() {
 
   Header header;
   RouterEntry src;
-  src.set_uuid(to_string(context.uuid()));
+  src.set_uuid(context.uuid());
   src.set_endpoint(context.bind_addr);
   header.mutable_src()->CopyFrom(src);
   return header;

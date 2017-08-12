@@ -38,5 +38,15 @@ TEST(chord_uuid, raw_pointer_constructor) {
       bits.set(i, false);
 
   auto uuid_str = uuid_t{"38597363079105398474523661669562635951089994888546854679819194669304376546645"};
-  auto uuid_ptr = uuid_t{&bits, &bits+8};
+  auto uuid_ptr = uuid_t{&bits, &bits+1};
+
+  ASSERT_EQ(uuid_str, uuid_ptr);
+}
+
+TEST(chord_uuid, random) {
+  for(int i=0; i<100; i++) {
+    auto a = uuid::random();
+    auto b = uuid::random();
+    ASSERT_NE(a, b);
+  }
 }
