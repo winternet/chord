@@ -50,18 +50,20 @@ namespace chord {
         return ss.str();
       }
 
-      uuid operator+=(const uuid& other) const { return uuid{val+other.val}; }
-      uuid operator-=(const uuid& other) const { return uuid{val-other.val}; }
-      uuid operator*=(const uuid& other) const { return uuid{val*other.val}; }
-      uuid operator/=(const uuid& other) const { return uuid{val/other.val}; }
-      bool operator==(const uuid& other) const { return val == other.val; }
-      bool operator!=(const uuid& other) const { return val != other.val; }
-      bool operator>=(const uuid& other) const { return val >= other.val; }
-      bool operator<=(const uuid& other) const { return val <= other.val; }
-      bool operator< (const uuid& other) const { return val <  other.val; }
-      bool operator> (const uuid& other) const { return val >  other.val; }
-      uuid operator+ (const uuid& other) const { return uuid{val+other.val}; }
-      uuid operator- (const uuid& other) const { return uuid{val-other.val}; }
+      uuid& operator+=(const uuid& other) { val += other.val; return *this; }
+      uuid& operator-=(const uuid& other) { val -= other.val; return *this; }
+      uuid& operator*=(const uuid& other) { val *= other.val; return *this; }
+      uuid& operator/=(const uuid& other) { val /= other.val; return *this; }
+      bool  operator==(const uuid& other) const { return val == other.val; }
+      bool  operator!=(const uuid& other) const { return val != other.val; }
+      bool  operator>=(const uuid& other) const { return val >= other.val; }
+      bool  operator<=(const uuid& other) const { return val <= other.val; }
+      bool  operator< (const uuid& other) const { return val <  other.val; }
+      bool  operator> (const uuid& other) const { return val >  other.val; }
+      uuid  operator+ (const uuid& other) const { return uuid{val+other.val}; }
+      uuid  operator- (const uuid& other) const { return uuid{val-other.val}; }
+      uuid  operator* (const uuid& other) const { return uuid{val*other.val}; }
+      uuid  operator/ (const uuid& other) const { return uuid{val/other.val}; }
 
       friend std::istream& operator>>(std::istream& is, uuid& hash) {
         is >> hash.val;
@@ -75,4 +77,3 @@ namespace chord {
 };
 
 typedef chord::uuid uuid_t;
-//std::string to_string(const uuid_t& uuid);

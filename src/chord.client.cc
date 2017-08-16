@@ -12,6 +12,7 @@
 #include "chord.router.h"
 #include "chord.context.h"
 #include "chord.grpc.pb.h"
+#include "chord.exception.h"
 
 
 #define log(level) LOG(level) << "[client] "
@@ -47,7 +48,7 @@ Header ChordClient::make_header() {
   return header;
 }
 
-bool ChordClient::join(const endpoint_t& addr) {
+void ChordClient::join(const endpoint_t& addr) {
   CLIENT_LOG(debug, join) << "joining " << addr;
 
   ClientContext clientContext;
@@ -58,16 +59,16 @@ bool ChordClient::join(const endpoint_t& addr) {
   JoinResponse res;
   Status status = make_stub(addr)->join(&clientContext, req, &res);
 
-  if(!res.has_successor()) {
-    CLIENT_LOG(fatal,join) << "failed " << addr;
-    return false;
+  if(!status.ok() || !res.has_successor()) {
+    throw chord::exception("Failed to join " + addr);
   }
 
-  CLIENT_LOG(trace,join) << "successful, received successor " << res.successor().uuid() << "@" << res.successor().endpoint();
-  router.set_successor(0, uuid_t(res.successor().uuid()), res.successor().endpoint());
+  auto entry = res.successor();
+  auto id = entry.uuid();
+  auto endpoint = entry.endpoint();
 
-  return true;
-
+  CLIENT_LOG(trace, join) << "successful, received successor " << id << "@" << endpoint;
+  router.set_successor(0, uuid_t{id}, endpoint);
 }
 
 void ChordClient::stabilize() {

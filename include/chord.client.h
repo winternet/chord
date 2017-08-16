@@ -41,12 +41,13 @@ private:
    * return new header
    */
   Header make_header();
+  SuccessorRequest make_request();
 
 public:
   ChordClient(Context& context, Router& router);
   ChordClient(Context& context, Router& router, StubFactory factory);
 
-  bool join(const endpoint_t& addr);
+  void join(const endpoint_t& addr);
 
   void stabilize();
   void notify();

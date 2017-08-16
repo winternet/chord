@@ -28,8 +28,6 @@ struct Router {
   {
     std::fill(std::begin(predecessors), std::end(predecessors), nullptr);
     std::fill(std::begin(successors), std::end(successors), nullptr);
-    //for(auto i=0; i < BITS; i++) successors[i] = nullptr;
-    //for(auto i=0; i < BITS; i++) predecessors[i] = nullptr;
     routes[context->uuid()] = context->bind_addr;
     context->set_router(this);
   }
@@ -39,10 +37,8 @@ struct Router {
   }
 
   void cleanup() {
-    for(auto pred:predecessors)
-      if(pred != nullptr) delete pred;
-    for(auto succ:successors)
-      if(succ != nullptr) delete succ;
+    for(auto pred:predecessors) delete pred;
+    for(auto succ:successors)   delete succ;
   }
 
   void reset() {
@@ -165,10 +161,9 @@ struct Router {
   friend std::ostream& operator<<(std::ostream& os, Router& router) {
     for( int i=0; i < 8; i++ ) {
       os << "\n::router [successor  ][" << i << "] "
-         << (router.successors[i] != nullptr ? *router.successors[i] + "@" + router.get_successor(i) : "<unknown>");
+        << (router.successors[i] == nullptr ?  (std::string)"<unknown>" : (std::string)*router.successors[i]);
     }
-    //os  << "\n::router [successor  ] " << (router.successor() != nullptr ? *router.successor() : "<unknown>") 
-    os << "\n::router [predecessor] " << (router.predecessor() != nullptr ? *router.predecessor() : "<unknown>");
+    os << "\n::router [predecessor] " << (router.predecessor() != nullptr ? (std::string)*router.predecessor() : (std::string)"<unknown>");
     return os;
   }
 

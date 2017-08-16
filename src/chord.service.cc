@@ -49,31 +49,24 @@ ChordServiceImpl::ChordServiceImpl(Context& context, Router& router, ClientFacto
 {}
 
 Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* req, JoinResponse* res) {
-  SERVICE_LOG(trace, join) << "from " << req->header().src().uuid()
-    << "@" << req->header().src().endpoint();
+  auto id = req->header().src().uuid();
+  auto endpoint = req->header().src().endpoint();
+
+  SERVICE_LOG(trace, join) << "from " << id << "@" << endpoint;
   /**
    * find successor
    */
-  Header header;
-  RouterEntry src;
-  header.mutable_src()->CopyFrom(req->header().src());
+  auto src = uuid_t{id};
+  auto entry = successor(src);
 
-  SuccessorRequest succReq;
-  succReq.mutable_header()->CopyFrom(header);
-  succReq.set_id(req->header().src().uuid());
-  SuccessorResponse succRes;
-
-  successor(serverContext, &succReq, &succRes);
-
-  res->mutable_successor()->CopyFrom(succRes.successor());
+  res->mutable_successor()->CopyFrom(entry);
 
   /**
    * initialize the ring
    */
-  if( router.successor() != nullptr ) { //and
-    //*router.successor() == context.uuid() ) {
+  if( router.successors[0] == nullptr) {
     SERVICE_LOG(info,join) << "first node joining, setting the node as successor";
-    router.set_successor(0, uuid_t(req->header().src().uuid()), req->header().src().endpoint());
+    router.set_successor(0, src, endpoint);
   }
 
   return Status::OK;
@@ -114,6 +107,8 @@ Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* r
     uuid_t id( req->id() );
     uuid_t self( context.uuid() );
     uuid_t successor( *router.successor() );
+    
+    SERVICE_LOG(trace, successor) << "id: " << id << ", self: " << self << ", successor " << successor;
 
     if( id > self and (id <= successor or (successor < self and id > successor)) ) {
       SERVICE_LOG(trace,successor) << "of " << id << " is " << successor;
@@ -209,28 +204,20 @@ Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* r
   void ChordServiceImpl::fix_fingers(size_t index) {
     uuid_t fix = context.uuid() ;
     if( router.successors[0] != nullptr ) {
-      SERVICE_LOG(trace, fix_fingers) << " router successor is not null, increasing uuid "
-        << "successor: " << *router.successor();
       fix += uuid_t(pow(2., (double)index-1));
+      SERVICE_LOG(trace, fix_fingers) << " router successor is not null, increasing uuid ";
     }
 
     SERVICE_LOG(trace, fix_fingers) << "fixing finger for " << fix << ".";
 
-    ServerContext serverContext;
-    SuccessorRequest req;
-    SuccessorResponse res;
+    try {
+      auto entry = successor(fix);
+      SERVICE_LOG(trace, fix_fingers) << "fixing finger for " << fix << ". received successor " << entry.uuid() 
+        << "@" << entry.endpoint();
+      //if( uuid_t(router_entry.uuid()) == context.uuid() ) return;
 
-    req.mutable_header()->CopyFrom(make_header());
-    req.set_id(fix);
-
-    Status status = successor(&serverContext, &req, &res);
-    if( status.ok() ) {
-      SERVICE_LOG(trace, fix_fingers) << "fixing finger for " << fix << ". received successor " << res.successor().uuid() 
-        << "@" << res.successor().endpoint();
-      if( uuid_t(res.successor().uuid()) == context.uuid() ) return;
-
-      router.set_successor(index, uuid_t(res.successor().uuid()), res.successor().endpoint());
-    } else {
+      router.set_successor(index, uuid_t{entry.uuid()}, entry.endpoint());
+    } catch(const chord::exception& e) {
       SERVICE_LOG(warning, fix_fingers) << "failed to fix fingers for " << fix;
     }
   }

@@ -28,6 +28,12 @@ TEST(RouterTest, initialize) {
   }
 }
 
+TEST(RouterTest, dump) {
+  auto context = Context{};
+  auto router = Router{&context};
+  std::cout << router;
+}
+
 TEST(RouterTest, closest_preceding_node) {
   Context context;
   context.set_uuid(0);

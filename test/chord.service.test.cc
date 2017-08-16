@@ -59,11 +59,11 @@ TEST(ServiceTest, successor_single_node) {
   SuccessorResponse res;
 
   req.mutable_header()->CopyFrom(make_header(0, "0.0.0.0:50050"));
-  req.set_id("10");
+  req.set_id(uuid_t{"10"});
 
   service.successor(&serverContext, &req, &res);
 
-  ASSERT_EQ(uuid_t(res.successor().uuid()), 0);
+  ASSERT_EQ(uuid_t{res.successor().uuid()}, uuid_t{0});
   ASSERT_EQ(res.successor().endpoint(), "0.0.0.0:50050");
 }
 

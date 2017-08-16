@@ -67,8 +67,10 @@ void ChordPeer::start_scheduler() {
 
   //--- fix fingers
   scheduler->schedule(chrono::milliseconds(context->check_period_ms), [this] {
+      //TODO(christoph) use uuid::UUID_BITS_MAX
       next = (next % 8) + 1;
       //next = 0;
+      PEER_LOG(trace) << "fix fingers with next index next: " << next;
       fix_fingers(next);
       PEER_LOG(trace) << "[dump]" << *router;
       });
@@ -106,14 +108,6 @@ void ChordPeer::check_predecessor() {
  * fix finger table
  */
 void ChordPeer::fix_fingers(size_t index) {
-  //if( router->successor() == nullptr ) {
-  //  PEER_LOG(trace) << "fixing fingers for direct successor.";
-  //  next = 1;
-  //}
-  //size_t next = pow(2., (double)1-1);
-  //uuid_t uuid = context->uuid() + next;
-  //PEER_LOG(trace) << "fixing finger for " << to_string(uuid) << ".";
-  //if( *router->successor() != context->uuid() )
   service->fix_fingers(index);
 }
 
@@ -123,8 +117,4 @@ void ChordPeer::fix_fingers(size_t index) {
 void ChordPeer::create() {
   PEER_LOG(trace) << "bootstrapping new chord ring.";
   router->reset();
-  //router->set_successor(
-  //    0,
-  //    context->uuid(),
-  //    context->bind_addr);
 }

@@ -50,3 +50,99 @@ TEST(chord_uuid, random) {
     ASSERT_NE(a, b);
   }
 }
+
+TEST(chord_uuid, operator_plus_equals) {
+  auto id = uuid_t{5};
+  ASSERT_EQ(id, 5);
+  ASSERT_EQ(id+=5, 10);
+  ASSERT_EQ(id, 10);
+}
+
+TEST(chord_uuid, operator_minus_equals) {
+  auto id = uuid_t{5};
+  ASSERT_EQ(id, 5);
+  ASSERT_EQ(id-=5, 0);
+  ASSERT_EQ(id, 0);
+}
+
+TEST(chord_uuid, operator_mul_equals) {
+  auto id = uuid_t{5};
+  ASSERT_EQ(id, 5);
+  ASSERT_EQ(id*=2, 10);
+  ASSERT_EQ(id, 10);
+}
+
+TEST(chord_uuid, operator_div_equals) {
+  auto id = uuid_t{15};
+  ASSERT_EQ(id, 15);
+  ASSERT_EQ(id/=3, 5);
+  ASSERT_EQ(id, 5);
+}
+
+TEST(chord_uuid, operator_minus) {
+  auto id = uuid_t{15};
+  ASSERT_EQ(id, 15);
+  ASSERT_EQ(id-5, 10);
+  ASSERT_EQ(id, 15);
+}
+
+TEST(chord_uuid, operator_plus) {
+  auto id = uuid_t{15};
+  ASSERT_EQ(id, 15);
+  ASSERT_EQ(id+5, 20);
+  ASSERT_EQ(id, 15);
+}
+
+TEST(chord_uuid, operator_mul) {
+  auto id = uuid_t{5};
+  ASSERT_EQ(id, 5);
+  ASSERT_EQ(id*3, 15);
+  ASSERT_EQ(id, 5);
+}
+
+TEST(chord_uuid, operator_div) {
+  auto id = uuid_t{15};
+  ASSERT_EQ(id, 15);
+  ASSERT_EQ(id/5, 3);
+  ASSERT_EQ(id, 15);
+}
+
+TEST(chord_uuid, operator_equals) {
+  ASSERT_TRUE(uuid_t{10} == uuid_t{10});
+  ASSERT_FALSE(uuid_t{0} == uuid_t{10});
+}
+
+TEST(chord_uuid, operator_not_equals) {
+  ASSERT_FALSE(uuid_t{10} != uuid_t{10});
+  ASSERT_TRUE(uuid_t{0} != uuid_t{10});
+}
+
+TEST(chord_uuid, operator_geq) {
+  ASSERT_TRUE(uuid_t{10} >= uuid_t{10});
+  ASSERT_TRUE(uuid_t{20} >= uuid_t{10});
+  ASSERT_FALSE(uuid_t{0} >= uuid_t{10});
+}
+
+TEST(chord_uuid, operator_leq) {
+  ASSERT_TRUE(uuid_t{10} <= uuid_t{10});
+  ASSERT_TRUE(uuid_t{0} <= uuid_t{10});
+  ASSERT_FALSE(uuid_t{20} <= uuid_t{10});
+}
+
+TEST(chord_uuid, operator_less) {
+  ASSERT_FALSE(uuid_t{10} < uuid_t{10});
+  ASSERT_FALSE(uuid_t{20} < uuid_t{10});
+  ASSERT_TRUE(uuid_t{0} < uuid_t{10});
+}
+
+TEST(chord_uuid, operator_greater) {
+  ASSERT_FALSE(uuid_t{10} > uuid_t{10});
+  ASSERT_FALSE(uuid_t{0} > uuid_t{10});
+  ASSERT_TRUE(uuid_t{20} > uuid_t{10});
+}
+
+TEST(chord_uuid, operator_string_cast) {
+  auto id = uuid_t{15};
+  auto str= string{id};
+  ASSERT_EQ(str, "15");
+}
