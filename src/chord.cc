@@ -23,6 +23,7 @@ void parse_program_options(int ac, char* av[], Context& context) {
     ("help,h", "produce help message")
     ("join,j", po::value<endpoint_t>(&(context.join_addr)), "join to an existing address.")
     ("bootstrap,b", "bootstrap peer to create a new chord ring.")
+    ("interactive,i", "start interactive mode.")
     ("uuid,u,id", po::value<uuid_t>(&(context.uuid())), "client uuid.")
     ("bind", po::value<endpoint_t>(&(context.bind_addr)), "bind address that is promoted to clients.")
     ;
@@ -54,6 +55,12 @@ void parse_program_options(int ac, char* av[], Context& context) {
   if(vm.count("bootstrap")) {
     LOG(trace) << "[option-bootstrap] " << "true";
     context.bootstrap = true;
+  }
+
+  //--- interactive
+  if(vm.count("interactive")) {
+    LOG(trace) << "[option-interactive] " << "true";
+    context.interactive = true;
   }
 
   //--- client-id

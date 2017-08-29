@@ -166,6 +166,10 @@ public:
 			const chord::CheckRequest&,
 			chord::CheckResponse*));
 
+  MOCK_METHOD2(putRaw, grpc::ClientWriterInterface<chord::PutRequest>*(grpc::ClientContext* context, chord::PutResponse* response));
+
+  MOCK_METHOD2(getRaw, grpc::ClientReaderInterface<chord::GetResponse>*(grpc::ClientContext* context, const chord::GetRequest& request));
+
 	MOCK_METHOD3(AsyncsuccessorRaw, grpc::ClientAsyncResponseReaderInterface<chord::SuccessorResponse>*(
 			grpc::ClientContext*, 
 			const chord::SuccessorRequest&,
@@ -191,6 +195,17 @@ public:
 			const chord::CheckRequest&,
 			grpc::CompletionQueue*));
 
+  MOCK_METHOD4(AsyncputRaw, grpc::ClientAsyncWriterInterface<chord::PutRequest>*(
+        grpc::ClientContext* context, 
+        chord::PutResponse* response,
+        grpc::CompletionQueue* cq,
+        void* tag));
+
+  MOCK_METHOD4(AsyncgetRaw, grpc::ClientAsyncReaderInterface<chord::GetResponse>*(
+        grpc::ClientContext* context,
+        const ::chord::GetRequest& request,
+        grpc::CompletionQueue* cq,
+        void* tag));
 };
 
 /**

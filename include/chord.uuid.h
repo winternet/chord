@@ -45,9 +45,27 @@ namespace chord {
       * implicit string conversion operator
       */
       operator std::string() const {
+        return value();
+      }
+
+      /**
+       * value as string
+       */
+      std::string value() const {
         std::stringstream ss;
         ss << val;
         return ss.str();
+      }
+
+      /**
+       * value as hex
+       */
+      std::string hex() const {
+        std::stringstream ss;
+        ss << std::hex << val;
+        auto str = ss.str();
+        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+        return str;
       }
 
       uuid& operator+=(const uuid& other) { val += other.val; return *this; }
@@ -70,7 +88,7 @@ namespace chord {
         return is;
       }
       friend std::ostream& operator<<(std::ostream& os, const uuid& hash) {
-        os << hash.val;
+        os << hash.hex();
         return os;
       }
   };

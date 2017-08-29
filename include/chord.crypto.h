@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <sstream>
 #include <openssl/sha.h>
 #include <boost/multiprecision/cpp_int.hpp>
 
@@ -36,6 +37,11 @@ namespace chord {
     }
 
     inline uuid_t sha256(const std::string& str) {
+      return sha256(str.data(), str.length());
+    }
+
+    inline uuid_t sha256(const std::istream& istream) {
+      std::string str = static_cast<std::stringstream const&>(std::stringstream() << istream.rdbuf()).str();
       return sha256(str.data(), str.length());
     }
 

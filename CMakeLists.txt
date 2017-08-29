@@ -59,6 +59,7 @@ message(STATUS "Found generated source files:\n--   ${SOURCES_GEN_OUT}")
 #
 file(GLOB SOURCES src/*.cc)
 include_directories(include)
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/gen")
 
 #
 # create shared library chord++

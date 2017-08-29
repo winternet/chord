@@ -1,18 +1,9 @@
 #pragma once
 
-//#include <stdexcept>
-//
 #include "chord.i.scheduler.h"
-//#include "chord.scheduler.h"
-//#include "chord.router.h"
-//#include "chord.client.h"
-//#include "chord.service.h"
-//
-//#include <grpc++/server.h>
 #include <grpc++/server_builder.h>
-//#include <grpc++/server_context.h>
 //
-//#include "chord.context.h"
+#include "chord.queue.h"
 #include "chord.uuid.h"
 
 
@@ -27,6 +18,7 @@ using grpc::ServerBuilder;
 class ChordPeer {
 private:
   size_t next { 0 };
+  chord::queue<std::string> commands;
 
   std::unique_ptr<AbstractScheduler> scheduler { nullptr };
   std::shared_ptr<Context> context      { nullptr };
@@ -38,6 +30,9 @@ private:
   void start_server();
 
 public:
+  ChordPeer(const ChordPeer&) = delete;             // disable copying
+  ChordPeer& operator=(const ChordPeer&) = delete;  // disable assignment
+
   ChordPeer(std::shared_ptr<Context> context);
 
   virtual ~ChordPeer();
@@ -73,5 +68,13 @@ public:
    * fix finger table
    */
   void fix_fingers(size_t index);
+
+  //-------------------------------------
+  //---------BUSINESS LOGIC--------------
+  //-------------------------------------
+  /**
+   * put
+   */
+  void put(std::istream& istream);
 
 };

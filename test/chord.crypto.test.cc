@@ -2,6 +2,7 @@
 #include <gmock/gmock.h>
 
 #include <iomanip>
+#include <fstream>
 
 #include "chord.crypto.h"
 #include "chord.uuid.h"
@@ -36,4 +37,26 @@ TEST(CryptoTest, initialize) {
   
   cout << "\nUUID: " << uid;
   cout << "\nUUID-HASH: " << std::hex << uid;
+}
+
+TEST(CryptoTest, hash_file) {
+
+  {
+  std::fstream file;
+  file.open("test.txt", std::fstream::out | std::fstream::trunc | std::fstream::binary);
+  file << "SOMECONTENT";
+  file.flush();
+  file.close();
+  }
+
+  std::fstream file;
+  file.open("test.txt", std::fstream::in | std::fstream::app | std::fstream::binary);
+  uuid_t hash = crypto::sha256(file);
+  file.close();
+  
+  cout << "\n--UUID: " << hash;
+  cout << "\n--UUID-HASH: " << std::nouppercase << std::hex << hash;
+
+  ASSERT_EQ(hash.hex(), "accf25d1f41665e077c819907458c7363f30083c223cd3718ec851249ab647f9");
+
 }

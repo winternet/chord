@@ -56,6 +56,8 @@ public:
 
   void fix_fingers(size_t index);
 
+  Status put(std::istream& istream);
+
 private:
   Context& context;
   Router& router;

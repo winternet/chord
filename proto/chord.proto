@@ -14,6 +14,9 @@ service Chord {
   rpc stabilize (StabilizeRequest)  returns (StabilizeResponse) {}
   rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
   rpc check     (CheckRequest)      returns (CheckResponse) {}
+  //--- file 
+  rpc put       (stream PutRequest) returns (PutResponse) {}
+  rpc get       (GetRequest)        returns (stream GetResponse) {}
 }
 
 /**
@@ -85,4 +88,37 @@ message CheckRequest {
 message CheckResponse {
   Header header = 1;
   string id = 2;
+}
+
+/**
+ * PUT
+ */
+message PutRequest {
+  //Header header = 1;
+  //--- id to put
+  string  id = 2;
+  bytes   data = 3;
+  uint64  offset =4;
+}
+
+message PutResponse { 
+  Header header = 1;
+  //--- id that was put
+  string id = 2;
+}
+
+/**
+ * GET
+ */
+message GetRequest {
+  //Header header = 1;
+  //--- id to get
+  string id = 2;
+
+}
+
+message GetResponse { 
+  //Header  header = 1;
+  bytes   data = 2;
+  uint64  offset = 3;
 }

@@ -1,4 +1,9 @@
 #include <stdexcept>
+#include <thread>
+
+#include <grpc++/server.h>
+#include <grpc++/server_builder.h>
+#include <grpc++/server_context.h>
 
 #include "chord.peer.h"
 
@@ -8,9 +13,6 @@
 #include "chord.client.h"
 #include "chord.service.h"
 
-#include <grpc++/server.h>
-#include <grpc++/server_builder.h>
-#include <grpc++/server_context.h>
 
 #include "chord.context.h"
 
@@ -38,6 +40,22 @@ ChordPeer::ChordPeer(shared_ptr<Context> context)
   , service { new ChordServiceImpl{*context, *router} }
 {
   PEER_LOG(trace) << "peer with client-id " << context->uuid();
+
+  if( context->interactive ) {
+    std::thread([&]{
+        string cmd;
+        cout << "**********FOOOOOOOOOO" << endl;
+        while(true) {
+
+          cout << "\n>>> ";
+          getline(cin, cmd);
+          commands.push(cmd);
+
+          if(cmd == "quit" || cmd == "exit")
+            return;
+        }
+    }).detach();
+  }
 
   if( context->bootstrap ) {
     create();
@@ -117,4 +135,9 @@ void ChordPeer::fix_fingers(size_t index) {
 void ChordPeer::create() {
   PEER_LOG(trace) << "bootstrapping new chord ring.";
   router->reset();
+}
+
+void ChordPeer::put(std::istream& ostream) {
+  PEER_LOG(trace) << "bootstrapping new chord ring.";
+  //service->put(istream);
 }
