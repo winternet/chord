@@ -38,7 +38,7 @@ using chord::Chord;
 
 using namespace std;
 
-ChordServiceImpl::ChordServiceImpl(Context& context, Router& router)
+ChordService::ChordService(Context& context, Router& router)
   : context{ context }
   , router{ router }
 {
@@ -47,13 +47,13 @@ ChordServiceImpl::ChordServiceImpl(Context& context, Router& router)
   };
 }
 
-ChordServiceImpl::ChordServiceImpl(Context& context, Router& router, ClientFactory make_client)
+ChordService::ChordService(Context& context, Router& router, ClientFactory make_client)
   : context{ context }
   , router{ router }
   , make_client{ make_client }
 {}
 
-Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* req, JoinResponse* res) {
+Status ChordService::join(ServerContext* serverContext, const JoinRequest* req, JoinResponse* res) {
   auto id = req->header().src().uuid();
   auto endpoint = req->header().src().endpoint();
 
@@ -77,7 +77,7 @@ Status ChordServiceImpl::join(ServerContext* serverContext, const JoinRequest* r
   return Status::OK;
 }
 
-Header ChordServiceImpl::make_header() {
+Header ChordService::make_header() {
   ClientContext clientContext;
 
   Header header;
@@ -88,7 +88,7 @@ Header ChordServiceImpl::make_header() {
   return header;
 }
 
-RouterEntry ChordServiceImpl::successor(const uuid_t& uuid) {
+RouterEntry ChordService::successor(const uuid_t& uuid) {
   ServerContext serverContext;
   SuccessorRequest req;
   SuccessorResponse res;
@@ -103,7 +103,7 @@ RouterEntry ChordServiceImpl::successor(const uuid_t& uuid) {
   return res.successor();
 }
 
-Status ChordServiceImpl::successor(ServerContext* serverContext, const SuccessorRequest* req, SuccessorResponse* res) {
+Status ChordService::successor(ServerContext* serverContext, const SuccessorRequest* req, SuccessorResponse* res) {
   SERVICE_LOG(trace,successor) << "from " << req->header().src().uuid()
     << "@" << req->header().src().endpoint()
     << " successor of? " << req->id();
@@ -148,7 +148,7 @@ Status ChordServiceImpl::successor(ServerContext* serverContext, const Successor
   return Status::OK;
 }
 
-Status ChordServiceImpl::stabilize(ServerContext* serverContext, const StabilizeRequest* req, StabilizeResponse* res) {
+Status ChordService::stabilize(ServerContext* serverContext, const StabilizeRequest* req, StabilizeResponse* res) {
   SERVICE_LOG(trace,stabilize) << "from " << req->header().src().uuid()
     << "@" << req->header().src().endpoint();
 
@@ -167,7 +167,7 @@ Status ChordServiceImpl::stabilize(ServerContext* serverContext, const Stabilize
   return Status::OK;
 }
 
-Status ChordServiceImpl::notify(ServerContext* serverContext, const NotifyRequest* req, NotifyResponse* res) {
+Status ChordService::notify(ServerContext* serverContext, const NotifyRequest* req, NotifyResponse* res) {
   SERVICE_LOG(trace,notify) << "from " << req->header().src().uuid()
     << "@" << req->header().src().endpoint();
 
@@ -198,7 +198,7 @@ Status ChordServiceImpl::notify(ServerContext* serverContext, const NotifyReques
   return Status::OK;
 }
 
-Status ChordServiceImpl::check(ServerContext* serverContext, const CheckRequest* req, CheckResponse* res) {
+Status ChordService::check(ServerContext* serverContext, const CheckRequest* req, CheckResponse* res) {
   SERVICE_LOG(trace,check) << "from " << req->header().src().uuid()
     << "@" << req->header().src().endpoint();
   res->mutable_header()->CopyFrom(make_header());
@@ -206,7 +206,7 @@ Status ChordServiceImpl::check(ServerContext* serverContext, const CheckRequest*
   return Status::OK;
 }
 
-void ChordServiceImpl::fix_fingers(size_t index) {
+void ChordService::fix_fingers(size_t index) {
   uuid_t fix = context.uuid() ;
   if( router.successors[0] != nullptr ) {
     fix += uuid_t(pow(2., (double)index-1));
@@ -228,8 +228,8 @@ void ChordServiceImpl::fix_fingers(size_t index) {
 }
 
 
-Status ChordServiceImpl::put(std::istream& istream) {
-  //size_t len = 512 * 1024; // 512k
+Status ChordService::put(const std::string& uri, std::istream& istream) {
+  //constexpr size_t len = 512 * 1024; // 512k
   //char buffer[len];
   //size_t tmp = 0;
   //size_t size= 0;
@@ -239,6 +239,8 @@ Status ChordServiceImpl::put(std::istream& istream) {
   //  read = istream.readsome(buffer, len);
   //  if(read == 0) {
   //    break;
+  //  } else {
+  //    cout << *buffer;
   //  }
 
   //  PutRequest req;

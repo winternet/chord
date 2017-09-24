@@ -33,7 +33,7 @@ Header make_header(const uuid_t& id, const endpoint_t& addr) {
 TEST(ServiceTest, join) {
   Context context = Context();
   Router router = Router(&context);
-  ChordServiceImpl service(context, router);
+  ChordService service(context, router);
 
   //TODO assertions and request
 
@@ -52,7 +52,7 @@ TEST(ServiceTest, successor_single_node) {
   Context context = make_context(0);
   Router router = Router(&context);
 
-  ChordServiceImpl service(context, router);
+  ChordService service(context, router);
 
   ServerContext serverContext;
   SuccessorRequest req;
@@ -80,7 +80,7 @@ TEST(ServiceTest, successor_two_nodes) {
   router.set_successor(0, 5, "0.0.0.0:50055");
   router.set_predecessor(0, 5, "0.0.0.0:50055");
 
-  ChordServiceImpl service(context, router);
+  ChordService service(context, router);
 
   ServerContext serverContext;
   SuccessorRequest req;
@@ -108,7 +108,7 @@ TEST(ServiceTest, successor_two_nodes_mod) {
   router.set_successor(0, 0, "0.0.0.0:50050");
   router.set_predecessor(0, 0, "0.0.0.0:50050");
 
-  ChordServiceImpl service(context, router);
+  ChordService service(context, router);
 
   ServerContext serverContext;
   SuccessorRequest req;
@@ -230,7 +230,7 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
 	ChordClient client(context, router, stub_factory);
 
 	auto client_factory = [&](){ return client; };
-  ChordServiceImpl service(context, router, client_factory);
+  ChordService service(context, router, client_factory);
 
   ServerContext serverContext;
   SuccessorRequest req;

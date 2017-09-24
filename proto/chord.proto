@@ -7,7 +7,13 @@ option objc_class_prefix = "CRD";
 
 package chord;
 
+service ChordControl {
+  //--- command
+  rpc control   (ControlRequest)  returns (ControlResponse) {}
+}
+
 service Chord {
+
   //--- common chord calls
   rpc successor (SuccessorRequest)  returns (SuccessorResponse) {}
   rpc join      (JoinRequest)       returns (JoinResponse) {}
@@ -17,6 +23,17 @@ service Chord {
   //--- file 
   rpc put       (stream PutRequest) returns (PutResponse) {}
   rpc get       (GetRequest)        returns (stream GetResponse) {}
+}
+
+/**
+ * Command
+ */
+message ControlRequest {
+  string command = 1;
+}
+
+message ControlResponse { 
+  string result = 1;
 }
 
 /**

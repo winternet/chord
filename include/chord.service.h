@@ -32,16 +32,16 @@ using chord::Chord;
 
 typedef std::function<ChordClient()> ClientFactory;
 
-class ChordServiceImpl final : public Chord::Service, AbstractService {
+class ChordService final : public Chord::Service, AbstractService {
 
 protected:
 
   Header make_header();
 
 public:
-  ChordServiceImpl(Context& context, Router& router);
+  ChordService(Context& context, Router& router);
 
-  ChordServiceImpl(Context& context, Router& router, ClientFactory make_client);
+  ChordService(Context& context, Router& router, ClientFactory make_client);
 
   Status join(ServerContext* context, const JoinRequest* req, JoinResponse* res);
 
@@ -56,7 +56,7 @@ public:
 
   void fix_fingers(size_t index);
 
-  Status put(std::istream& istream);
+  Status put(const std::string& uri, std::istream& istream);
 
 private:
   Context& context;

@@ -32,30 +32,17 @@ void ChordPeer::start_server() {
   server->Wait();
 }
 
-ChordPeer::ChordPeer(shared_ptr<Context> context) 
+ChordPeer::ChordPeer(const shared_ptr<Context>& context) 
   : scheduler { new Scheduler() }
   , context { context }
   , router  { new Router{context.get()} }
   , client  { new ChordClient{*context, *router} }
-  , service { new ChordServiceImpl{*context, *router} }
+  , service { new ChordService{*context, *router} }
 {
+}
+
+void ChordPeer::start() {
   PEER_LOG(trace) << "peer with client-id " << context->uuid();
-
-  if( context->interactive ) {
-    std::thread([&]{
-        string cmd;
-        cout << "**********FOOOOOOOOOO" << endl;
-        while(true) {
-
-          cout << "\n>>> ";
-          getline(cin, cmd);
-          commands.push(cmd);
-
-          if(cmd == "quit" || cmd == "exit")
-            return;
-        }
-    }).detach();
-  }
 
   if( context->bootstrap ) {
     create();
@@ -137,7 +124,7 @@ void ChordPeer::create() {
   router->reset();
 }
 
-void ChordPeer::put(std::istream& ostream) {
-  PEER_LOG(trace) << "bootstrapping new chord ring.";
-  //service->put(istream);
+void ChordPeer::put(const std::string& uri, std::istream& istream) {
+  PEER_LOG(trace) << "put new stream.";
+  service->put(uri, istream);
 }

@@ -1,8 +1,10 @@
 #pragma once
 
+#include "chord.router.h"
+#include "chord.client.h"
+#include "chord.service.h"
 #include "chord.i.scheduler.h"
 #include <grpc++/server_builder.h>
-//
 #include "chord.queue.h"
 #include "chord.uuid.h"
 
@@ -10,8 +12,6 @@
 struct Context;
 struct Router;
 class AbstractScheduler;
-class ChordClient;
-class ChordServiceImpl;
 
 using grpc::ServerBuilder;
 
@@ -21,23 +21,24 @@ private:
   chord::queue<std::string> commands;
 
   std::unique_ptr<AbstractScheduler> scheduler { nullptr };
-  std::shared_ptr<Context> context      { nullptr };
+  const std::shared_ptr<Context>& context      { nullptr };
 
   std::unique_ptr<Router> router        { nullptr };
   std::unique_ptr<ChordClient> client   { nullptr };
-  std::unique_ptr<ChordServiceImpl> service { nullptr };
+  std::unique_ptr<ChordService> service { nullptr };
 
   void start_server();
+  void start_scheduler();
 
 public:
   ChordPeer(const ChordPeer&) = delete;             // disable copying
   ChordPeer& operator=(const ChordPeer&) = delete;  // disable assignment
 
-  ChordPeer(std::shared_ptr<Context> context);
+  ChordPeer(const std::shared_ptr<Context>& context);
 
   virtual ~ChordPeer();
 
-  void start_scheduler();
+  void start();
 
   /**
    * create new chord ring
@@ -75,6 +76,6 @@ public:
   /**
    * put
    */
-  void put(std::istream& istream);
+  void put(const std::string& uri, std::istream& istream);
 
 };

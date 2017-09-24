@@ -57,14 +57,4 @@ public:
   Status successor(ClientContext* context, const SuccessorRequest* req, SuccessorResponse* res);
   Status successor(const SuccessorRequest* req, SuccessorResponse* res);
   
-
-  /*
-  Status stabilize(ClientContext* context, const StabilizeRequest* req, StabilizeResponse* res);
-  void stabilize(const StabilizeRequest* req, StabilizeResponse* res);
-  */
-//
-//  void notify(ClientContext* context, const NotifyRequest* req, NotifyResponse* res) {
-//    BOOST_LOG_TRIVIAL(debug) << "received notification " << req;
-//    return Status::OK;
-//  }
 };

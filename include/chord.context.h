@@ -17,7 +17,7 @@ struct Context {
   uuid_t _uuid {chord::uuid::random()};
   //--- program options
   bool bootstrap { false };
-  bool interactive { false };
+  bool no_controller { false };
   //--- promoted endpoint
   endpoint_t bind_addr { "0.0.0.0:50050" };
   endpoint_t join_addr { "0.0.0.0:50050" };
