@@ -88,6 +88,7 @@ file(GLOB TEST_SOURCES test/*.cc)
 string(REPLACE ";" "\n--   " TEST_SOURCES_OUT "${TEST_SOURCES}")
 message(STATUS "Found tests:\n--   ${TEST_SOURCES_OUT}")
 #
+enable_testing()
 include_directories(include)
 add_executable(test_chord ${TEST_SOURCES})
 target_link_libraries(test_chord gtest gmock gmock_main ${PROJECT_NAME}++)
