@@ -5,10 +5,11 @@ language: cpp
 addons:
   apt:
     sources:
+      - boost-latest
       - ubuntu-toolchain-r-test
     packages:
       - g++-7
-      - libboost-dev
+      - libboost1.55-all-dev
       - build-essential
       - autoconf
       - libtool
