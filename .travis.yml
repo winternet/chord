@@ -23,7 +23,8 @@ before_install:
   - git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
   - cd grpc
   - git submodule update --init
-  - make && make install 
+  - make CFLAGS:=$(CFLAGS) -w CXXFLAGS:=$(CXXFLAGS) -w
+  - make install
 
 script:
   - cmake .
