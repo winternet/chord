@@ -23,7 +23,7 @@ before_install:
   - git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
   - cd grpc
   - git submodule update --init
-  - make CFLAGS:=$(CFLAGS) -w CXXFLAGS:=$(CXXFLAGS) -w
+  - make CFLAGS:=$(CFLAGS) -Wno-implicit-fallthrough CXXFLAGS:=$(CXXFLAGS) -Wno-implicit-fallthrough
   - make install
 
 script:
