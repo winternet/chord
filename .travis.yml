@@ -11,7 +11,6 @@ cache:
 addons:
   apt:
     sources:
-      - boost-latest
       - ubuntu-toolchain-r-test
     packages:
       - g++-7
@@ -32,7 +31,7 @@ before_install:
   - curl -O -L https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2
   - tar xvjf boost_1_65_1.tar.bz2 && cd boost_1_65_1
   - ./bootstrap.sh --prefix=/usr/local/
-  - ./b2 --with-log --with-thread --with-system --with-program_options -j2 install
+  - ./b2 --with-log --with-thread --with-system --with-program_options -j2 install &> /tmp/boost.log
   - export BOOST_ROOT=$(pwd)
   - echo "building grpc" && cd
   - git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
@@ -54,3 +53,6 @@ script:
   - cmake .
   - cmake --build . -- -j2
   - ctest -j2
+
+after_failure:
+  - cat /tmp/boost.log
