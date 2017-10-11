@@ -29,6 +29,7 @@ before_install:
   - ./autogen.sh
   - ./configure && make
   - sudo make install
+  - cd ../../..
 
 script:
   - cmake .
