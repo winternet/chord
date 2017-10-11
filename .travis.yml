@@ -8,6 +8,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-7
+      - libboost-dev
       - build-essential
       - autoconf
       - libtool
@@ -32,6 +33,7 @@ before_install:
   - cd ../../..
 
 script:
+  - protoc --version
   - cmake .
   - cmake --build . -- -j2
   - ctest -j2
