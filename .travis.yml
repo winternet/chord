@@ -1,5 +1,5 @@
 dist: trusty
-sudo: false
+sudo: required
 language: cpp
 
 addons:
@@ -24,7 +24,11 @@ before_install:
   - cd grpc
   - git submodule update --init
   - make CFLAGS='-Wno-implicit-fallthrough -w' CXXFLAGS='-Wno-implicit-fallthrough -w'
-  - make install
+  - sudo make install
+  - cd grpc/third_party/protobuf
+  - ./autogen.sh
+  - ./configure && make
+  - sudo make install
 
 script:
   - cmake .
