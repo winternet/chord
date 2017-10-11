@@ -2,6 +2,10 @@ dist: trusty
 sudo: required
 language: cpp
 
+#compiler:
+#  - clang++
+#  - g++
+
 cache:
   apt: true
   directories:
@@ -19,7 +23,6 @@ addons:
       - libtool
       - git
       - curl
-      - protobuf-compiler
 
 env:
   - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
@@ -30,9 +33,15 @@ before_install:
   - echo "building boost" && cd
   - curl -O -L https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2
   - tar xf boost_1_65_1.tar.bz2 && cd boost_1_65_1
-  - ./bootstrap.sh --prefix=/usr/local/
+  - ./bootstrap.sh --prefix=$HOME
   - ./b2 --with-log --with-thread --with-system --with-program_options -j2 install
   - export BOOST_ROOT=$(pwd)
+  - LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
+  - export LD_LIBRARY_PATH
+  - LIBRARY_PATH=$HOME/lib:$LIBRARY_PATH
+  - export LIBRARY_PATH
+  - CPATH=$HOME/include:$CPATH
+  - export CPATH
   - echo "building grpc" && cd
   - git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
   - cd grpc
@@ -53,3 +62,8 @@ script:
   - cmake .
   - cmake --build . -- -j2
   - ctest -j2
+
+notifications:
+  email:
+    on_success: change
+    on_failure: change
