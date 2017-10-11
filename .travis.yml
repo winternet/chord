@@ -28,21 +28,26 @@ env:
 before_install:
   - pwd
   - eval "${MATRIX_EVAL}"
+  - echo ":: building boost" && cd
+  - curl -O -L https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2
+  - tar xvjf boost_1_65_1.tar.bz2 && cd boost_1_65_1
+  - ./bootstrap.sh --prefix=/usr/local/
+  - ./b2 --with-log --with-thread --with-system --with-program_options -j2 install
+  - export BOOST_ROOT=$(pwd)
+  - echo ":: building grpc" && cd
   - git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
   - cd grpc
   - git submodule update --init
-  - make CFLAGS='-Wno-implicit-fallthrough -w' CXXFLAGS='-Wno-implicit-fallthrough -w'
+  - make CFLAGS='-Wno-implicit-fallthrough -w' CXXFLAGS='-Wno-implicit-fallthrough -w' -j2
   - sudo make install
+  - echo ":: building protobuf"
   - cd third_party/protobuf
   - ./autogen.sh
-  - ./configure && make
+  - ./configure && make -j2
   - sudo make install
+  - echo ":: finished building pre-requisites"
   - cd
-  - curl -O -L https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2
-  - tar xvjf boost_1_65_1.tar.bz2 && cd boost_1_65_1
-  - ./bootstrap.sh
-  - ./b2
-  - cd ../../..
+  - pwd
 
 script:
   - protoc --version
