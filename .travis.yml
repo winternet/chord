@@ -25,7 +25,7 @@ before_install:
   - git submodule update --init
   - make CFLAGS='-Wno-implicit-fallthrough -w' CXXFLAGS='-Wno-implicit-fallthrough -w'
   - sudo make install
-  - cd grpc/third_party/protobuf
+  - cd third_party/protobuf
   - ./autogen.sh
   - ./configure && make
   - sudo make install
