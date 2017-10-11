@@ -2,6 +2,12 @@ dist: trusty
 sudo: required
 language: cpp
 
+cache:
+  apt: true
+  directories:
+    - grpc
+    - boost_1_65_1
+
 addons:
   apt:
     sources:
@@ -9,7 +15,6 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-7
-      - libboost1.55-all-dev
       - build-essential
       - autoconf
       - libtool
@@ -21,6 +26,7 @@ env:
   - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
 before_install:
+  - pwd
   - eval "${MATRIX_EVAL}"
   - git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
   - cd grpc
@@ -31,6 +37,11 @@ before_install:
   - ./autogen.sh
   - ./configure && make
   - sudo make install
+  - cd
+  - curl -O -L https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2
+  - tar xvjf boost_1_65_1.tar.bz2 && cd boost_1_65_1
+  - ./bootstrap.sh
+  - ./b2
   - cd ../../..
 
 script:
