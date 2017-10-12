@@ -52,11 +52,11 @@ install:
   - |
     if [[ "${GRPC_VERSION}" != "" ]]; then
       GRPC_DIR=${DEPS_DIR}/grpc-${GRPC_VERSION}
-      if [[ -z "$(ls -A ${GRPC_DIR}" ]]; then
+      if [[ -z "$(ls -A ${GRPC_DIR})" ]]; then
         travis_retry git clone -b ${GRPC_VERSION} https://github.com/grpc/grpc ${GRPC_DIR}
         (cd ${GRPC_DIR} && git submodule update --init)
         make CFLAGS='-Wno-implicit-fallthrough -w' CXXFLAGS='-Wno-implicit-fallthrough -w' -j2
-        (cd ${GRPC_DIR}/third_party/protobuf
+        cd ${GRPC_DIR}/third_party/protobuf
         ./autogen.sh && ./configure && make -j2
       fi
       CMAKE_OPTIONS+=" -DGRPC_CPP_PLUGIN=${GRPC_DIR}/bin"
