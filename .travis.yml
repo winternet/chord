@@ -9,8 +9,8 @@ language: cpp
 cache:
   apt: true
   directories:
-    - grpc
-    - boost_1_65_1
+    - $HOME/grpc
+    - $HOME/boost_1_65_1
 
 addons:
   apt:
@@ -34,7 +34,7 @@ before_install:
   - curl -O -L https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2
   - tar xf boost_1_65_1.tar.bz2 && cd boost_1_65_1
   - ./bootstrap.sh --prefix=$HOME
-  - ./b2 --with-log --with-thread --with-system --with-program_options -j2 install
+  - ./b2 --with-log --with-thread --with-system --with-program_options -j2
   - export BOOST_ROOT=$(pwd)
   - LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
   - export LD_LIBRARY_PATH
