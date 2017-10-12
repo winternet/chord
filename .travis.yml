@@ -1,22 +1,17 @@
 dist: trusty
 sudo: required
-language: cpp
+language: c++
 
 #compiler:
 #  - clang++
 #  - g++
 
-cache:
-  apt: true
-  directories:
-    - $HOME/grpc
-    - $HOME/boost_1_65_1
-
 addons:
   apt:
-    sources:
+    sources: &sources
       - ubuntu-toolchain-r-test
     packages:
+      - g++-6
       - g++-7
       - build-essential
       - autoconf
@@ -24,46 +19,184 @@ addons:
       - git
       - curl
 
-env:
-  - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+cache:
+  apt: true
+  ccache: true
+  directories:
+    - $HOME/grpc
+    - $HOME/boost_1_65_1
+    - ${TRAVIS_BUILD_DIR}/deps/boost-1.65.1
+    - ${TRAVIS_BUILD_DIR}/deps/grpc
 
-before_install:
-  - pwd
-  - eval "${MATRIX_EVAL}"
-  - echo "building boost" && cd
-  - curl -O -L https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2
-  - tar xf boost_1_65_1.tar.bz2 && cd boost_1_65_1
-  - ./bootstrap.sh --prefix=$HOME
-  - ./b2 --with-log --with-thread --with-system --with-program_options -j2
-  - export BOOST_ROOT=$(pwd)
-  - LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
-  - export LD_LIBRARY_PATH
-  - LIBRARY_PATH=$HOME/lib:$LIBRARY_PATH
-  - export LIBRARY_PATH
-  - CPATH=$HOME/include:$CPATH
-  - export CPATH
-  - echo "building grpc" && cd
-  - git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
-  - cd grpc
-  - git submodule update --init
-  - make CFLAGS='-Wno-implicit-fallthrough -w' CXXFLAGS='-Wno-implicit-fallthrough -w' -j2
-  - sudo make install
-  - echo "building protobuf"
-  - cd third_party/protobuf
-  - ./autogen.sh
-  - ./configure && make -j2
-  - sudo make install
-  - echo "finished building pre-requisites"
-  - cd
-  - pwd
+matrix:
+  include:
+    #- os: linux
+    #  env: COMPILER=g++-6 BOOST_VERSION=1.65.1 DOCUMENTATION=false
+    #  compiler: gcc
+
+    - os: linux
+      env: COMPILER=g++-7 BOOST_VERSION=1.65.1 DOCUMENTATION=false GRPC_VERSION=v1.6.6
+      compiler: gcc
+
+install:
+  ## install dependencies in ${TRAVIS_BUILD_DIR}/deps/
+  - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
+  - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
+
+  ## setup default versions and override compiler if needed
+  - if [[ "${LLVM_VERSION}" == "default" ]]; then LLVM_VERSION=3.9.0; fi
+  - if [[ "${BOOST_VERSION}" == "default" ]]; then BOOST_VERSION=1.63.0; fi
+  - if [[ "${COMPILER}" != "" ]]; then export CXX=${COMPILER}; fi
+
+  ## install grpc
+  - |
+    if [[ "${GRPC_VERSION}" != "" ]]; then
+      GRPC_DIR=${DEPS_DIR}/grpc-${GRPC_VERSION}
+      if [[ -z "$(ls -A ${GRPC_DIR}" ]]; then
+        travis_retry git clone -b ${GRPC_VERSION} https://github.com/grpc/grpc ${GRPC_DIR}
+        (cd ${GRPC_DIR} && git submodule update --init)
+        make CFLAGS='-Wno-implicit-fallthrough -w' CXXFLAGS='-Wno-implicit-fallthrough -w' -j2
+        (cd ${GRPC_DIR}/third_party/protobuf
+        ./autogen.sh && ./configure && make -j2
+      fi
+      CMAKE_OPTIONS+=" -DGRPC_CPP_PLUGIN=${GRPC_DIR}/bin"
+      export PATH=${GRPC_DIR}/bin:${PATH}
+      export LDFLAGS="-L ${GRPC_DIR}/lib"
+      export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${GRPC_DIR}/lib"
+    fi
+
+  ## install boost headers
+  - |
+    if [[ "${BOOST_VERSION}" != "" ]]; then
+      BOOST_DIR=${DEPS_DIR}/boost-${BOOST_VERSION}
+      if [[ -z "$(ls -A ${BOOST_DIR})" ]]; then
+        if [[ "${BOOST_VERSION}" == "trunk" ]]; then
+          BOOST_URL="http://github.com/boostorg/boost.git"
+          travis_retry git clone --depth 1 --recursive ${BOOST_URL} ${BOOST_DIR} || exit 1
+          (cd ${BOOST_DIR} && ./bootstrap.sh && ./b2 headers) || exit 1
+        else
+          BOOST_URL="http://sourceforge.net/projects/boost/files/boost/${BOOST_VERSION}/boost_${BOOST_VERSION//\./_}.tar.gz"
+          mkdir -p ${BOOST_DIR}
+          { travis_retry wget -O - ${BOOST_URL} | tar --strip-components=1 -xz -C ${BOOST_DIR}; } || exit 1
+        fi
+      fi
+      CMAKE_OPTIONS+=" -DBOOST_ROOT=${BOOST_DIR}"
+    fi
+
+
+  ## install recent cmake
+  - |
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      CMAKE_URL="https://cmake.org/files/v3.8/cmake-3.8.0-Linux-x86_64.tar.gz"
+      mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
+      export PATH=${DEPS_DIR}/cmake/bin:${PATH}
+    else
+      brew upgrade cmake || brew install cmake
+    fi
+  - cmake --version
+
+  ## install boost libraries
+  - |
+    (cd ${BOOST_DIR} && ./bootstrap.sh --prefix=${DEPS_DIR} && ./b2 --with-log --with-thread --with-system --with-program_options -j install --prefix=${DEPS_DIR})
+    export PATH=${DEPS_DIR}/b2/bin:${PATH}
+    export LDFLAGS="-L ${BOOST_DIR}/lib"
+    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${BOOST_DIR}/lib"
+
+
+  ## install boost.build
+  - |
+    if [[ "${BOOST_BUILD}" == "true" ]]; then
+      (cd ${BOOST_DIR}/tools/build && ./bootstrap.sh && ./b2 install --prefix=${DEPS_DIR}/b2)
+      export PATH=${DEPS_DIR}/b2/bin:${PATH}
+    fi
+
+  ## install clang libc++ and libc++abi
+  - |
+    if [[ "${LLVM_VERSION}" != "" ]]; then
+      LLVM_DIR=${DEPS_DIR}/llvm-${LLVM_VERSION}
+      if [[ -z "$(ls -A ${LLVM_DIR})" ]]; then
+        LLVM_URL="http://llvm.org/releases/${LLVM_VERSION}/llvm-${LLVM_VERSION}.src.tar.xz"
+        LIBCXX_URL="http://llvm.org/releases/${LLVM_VERSION}/libcxx-${LLVM_VERSION}.src.tar.xz"
+        LIBCXXABI_URL="http://llvm.org/releases/${LLVM_VERSION}/libcxxabi-${LLVM_VERSION}.src.tar.xz"
+        CLANG_URL="http://llvm.org/releases/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-14.04.tar.xz"
+        mkdir -p ${LLVM_DIR} ${LLVM_DIR}/build ${LLVM_DIR}/projects/libcxx ${LLVM_DIR}/projects/libcxxabi ${LLVM_DIR}/clang
+        travis_retry wget --quiet -O - ${LLVM_URL}      | tar --strip-components=1 -xJ -C ${LLVM_DIR}
+        travis_retry wget --quiet -O - ${LIBCXX_URL}    | tar --strip-components=1 -xJ -C ${LLVM_DIR}/projects/libcxx
+        travis_retry wget --quiet -O - ${LIBCXXABI_URL} | tar --strip-components=1 -xJ -C ${LLVM_DIR}/projects/libcxxabi
+        travis_retry wget --quiet -O - ${CLANG_URL}     | tar --strip-components=1 -xJ -C ${LLVM_DIR}/clang
+        (cd ${LLVM_DIR}/build && cmake .. -DCMAKE_INSTALL_PREFIX=${LLVM_DIR}/install -DCMAKE_CXX_COMPILER=clang++)
+        (cd ${LLVM_DIR}/build/projects/libcxx && make install -j2)
+        (cd ${LLVM_DIR}/build/projects/libcxxabi && make install -j2)
+      fi
+      export CXXFLAGS="-nostdinc++ -isystem ${LLVM_DIR}/install/include/c++/v1"
+      export LDFLAGS="-L ${LLVM_DIR}/install/lib -l c++ -l c++abi"
+      export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${LLVM_DIR}/install/lib"
+      export PATH="${LLVM_DIR}/clang/bin:${PATH}"
+    fi
+  - ${CXX} --version
+
+  ## install recent doxygen
+  - |
+    if [[ "${DOCUMENTATION}" == "true" ]]; then
+      DOXYGEN_URL="http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.11.linux.bin.tar.gz"
+      mkdir doxygen && travis_retry wget --quiet -O - ${DOXYGEN_URL} | tar --strip-components=1 -xz -C doxygen
+      export PATH=${DEPS_DIR}/doxygen/bin:${PATH}
+      doxygen --version
+    fi
+    #  - echo "building grpc" && cd
+    #  - git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
+    #  - cd grpc
+    #  - git submodule update --init
+    #  - make CFLAGS='-Wno-implicit-fallthrough -w' CXXFLAGS='-Wno-implicit-fallthrough -w' -j2
+    #  - sudo make install
+    #  - echo "building protobuf"
+    #  - cd third_party/protobuf
+    #  - ./autogen.sh
+    #  - ./configure && make -j2
+    #  - sudo make install
+
+before_script:
+  - protoc --version
+  - cd ${TRAVIS_BUILD_DIR}
+  - (mkdir build && cd build && cmake .. ${CMAKE_OPTIONS})
+
+    #before_install:
+    #  - pwd
+    #  - eval "${MATRIX_EVAL}"
+    #  - echo "building boost" && cd
+    #  - curl -O -L https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2
+    #  - tar xf boost_1_65_1.tar.bz2 && cd boost_1_65_1
+    #  - ./bootstrap.sh --prefix=$HOME
+    #  - ./b2 --with-log --with-thread --with-system --with-program_options -j2
+    #  - export BOOST_ROOT=$(pwd)
+    #  - LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
+    #  - export LD_LIBRARY_PATH
+    #  - LIBRARY_PATH=$HOME/lib:$LIBRARY_PATH
+    #  - export LIBRARY_PATH
+    #  - CPATH=$HOME/include:$CPATH
+    #  - export CPATH
+    #  - echo "building grpc" && cd
+    #  - git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
+    #  - cd grpc
+    #  - git submodule update --init
+    #  - make CFLAGS='-Wno-implicit-fallthrough -w' CXXFLAGS='-Wno-implicit-fallthrough -w' -j2
+    #  - sudo make install
+    #  - echo "building protobuf"
+    #  - cd third_party/protobuf
+    #  - ./autogen.sh
+    #  - ./configure && make -j2
+    #  - sudo make install
+    #  - echo "finished building pre-requisites"
+    #  - cd
+    #  - pwd
 
 script:
-  - protoc --version
-  - cmake .
-  - cmake --build . -- -j2
-  - ctest -j2
+  ## build and run the unit tests and examples
+  - |
+    cmake --build . -- -j2
+    ctest -j2
 
 notifications:
   email:
     on_success: change
-    on_failure: change
+    on_failure: always
