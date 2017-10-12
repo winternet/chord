@@ -23,10 +23,8 @@ cache:
   apt: true
   ccache: true
   directories:
-    - $HOME/grpc
-    - $HOME/boost_1_65_1
     - ${TRAVIS_BUILD_DIR}/deps/boost-1.65.1
-    - ${TRAVIS_BUILD_DIR}/deps/grpc
+    - ${TRAVIS_BUILD_DIR}/deps/grpc-v1.6.6
 
 matrix:
   include:
@@ -35,7 +33,7 @@ matrix:
     #  compiler: gcc
 
     - os: linux
-      env: COMPILER=g++-7 BOOST_VERSION=1.65.1 DOCUMENTATION=false GRPC_VERSION=v1.6.6
+      env: COMPILER=g++-7 BOOST_VERSION=1.65.1 DOCUMENTATION=false GRPC_VERSION=v1.6.6 PROTOBUF_VERSION=3.0.0
       compiler: gcc
 
 install:
@@ -63,6 +61,17 @@ install:
       export PATH=${GRPC_DIR}/bin:${PATH}
       export LDFLAGS="-L ${GRPC_DIR}/lib"
       export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${GRPC_DIR}/lib"
+    fi
+  ## install protobuf
+  - |
+    if [[ "${PROTOBUF_VERSION}" != "" ]]; then
+      PROTOBUF_DIR=${DEPS_DIR}/protobuf-v${PROTOBUF_VERSION}
+      if [[ -z "$(ls -A ${PROTOBUF_DIR})" ]]; then
+        wget https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip
+        unzip protoc-${PROTOBUF_VERSION}-linux-x86_64.zip -d ${PROTOBUF_DIR}
+      fi
+      export PATH=${PROTOBUF_DIR}/bin:${PATH}
+      protoc --version
     fi
 
   ## install boost headers
@@ -97,7 +106,7 @@ install:
 
   ## install boost libraries
   - |
-    (cd ${BOOST_DIR} && ./bootstrap.sh --prefix=${DEPS_DIR} && ./b2 --with-log --with-thread --with-system --with-program_options -j install --prefix=${DEPS_DIR})
+    (cd ${BOOST_DIR} && ./bootstrap.sh --prefix=${DEPS_DIR} && ./b2 --with-log --with-thread --with-system --with-program_options -j2 install --prefix=${DEPS_DIR})
     export PATH=${DEPS_DIR}/b2/bin:${PATH}
     export LDFLAGS="-L ${BOOST_DIR}/lib"
     export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${BOOST_DIR}/lib"
