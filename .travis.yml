@@ -67,8 +67,9 @@ install:
     if [[ "${PROTOBUF_VERSION}" != "" ]]; then
       PROTOBUF_DIR=${DEPS_DIR}/protobuf-v${PROTOBUF_VERSION}
       if [[ -z "$(ls -A ${PROTOBUF_DIR})" ]]; then
-        wget https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip
-        unzip protoc-${PROTOBUF_VERSION}-linux-x86_64.zip -d ${PROTOBUF_DIR}
+        mkdir -p ${PROTOBUF_DIR} && cd ${PROTOBUF_DIR}
+        travis_retry wget https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip
+        unzip protoc-${PROTOBUF_VERSION}-linux-x86_64.zip
       fi
       export PATH=${PROTOBUF_DIR}/bin:${PATH}
       protoc --version
