@@ -6,11 +6,30 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
 set(ProtoPath "${CMAKE_CURRENT_SOURCE_DIR}/proto")
-set(ProtoGenerateTargetPath "gen")
+set(ProtoGenerateTargetPath "./gen")
 
 set(CMAKE_BUILD_TYPE 				Debug)
-#set(CMAKE_CXX_COMPILER      "/usr/bin/clang++")
-set(CMAKE_CXX_FLAGS 				"${CMAKE_CXX_FLAGS} -Wall")
+
+set(CMAKE_CXX_COMPILER      "/usr/bin/clang++")
+
+add_compile_options(
+  -Wall
+  -Wextra
+  -std=c++14
+)
+
+message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  # compile with address sanitizer (2x slowdown)
+  add_compile_options(
+    -fsanitize=address -fsanitize-address-use-after-scope
+  )
+#add_compile_options(
+#    $<$<NOT:$<STREQUAL:$<TARGET_PROPERTY:SOURCE_DIR>,${CMAKE_SOURCE_DIR}/test_app1>>:-Werror>
+#  )
+endif()
+
 
 #
 # custom modules
@@ -22,9 +41,6 @@ include(grpc)
 include(protobuf)
 include(CTest)
 
-
-
-
 #
 # find packages
 #
@@ -32,11 +48,6 @@ find_package(Boost COMPONENTS log thread system program_options)
 find_package(Protobuf REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
-
-if( Boost_FOUND )
-  add_definitions(-std=c++14)
-endif()
-
 
 #
 # generate messages and services
@@ -46,10 +57,10 @@ protobuf_generate_cpp_with_path(${ProtoGenerateTargetPath} ProtoSources ProtoHea
 message(STATUS "Generating protobuf messages")
 protobuf_generate_grpc_cpp_with_path(${ProtoGenerateTargetPath} GrpcSources GrpcHeaders ${ProtoFiles})
 message(STATUS "Generating grpc services")
-include_directories(${ProtoGenerateTargetPath})
-message(STATUS "Including generated header files")
+include_directories(SYSTEM ${ProtoGenerateTargetPath})
+message(STATUS "Including generated header files: ${ProtoGenerateTargetPath}")
 
-file(GLOB SOURCES_GEN ${ProtoGenerateTargetPath}/*.cc)
+file(GLOB SOURCES_GEN ${CMAKE_CURRENT_BINARY_DIR}/gen/*)
 string(REPLACE ";" "\n--   " SOURCES_GEN_OUT "${SOURCES_GEN}")
 message(STATUS "Found generated source files:\n--   ${SOURCES_GEN_OUT}")
 
@@ -59,13 +70,17 @@ message(STATUS "Found generated source files:\n--   ${SOURCES_GEN_OUT}")
 #
 file(GLOB SOURCES src/*.cc)
 include_directories(include)
-include_directories("${CMAKE_CURRENT_BINARY_DIR}/gen")
+# use SYSTEM symbol to suppress warnings within generated code
+include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}/gen")
+
 
 #
 # create shared library chord++
 #
 add_library(${PROJECT_NAME}++ SHARED ${SOURCES} ${SOURCES_GEN} ${ProtoSources} ${ProtoHeaders} ${GrpcSources} ${GrpcHeaders})
-target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} grpc++ grpc ssl crypto)
+target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} 
+  #debug asan
+  general grpc++ grpc ssl crypto)
 install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 
 #
@@ -77,7 +92,9 @@ add_executable(${PROJECT_NAME} src/chord.cc)
 #
 # add libraries for executable (chord++)
 #
-target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}++)
+target_link_libraries(${PROJECT_NAME} 
+  debug asan
+  general ${PROJECT_NAME}++)
 
 
 ### TESTS ###
@@ -90,6 +107,6 @@ message(STATUS "Found tests:\n--   ${TEST_SOURCES_OUT}")
 #
 enable_testing()
 include_directories(include)
-add_executable(test_chord ${TEST_SOURCES})
-target_link_libraries(test_chord gtest gmock gmock_main ${PROJECT_NAME}++)
-add_test(NAME test COMMAND test_chord)
+#add_executable(test ${TEST_SOURCES})
+#target_link_libraries(test gtest gmock gmock_main ${PROJECT_NAME}++)
+#add_test(NAME test COMMAND test)

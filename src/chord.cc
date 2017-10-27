@@ -18,7 +18,7 @@ namespace po = boost::program_options;
 
 #define fatal cerr << "\nFATAL - "
 
-void parse_program_options(int ac, char* av[], const shared_ptr<Context> context) {
+void parse_program_options(int ac, char* av[], const shared_ptr<Context>& context) {
   po::options_description global("[program options]");
 
   global.add_options()
@@ -46,12 +46,12 @@ void parse_program_options(int ac, char* av[], const shared_ptr<Context> context
 
   vector<string> commands = po::collect_unrecognized(parsed.options, po::include_positional);
   if(!commands.empty()) {
-    ChordControlClient client(context);
+    ChordControlClient controlClient;
 
     if((commands[0]) == "put") {
       stringstream ss;
       for(auto c:commands) ss << c << " ";
-      client.control(ss.str());
+      controlClient.control(ss.str());
     }
 
     exit(0);
@@ -103,7 +103,9 @@ int main(int argc, char* argv[]) {
   auto peer = make_shared<ChordPeer>(context);
 
   //--- start controller
-  thread controller_thread(start_controller, peer);
+  thread controller_thread([&](){
+      ChordControlService controller(peer);
+  });
 
   peer->start();
 

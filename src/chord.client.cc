@@ -1,5 +1,6 @@
 #include <memory>
 #include <grpc/grpc.h>
+#include <fstream>
 
 #include <grpc++/channel.h>
 #include <grpc++/client_context.h>
@@ -14,9 +15,32 @@
 #include "chord.grpc.pb.h"
 #include "chord.exception.h"
 
+#include "chord.crypto.h"
 
 #define log(level) LOG(level) << "[client] "
 #define CLIENT_LOG(level, method) LOG(level) << "[client][" << #method << "] "
+
+using grpc::Channel;
+using grpc::ClientContext;
+using grpc::Status;
+using grpc::ClientWriter;
+
+using chord::Header;
+using chord::RouterEntry;
+
+using chord::JoinResponse;
+using chord::JoinRequest;
+using chord::SuccessorResponse;
+using chord::SuccessorRequest;
+using chord::StabilizeResponse;
+using chord::StabilizeRequest;
+using chord::NotifyResponse;
+using chord::NotifyRequest;
+using chord::CheckResponse;
+using chord::CheckRequest;
+using chord::Chord;
+using chord::PutResponse;
+using chord::PutRequest;
 
 using namespace std;
 
@@ -120,80 +144,135 @@ void ChordClient::stabilize() {
       //if(   (pred > self and succ < pred)) {
       router.set_successor(0, pred, entry.endpoint());
     }
-    } else {
-      CLIENT_LOG(trace, stabilize) << "received empty routing entry";
-    }
-
-    notify();
+  } else {
+    CLIENT_LOG(trace, stabilize) << "received empty routing entry";
   }
 
-  void ChordClient::notify() {
+  notify();
+}
 
-    // get successor
-    auto successor = router.successor();
-    endpoint_t endpoint = router.get(successor);
+void ChordClient::notify() {
 
-    ClientContext clientContext;
-    NotifyRequest req;
-    NotifyResponse res;
+  // get successor
+  auto successor = router.successor();
+  endpoint_t endpoint = router.get(successor);
 
-    CLIENT_LOG(trace, notify) << "calling notify on address " << endpoint;
+  ClientContext clientContext;
+  NotifyRequest req;
+  NotifyResponse res;
 
-    req.mutable_header()->CopyFrom(make_header());
-    make_stub(endpoint)->notify(&clientContext, req, &res);
+  CLIENT_LOG(trace, notify) << "calling notify on address " << endpoint;
 
+  req.mutable_header()->CopyFrom(make_header());
+  make_stub(endpoint)->notify(&clientContext, req, &res);
+
+}
+
+Status ChordClient::successor(ClientContext* clientContext, const SuccessorRequest* req, SuccessorResponse* res) {
+
+  CLIENT_LOG(trace,successor) << "trying to find successor of " << req->id();
+  SuccessorRequest copy(*req);
+  copy.mutable_header()->CopyFrom(make_header());
+
+  uuid_t predecessor = router.closest_preceding_node(uuid_t(req->id()));
+  endpoint_t endpoint = router.get(predecessor);
+  CLIENT_LOG(trace,successor) << "forwarding request to " << endpoint;
+
+  return make_stub(endpoint)->successor(clientContext, copy, res);
+
+}
+
+/** called by chord.service **/
+Status ChordClient::successor(const SuccessorRequest* req, SuccessorResponse* res) {
+  ClientContext clientContext;
+  return successor(&clientContext, req, res);
+}
+
+RouterEntry ChordClient::successor(const uuid_t& uuid) {
+  ClientContext clientContext;
+  SuccessorRequest req;
+  req.mutable_header()->CopyFrom(make_header());
+  req.set_id(uuid);
+  SuccessorResponse res;
+
+  auto status = successor(&clientContext, &req, &res);
+
+  if(!status.ok()) throw chord::exception("failed to query succesor", status);
+
+  return res.successor();
+}
+
+void ChordClient::check() {
+  auto predecessor = router.predecessor();
+  auto successor = router.successor();
+
+  if( predecessor == nullptr ) {
+    CLIENT_LOG(trace, check) << "no predecessor, skip.";
+    return;
+  }
+  if( successor == nullptr ) {
+    CLIENT_LOG(trace, check) << "no successor, skip.";
+    return;
   }
 
-  Status ChordClient::successor(ClientContext* clientContext, const SuccessorRequest* req, SuccessorResponse* res) {
+  ClientContext clientContext;
+  CheckRequest req;
+  CheckResponse res;
 
-    CLIENT_LOG(trace,successor) << "trying to find successor of " << req->id();
-    SuccessorRequest copy(*req);
-    copy.mutable_header()->CopyFrom(make_header());
+  req.mutable_header()->CopyFrom(make_header());
 
-    uuid_t predecessor = router.closest_preceding_node(uuid_t(req->id()));
-    endpoint_t endpoint = router.get(predecessor);
-    CLIENT_LOG(trace,successor) << "forwarding request to " << endpoint;
+  auto endpoint = router.get(predecessor);
 
-    return make_stub(endpoint)->successor(clientContext, copy, res);
+  CLIENT_LOG(trace, check) << "checking predecessor " << *predecessor << "@" << endpoint;
+  const grpc::Status status = make_stub(endpoint)->check(&clientContext, req, &res);
 
+  if( !status.ok() ) {
+    CLIENT_LOG(warning, check) << "predecessor failed.";
+    router.reset_predecessor(0);
   }
-
-  /** called by chord.service **/
-  Status ChordClient::successor(const SuccessorRequest* req, SuccessorResponse* res) {
-    ClientContext clientContext;
-    return successor(&clientContext, req, res);
+  if( !res.has_header() ) {
+    cerr << "CHECK RETURNED WITHOUT HEADER! SHOULD REMOVE " << endpoint << " ?";
   }
+}
 
-  void ChordClient::check() {
-    auto predecessor = router.predecessor();
-    auto successor = router.successor();
+Status ChordClient::put(const std::string& uri, std::istream& istream) {
+  auto hash = chord::crypto::sha256(uri);
+  CLIENT_LOG(trace, check) << "put " << uri << " (" << hash << ")";
+  auto node = successor(hash);
+  auto endpoint = node.endpoint();
+  constexpr size_t len = 512 * 1024; // 512k
+  char buffer[len];
+  size_t offset = 0, 
+         read = 0;
 
-    if( predecessor == nullptr ) {
-      CLIENT_LOG(trace, check) << "no predecessor, skip.";
-      return;
+  ClientContext clientContext;
+  PutResponse res;
+  // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
+  auto stub = Chord::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
+  std::unique_ptr<ClientWriter<PutRequest> > writer(stub->put(&clientContext, &res));
+  int i=0;
+
+  do {
+    ++i;
+    read = istream.readsome(buffer, len);
+    if(read <= 0) {
+      break;
     }
-    if( successor == nullptr ) {
-      CLIENT_LOG(trace, check) << "no successor, skip.";
-      return;
+
+    PutRequest req;
+    req.set_id(hash);
+    req.set_data(buffer, read);
+    req.set_offset(offset);
+    req.set_size(read);
+    offset += read;
+
+    if(!writer->Write(req)) {
+      throw chord::exception("broken stream.");
     }
+    
+  } while(read > 0);
+  cout << "\n---------- read " << i << " times.";
 
-    ClientContext clientContext;
-    CheckRequest req;
-    CheckResponse res;
-
-    req.mutable_header()->CopyFrom(make_header());
-
-    auto endpoint = router.get(predecessor);
-
-    CLIENT_LOG(trace, check) << "checking predecessor " << *predecessor << "@" << endpoint;
-    const grpc::Status status = make_stub(endpoint)->check(&clientContext, req, &res);
-
-    if( !status.ok() ) {
-      CLIENT_LOG(warning, check) << "predecessor failed.";
-      router.reset_predecessor(0);
-    }
-    if( !res.has_header() ) {
-      cerr << "CHECK RETURNED WITHOUT HEADER! SHOULD REMOVE " << endpoint << " ?";
-    }
-  }
-
+  writer->WritesDone();
+  return writer->Finish();
+}

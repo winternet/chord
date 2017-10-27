@@ -48,13 +48,20 @@ class Scheduler : public AbstractScheduler
     std::unique_ptr<std::thread> thread;
     std::priority_queue<function_timer> tasks;
 
-    //Scheduler& operator=(const Scheduler& rhs) = delete;
-    //Scheduler(const Scheduler& rhs) = delete;
+    Scheduler& operator=(const Scheduler& rhs) = delete;
+    Scheduler(const Scheduler& rhs) = delete;
 
   public:
     Scheduler()
       :shutdown(false),
-      thread(new std::thread([this]() { loop(); }))
+      thread(new std::thread([this] { 
+        //--- setup time
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(2s);
+        //--- start loop
+        loop(); 
+        }
+      ))
       { }
 
     virtual ~Scheduler() {

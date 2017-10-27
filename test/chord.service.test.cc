@@ -224,9 +224,9 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   router.set_successor(0, 0, "0.0.0.0:50050");
   router.set_predecessor(0, 0, "0.0.0.0:50050");
 
-  std::shared_ptr<MockStub> stub(new MockStub);
+  std::unique_ptr<MockStub> stub(new MockStub);
 
-	auto stub_factory = [&](const endpoint_t& endpoint){ return stub; };
+	auto stub_factory = [&](const endpoint_t& endpoint){ return std::move(stub); };
 	ChordClient client(context, router, stub_factory);
 
 	auto client_factory = [&](){ return client; };

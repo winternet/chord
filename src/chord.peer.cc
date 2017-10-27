@@ -91,8 +91,8 @@ void ChordPeer::join() {
 /**
  * successor
  */
-void ChordPeer::successor(const uuid_t& uuid) {
-  service->successor(uuid);
+RouterEntry ChordPeer::successor(const uuid_t& uuid) {
+  return service->successor(uuid);
 }
 
 /**
@@ -125,6 +125,5 @@ void ChordPeer::create() {
 }
 
 void ChordPeer::put(const std::string& uri, std::istream& istream) {
-  PEER_LOG(trace) << "put new stream.";
-  service->put(uri, istream);
+  client->put(uri, istream);
 }

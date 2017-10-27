@@ -21,7 +21,7 @@ private:
   chord::queue<std::string> commands;
 
   std::unique_ptr<AbstractScheduler> scheduler { nullptr };
-  const std::shared_ptr<Context>& context      { nullptr };
+  const std::shared_ptr<Context>& context;
 
   std::unique_ptr<Router> router        { nullptr };
   std::unique_ptr<ChordClient> client   { nullptr };
@@ -53,7 +53,7 @@ public:
   /**
    * successor
    */
-  void successor(const uuid_t& uuid);
+  RouterEntry successor(const uuid_t& uuid);
 
   /**
    * stabilize the ring

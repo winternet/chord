@@ -12,22 +12,16 @@
 
 #include "chord.peer.h"
 
-using grpc::ServerContext;
-using grpc::ServerBuilder;
-using grpc::Status;
-
-using chord::ControlResponse;
-using chord::ControlRequest;
 
 class ChordControlService final : public chord::ChordControl::Service {
 
 public:
   ChordControlService(const std::shared_ptr<ChordPeer>& peer);
 
-  Status control(ServerContext* context, const ControlRequest* req, ControlResponse* res);
-
-  void parse_command(const std::string& command);
+  Status control(grpc::ServerContext* context, const chord::ControlRequest* req, chord::ControlResponse* res) override;
 
 private:
+  Status parse_command(const chord::ControlRequest* req, chord::ControlResponse* res);
+
   const std::shared_ptr<ChordPeer>& peer;
 };

@@ -19,10 +19,20 @@
 #define log(level) LOG(level) << "[client] "
 #define CLIENT_LOG(level, method) LOG(level) << "[client][" << #method << "] "
 
+using grpc::Channel;
+using grpc::ClientContext;
+using grpc::Status;
+
+using chord::Header;
+using chord::RouterEntry;
+
+using chord::ChordControl;
+using chord::ControlResponse;
+using chord::ControlRequest;
+
 using namespace std;
 
-ChordControlClient::ChordControlClient(const shared_ptr<Context>& context) 
-  :context{context}
+ChordControlClient::ChordControlClient() 
 {
   //--- default stub factory
   make_stub = [&](const endpoint_t& endpoint) {
@@ -30,9 +40,8 @@ ChordControlClient::ChordControlClient(const shared_ptr<Context>& context)
   };
 }
 
-ChordControlClient::ChordControlClient(const shared_ptr<Context>& context, ControlStubFactory make_stub) 
-  :context{context}
-  ,make_stub{make_stub}
+ChordControlClient::ChordControlClient(ControlStubFactory make_stub) 
+  :make_stub{make_stub}
 {
 }
 

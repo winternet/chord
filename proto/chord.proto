@@ -115,7 +115,8 @@ message PutRequest {
   //--- id to put
   string  id = 2;
   bytes   data = 3;
-  uint64  offset =4;
+  uint64  offset = 4;
+  uint64  size = 5;
 }
 
 message PutResponse { 

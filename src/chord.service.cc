@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <grpc/grpc.h>
 
 #include <grpc++/server.h>
@@ -19,9 +20,12 @@
 #define SERVICE_LOG(level,method) LOG(level) << "[service][" << #method << "] "
 
 using grpc::ServerContext;
+using grpc::ClientContext;
 using grpc::ServerBuilder;
+using grpc::ServerReader;
 using grpc::Status;
 
+using chord::Header;
 using chord::JoinResponse;
 using chord::JoinRequest;
 using chord::SuccessorResponse;
@@ -30,6 +34,8 @@ using chord::StabilizeResponse;
 using chord::StabilizeRequest;
 using chord::NotifyResponse;
 using chord::NotifyRequest;
+using chord::CheckResponse;
+using chord::CheckRequest;
 using chord::PutResponse;
 using chord::PutRequest;
 using chord::GetResponse;
@@ -228,27 +234,28 @@ void ChordService::fix_fingers(size_t index) {
 }
 
 
-Status ChordService::put(const std::string& uri, std::istream& istream) {
-  //constexpr size_t len = 512 * 1024; // 512k
-  //char buffer[len];
-  //size_t tmp = 0;
-  //size_t size= 0;
-  //size_t read= 0;
-  //auto id = uuid_t{istream};
-  //do {
-  //  read = istream.readsome(buffer, len);
-  //  if(read == 0) {
-  //    break;
-  //  } else {
-  //    cout << *buffer;
-  //  }
 
-  //  PutRequest req;
-  //  //req.set_id(id).set_data(bufferser
-  //  size += read;
-  //  
-  //} while(read > 0);
+Status ChordService::put(ServerContext* serverContext, ServerReader<PutRequest>* reader, PutResponse* response) {
+  PutRequest req;
+  ofstream file;
 
-  //cout << istream.rdbuf();
-  return grpc::Status::OK;
+  if(reader->Read(&req)) {
+    auto id = req.id();
+    file.exceptions(ifstream::failbit | ifstream::badbit);
+    file.open(id, std::fstream::binary);
+  }
+
+  long size=0;
+  int i=0;
+  do {
+    size+=req.size();
+    file.write((const char*)req.data().data(), req.size());
+    ++i;
+  } while(reader->Read(&req));
+  cout << "\n---------- write " << i << " times.";
+  cout << "\n---------- overall " << size << " bytes.";
+
+  file.close();
+  //TODO(christoph) checksum
+  return Status::OK;
 }

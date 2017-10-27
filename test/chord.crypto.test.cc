@@ -19,10 +19,12 @@ TEST(CryptoTest, sha256) {
   auto str = crypto::sha256(data);
   auto ptr = crypto::sha256(data.data(), data.length());
 
-  EXPECT_TRUE(str == ptr);
+  EXPECT_EQ(str, ptr);
 
-  auto expected = "C3AB8FF13720E8AD9047DD39466B3C8974E592C2FA383D4A3960714CAEF0C4F2"s;
+  stringstream actual; actual << std::hex << str;
+  auto expected = "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"s;
 
+  EXPECT_EQ(actual.str(), expected);
 }
 
 TEST(CryptoTest, initialize) {

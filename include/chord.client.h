@@ -9,26 +9,8 @@
 #include "chord.context.h"
 #include "chord.grpc.pb.h"
 
-using grpc::Channel;
-using grpc::ClientContext;
-using grpc::Status;
 
-using chord::Header;
-using chord::RouterEntry;
-
-using chord::JoinResponse;
-using chord::JoinRequest;
-using chord::SuccessorResponse;
-using chord::SuccessorRequest;
-using chord::StabilizeResponse;
-using chord::StabilizeRequest;
-using chord::NotifyResponse;
-using chord::NotifyRequest;
-using chord::CheckResponse;
-using chord::CheckRequest;
-using chord::Chord;
-
-typedef std::function<std::shared_ptr<chord::Chord::StubInterface>(const endpoint_t& endpoint)> StubFactory;
+typedef std::function<std::unique_ptr<chord::Chord::StubInterface>(const endpoint_t& endpoint)> StubFactory;
 
 class ChordClient {
 private:
@@ -40,8 +22,8 @@ private:
   /**
    * return new header
    */
-  Header make_header();
-  SuccessorRequest make_request();
+  chord::Header make_header();
+  chord::SuccessorRequest make_request();
 
 public:
   ChordClient(Context& context, Router& router);
@@ -54,7 +36,8 @@ public:
   void check();
   void fix_fingers();
 
-  Status successor(ClientContext* context, const SuccessorRequest* req, SuccessorResponse* res);
-  Status successor(const SuccessorRequest* req, SuccessorResponse* res);
-  
+  chord::RouterEntry successor(const uuid_t& id);
+  grpc::Status successor(grpc::ClientContext* context, const chord::SuccessorRequest* req, chord::SuccessorResponse* res);
+  grpc::Status successor(const chord::SuccessorRequest* req, chord::SuccessorResponse* res);
+  grpc::Status put(const std::string& uri, std::istream& istream);
 };
