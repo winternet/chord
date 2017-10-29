@@ -107,6 +107,8 @@ message(STATUS "Found tests:\n--   ${TEST_SOURCES_OUT}")
 #
 enable_testing()
 include_directories(include)
-#add_executable(test ${TEST_SOURCES})
-#target_link_libraries(test gtest gmock gmock_main ${PROJECT_NAME}++)
-#add_test(NAME test COMMAND test)
+add_executable(chord_test ${TEST_SOURCES})
+target_link_libraries(chord_test 
+  debug asan
+  general gtest gmock gmock_main ${PROJECT_NAME}++)
+add_test(NAME chord_test COMMAND chord_test)
