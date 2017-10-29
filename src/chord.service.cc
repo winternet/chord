@@ -239,23 +239,19 @@ Status ChordService::put(ServerContext* serverContext, ServerReader<PutRequest>*
   PutRequest req;
   ofstream file;
 
+  // open
   if(reader->Read(&req)) {
     auto id = req.id();
     file.exceptions(ifstream::failbit | ifstream::badbit);
     file.open(id, std::fstream::binary);
   }
 
-  long size=0;
-  int i=0;
+  //write
   do {
-    size+=req.size();
     file.write((const char*)req.data().data(), req.size());
-    ++i;
   } while(reader->Read(&req));
-  cout << "\n---------- write " << i << " times.";
-  cout << "\n---------- overall " << size << " bytes.";
 
+  // close
   file.close();
-  //TODO(christoph) checksum
   return Status::OK;
 }

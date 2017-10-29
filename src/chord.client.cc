@@ -240,6 +240,7 @@ Status ChordClient::put(const std::string& uri, std::istream& istream) {
   CLIENT_LOG(trace, check) << "put " << uri << " (" << hash << ")";
   auto node = successor(hash);
   auto endpoint = node.endpoint();
+  //TODO make configurable
   constexpr size_t len = 512 * 1024; // 512k
   char buffer[len];
   size_t offset = 0, 
@@ -250,10 +251,8 @@ Status ChordClient::put(const std::string& uri, std::istream& istream) {
   // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
   auto stub = Chord::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
   std::unique_ptr<ClientWriter<PutRequest> > writer(stub->put(&clientContext, &res));
-  int i=0;
 
   do {
-    ++i;
     read = istream.readsome(buffer, len);
     if(read <= 0) {
       break;
@@ -271,7 +270,6 @@ Status ChordClient::put(const std::string& uri, std::istream& istream) {
     }
     
   } while(read > 0);
-  cout << "\n---------- read " << i << " times.";
 
   writer->WritesDone();
   return writer->Finish();
