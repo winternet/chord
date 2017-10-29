@@ -139,17 +139,30 @@ namespace chord {
 
         auto _scheme = match.str(2);
         auto _authority = match.str(4);
+        auto has_authority = false;
         {
           smatch auth_match;
           auto auth_reg = regex{"^(.*):(.*)@([^:]*)?[:]?([0-9]*)?$"};
-          regex_search(_authority, auth_match, auth_reg);
-          uri_builder.user(auth_match.str(1));
-          uri_builder.password(auth_match.str(2));
-          uri_builder.host(auth_match.str(3));
-          if(!auth_match.str(4).empty())
-            uri_builder.port(stoi(auth_match.str(4)));
+          has_authority = regex_match(_authority, auth_reg);
+          if(has_authority) {
+            regex_search(_authority, auth_match, auth_reg);
+            uri_builder.user(auth_match.str(1));
+            uri_builder.password(auth_match.str(2));
+            uri_builder.host(auth_match.str(3));
+            if(!auth_match.str(4).empty())
+              uri_builder.port(stoi(auth_match.str(4)));
+          }
         }
-        auto _path = match.str(5);
+
+        auto _path = ""s;
+        {
+          if(has_authority) {
+            _path = match.str(5);
+          } else {
+            _path = match.str(4) + match.str(5);
+          }
+        }
+
         auto _query = match.str(6);
         {
           smatch query_matches;

@@ -8,6 +8,11 @@
 using namespace std;
 using namespace chord;
 
+TEST(chord_uri, parse_path) {
+  auto uri = chord::uri::from("chord://folder/filename.extension");
+  ASSERT_EQ("chord", uri.scheme());
+  ASSERT_EQ("folder/filename.extension", uri.path());
+}
 TEST(chord_uri, parse_success) {
   auto uri = chord::uri::from("scheme://user:password@host:50050/path?foo=bar&zoom=1&ignored#fragment");
 
