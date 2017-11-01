@@ -8,11 +8,19 @@
 using namespace std;
 using namespace chord;
 
-TEST(chord_uri, parse_path) {
-  auto uri = chord::uri::from("chord://folder/filename.extension");
+TEST(chord_uri, parse_url) {
+  auto uri = chord::uri::from("chord://foo/bar.zip");
   ASSERT_EQ("chord", uri.scheme());
-  ASSERT_EQ("folder/filename.extension", uri.path());
+  ASSERT_EQ("foo", uri.host());
+  ASSERT_EQ("/bar.zip", uri.path());
 }
+
+TEST(chord_uri, parse_urn) {
+  auto uri = chord::uri::from("chord:folder:filename.extension");
+  ASSERT_EQ("chord", uri.scheme());
+  ASSERT_EQ("folder:filename.extension", uri.path());
+}
+
 TEST(chord_uri, parse_success) {
   auto uri = chord::uri::from("scheme://user:password@host:50050/path?foo=bar&zoom=1&ignored#fragment");
 
