@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <experimental/filesystem>
 #include <grpc/grpc.h>
 
 #include <grpc++/server.h>
@@ -9,6 +10,7 @@
 
 
 #include "chord.log.h"
+#include "chord.uri.h"
 #include "chord.context.h"
 #include "chord.grpc.pb.h"
 
@@ -42,6 +44,7 @@ using chord::GetResponse;
 using chord::GetRequest;
 using chord::Chord;
 
+namespace fs = std::experimental::filesystem::v1;
 using namespace std;
 
 ChordService::ChordService(Context& context, Router& router)
@@ -234,16 +237,38 @@ void ChordService::fix_fingers(size_t index) {
 }
 
 
-
 Status ChordService::put(ServerContext* serverContext, ServerReader<PutRequest>* reader, PutResponse* response) {
   PutRequest req;
   ofstream file;
 
+  //TODO make configurable
+  fs::path data {"./data"};
+  if( !fs::is_directory(data) ) {
+    fs::create_directory(data);
+  }
+
   // open
   if(reader->Read(&req)) {
     auto id = req.id();
+    auto uri = chord::uri::from(req.uri());
+
+    data /= uri.directory();
+    if( !fs::is_directory(data) ) {
+      SERVICE_LOG(trace, put) << "creating directories for " << data;
+      fs::create_directories(data);
+    }
+
+    data /= uri.filename();
+    SERVICE_LOG(trace, put) << "trying to put " << data;
     file.exceptions(ifstream::failbit | ifstream::badbit);
-    file.open(id, std::fstream::binary);
+    //TODO make data path configurable
+    //TODO auto-create parent paths if not exist
+    try {
+      file.open(data, std::fstream::binary);
+    } catch(ios_base::failure error) {
+      SERVICE_LOG(error, put) << "failed to open file " << data << ", " << error.what();
+      return Status::CANCELLED;
+    }
   }
 
   //write
@@ -253,5 +278,60 @@ Status ChordService::put(ServerContext* serverContext, ServerReader<PutRequest>*
 
   // close
   file.close();
+  return Status::OK;
+}
+
+Status ChordService::get(grpc::ServerContext* context, const chord::GetRequest* req, grpc::ServerWriter<chord::GetResponse>* writer) {
+  ifstream file;
+
+  //TODO make configurable
+  fs::path data {"./data"};
+  if( !fs::is_directory(data) ) {
+    return Status::CANCELLED;
+  }
+
+  auto id = req->id();
+  auto uri = chord::uri::from(req->uri());
+
+  data /= uri.path();
+  if( !fs::is_regular_file(data) ) {
+    return Status::CANCELLED;
+  }
+
+  SERVICE_LOG(trace, put) << "trying to get " << data;
+  file.exceptions(ifstream::failbit | ifstream::badbit);
+  try {
+    file.open(data, std::fstream::binary);
+  } catch(ios_base::failure error) {
+    SERVICE_LOG(error, put) << "failed to open file " << data << ", " << error.what();
+    return Status::CANCELLED;
+  }
+
+  //TODO make configurable (see chord.client)
+  constexpr size_t len = 512*1024; // 512k
+  char buffer[len];
+  size_t offset = 0,
+          read = 0;
+  //read
+  do {
+    read = file.readsome(buffer, len);
+    if(read <= 0) break;
+
+    GetResponse res;
+    //TODO validate hashes
+    res.set_id(req->id());
+    res.set_data(buffer, read);
+    res.set_offset(offset);
+    res.set_size(read);
+    //TODO write implicit string conversion
+    //res.set_uri(uri);
+    offset += read;
+
+    if(!writer->Write(res)) {
+      throw chord::exception("broken stream.");
+    }
+
+  } while(read > 0);
+
   return Status::OK;
 }

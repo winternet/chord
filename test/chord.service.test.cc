@@ -3,6 +3,8 @@
 
 #include "chord.service.h"
 
+using chord::Header;
+
 Context make_context(const uuid_t& self) {
   Context context = Context();
   context.set_uuid(self);

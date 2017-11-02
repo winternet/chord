@@ -40,4 +40,5 @@ public:
   grpc::Status successor(grpc::ClientContext* context, const chord::SuccessorRequest* req, chord::SuccessorResponse* res);
   grpc::Status successor(const chord::SuccessorRequest* req, chord::SuccessorResponse* res);
   grpc::Status put(const std::string& uri, std::istream& istream);
+  grpc::Status get(const std::string& uri, std::ostream& ostream);
 };

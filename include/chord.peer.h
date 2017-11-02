@@ -77,5 +77,9 @@ public:
    * put
    */
   void put(const std::string& uri, std::istream& istream);
+  /**
+   * get
+   */
+  void get(const std::string& uri, std::ostream& ostream);
 
 };

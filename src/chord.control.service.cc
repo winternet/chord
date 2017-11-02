@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <experimental/filesystem>
 #include <grpc/grpc.h>
 
 #include <grpc++/server.h>
@@ -11,6 +12,7 @@
 
 
 #include "chord.log.h"
+#include "chord.uri.h"
 #include "chord.context.h"
 #include "chord.grpc.pb.h"
 
@@ -32,6 +34,8 @@ using chord::Chord;
 
 using grpc::ServerBuilder;
 using namespace std;
+
+namespace fs = std::experimental::filesystem;
 
 ChordControlService::ChordControlService(const shared_ptr<ChordPeer>& peer)
   : peer{ peer }
@@ -62,6 +66,9 @@ Status ChordControlService::parse_command(const ControlRequest* req, ControlResp
   vector<string> words(distance(begin(tokens), end(tokens)));
   copy(begin(tokens), end(tokens), begin(words));
 
+  CONTROL_LOG(error,parse_command) << "received following words: ";
+  for( auto w:words ) CONTROL_LOG(error, parse_command) << "word " << w;
+
   if(words.size() <= 0) {
     res->set_result("no commands received.");
     return Status::CANCELLED;
@@ -80,7 +87,37 @@ Status ChordControlService::parse_command(const ControlRequest* req, ControlResp
     file.exceptions(ifstream::failbit | ifstream::badbit);
     file.open(source, std::fstream::binary);
 
-    peer->put(target, file);
+    try {
+      peer->put(target, file);
+    } catch(chord::exception exception) {
+      CONTROL_LOG(error,put) << "failed to issue put request: " << exception.what();
+      return Status::CANCELLED;
+    }
+    return Status::OK;
+  } else if(words.at(0) == "get") {
+    if(words.size() < 2) {
+      res->set_result("invalid arguments.");
+      return Status::CANCELLED;
+    }
+
+    auto target = words.at(1);
+
+    auto uri = chord::uri::from(target);
+    //if(!fs::is_directory(uri.directory())) {
+    //  fs::create_directories(uri.directory());
+    //}
+
+    ofstream file;
+    file.exceptions(ofstream::failbit | ofstream::badbit);
+    file.open(uri.filename(), std::fstream::binary);
+
+    try {
+      peer->get(target, file);
+      file.close();
+    } catch(chord::exception exception) {
+      CONTROL_LOG(error,get) << "failed to issue put request: " << exception.what();
+      return Status::CANCELLED;
+    }
     return Status::OK;
   }
 

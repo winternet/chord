@@ -24,6 +24,7 @@ using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 using grpc::ClientWriter;
+using grpc::ClientReader;
 
 using chord::Header;
 using chord::RouterEntry;
@@ -41,6 +42,8 @@ using chord::CheckRequest;
 using chord::Chord;
 using chord::PutResponse;
 using chord::PutRequest;
+using chord::GetResponse;
+using chord::GetRequest;
 
 using namespace std;
 
@@ -237,9 +240,10 @@ void ChordClient::check() {
 
 Status ChordClient::put(const std::string& uri, std::istream& istream) {
   auto hash = chord::crypto::sha256(uri);
-  CLIENT_LOG(trace, check) << "put " << uri << " (" << hash << ")";
-  auto node = successor(hash);
-  auto endpoint = node.endpoint();
+  auto endpoint = successor(hash).endpoint();
+
+  CLIENT_LOG(trace, put) << uri << " (" << hash << ")";
+
   //TODO make configurable
   constexpr size_t len = 512 * 1024; // 512k
   char buffer[len];
@@ -263,6 +267,7 @@ Status ChordClient::put(const std::string& uri, std::istream& istream) {
     req.set_data(buffer, read);
     req.set_offset(offset);
     req.set_size(read);
+    req.set_uri(uri);
     offset += read;
 
     if(!writer->Write(req)) {
@@ -273,4 +278,32 @@ Status ChordClient::put(const std::string& uri, std::istream& istream) {
 
   writer->WritesDone();
   return writer->Finish();
+}
+
+Status ChordClient::get(const std::string& uri, std::ostream& ostream) {
+  auto hash = chord::crypto::sha256(uri);
+  auto endpoint = successor(hash).endpoint();
+
+  CLIENT_LOG(trace, get) << uri << " (" << hash << ")";
+
+  //TODO make configurable
+  constexpr size_t len = 512 * 1024; // 512k
+  char buffer[len];
+
+  ClientContext clientContext;
+  GetResponse res;
+  GetRequest req;
+
+  req.set_id(hash);
+  req.set_uri(uri);
+
+  // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
+  auto stub = Chord::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
+  unique_ptr<ClientReader<GetResponse> > reader(stub->get(&clientContext, req));
+
+  while(reader->Read(&res)) {
+    ostream.write(res.data().data(), res.size());
+  }
+
+  return reader->Finish();
 }

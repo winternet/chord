@@ -51,6 +51,7 @@ void ChordControlClient::control(const string& command) {
   ControlResponse res;
 
   req.set_command(command);
+  //TODO make configurable (at least port)
   auto status = make_stub("127.0.0.1:50000")->control(&clientContext, req, &res);
   if(status.ok()) {
     return;

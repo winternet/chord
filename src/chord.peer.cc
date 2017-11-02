@@ -127,3 +127,7 @@ void ChordPeer::create() {
 void ChordPeer::put(const std::string& uri, std::istream& istream) {
   client->put(uri, istream);
 }
+
+void ChordPeer::get(const std::string& uri, std::ostream& ostream) {
+  client->get(uri, ostream);
+}

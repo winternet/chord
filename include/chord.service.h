@@ -42,6 +42,8 @@ public:
 
   virtual Status put(grpc::ServerContext* context, grpc::ServerReader<chord::PutRequest>* reader, chord::PutResponse* response) override;
 
+  virtual Status get(grpc::ServerContext* context, const chord::GetRequest* req, grpc::ServerWriter<chord::GetResponse>* writer) override;
+
   void fix_fingers(size_t index);
 
 private:
