@@ -8,11 +8,21 @@
 using namespace std;
 using namespace chord;
 
-TEST(chord_uri, parse_url) {
-  auto uri = chord::uri::from("chord://foo/bar.zip");
+TEST(chord_uri, parse_url_filename_only) {
+  auto uri = chord::uri::from("chord:/file.ext");
   ASSERT_EQ("chord", uri.scheme());
-  ASSERT_EQ("foo", uri.host());
-  ASSERT_EQ("/bar.zip", uri.path());
+  ASSERT_EQ("file.ext", uri.filename());
+  ASSERT_EQ(".ext", uri.extension());
+}
+
+TEST(chord_uri, parse_url) {
+  auto uri = chord::uri::from("chord://hostname/folder/subfolder/bar.ext");
+  ASSERT_EQ("chord", uri.scheme());
+  ASSERT_EQ("hostname", uri.host());
+  ASSERT_EQ("/folder/subfolder/bar.ext", uri.path());
+  ASSERT_EQ("/folder/subfolder", uri.directory());
+  ASSERT_EQ("bar.ext", uri.filename());
+  ASSERT_EQ(".ext", uri.extension());
 }
 
 TEST(chord_uri, parse_urn) {
@@ -22,7 +32,7 @@ TEST(chord_uri, parse_urn) {
 }
 
 TEST(chord_uri, parse_success) {
-  auto uri = chord::uri::from("scheme://user:password@host:50050/path?foo=bar&zoom=1&ignored#fragment");
+  auto uri = chord::uri::from("scheme://user:password@host:50050/path/sub/index.html?foo=bar&zoom=1&ignored#fragment");
 
   // scheme
   ASSERT_EQ("scheme", uri.scheme());
@@ -32,7 +42,10 @@ TEST(chord_uri, parse_success) {
   ASSERT_EQ("host", uri.host());
   ASSERT_EQ(50050, uri.port());
   // path
-  ASSERT_EQ("/path", uri.path());
+  ASSERT_EQ("/path/sub/index.html", uri.path());
+  ASSERT_EQ("/path/sub", uri.directory());
+  ASSERT_EQ("index.html", uri.filename());
+  ASSERT_EQ(".html", uri.extension());
   // queries
   ASSERT_EQ("bar", uri.query().at("foo"));
   ASSERT_EQ("1", uri.query().at("zoom"));

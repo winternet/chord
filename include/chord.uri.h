@@ -5,6 +5,8 @@
 #include <cctype>
 #include <iomanip>
 #include <sstream>
+#include <experimental/filesystem>
+
 
 #include "chord.exception.h"
 
@@ -17,6 +19,8 @@ namespace chord {
         string _scheme, _path, _fragment, _user, _password, _host;
         int _port;
 
+        string _directory, _filename, _extension;
+
         public:
         builder scheme(const string& scheme) { _scheme = scheme; return *this;}
         builder host(const string& host) { _host = host; return *this; }
@@ -27,6 +31,9 @@ namespace chord {
         builder query(const map<string, string>& query) { _query = query; return *this; }
         builder add_query(const string& key, const string& value) { _query[key] = value; return *this; }
         builder fragment(const string& fragment) { _fragment = fragment; return *this; }
+        builder directory(const string& directory) { _directory = directory; return *this; }
+        builder filename(const string& filename) { _filename = filename; return *this; }
+        builder extension(const string& extension) { _extension = extension; return *this; }
 
         uri build() {
           uri ret({_user, _password, _host, _port});
@@ -34,6 +41,9 @@ namespace chord {
           ret.path(_path);
           ret.query(_query);
           ret.fragment(_fragment);
+          ret.directory(_directory);
+          ret.filename(_filename);
+          ret.extension(_extension);
           return ret;
         }
       };
@@ -66,6 +76,7 @@ namespace chord {
       map<string, string> _query;
 
       string _scheme, _path, _fragment;
+      string _directory, _filename, _extension;
 
     public:
       uri(const authority& authority):
@@ -86,6 +97,9 @@ namespace chord {
       void path(const string path) { _path = path; }
       void query(const map<string, string> query) { _query = query; }
       void fragment(const string fragment) { _fragment = fragment; }
+      void directory(const string directory) { _directory = directory; }
+      void filename(const string filename) { _filename = filename; }
+      void extension(const string extension) { _extension = extension; }
 
       const string& scheme() const { return _scheme; }
       const string& path() const { return _path; }
@@ -95,6 +109,9 @@ namespace chord {
       const string& host() const { return _authority.host(); }
       const int& port() const { return _authority.port(); }
       const string& fragment() const { return _fragment; }
+      const string& directory() const { return _directory; }
+      const string& filename() const { return _filename; }
+      const string& extension() const { return _extension; }
 
       static string decode(const string& str) {
         ostringstream decoded;
@@ -128,6 +145,7 @@ namespace chord {
       }
 
       static uri from(const string& str) {
+        namespace fs = std::experimental::filesystem::v1;
         auto reg = uri_regex();
         smatch match;
         if(!regex_match(str, reg)) {
@@ -173,6 +191,12 @@ namespace chord {
 
         uri_builder.scheme(_scheme);
         uri_builder.path(_path);
+        fs::path p {_path};
+
+        uri_builder.directory(p.parent_path());
+        uri_builder.filename(p.filename());
+        uri_builder.extension(p.extension());
+
         uri_builder.fragment(_fragment);
         return uri_builder.build();
       }
