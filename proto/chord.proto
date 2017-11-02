@@ -133,11 +133,15 @@ message GetRequest {
   //Header header = 1;
   //--- id to get
   string id = 2;
+  string uri = 3;
 
 }
 
 message GetResponse { 
   //Header  header = 1;
-  bytes   data = 2;
-  uint64  offset = 3;
+  string  id = 2;
+  bytes   data = 3;
+  uint64  offset = 4;
+  uint64  size = 5;
+  string  uri = 6;
 }
