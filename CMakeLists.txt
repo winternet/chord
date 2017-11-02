@@ -15,7 +15,7 @@ set(CMAKE_CXX_COMPILER      "/usr/bin/clang++")
 add_compile_options(
   -Wall
   -Wextra
-  -std=c++14
+  -std=c++17
 )
 
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
@@ -80,7 +80,7 @@ include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}/gen")
 add_library(${PROJECT_NAME}++ SHARED ${SOURCES} ${SOURCES_GEN} ${ProtoSources} ${ProtoHeaders} ${GrpcSources} ${GrpcHeaders})
 target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} 
   #debug asan
-  general grpc++ grpc ssl crypto)
+  general stdc++fs grpc++ grpc ssl crypto)
 install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 
 #
