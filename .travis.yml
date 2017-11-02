@@ -205,6 +205,7 @@ script:
   - |
     cmake --build . -- -j2
     ctest -j2
+    ./chord_test
 
 notifications:
   email:
