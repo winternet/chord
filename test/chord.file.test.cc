@@ -6,7 +6,6 @@
 #include "chord.file.h"
 
 using namespace std;
-using namespace chord;
 
 TEST(chord_file, getxattr) {
   auto file = "xattr.get";
@@ -21,5 +20,5 @@ TEST(chord_file, getxattr) {
   ASSERT_FALSE(chord::file::exists(file));
 
   ASSERT_TRUE(success);
-  ASSERT_EQ("thevalue", attr_value);
+  ASSERT_EQ("thevalue_NOT", attr_value);
 }
