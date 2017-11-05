@@ -204,8 +204,7 @@ script:
   ## build and run the unit tests and examples
   - |
     cmake --build . -- -j2
-    ctest -j2
-    ./chord_test
+    ctest -j2 --V
 
 notifications:
   email:
