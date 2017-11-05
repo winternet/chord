@@ -19,12 +19,12 @@ addons:
       - git
       - curl
 
-cache:
-  apt: true
-  ccache: true
-  directories:
-    - ${TRAVIS_BUILD_DIR}/deps/boost-1.65.1
-    - ${TRAVIS_BUILD_DIR}/deps/grpc-v1.6.6
+        #cache:
+        #  apt: true
+        #  ccache: true
+        #  directories:
+        #    - ${TRAVIS_BUILD_DIR}/deps/boost-1.65.1
+        #    - ${TRAVIS_BUILD_DIR}/deps/grpc-v1.6.6
 
 matrix:
   include:
