@@ -286,10 +286,6 @@ Status ChordClient::get(const std::string& uri, std::ostream& ostream) {
 
   CLIENT_LOG(trace, get) << uri << " (" << hash << ")";
 
-  //TODO make configurable
-  constexpr size_t len = 512 * 1024; // 512k
-  char buffer[len];
-
   ClientContext clientContext;
   GetResponse res;
   GetRequest req;

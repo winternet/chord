@@ -61,10 +61,10 @@ install:
         cd ${GRPC_DIR}/third_party/protobuf
         ./autogen.sh && ./configure && make -j2
       fi
-      CMAKE_OPTIONS+=" -DGRPC_CPP_PLUGIN=${GRPC_DIR}/bin -DPROTOBUF_LIBRARY=${GRPC_DIR}/lib -DPROTOBUF_INCLUDE_DIR=${GRPC_DIR}/include"
-      export PATH=${GRPC_DIR}/bin:${PATH}
-      export LDFLAGS="-L ${GRPC_DIR}/lib"
-      export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${GRPC_DIR}/lib"
+      CMAKE_OPTIONS+=" -DGRPC_CPP_PLUGIN=${GRPC_DIR}/bins/opt -DPROTOBUF_LIBRARY=${GRPC_DIR}/libs/opt -DPROTOBUF_INCLUDE_DIR=${GRPC_DIR}/include"
+      export PATH=${GRPC_DIR}/bins/opt:${PATH}
+      export LDFLAGS="-L ${GRPC_DIR}/libs/opt"
+      export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${GRPC_DIR}/libs/opt"
     fi
   ## install protobuf
   - |
