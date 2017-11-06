@@ -20,5 +20,5 @@ TEST(chord_file, getxattr) {
   ASSERT_FALSE(chord::file::exists(file));
 
   ASSERT_TRUE(success);
-  ASSERT_EQ("thevalue_NOT", attr_value);
+  ASSERT_EQ("thevalue", attr_value);
 }
