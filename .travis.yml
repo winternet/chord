@@ -19,12 +19,12 @@ addons:
       - git
       - curl
 
-        #cache:
-        #  apt: true
-        #  ccache: true
-        #  directories:
-        #    - ${TRAVIS_BUILD_DIR}/deps/boost-1.65.1
-        #    - ${TRAVIS_BUILD_DIR}/deps/grpc-v1.6.6
+    cache:
+      apt: true
+      ccache: true
+      directories:
+        - ${TRAVIS_BUILD_DIR}/deps/boost-1.65.1
+        - ${TRAVIS_BUILD_DIR}/deps/grpc-v1.6.6
 
 matrix:
   include:
@@ -58,26 +58,28 @@ install:
         travis_retry git clone -b ${GRPC_VERSION} https://github.com/grpc/grpc ${GRPC_DIR}
         (cd ${GRPC_DIR} && git submodule update --init)
         make CFLAGS='-Wno-implicit-fallthrough -w' CXXFLAGS='-Wno-implicit-fallthrough -w' -j2
-        cd ${GRPC_DIR}/third_party/protobuf
+        PROTOBUF_DIR = ${GRPC_DIR}/third_party/protobuf/src
+        cd ${PROTOBUF_DIR}
         ./autogen.sh && ./configure && make -j2
       fi
-      CMAKE_OPTIONS+=" -DGRPC_CPP_PLUGIN=${GRPC_DIR}/bins/opt -DPROTOBUF_LIBRARY=${GRPC_DIR}/libs/opt -DPROTOBUF_INCLUDE_DIR=${GRPC_DIR}/include"
-      export PATH=${GRPC_DIR}/bins/opt:${PATH}
-      export LDFLAGS="-L ${GRPC_DIR}/libs/opt"
-      export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${GRPC_DIR}/libs/opt"
+      CMAKE_OPTIONS+=" -DGRPC_CPP_PLUGIN=${GRPC_DIR}/bins/opt -DPROTOBUF_LIBRARY=${PROTOBUF_DIR}/.libs -DPROTOBUF_INCLUDE_DIR=${PROTOBUF_DIR}"
+      export PATH=${GRPC_DIR}/bins/opt:${PROTOBUF_DIR}/.libs:${PATH}
+      export LDFLAGS="-L ${GRPC_DIR}/libs/opt -L ${PROTOBUF_DIR}"
+      export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${GRPC_DIR}/libs/opt:${PROTOBUF_DIR}/.libs"
     fi
   ## install protobuf
-  - |
-    if [[ "${PROTOBUF_VERSION}" != "" ]]; then
-      PROTOBUF_DIR=${DEPS_DIR}/protobuf-v${PROTOBUF_VERSION}
-      if [[ -z "$(ls -A ${PROTOBUF_DIR})" ]]; then
-        mkdir -p ${PROTOBUF_DIR} && cd ${PROTOBUF_DIR}
-        travis_retry wget https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip
-        unzip protoc-${PROTOBUF_VERSION}-linux-x86_64.zip
-      fi
-      export PATH=${PROTOBUF_DIR}/bin:${PATH}
-      protoc --version
-    fi
+  #- |
+  #  if [[ "${PROTOBUF_VERSION}" != "" ]]; then
+  #    PROTOBUF_DIR=${DEPS_DIR}/protobuf-v${PROTOBUF_VERSION}
+  #    if [[ -z "$(ls -A ${PROTOBUF_DIR})" ]]; then
+  #      mkdir -p ${PROTOBUF_DIR} && cd ${PROTOBUF_DIR}
+  #      #travis_retry wget https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip
+  #      #unzip protoc-${PROTOBUF_VERSION}-linux-x86_64.zip
+  #      travis_retry git clone -b ${PROTOBUF_VERSION} https://github.com/google/protobuf.git .
+  #    fi
+  #    export PATH=${PROTOBUF_DIR}/bin:${PATH}
+  #    protoc --version
+  #  fi
 
   ## install boost headers
   - |
