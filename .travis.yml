@@ -36,6 +36,10 @@ matrix:
       env: COMPILER=g++-7 BOOST_VERSION=1.65.1 DOCUMENTATION=false GRPC_VERSION=v1.6.6 PROTOBUF_VERSION=3.0.0
       compiler: gcc
 
+before_install:
+  - pwd
+  - eval "${MATRIX_EVAL}"
+
 install:
   ## install dependencies in ${TRAVIS_BUILD_DIR}/deps/
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
@@ -168,41 +172,12 @@ install:
 before_script:
   - protoc --version
   - cd ${TRAVIS_BUILD_DIR}
-  - (mkdir build && cd build && cmake .. ${CMAKE_OPTIONS})
-
-    #before_install:
-    #  - pwd
-    #  - eval "${MATRIX_EVAL}"
-    #  - echo "building boost" && cd
-    #  - curl -O -L https://dl.bintray.com/boostorg/release/1.65.1/source/boost_1_65_1.tar.bz2
-    #  - tar xf boost_1_65_1.tar.bz2 && cd boost_1_65_1
-    #  - ./bootstrap.sh --prefix=$HOME
-    #  - ./b2 --with-log --with-thread --with-system --with-program_options -j2
-    #  - export BOOST_ROOT=$(pwd)
-    #  - LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
-    #  - export LD_LIBRARY_PATH
-    #  - LIBRARY_PATH=$HOME/lib:$LIBRARY_PATH
-    #  - export LIBRARY_PATH
-    #  - CPATH=$HOME/include:$CPATH
-    #  - export CPATH
-    #  - echo "building grpc" && cd
-    #  - git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
-    #  - cd grpc
-    #  - git submodule update --init
-    #  - make CFLAGS='-Wno-implicit-fallthrough -w' CXXFLAGS='-Wno-implicit-fallthrough -w' -j2
-    #  - sudo make install
-    #  - echo "building protobuf"
-    #  - cd third_party/protobuf
-    #  - ./autogen.sh
-    #  - ./configure && make -j2
-    #  - sudo make install
-    #  - echo "finished building pre-requisites"
-    #  - cd
-    #  - pwd
 
 script:
-  ## build and run the unit tests and examples
   - |
+    mkdir build 
+    cd build
+    cmake .. ${CMAKE_OPTIONS}
     cmake --build .
     ctest --V
 
