@@ -58,7 +58,7 @@ install:
         mkdir -p ${PROTOBUF_DIR} && cd ${PROTOBUF_DIR}
         #travis_retry wget https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip
         #unzip protoc-${PROTOBUF_VERSION}-linux-x86_64.zip
-        travis_retry git clone -b ${PROTOBUF_VERSION} https://github.com/google/protobuf.git .
+        travis_retry git clone -b v${PROTOBUF_VERSION} https://github.com/google/protobuf.git .
         ./autogen.sh
         ./configure
         make
