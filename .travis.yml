@@ -82,7 +82,7 @@ install:
         # cd ${PROTOBUF_DIR}
         # ./autogen.sh && ./configure && make -j2
       fi
-      CMAKE_OPTIONS+=" -DGRPC_CPP_PLUGIN=${GRPC_DIR}/bins/opt"
+      CMAKE_OPTIONS+=" -DGRPC_CPP_PLUGIN=${GRPC_DIR}/bins/opt/grpc_cpp_plugin"
       export PATH=${GRPC_DIR}/bins/opt:${PATH}
       export LDFLAGS="-L ${GRPC_DIR}/libs/opt"
       export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${GRPC_DIR}/libs/opt"
@@ -109,7 +109,7 @@ install:
         if [[ "${BOOST_VERSION}" == "trunk" ]]; then
           BOOST_URL="http://github.com/boostorg/boost.git"
           travis_retry git clone --depth 1 --recursive ${BOOST_URL} ${BOOST_DIR} || exit 1
-          (cd ${BOOST_DIR} && ./bootstrap.sh && ./b2 headers) || exit 1
+          (cd ${BOOST_DIR} && ./bootstrap.sh --with-libraries=log,thread,system,program_options && ./b2 headers) || exit 1
         else
           BOOST_URL="http://sourceforge.net/projects/boost/files/boost/${BOOST_VERSION}/boost_${BOOST_VERSION//\./_}.tar.gz"
           mkdir -p ${BOOST_DIR}
