@@ -30,6 +30,7 @@ jobs:
             git submodule update --init
             make
             make install
+            ldconfig
 
       - run:
           name: Install protobuf
@@ -41,6 +42,7 @@ jobs:
             ./configure
             make
             make install
+            ldconfig
 
       - run:
           name: Print the Current Time
