@@ -19,7 +19,7 @@ jobs:
       - run:
           name: Install openssl
           command: |
-            apt-get -y openssl libssl-dev
+            apt-get -y install openssl libssl-dev
 
       - run:
           name: Install boost
