@@ -33,7 +33,7 @@ matrix:
     #  compiler: gcc
 
     - os: linux
-      env: COMPILER=g++-7 BOOST_VERSION=1.65.1 DOCUMENTATION=false GRPC_VERSION=v1.6.6 PROTOBUF_VERSION=3.0.2
+      env: COMPILER=g++-7 BOOST_VERSION=1.65.1 DOCUMENTATION=false GRPC_VERSION=v1.7.2 PROTOBUF_VERSION=3.0.2
       compiler: gcc
 
 before_install:
