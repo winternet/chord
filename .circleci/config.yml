@@ -10,7 +10,7 @@ jobs:
           command: |
             apt-get update
             apt-get -y install build-essential autoconf libtool git curl cmake 
-            export WORKINGDIR="$(pwd)
+            export WORKINGDIR="$(pwd)"
             echo "working dir: $WORKINGDIR"
             export DEPS="$(pwd)/deps"
             echo "dependency dir: $DEPS"
