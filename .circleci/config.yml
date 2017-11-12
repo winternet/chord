@@ -8,13 +8,26 @@ jobs:
       - run:
           name: Setup
           command: |
+            add-apt-repository ppa:ubuntu-toolchain-r/test
             apt-get update
-            apt-get -y install build-essential autoconf libtool git curl cmake unzip clang
+            apt-get -y install build-essential autoconf libtool git curl cmake unzip
             export WORKINGDIR="$(pwd)"
             echo "working dir: $WORKINGDIR"
             export DEPS="$(pwd)/deps"
             echo "dependency dir: $DEPS"
             mkdir -p $DEPS
+
+      - run:
+          name: Install clang
+          command: |
+            apt-get -y install clang
+            clang++ --version
+
+      - run:
+          name: Install gcc-7
+          command: |
+            apt-get -y install  gcc-7
+            g++ --version
 
       - run:
           name: Install openssl
