@@ -9,12 +9,17 @@ jobs:
           name: Setup
           command: |
             apt-get update
-            apt-get -y install build-essential autoconf libtool git curl cmake unzip
+            apt-get -y install build-essential autoconf libtool git curl cmake unzip openssl
             export WORKINGDIR="$(pwd)"
             echo "working dir: $WORKINGDIR"
             export DEPS="$(pwd)/deps"
             echo "dependency dir: $DEPS"
             mkdir -p $DEPS
+
+      - run:
+          name: Install boost
+          command: |
+            apt-get -y install  libboost-program-options-dev libboost-log-dev libboost-thread-dev libboost-system-dev
 
       - run:
           name: Install grpc
@@ -35,6 +40,7 @@ jobs:
             ./autogen.sh
             ./configure
             make
+            make install
 
       - run:
           name: Print the Current Time
@@ -44,8 +50,7 @@ jobs:
           name: Install chord
           command: |
             ls -al
-            cd $WORKINGDIR
-            ls -al
+            protoc --version
             mkdir build
             cd build
             cmake ..
