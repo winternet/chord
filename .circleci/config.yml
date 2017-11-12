@@ -2,20 +2,45 @@ version: 2
 jobs:
   build:
     docker:
-      - image: debian:stretch
+      - image: ubuntu:17.04
     steps:
       - checkout
       - run:
           name: Setup
           command: |
-            apt-get -y install build-essential autoconf libtool git curl g++-7 g++-6 grpc cmake
+            apt-get update
+            apt-get -y install build-essential autoconf libtool git curl cmake 
+            export WORKINGDIR="$(pwd)
+            echo "working dir: $WORKINGDIR"
+            export DEPS="$(pwd)/deps"
+            echo "dependency dir: $DEPS"
+            mkdir -p $DEPS
+
+      - run:
+          name: Install grpc
+          command: |
+            cd $DEPS
+            git clone -b v1.6.6 https://github.com/grpc/grpc
+            cd grpc
+            git submodule update --init
+            make
+            make install
+
+      - run:
+          name: Install protobuf
+          command: |
+            cd $DEPS
+            git clone -b v3.0.2 https://github.com/google/protobuf.git protobuf
+            ./autogen.sh
+            ./configure
+            make
 
       - run:
           name: Print the Current Time
           command: date
 
       - run:
-          name: Install
+          name: Install chord
           command: |
             mkdir build
             cd build
