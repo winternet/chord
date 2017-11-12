@@ -8,7 +8,7 @@ jobs:
       - run:
           name: Setup
           command: |
-            apt-get -y build-essential autoconf libtool git curl g++-7 g++-6 grpc cmake
+            apt-get -y install build-essential autoconf libtool git curl g++-7 g++-6 grpc cmake
 
       - run:
           name: Print the Current Time
