@@ -6,9 +6,20 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Greeting
-          command: echo Hello, world.
+          name: Setup
+          command: |
+            apt-get -y build-essential autoconf libtool git curl g++-7 g++-6 grpc cmake
+
       - run:
           name: Print the Current Time
           command: date
+
+      - run:
+          name: Install
+          command: |
+            mkdir build
+            cd build
+            cmake ..
+            cmake --build .
+            ctest --V
 
