@@ -8,9 +8,10 @@ jobs:
       - run:
           name: Setup
           command: |
-            add-apt-repository ppa:ubuntu-toolchain-r/test
             apt-get update
-            apt-get -y install build-essential autoconf libtool git curl cmake unzip
+            apt-get -y install build-essential autoconf libtool git curl cmake unzip software-properties-common
+            add-apt-repository -y ppa:ubuntu-toolchain-r/test
+            apt-get update
             export WORKINGDIR="$(pwd)"
             echo "working dir: $WORKINGDIR"
             export DEPS="$(pwd)/deps"
