@@ -31,6 +31,7 @@ jobs:
           command: |
             cd $DEPS
             git clone -b v3.0.2 https://github.com/google/protobuf.git protobuf
+            cd protobuf
             ./autogen.sh
             ./configure
             make
@@ -42,6 +43,9 @@ jobs:
       - run:
           name: Install chord
           command: |
+            ls -al
+            cd $WORKINGDIR
+            ls -al
             mkdir build
             cd build
             cmake ..
