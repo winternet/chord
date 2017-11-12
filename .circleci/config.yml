@@ -9,7 +9,7 @@ jobs:
           name: Setup
           command: |
             apt-get update
-            apt-get -y install build-essential autoconf libtool git curl cmake unzip
+            apt-get -y install build-essential autoconf libtool git curl cmake unzip clang
             export WORKINGDIR="$(pwd)"
             echo "working dir: $WORKINGDIR"
             export DEPS="$(pwd)/deps"
