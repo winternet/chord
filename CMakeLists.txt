@@ -1,4 +1,4 @@
-set(CMAKE_CXX_COMPILER      "/usr/bin/clang++")
+#set(CMAKE_CXX_COMPILER      "/usr/bin/clang++")
 
 project(chord)
 cmake_minimum_required(VERSION 2.8)
