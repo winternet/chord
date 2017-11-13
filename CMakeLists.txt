@@ -6,6 +6,7 @@ cmake_minimum_required(VERSION 2.8)
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(ProtoPath "${CMAKE_CURRENT_SOURCE_DIR}/proto")
 set(ProtoGenerateTargetPath "./gen")
@@ -15,7 +16,6 @@ set(CMAKE_BUILD_TYPE 				Debug)
 add_compile_options(
   -Wall
   -Wextra
-  -fPIC
   -std=c++1z
 )
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
