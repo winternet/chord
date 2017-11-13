@@ -9,8 +9,10 @@ jobs:
           name: Setup
           command: |
             apt-get update
-            apt-get -y install build-essential autoconf libtool git curl cmake unzip software-properties-common
+            apt-get -y install build-essential autoconf libtool git curl cmake unzip software-properties-common wget
             add-apt-repository -y ppa:ubuntu-toolchain-r/test
+            add-apt-repository "deb http://apt.llvm.org/zesty/ llvm-toolchain-zesty-5.0 main"
+            wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
             apt-get update
             export WORKINGDIR="$(pwd)"
             echo "working dir: $WORKINGDIR"
@@ -21,8 +23,8 @@ jobs:
       - run:
           name: Install clang
           command: |
-            apt-get -y install clang
-            clang++ --version
+            apt-get -y install clang-5.0 
+            clang++-5.0 --version
 
       - run:
           name: Install gcc-7
@@ -69,7 +71,7 @@ jobs:
           command: |
             mkdir build
             cd build
-            CXX=clang++ CC=clang cmake ..
+            CXX=clang++-5.0 CC=clang-5.0 cmake ..
             cmake --build .
             ctest --V
 
