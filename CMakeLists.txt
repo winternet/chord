@@ -15,6 +15,7 @@ set(CMAKE_BUILD_TYPE 				Debug)
 add_compile_options(
   -Wall
   -Wextra
+  -fPIC
   -std=c++1z
 )
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
