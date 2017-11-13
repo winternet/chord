@@ -33,6 +33,11 @@ jobs:
             g++ --version
 
       - run:
+          name: Install xattr
+          command: |
+            apt-get -y install attr-dev
+
+      - run:
           name: Install openssl
           command: |
             apt-get -y install openssl libssl-dev
