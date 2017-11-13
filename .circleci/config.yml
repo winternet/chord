@@ -71,7 +71,7 @@ jobs:
           command: |
             mkdir build
             cd build
-            CXX=clang++-5.0 CC=clang-5.0 cmake ..
+            CXX=g++-7 CC=gcc-7 cmake ..
             cmake --build .
             ctest --V
 
