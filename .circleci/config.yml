@@ -45,7 +45,10 @@ jobs:
       - run:
           name: Install boost
           command: |
-            apt-get -y install  libboost-program-options-dev libboost-log-dev libboost-thread-dev libboost-system-dev
+            cd $DEPS
+            git clone --depth 1 --recursive http://github.com/boostorg/boost.git boost || exit 1
+            (cd boost && ./bootstrap.sh --with-libraries=log,thread,system,program_options && ./b2 link=shared install) || exit 1
+	    ldconfig
 
       - run:
           name: Install grpc
