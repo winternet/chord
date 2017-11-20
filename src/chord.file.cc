@@ -40,15 +40,27 @@ bool file::create_directories(const std::string& path) {
   return fs::create_directories({path});
 }
 
+bool file::has_attr(const std::string& path, const std::string& name) {
+  size_t read = ::getxattr(path.c_str(), name.c_str(), nullptr, 0);
+  if(read == -1u) return false;
+
+  return true;
+}
+
 /// xattr get
 attribute file::attr(const std::string& path, const std::string& name) {
   using namespace std::string_literals;
   size_t read = ::getxattr(path.c_str(), name.c_str(), nullptr, 0);
   if(read == -1u) return {false};
 
+#if __cplusplus >= 201703L
   std::string value; value.resize(read);
-
   read = ::getxattr(path.c_str(), name.c_str(), value.data(), value.size());
+#else
+  char buffer[read];
+  read = ::getxattr(path.c_str(), name.c_str(), buffer, read);
+  std::string value(buffer, read);
+#endif
   if(read == -1u) throw new chord::exception("failed to get xattr"s + strerror(errno));
 
   return {true, value};

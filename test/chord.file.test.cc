@@ -13,7 +13,13 @@ TEST(chord_file, getxattr) {
 
   chord::file::create_file(file);
   chord::file::attr(file, attr_name, "thevalue");
+#if __cplusplus >= 2017031L
   auto [success, attr_value] = chord::file::attr(file, attr_name);
+#else
+  auto attribute = chord::file::attr(file, attr_name);
+  auto success = attribute.success;
+  auto attr_value = attribute.value;
+#endif
 
   ASSERT_TRUE(chord::file::exists(file));
   chord::file::remove(file);

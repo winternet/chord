@@ -3,7 +3,7 @@
 project(chord)
 cmake_minimum_required(VERSION 2.8)
 
-set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -16,14 +16,15 @@ set(CMAKE_BUILD_TYPE 				Debug)
 add_compile_options(
   -Wall
   -Wextra
-  -std=c++1z
+  -std=c++14
+  -DBOOST_LOG_DYN_LINK
 )
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   # compile with address sanitizer (2x slowdown)
   add_compile_options(
-    -fsanitize=address -fsanitize-address-use-after-scope
+    -fsanitize=address
   )
 #add_compile_options(
 #    $<$<NOT:$<STREQUAL:$<TARGET_PROPERTY:SOURCE_DIR>,${CMAKE_SOURCE_DIR}/test_app1>>:-Werror>

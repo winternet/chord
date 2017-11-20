@@ -25,6 +25,8 @@ namespace chord {
 
     static bool create_directories(const std::string& path);
 
+    static bool has_attr(const std::string& path, const std::string& name);
+
     /// xattr get
     static attribute attr(const std::string& path, const std::string& name);
 

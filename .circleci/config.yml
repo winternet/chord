@@ -33,6 +33,18 @@ jobs:
             g++ --version
 
       - run:
+          name: Install cmake
+          command: |
+            cd $DEPS
+            wget https://cmake.org/files/v3.9/cmake-3.9.6.tar.gz
+            tar xvzf cmake-3.9.6.tar.gz
+            cd cmake-3.9.6
+            ./bootstrap
+            make -j4
+            make install
+            cmake --version
+
+      - run:
           name: Install xattr
           command: |
             apt-get -y install attr-dev
@@ -43,10 +55,15 @@ jobs:
             apt-get -y install openssl libssl-dev
 
       - run:
+          name: Install gtest
+          command: |
+            apt-get -y install libgtest-dev
+
+      - run:
           name: Install boost
           command: |
             cd $DEPS
-            git clone --depth 1 --recursive http://github.com/boostorg/boost.git boost || exit 1
+            git clone -b boost-1.65.0 --depth 1 --recursive http://github.com/boostorg/boost.git boost || exit 1
             (cd boost && ./bootstrap.sh --prefix=/usr --with-libraries=log,thread,system,program_options && ./b2 headers && ./b2 link=shared install) || exit 1
             ldconfig
 
@@ -57,7 +74,7 @@ jobs:
             git clone -b v1.6.6 https://github.com/grpc/grpc
             cd grpc
             git submodule update --init
-            make
+            make -j4
             make install
             ldconfig
 
@@ -69,7 +86,7 @@ jobs:
             cd protobuf
             ./autogen.sh
             ./configure
-            make
+            make -j4
             make install
             ldconfig
             protoc --version
