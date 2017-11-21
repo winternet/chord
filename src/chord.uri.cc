@@ -176,4 +176,4 @@ namespace chord {
     return uri_builder.build();
   }
 
-};
+}

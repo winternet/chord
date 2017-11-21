@@ -82,4 +82,4 @@ bool file::attr_remove(const std::string& path, const std::string& name) {
 
   return true;
 }
-};
+}

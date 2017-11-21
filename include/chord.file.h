@@ -35,4 +35,4 @@ namespace chord {
 
     static bool attr_remove(const std::string& path, const std::string& name);
   };
-};
+}

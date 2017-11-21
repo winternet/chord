@@ -45,5 +45,5 @@ namespace chord {
       return sha256(str.data(), str.length());
     }
 
-  };
-};
+  }
+}

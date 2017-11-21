@@ -92,6 +92,6 @@ namespace chord {
         return os;
       }
   };
-};
+}
 
 typedef chord::uuid uuid_t;

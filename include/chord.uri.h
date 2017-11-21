@@ -98,4 +98,4 @@ namespace chord {
 
       static uri from(const std::string& str);
   };
-};
+}

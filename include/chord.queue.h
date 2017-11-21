@@ -48,4 +48,4 @@ namespace chord {
         condition.notify_one();
       }
   };
-};
+}
