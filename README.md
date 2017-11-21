@@ -1,3 +1,5 @@
+[![Build Status](https://circleci.com/gh/winternet/chord/tree/master.svg?style=shield&circle-token=06884550effac32786aa01b3638bdd15e8baa03b)](https://circleci.com/gh/winternet/chord)
+
 # chord
 
 ## pre-requisites
