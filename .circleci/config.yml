@@ -57,7 +57,7 @@ jobs:
           name: Install gtest
           command: |
             apt-get -y install libgtest-dev
-            cd /usr/src/googletest/googletest
+            cd /usr/src/googletest
             mkdir build && cd build
             cmake ..
             make -j4 && make install
