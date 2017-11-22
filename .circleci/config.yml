@@ -97,7 +97,7 @@ jobs:
           command: |
             mkdir build
             cd build
-            CXX=g++-7 CC=gcc-7 cmake ..
-            cmake --build .
+            CXX=g++-7 CC=gcc-7 cmake .. -DENABLE_COVERAGE:BOOL=TRUE
+            cmake --build . -- -j4 
             ctest --V
 

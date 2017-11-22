@@ -13,9 +13,18 @@ set(ProtoGenerateTargetPath "./gen")
 
 set(CMAKE_BUILD_TYPE 				Debug)
 
+if(CMAKE_COMPILER_IS_GNUCC)
+  option(ENABLE_COVERAGE "enable coverage reporting for gcc/clang" FALSE)
+  if(ENABLE_COVERAGE)
+    add_compile_options(--coverage -O0)
+  endif()
+endif()
+
 add_compile_options(
+  -fPIC
   -Wall
   -Wextra
+  -Wpedantic
   -std=c++14
   -DBOOST_LOG_DYN_LINK
 )
@@ -23,9 +32,7 @@ message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   # compile with address sanitizer (2x slowdown)
-  add_compile_options(
-    -fsanitize=address
-  )
+  add_compile_options(-fsanitize=address)
 #add_compile_options(
 #    $<$<NOT:$<STREQUAL:$<TARGET_PROPERTY:SOURCE_DIR>,${CMAKE_SOURCE_DIR}/test_app1>>:-Werror>
 #  )
@@ -45,7 +52,7 @@ include(CTest)
 #
 # find packages
 #
-find_package(Boost COMPONENTS log thread system program_options)
+find_package(Boost REQUIRED COMPONENTS log thread system program_options)
 find_package(Protobuf REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
@@ -82,6 +89,7 @@ add_library(${PROJECT_NAME}++ SHARED ${SOURCES} ${SOURCES_GEN} ${ProtoSources} $
 target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} 
   #debug asan
   general stdc++fs grpc++ grpc ssl crypto)
+target_link_libraries(${PROJECT_NAME}++ --coverage)
 install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 
 #
@@ -112,4 +120,5 @@ add_executable(chord_test ${TEST_SOURCES})
 target_link_libraries(chord_test 
   debug asan
   general gtest gmock gmock_main ${PROJECT_NAME}++)
+target_link_libraries(chord_test --coverage)
 add_test(NAME chord_test COMMAND chord_test)
