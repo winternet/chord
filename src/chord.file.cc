@@ -48,10 +48,10 @@ bool file::has_attr(const std::string& path, const std::string& name) {
 }
 
 /// xattr get
-attribute file::attr(const std::string& path, const std::string& name) {
+optional_t<std::string> file::attr(const std::string& path, const std::string& name) {
   using namespace std::string_literals;
   size_t read = ::getxattr(path.c_str(), name.c_str(), nullptr, 0);
-  if(read == -1u) return {false};
+  if(read == -1u) return {};
 
 #if __cplusplus >= 201703L
   std::string value; value.resize(read);
@@ -63,7 +63,7 @@ attribute file::attr(const std::string& path, const std::string& name) {
 #endif
   if(read == -1u) throw new chord::exception("failed to get xattr"s + strerror(errno));
 
-  return {true, value};
+  return value;
 }
 
 /// xattr set

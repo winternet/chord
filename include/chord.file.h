@@ -1,15 +1,12 @@
 #pragma once
 
 #include <string>
+#include <boost/optional.hpp>
 
 namespace chord {
 
-  struct attribute {
-    bool success;
-    std::string value;
-    attribute(bool succ):success(succ) {};
-    attribute(bool succ, std::string val):success(succ), value(val) {};
-  };
+  template<typename T>
+  using optional_t = boost::optional<T>;
 
   struct file {
     // wrappers
@@ -28,7 +25,7 @@ namespace chord {
     static bool has_attr(const std::string& path, const std::string& name);
 
     /// xattr get
-    static attribute attr(const std::string& path, const std::string& name);
+    static optional_t<std::string> attr(const std::string& path, const std::string& name);
 
     /// xattr set
     static bool attr(const std::string& path, const std::string& name, const std::string& value);
