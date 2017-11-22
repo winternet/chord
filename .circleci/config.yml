@@ -100,4 +100,5 @@ jobs:
             CXX=g++-7 CC=gcc-7 cmake .. -DENABLE_COVERAGE:BOOL=TRUE
             cmake --build . -- -j4 
             ctest --V
+            bash <(curl -s https://codecov.io/bash) -t 8811a299-c05a-4c37-8d1d-c5bac9cca1fe
 
