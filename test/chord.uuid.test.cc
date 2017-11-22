@@ -146,3 +146,11 @@ TEST(chord_uuid, operator_string_cast) {
   auto str= string{id};
   ASSERT_EQ(str, "15");
 }
+
+TEST(chord_uuid, operator_input_stream) {
+  uuid_t id;
+  stringstream input_stream;
+  input_stream << "12345";
+  input_stream >> id;
+  ASSERT_EQ(id, 12345);
+}
