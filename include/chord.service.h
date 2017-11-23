@@ -20,10 +20,6 @@ typedef std::function<ChordClient()> ClientFactory;
 
 class ChordService final : public chord::Chord::Service, AbstractService {
 
-protected:
-
-  chord::Header make_header();
-
 public:
   ChordService(Context& context, Router& router);
 

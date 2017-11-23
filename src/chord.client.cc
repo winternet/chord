@@ -15,6 +15,7 @@
 #include "chord.grpc.pb.h"
 #include "chord.exception.h"
 
+#include "chord.common.h"
 #include "chord.crypto.h"
 
 #define log(level) LOG(level) << "[client] "
@@ -46,6 +47,7 @@ using chord::GetResponse;
 using chord::GetRequest;
 
 using namespace std;
+using namespace chord::common;
 
 ChordClient::ChordClient(Context& context, Router& router) 
   :context{context}
@@ -64,24 +66,13 @@ ChordClient::ChordClient(Context& context, Router& router, StubFactory make_stub
 {
 }
 
-Header ChordClient::make_header() {
-  ClientContext clientContext;
-
-  Header header;
-  RouterEntry src;
-  src.set_uuid(context.uuid());
-  src.set_endpoint(context.bind_addr);
-  header.mutable_src()->CopyFrom(src);
-  return header;
-}
-
 void ChordClient::join(const endpoint_t& addr) {
   CLIENT_LOG(debug, join) << "joining " << addr;
 
   ClientContext clientContext;
   JoinRequest req;
 
-  req.mutable_header()->CopyFrom(make_header());
+  req.mutable_header()->CopyFrom(make_header(context));
 
   JoinResponse res;
   Status status = make_stub(addr)->join(&clientContext, req, &res);
@@ -103,7 +94,7 @@ void ChordClient::stabilize() {
   StabilizeRequest req;
   StabilizeResponse res;
 
-  req.mutable_header()->CopyFrom(make_header());
+  req.mutable_header()->CopyFrom(make_header(context));
 
   auto successor = router.successor();
 
@@ -166,7 +157,7 @@ void ChordClient::notify() {
 
   CLIENT_LOG(trace, notify) << "calling notify on address " << endpoint;
 
-  req.mutable_header()->CopyFrom(make_header());
+  req.mutable_header()->CopyFrom(make_header(context));
   make_stub(endpoint)->notify(&clientContext, req, &res);
 
 }
@@ -175,7 +166,7 @@ Status ChordClient::successor(ClientContext* clientContext, const SuccessorReque
 
   CLIENT_LOG(trace,successor) << "trying to find successor of " << req->id();
   SuccessorRequest copy(*req);
-  copy.mutable_header()->CopyFrom(make_header());
+  copy.mutable_header()->CopyFrom(make_header(context));
 
   uuid_t predecessor = router.closest_preceding_node(uuid_t(req->id()));
   endpoint_t endpoint = router.get(predecessor);
@@ -194,7 +185,7 @@ Status ChordClient::successor(const SuccessorRequest* req, SuccessorResponse* re
 RouterEntry ChordClient::successor(const uuid_t& uuid) {
   ClientContext clientContext;
   SuccessorRequest req;
-  req.mutable_header()->CopyFrom(make_header());
+  req.mutable_header()->CopyFrom(make_header(context));
   req.set_id(uuid);
   SuccessorResponse res;
 
@@ -222,7 +213,7 @@ void ChordClient::check() {
   CheckRequest req;
   CheckResponse res;
 
-  req.mutable_header()->CopyFrom(make_header());
+  req.mutable_header()->CopyFrom(make_header(context));
 
   auto endpoint = router.get(predecessor);
 

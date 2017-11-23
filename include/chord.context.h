@@ -27,6 +27,7 @@ struct Context {
   size_t check_period_ms      { 10000 };
 
   uuid_t& uuid() { return _uuid; }
+  const uuid_t& uuid() const { return _uuid; }
 
   Context set_uuid(const uuid_t& uuid);
   Context set_router(Router* router);

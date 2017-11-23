@@ -14,6 +14,7 @@
 #include "chord.context.h"
 #include "chord.grpc.pb.h"
 
+#include "chord.common.h"
 #include "chord.client.h"
 #include "chord.service.h"
 
@@ -44,8 +45,10 @@ using chord::GetResponse;
 using chord::GetRequest;
 using chord::Chord;
 
+
 namespace fs = std::experimental::filesystem::v1;
 using namespace std;
+using namespace chord::common;
 
 ChordService::ChordService(Context& context, Router& router)
   : context{ context }
@@ -86,23 +89,12 @@ Status ChordService::join(ServerContext* serverContext, const JoinRequest* req, 
   return Status::OK;
 }
 
-Header ChordService::make_header() {
-  ClientContext clientContext;
-
-  Header header;
-  RouterEntry src;
-  src.set_uuid(context.uuid());
-  src.set_endpoint(context.bind_addr);
-  header.mutable_src()->CopyFrom(src);
-  return header;
-}
-
 RouterEntry ChordService::successor(const uuid_t& uuid) {
   ServerContext serverContext;
   SuccessorRequest req;
   SuccessorResponse res;
 
-  req.mutable_header()->CopyFrom(make_header());
+  req.mutable_header()->CopyFrom(make_header(context));
   req.set_id(uuid);
 
   Status status = successor(&serverContext, &req, &res);
@@ -210,7 +202,7 @@ Status ChordService::notify(ServerContext* serverContext, const NotifyRequest* r
 Status ChordService::check(ServerContext* serverContext, const CheckRequest* req, CheckResponse* res) {
   SERVICE_LOG(trace,check) << "from " << req->header().src().uuid()
     << "@" << req->header().src().endpoint();
-  res->mutable_header()->CopyFrom(make_header());
+  res->mutable_header()->CopyFrom(make_header(context));
   res->set_id(req->id());
   return Status::OK;
 }

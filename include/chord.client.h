@@ -18,11 +18,6 @@ private:
   Router& router;
 
   StubFactory make_stub;
-
-  /**
-   * return new header
-   */
-  chord::Header make_header();
   chord::SuccessorRequest make_request();
 
 public:
