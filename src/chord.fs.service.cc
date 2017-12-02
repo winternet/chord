@@ -44,16 +44,7 @@ namespace chord {
     Service::Service(Context& context)
       : context{ context }
     {
-      //make_client = [&](){
-      //  return chord::client(context, router);
-      //};
     }
-
-    //Service::Service(const std::shared_ptr<Context>& context, ClientFactory make_client)
-    //  : context{ context }
-    //  , make_client{ make_client }
-    //{}
-
 
     Status Service::put(ServerContext* serverContext, ServerReader<PutRequest>* reader, PutResponse* response) {
       PutRequest req;

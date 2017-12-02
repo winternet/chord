@@ -47,6 +47,7 @@ using namespace std;
 using namespace chord::common;
 
 namespace chord {
+
   Service::Service(Context& context, Router& router)
     : context{ context }
   , router{ router }
@@ -224,4 +225,5 @@ namespace chord {
       SERVICE_LOG(warning, fix_fingers) << "failed to fix fingers for " << fix;
     }
   }
-}
+
+} //namespace chord

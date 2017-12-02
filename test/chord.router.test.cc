@@ -11,6 +11,7 @@
 #define EXPECT_NULL(pointer) EXPECT_TRUE(pointer == nullptr)
 
 using namespace std;
+using namespace chord;
 
 TEST(RouterTest, initialize) {
   Context context;

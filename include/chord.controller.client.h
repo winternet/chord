@@ -17,12 +17,6 @@ namespace chord {
       private:
         ControlStubFactory make_stub;
 
-        /**
-         * return new header
-         */
-        //Header make_header();
-        //SuccessorRequest make_request();
-
       public:
         Client();
         Client(ControlStubFactory factory);

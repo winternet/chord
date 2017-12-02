@@ -132,12 +132,4 @@ namespace chord {
     router->reset();
   }
 
-//  void Peer::put(const std::string& uri, std::istream& istream) {
-//    client->put(uri, istream);
-//  }
-//
-//  void Peer::get(const std::string& uri, std::ostream& ostream) {
-//    client->get(uri, ostream);
-//  }
-
 } //namespace chord

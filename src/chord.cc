@@ -13,12 +13,13 @@
 #include "chord.context.h"
 
 using namespace std;
+using namespace chord;
 
 namespace po = boost::program_options;
 
 #define fatal cerr << "\nFATAL - "
 
-void parse_program_options(int ac, char* av[], const shared_ptr<Context>& context) {
+void parse_program_options(int ac, char* av[], const shared_ptr<chord::Context>& context) {
   po::options_description global("[program options]");
 
   global.add_options()
@@ -96,7 +97,7 @@ int main(int argc, char* argv[]) {
 
   //--- parse program options to context
   //--- or issue client command
-  auto context = make_shared<Context>();
+  auto context = make_shared<chord::Context>();
   parse_program_options(argc, argv, context);
 
   //--- start peer

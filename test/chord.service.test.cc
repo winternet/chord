@@ -14,6 +14,8 @@ using chord::JoinResponse;
 using chord::SuccessorRequest;
 using chord::SuccessorResponse;
 
+using namespace chord;
+
 Context make_context(const uuid_t& self) {
   Context context = Context();
   context.set_uuid(self);

@@ -18,13 +18,10 @@
 namespace chord {
   namespace fs {
 
-    //typedef std::function<chord::client()> ClientFactory;
     class Service final : public chord::fs::Filesystem::Service {
 
       public:
         Service(Context& context);
-
-        //Service(const std::shared_ptr<Context>& context, ClientFactory make_client);
 
         virtual grpc::Status put(grpc::ServerContext* context, grpc::ServerReader<chord::fs::PutRequest>* reader, chord::fs::PutResponse* response) override;
 

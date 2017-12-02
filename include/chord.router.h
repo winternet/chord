@@ -23,7 +23,7 @@ struct Router {
   std::array<uuid_t*, BITS> successors;
 
 
-  Router(Context* context)
+  Router(chord::Context* context)
     : context { context }
   {
     std::fill(std::begin(predecessors), std::end(predecessors), nullptr);
@@ -168,5 +168,5 @@ struct Router {
   }
 
 private:
-  Context* context;
+  chord::Context* context;
 };
