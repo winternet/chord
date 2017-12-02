@@ -10,30 +10,33 @@
 #include "chord.grpc.pb.h"
 
 
-typedef std::function<std::unique_ptr<chord::Chord::StubInterface>(const endpoint_t& endpoint)> StubFactory;
+namespace chord {
 
-class ChordClient {
-private:
-  Context& context;
-  Router& router;
+  typedef std::function<std::unique_ptr<chord::Chord::StubInterface>(const endpoint_t& endpoint)> StubFactory;
 
-  StubFactory make_stub;
-  chord::SuccessorRequest make_request();
+  class Client {
+    private:
+      Context& context;
+      Router& router;
 
-public:
-  ChordClient(Context& context, Router& router);
-  ChordClient(Context& context, Router& router, StubFactory factory);
+      StubFactory make_stub;
+      chord::SuccessorRequest make_request();
 
-  void join(const endpoint_t& addr);
+    public:
+      Client(Context& context, Router& router);
+      Client(Context& context, Router& router, StubFactory factory);
 
-  void stabilize();
-  void notify();
-  void check();
-  void fix_fingers();
+      void join(const endpoint_t& addr);
 
-  chord::RouterEntry successor(const uuid_t& id);
-  grpc::Status successor(grpc::ClientContext* context, const chord::SuccessorRequest* req, chord::SuccessorResponse* res);
-  grpc::Status successor(const chord::SuccessorRequest* req, chord::SuccessorResponse* res);
-  grpc::Status put(const std::string& uri, std::istream& istream);
-  grpc::Status get(const std::string& uri, std::ostream& ostream);
-};
+      void stabilize();
+      void notify();
+      void check();
+      void fix_fingers();
+
+      chord::common::RouterEntry successor(const uuid_t& id);
+      grpc::Status successor(grpc::ClientContext* context, const chord::SuccessorRequest* req, chord::SuccessorResponse* res);
+      grpc::Status successor(const chord::SuccessorRequest* req, chord::SuccessorResponse* res);
+      grpc::Status put(const std::string& uri, std::istream& istream);
+      grpc::Status get(const std::string& uri, std::ostream& ostream);
+  };
+}

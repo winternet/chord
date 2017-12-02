@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "chord_common.proto";
+
 option java_multiple_files = true;
 option java_package = "onezero.chord";
 option java_outer_classname = "ChordProto";
@@ -21,8 +23,8 @@ service Chord {
   rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
   rpc check     (CheckRequest)      returns (CheckResponse) {}
   //--- file 
-  rpc put       (stream PutRequest) returns (PutResponse) {}
-  rpc get       (GetRequest)        returns (stream GetResponse) {}
+  //rpc put       (stream PutRequest) returns (PutResponse) {}
+  //rpc get       (GetRequest)        returns (stream GetResponse) {}
 }
 
 /**
@@ -39,109 +41,109 @@ message ControlResponse {
 /**
  * COMMON
  */
-message RouterEntry {
-  string uuid = 1;
-  string endpoint = 2;
-}
-message Header {
-  RouterEntry src = 1;
-  //RouterEntry dst = 2;
-}
+//message RouterEntry {
+//  string uuid = 1;
+//  string endpoint = 2;
+//}
+//message Header {
+//  RouterEntry src = 1;
+//  //RouterEntry dst = 2;
+//}
 
 /**
  * SUCCESSOR 
  */
 message SuccessorRequest {
-  Header header = 1;
+  chord.common.Header header = 1;
   //--- id to find
   string id = 2;
 }
 
 message SuccessorResponse { 
-  Header header = 1;
-  RouterEntry successor = 2;
+  chord.common.Header header = 1;
+  chord.common.RouterEntry successor = 2;
 }
 
 /**
  * JOIN
  */
 message JoinRequest {
-  Header header = 1;
+  chord.common.Header header = 1;
 }
 
 message JoinResponse { 
-  Header header = 1;
-  RouterEntry successor = 2;
+  chord.common.Header header = 1;
+  chord.common.RouterEntry successor = 2;
 }
 
 /**
  * STABILIZE
  */
 message StabilizeRequest {
-  Header header = 1;
+  chord.common.Header header = 1;
 }
 message StabilizeResponse {
-  Header header = 1;
-  RouterEntry predecessor = 2;
+  chord.common.Header header = 1;
+  chord.common.RouterEntry predecessor = 2;
 }
 
 /**
  * NOTIFY
  */
 message NotifyRequest {
-  Header header = 1;
+  chord.common.Header header = 1;
 }
 message NotifyResponse {
-  Header header = 1;
+  chord.common.Header header = 1;
 }
 
 /**
  * CHECK
  */
 message CheckRequest {
-  Header header = 1;
+  chord.common.Header header = 1;
   string id = 2;
 }
 message CheckResponse {
-  Header header = 1;
+  chord.common.Header header = 1;
   string id = 2;
 }
 
 /**
  * PUT
  */
-message PutRequest {
-  //Header header = 1;
-  //--- id to put
-  string  id = 2;
-  bytes   data = 3;
-  uint64  offset = 4;
-  uint64  size = 5;
-  string  uri = 6;
-}
-
-message PutResponse { 
-  Header header = 1;
-  //--- id that was put
-  string id = 2;
-}
-
-/**
- * GET
- */
-message GetRequest {
-  //Header header = 1;
-  //--- id to get
-  string id = 2;
-  string uri = 3;
-
-}
-
-message GetResponse { 
-  //Header  header = 1;
-  string  id = 2;
-  bytes   data = 3;
-  uint64  offset = 4;
-  uint64  size = 5;
-  string  uri = 6;
-}
+//message PutRequest {
+//  //Header header = 1;
+//  //--- id to put
+//  string  id = 2;
+//  bytes   data = 3;
+//  uint64  offset = 4;
+//  uint64  size = 5;
+//  string  uri = 6;
+//}
+//
+//message PutResponse { 
+//  Header header = 1;
+//  //--- id that was put
+//  string id = 2;
+//}
+//
+///**
+// * GET
+// */
+//message GetRequest {
+//  //Header header = 1;
+//  //--- id to get
+//  string id = 2;
+//  string uri = 3;
+//
+//}
+//
+//message GetResponse { 
+//  //Header  header = 1;
+//  string  id = 2;
+//  bytes   data = 3;
+//  uint64  offset = 4;
+//  uint64  size = 5;
+//  string  uri = 6;
+//}

@@ -3,7 +3,16 @@
 
 #include "chord.service.h"
 
-using chord::Header;
+using chord::common::Header;
+using chord::common::RouterEntry;
+
+using grpc::ServerContext;
+using grpc::Status;
+
+using chord::JoinRequest;
+using chord::JoinResponse;
+using chord::SuccessorRequest;
+using chord::SuccessorResponse;
 
 Context make_context(const uuid_t& self) {
   Context context = Context();
@@ -35,7 +44,7 @@ Header make_header(const uuid_t& id, const endpoint_t& addr) {
 TEST(ServiceTest, join) {
   Context context = Context();
   Router router = Router(&context);
-  ChordService service(context, router);
+  chord::Service service(context, router);
 
   //TODO assertions and request
 
@@ -54,7 +63,7 @@ TEST(ServiceTest, successor_single_node) {
   Context context = make_context(0);
   Router router = Router(&context);
 
-  ChordService service(context, router);
+  chord::Service service(context, router);
 
   ServerContext serverContext;
   SuccessorRequest req;
@@ -82,7 +91,7 @@ TEST(ServiceTest, successor_two_nodes) {
   router.set_successor(0, 5, "0.0.0.0:50055");
   router.set_predecessor(0, 5, "0.0.0.0:50055");
 
-  ChordService service(context, router);
+  chord::Service service(context, router);
 
   ServerContext serverContext;
   SuccessorRequest req;
@@ -110,7 +119,7 @@ TEST(ServiceTest, successor_two_nodes_mod) {
   router.set_successor(0, 0, "0.0.0.0:50050");
   router.set_predecessor(0, 0, "0.0.0.0:50050");
 
-  ChordService service(context, router);
+  chord::Service service(context, router);
 
   ServerContext serverContext;
   SuccessorRequest req;
@@ -168,9 +177,9 @@ public:
 			const chord::CheckRequest&,
 			chord::CheckResponse*));
 
-  MOCK_METHOD2(putRaw, grpc::ClientWriterInterface<chord::PutRequest>*(grpc::ClientContext* context, chord::PutResponse* response));
+  //MOCK_METHOD2(putRaw, grpc::ClientWriterInterface<chord::PutRequest>*(grpc::ClientContext* context, chord::PutResponse* response));
 
-  MOCK_METHOD2(getRaw, grpc::ClientReaderInterface<chord::GetResponse>*(grpc::ClientContext* context, const chord::GetRequest& request));
+  //MOCK_METHOD2(getRaw, grpc::ClientReaderInterface<chord::GetResponse>*(grpc::ClientContext* context, const chord::GetRequest& request));
 
 	MOCK_METHOD3(AsyncsuccessorRaw, grpc::ClientAsyncResponseReaderInterface<chord::SuccessorResponse>*(
 			grpc::ClientContext*, 
@@ -197,17 +206,17 @@ public:
 			const chord::CheckRequest&,
 			grpc::CompletionQueue*));
 
-  MOCK_METHOD4(AsyncputRaw, grpc::ClientAsyncWriterInterface<chord::PutRequest>*(
-        grpc::ClientContext* context, 
-        chord::PutResponse* response,
-        grpc::CompletionQueue* cq,
-        void* tag));
+  //MOCK_METHOD4(AsyncputRaw, grpc::ClientAsyncWriterInterface<chord::PutRequest>*(
+  //      grpc::ClientContext* context, 
+  //      chord::PutResponse* response,
+  //      grpc::CompletionQueue* cq,
+  //      void* tag));
 
-  MOCK_METHOD4(AsyncgetRaw, grpc::ClientAsyncReaderInterface<chord::GetResponse>*(
-        grpc::ClientContext* context,
-        const ::chord::GetRequest& request,
-        grpc::CompletionQueue* cq,
-        void* tag));
+  //MOCK_METHOD4(AsyncgetRaw, grpc::ClientAsyncReaderInterface<chord::GetResponse>*(
+  //      grpc::ClientContext* context,
+  //      const ::chord::GetRequest& request,
+  //      grpc::CompletionQueue* cq,
+  //      void* tag));
 };
 
 /**
@@ -229,10 +238,10 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   std::unique_ptr<MockStub> stub(new MockStub);
 
 	auto stub_factory = [&](const endpoint_t& endpoint){ return std::move(stub); };
-	ChordClient client(context, router, stub_factory);
+  chord::Client client(context, router, stub_factory);
 
 	auto client_factory = [&](){ return client; };
-  ChordService service(context, router, client_factory);
+  chord::Service service(context, router, client_factory);
 
   ServerContext serverContext;
   SuccessorRequest req;

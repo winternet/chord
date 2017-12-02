@@ -1,12 +1,12 @@
 #include "chord.context.h"
 #include "chord.grpc.pb.h"
 
-using chord::Header;
+using chord::common::Header;
 
 namespace chord {
 namespace common {
 
-  chord::Header make_header(const Context& context) {
+  chord::common::Header make_header(const Context& context) {
     Header header;
     RouterEntry src;
     src.set_uuid(context.uuid());

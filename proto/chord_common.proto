@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "onezero.chord";
+option java_outer_classname = "ChordProto";
+option objc_class_prefix = "CRD";
+
+package chord.common;
+
+message RouterEntry {
+  string uuid = 1;
+  string endpoint = 2;
+}
+
+message Header {
+  RouterEntry src = 1;
+}

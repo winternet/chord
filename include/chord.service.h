@@ -15,35 +15,31 @@
 
 #include "chord.client.h"
 
+namespace chord {
+  typedef std::function<chord::Client()> ClientFactory;
+  class Service final : public chord::Chord::Service, AbstractService {
 
-typedef std::function<ChordClient()> ClientFactory;
+    public:
+      Service(Context& context, Router& router);
 
-class ChordService final : public chord::Chord::Service, AbstractService {
+      Service(Context& context, Router& router, ClientFactory make_client);
 
-public:
-  ChordService(Context& context, Router& router);
+      grpc::Status join(grpc::ServerContext* context, const chord::JoinRequest* req, chord::JoinResponse* res) override;
 
-  ChordService(Context& context, Router& router, ClientFactory make_client);
+      virtual chord::common::RouterEntry successor(const uuid_t& uuid) noexcept(false) override ;
+      virtual grpc::Status successor(grpc::ServerContext* context, const chord::SuccessorRequest* req, chord::SuccessorResponse* res) override;
 
-  Status join(ServerContext* context, const chord::JoinRequest* req, chord::JoinResponse* res) override;
+      virtual grpc::Status stabilize(grpc::ServerContext* context, const chord::StabilizeRequest* req, chord::StabilizeResponse* res) override;
 
-  virtual RouterEntry successor(const uuid_t& uuid) noexcept(false) override ;
-  virtual Status successor(ServerContext* context, const chord::SuccessorRequest* req, chord::SuccessorResponse* res) override;
+      virtual grpc::Status notify(grpc::ServerContext* context, const chord::NotifyRequest* req, chord::NotifyResponse* res) override;
 
-  virtual Status stabilize(grpc::ServerContext* context, const chord::StabilizeRequest* req, chord::StabilizeResponse* res) override;
+      virtual grpc::Status check(grpc::ServerContext* context, const chord::CheckRequest* req, chord::CheckResponse* res) override;
 
-  virtual Status notify(grpc::ServerContext* context, const chord::NotifyRequest* req, chord::NotifyResponse* res) override;
+      void fix_fingers(size_t index);
 
-  virtual Status check(grpc::ServerContext* context, const chord::CheckRequest* req, chord::CheckResponse* res) override;
-
-  virtual Status put(grpc::ServerContext* context, grpc::ServerReader<chord::PutRequest>* reader, chord::PutResponse* response) override;
-
-  virtual Status get(grpc::ServerContext* context, const chord::GetRequest* req, grpc::ServerWriter<chord::GetResponse>* writer) override;
-
-  void fix_fingers(size_t index);
-
-private:
-  Context& context;
-  Router& router;
-  ClientFactory make_client;
-};
+    private:
+      Context& context;
+      Router& router;
+      ClientFactory make_client;
+  };
+}

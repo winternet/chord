@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+import "chord_common.proto";
+
+option java_multiple_files = true;
+option java_package = "onezero.chord";
+option java_outer_classname = "ChordControlProto";
+option objc_class_prefix = "CRDCTRL";
+
+package chord.controller;
+
+service Control {
+  //--- command
+  rpc control   (ControlRequest)  returns (ControlResponse) {}
+}
+
+/**
+ * Command
+ */
+message ControlRequest {
+  string command = 1;
+}
+
+message ControlResponse { 
+  string result = 1;
+}
+

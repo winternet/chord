@@ -1,12 +1,10 @@
 #pragma once
 #include "chord.context.h"
 
-using chord::Header;
-
 namespace chord {
-namespace common {
+  namespace common {
 
-  chord::Header make_header(const Context& context);
+    chord::common::Header make_header(const Context& context);
 
-}
+  }
 }

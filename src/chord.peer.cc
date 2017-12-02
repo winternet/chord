@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <memory>
 #include <thread>
 
 #include <grpc++/server.h>
@@ -12,7 +13,7 @@
 #include "chord.router.h"
 #include "chord.client.h"
 #include "chord.service.h"
-
+#include "chord.fs.service.h"
 
 #include "chord.context.h"
 
@@ -21,113 +22,122 @@
 using grpc::ServerBuilder;
 using namespace std;
 
-void ChordPeer::start_server() {
-  endpoint_t bind_addr = context->bind_addr;
-  ServerBuilder builder;
-  builder.AddListeningPort(bind_addr, grpc::InsecureServerCredentials());
-  builder.RegisterService(service.get());
+using chord::common::RouterEntry;
 
-  unique_ptr<grpc::Server> server(builder.BuildAndStart());
-  PEER_LOG(debug) << "server listening on " << bind_addr;
-  server->Wait();
-}
+namespace chord {
 
-ChordPeer::ChordPeer(const shared_ptr<Context>& context) 
-  : scheduler { new Scheduler() }
-  , context { context }
-  , router  { new Router{context.get()} }
-  , client  { new ChordClient{*context, *router} }
-  , service { new ChordService{*context, *router} }
-{
-}
+  void Peer::start_server() {
+    endpoint_t bind_addr = context->bind_addr;
+    ServerBuilder builder;
+    builder.AddListeningPort(bind_addr, grpc::InsecureServerCredentials());
+    builder.RegisterService(service.get());
+    // filesystem service
+    builder.RegisterService(fs_service.get());
 
-void ChordPeer::start() {
-  PEER_LOG(trace) << "peer with client-id " << context->uuid();
-
-  if( context->bootstrap ) {
-    create();
-  } else {
-    join();
+    unique_ptr<grpc::Server> server(builder.BuildAndStart());
+    PEER_LOG(debug) << "server listening on " << bind_addr;
+    server->Wait();
   }
 
-  start_scheduler();
-  start_server();
-  //--- blocks
-}
+  Peer::Peer(const shared_ptr<Context>& context) 
+    : scheduler { new Scheduler() }
+  , context { context }
+  , router  { make_unique<Router>(context.get()) }
+  , client  { make_unique<chord::Client>(*context, *router) }
+  , service { make_unique<chord::Service>(*context, *router) }
+  , fs_service { make_unique<chord::fs::Service>(*context) }
+  {
+  }
 
-ChordPeer::~ChordPeer() {}
+  void Peer::start() {
+    PEER_LOG(trace) << "peer with client-id " << context->uuid();
 
-void ChordPeer::start_scheduler() {
-  //--- stabilize
-  scheduler->schedule(chrono::milliseconds(context->stabilize_period_ms), [this] {
-      stabilize();
-      //PEER_LOG(trace) << "[dump]" << *router;
-      });
+    if( context->bootstrap ) {
+      create();
+    } else {
+      join();
+    }
 
-  //--- check predecessor
-  scheduler->schedule(chrono::milliseconds(context->check_period_ms), [this] {
-      check_predecessor();
-      //PEER_LOG(trace) << "[dump]" << *router;
-      });
+    start_scheduler();
+    start_server();
+    //--- blocks
+  }
 
-  //--- fix fingers
-  scheduler->schedule(chrono::milliseconds(context->check_period_ms), [this] {
-      //TODO(christoph) use uuid::UUID_BITS_MAX
-      next = (next % 8) + 1;
-      //next = 0;
-      PEER_LOG(trace) << "fix fingers with next index next: " << next;
-      fix_fingers(next);
-      PEER_LOG(trace) << "[dump]" << *router;
-      });
-}
+  Peer::~Peer() {}
 
-/**
- * join chord ring containing client-id.
- */
-void ChordPeer::join() {
-  client->join(context->join_addr);
-}
+  void Peer::start_scheduler() {
+    //--- stabilize
+    scheduler->schedule(chrono::milliseconds(context->stabilize_period_ms), [this] {
+        stabilize();
+        //PEER_LOG(trace) << "[dump]" << *router;
+        });
 
-/**
- * successor
- */
-RouterEntry ChordPeer::successor(const uuid_t& uuid) {
-  return service->successor(uuid);
-}
+    //--- check predecessor
+    scheduler->schedule(chrono::milliseconds(context->check_period_ms), [this] {
+        check_predecessor();
+        //PEER_LOG(trace) << "[dump]" << *router;
+        });
 
-/**
- * stabilize the ring
- */
-void ChordPeer::stabilize() {
-  client->stabilize();
-}
+    //--- fix fingers
+    scheduler->schedule(chrono::milliseconds(context->check_period_ms), [this] {
+        //TODO(christoph) use uuid::UUID_BITS_MAX
+        next = (next % 8) + 1;
+        //next = 0;
+        PEER_LOG(trace) << "fix fingers with next index next: " << next;
+        fix_fingers(next);
+        PEER_LOG(trace) << "[dump]" << *router;
+        });
+  }
 
-/**
- * check predecessor
- */
-void ChordPeer::check_predecessor() {
-  client->check();
-}
+  /**
+   * join chord ring containing client-id.
+   */
+  void Peer::join() {
+    client->join(context->join_addr);
+  }
 
-/**
- * fix finger table
- */
-void ChordPeer::fix_fingers(size_t index) {
-  service->fix_fingers(index);
-}
+  /**
+   * successor
+   */
+  RouterEntry Peer::successor(const uuid_t& uuid) {
+    return service->successor(uuid);
+  }
 
-/**
- * create new chord ring
- */
-void ChordPeer::create() {
-  PEER_LOG(trace) << "bootstrapping new chord ring.";
-  router->reset();
-}
+  /**
+   * stabilize the ring
+   */
+  void Peer::stabilize() {
+    client->stabilize();
+  }
 
-void ChordPeer::put(const std::string& uri, std::istream& istream) {
-  client->put(uri, istream);
-}
+  /**
+   * check predecessor
+   */
+  void Peer::check_predecessor() {
+    client->check();
+  }
 
-void ChordPeer::get(const std::string& uri, std::ostream& ostream) {
-  client->get(uri, ostream);
-}
+  /**
+   * fix finger table
+   */
+  void Peer::fix_fingers(size_t index) {
+    service->fix_fingers(index);
+  }
+
+  /**
+   * create new chord ring
+   */
+  void Peer::create() {
+    PEER_LOG(trace) << "bootstrapping new chord ring.";
+    router->reset();
+  }
+
+//  void Peer::put(const std::string& uri, std::istream& istream) {
+//    client->put(uri, istream);
+//  }
+//
+//  void Peer::get(const std::string& uri, std::ostream& ostream) {
+//    client->get(uri, ostream);
+//  }
+
+} //namespace chord

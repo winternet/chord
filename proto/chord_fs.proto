@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+import "chord_common.proto";
+
+option java_multiple_files = true;
+option java_package = "onezero.chord";
+option java_outer_classname = "ChordFSProto";
+option objc_class_prefix = "CFS";
+
+package chord.fs;
+
+service Filesystem {
+  //--- file 
+  rpc put       (stream PutRequest) returns (PutResponse) {}
+  rpc get       (GetRequest)        returns (stream GetResponse) {}
+}
+
+/**
+ * PUT
+ */
+message PutRequest {
+  //Header header = 1;
+  //--- id to put
+  string  id = 2;
+  bytes   data = 3;
+  uint64  offset = 4;
+  uint64  size = 5;
+  string  uri = 6;
+}
+
+message PutResponse { 
+  chord.common.Header header = 1;
+  //--- id that was put
+  string id = 2;
+}
+
+/**
+ * GET
+ */
+message GetRequest {
+  //Header header = 1;
+  //--- id to get
+  string id = 2;
+  string uri = 3;
+
+}
+
+message GetResponse { 
+  //Header  header = 1;
+  string  id = 2;
+  bytes   data = 3;
+  uint64  offset = 4;
+  uint64  size = 5;
+  string  uri = 6;
+}

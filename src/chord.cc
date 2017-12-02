@@ -6,8 +6,8 @@
 
 #include "chord.log.h"
 #include "chord.peer.h"
-#include "chord.control.client.h"
-#include "chord.control.service.h"
+#include "chord.controller.client.h"
+#include "chord.controller.service.h"
 #include "chord.client.h"
 #include "chord.service.h"
 #include "chord.context.h"
@@ -46,7 +46,7 @@ void parse_program_options(int ac, char* av[], const shared_ptr<Context>& contex
 
   vector<string> commands = po::collect_unrecognized(parsed.options, po::include_positional);
   if(!commands.empty()) {
-    ChordControlClient controlClient;
+    chord::controller::Client controlClient;
 
     if(commands[0] == "put" || commands[0] == "get") {
       stringstream ss;
@@ -88,8 +88,8 @@ void parse_program_options(int ac, char* av[], const shared_ptr<Context>& contex
   }
 }
 
-void start_controller(const shared_ptr<ChordPeer>& peer) {
-  ChordControlService controller(peer);
+void start_controller(const shared_ptr<chord::fs::Client>& fs_client) {
+  chord::controller::Service controller(fs_client);
 }
 
 int main(int argc, char* argv[]) {
@@ -100,11 +100,12 @@ int main(int argc, char* argv[]) {
   parse_program_options(argc, argv, context);
 
   //--- start peer
-  auto peer = make_shared<ChordPeer>(context);
+  auto peer = make_shared<chord::Peer>(context);
 
   //--- start controller
   thread controller_thread([&](){
-      ChordControlService controller(peer);
+      auto fs_client = make_shared<chord::fs::Client>(context, peer);
+      chord::controller::Service controller(fs_client);
   });
 
   peer->start();
