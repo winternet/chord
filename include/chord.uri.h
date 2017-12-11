@@ -1,14 +1,9 @@
 #pragma once
+
 #include <string>
 #include <regex>
 #include <map>
 #include <cctype>
-#include <iomanip>
-#include <sstream>
-#include <experimental/filesystem>
-
-
-#include "chord.exception.h"
 
 namespace chord {
   class uri {

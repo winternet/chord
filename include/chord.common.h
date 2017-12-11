@@ -1,4 +1,6 @@
 #pragma once
+
+#include "chord.pb.h"
 #include "chord.context.h"
 
 namespace chord {

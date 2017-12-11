@@ -1,19 +1,21 @@
 #pragma once
+
 #include <functional>
 
 #include <grpc/grpc.h>
-
-#include <grpc++/server.h>
-#include <grpc++/server_builder.h>
 #include <grpc++/server_context.h>
-#include <grpc++/security/server_credentials.h>
 
-#include "chord.context.h"
+#include "chord.pb.h"
 #include "chord.grpc.pb.h"
 #include "chord.i.service.h"
 #include "chord.exception.h"
 
 #include "chord.client.h"
+
+namespace chord {
+  struct Context;
+  struct Router;
+}
 
 namespace chord {
   typedef std::function<chord::Client()> ClientFactory;

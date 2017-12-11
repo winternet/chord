@@ -1,34 +1,52 @@
 #pragma once
 
-#include "chord.router.h"
+#include <memory>
+#include <grpc++/server_builder.h>
+
 #include "chord.client.h"
 #include "chord.service.h"
 #include "chord.i.scheduler.h"
-#include <grpc++/server_builder.h>
+
 #include "chord.queue.h"
 #include "chord.uuid.h"
-#include "chord.fs.service.h"
 
-
-struct Context;
-struct Router;
 class AbstractScheduler;
 
-//using grpc::ServerBuilder;
+namespace chord {
+  class Client;
+  class Service;
+  struct Context;
+  struct Router;
+  namespace controller {
+    class Service;
+  }
+  namespace fs {
+    class Service;
+    class Client;
+  }
+}
+
 namespace chord {
 
-  class Peer {
+  class Peer : std::enable_shared_from_this<Peer> {
     private:
       size_t next { 0 };
       chord::queue<std::string> commands;
 
       std::unique_ptr<AbstractScheduler> scheduler { nullptr };
-      const std::shared_ptr<Context>& context;
+      const std::shared_ptr<chord::Context>& context;
 
-      std::unique_ptr<Router> router        { nullptr };
-      std::unique_ptr<chord::Client> client   { nullptr };
-      std::unique_ptr<chord::Service> service { nullptr };
-      std::unique_ptr<chord::fs::Service> fs_service { nullptr };
+      std::unique_ptr<chord::Router> router;//       { nullptr };
+
+      //--- chord
+      std::unique_ptr<chord::Client> client;//  { nullptr };
+      std::unique_ptr<chord::Service> service; // { nullptr };
+
+      //--- filesystem
+      std::shared_ptr<chord::fs::Client> fs_client;// { nullptr };
+      std::shared_ptr<chord::fs::Service> fs_service;// { nullptr };
+
+      std::unique_ptr<chord::controller::Service> controller;// { nullptr };
 
       void start_server();
       void start_scheduler();
@@ -37,7 +55,7 @@ namespace chord {
       Peer(const Peer&) = delete;             // disable copying
       Peer& operator=(const Peer&) = delete;  // disable assignment
 
-      Peer(const std::shared_ptr<Context>& context);
+      Peer(std::shared_ptr<chord::Context> context);
 
       virtual ~Peer();
 

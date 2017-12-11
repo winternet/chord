@@ -3,10 +3,10 @@
 #include <experimental/filesystem>
 #include <grpc/grpc.h>
 
-#include <grpc++/server.h>
-#include <grpc++/server_builder.h>
+//#include <grpc++/server.h>
+//#include <grpc++/server_builder.h>
 #include <grpc++/server_context.h>
-#include <grpc++/security/server_credentials.h>
+//#include <grpc++/security/server_credentials.h>
 
 #include <boost/tokenizer.hpp>
 
@@ -14,8 +14,10 @@
 #include "chord.log.h"
 #include "chord.uri.h"
 #include "chord.context.h"
+#include "chord.exception.h"
 #include "chord_controller.grpc.pb.h"
 
+#include "chord.fs.client.h"
 #include "chord.controller.service.h"
 
 #define log(level) LOG(level) << "[control] "
@@ -39,19 +41,9 @@ namespace fs = std::experimental::filesystem;
 
 namespace chord {
   namespace controller {
-    Service::Service(const shared_ptr<chord::fs::Client>& fs_client)
+    Service::Service(shared_ptr<chord::fs::Client> fs_client)
       : fs_client { fs_client }
     {
-      auto bind_addr = "127.0.0.1:50000"s;
-      //endpoint_t bind_addr = context->bind_addr;
-      ServerBuilder builder;
-      builder.AddListeningPort(bind_addr, grpc::InsecureServerCredentials());
-      builder.RegisterService(this);
-
-      unique_ptr<grpc::Server> server(builder.BuildAndStart());
-      CONTROL_LOG(debug, init) << "server listening on " << bind_addr;
-      //--- blocks
-      server->Wait();
     }
 
     Status Service::control(ServerContext* serverContext __attribute__((unused)) , const ControlRequest* req, ControlResponse* res) {

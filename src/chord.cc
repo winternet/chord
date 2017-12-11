@@ -89,9 +89,9 @@ void parse_program_options(int ac, char* av[], const shared_ptr<chord::Context>&
   }
 }
 
-void start_controller(const shared_ptr<chord::fs::Client>& fs_client) {
-  chord::controller::Service controller(fs_client);
-}
+//void start_controller(const shared_ptr<chord::fs::Client>& fs_client) {
+//  chord::controller::Service controller(fs_client);
+//}
 
 int main(int argc, char* argv[]) {
 
@@ -104,14 +104,14 @@ int main(int argc, char* argv[]) {
   auto peer = make_shared<chord::Peer>(context);
 
   //--- start controller
-  thread controller_thread([&](){
-      auto fs_client = make_shared<chord::fs::Client>(context, peer);
-      chord::controller::Service controller(fs_client);
-  });
+  //thread controller_thread([&](){
+  //    auto fs_client = make_shared<chord::fs::Client>(context, peer);
+  //    chord::controller::Service controller(fs_client);
+  //});
 
   peer->start();
 
   //--- join
-  controller_thread.join();
+  //controller_thread.join();
   return 0;
 }

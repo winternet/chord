@@ -1,4 +1,5 @@
 #pragma once
+
 #include <chrono>
 #include <random>
 #include <string>
@@ -66,6 +67,9 @@ namespace chord {
         auto str = ss.str();
         std::transform(str.begin(), str.end(), str.begin(), ::tolower);
         return str;
+      }
+      std::string short_hex() const {
+        return hex().substr(0,5);
       }
 
       uuid& operator+=(const uuid& other) { val += other.val; return *this; }

@@ -1,17 +1,14 @@
 #include <iostream>
 #include <fstream>
 #include <experimental/filesystem>
+
 #include <grpc/grpc.h>
-
-#include <grpc++/server.h>
-#include <grpc++/server_builder.h>
 #include <grpc++/server_context.h>
-#include <grpc++/security/server_credentials.h>
-
 
 #include "chord.log.h"
 #include "chord.uri.h"
 #include "chord.context.h"
+#include "chord.router.h"
 #include "chord.grpc.pb.h"
 
 #include "chord.common.h"

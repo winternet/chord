@@ -3,12 +3,14 @@
 #include <memory>
 #include <functional>
 
-#include "chord.log.h"
 #include "chord.uuid.h"
-#include "chord.router.h"
-#include "chord.context.h"
 #include "chord.grpc.pb.h"
+#include "chord.types.h"
 
+namespace chord {
+  struct Router;
+  struct Context;
+}
 
 namespace chord {
 

@@ -7,7 +7,9 @@
 
 uuid_t generate_random();
 
-struct Router;
+namespace chord {
+  struct Router;
+}
 
 namespace chord {
   struct Context {
@@ -31,9 +33,9 @@ namespace chord {
     const uuid_t& uuid() const { return _uuid; }
 
     Context set_uuid(const uuid_t& uuid);
-    Context set_router(Router* router);
+    Context set_router(chord::Router* router);
 
     private:
-    Router* router { nullptr };
+      Router* router { nullptr };
   };
 } //namespace chord

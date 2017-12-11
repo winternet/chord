@@ -1,19 +1,15 @@
 #pragma once
+
 #include <functional>
 
 #include <grpc/grpc.h>
-
-#include <grpc++/server.h>
-#include <grpc++/server_builder.h>
 #include <grpc++/server_context.h>
-#include <grpc++/security/server_credentials.h>
 
-#include "chord.context.h"
 #include "chord_fs.grpc.pb.h"
-#include "chord.i.service.h"
-#include "chord.exception.h"
 
-#include "chord.client.h"
+namespace chord {
+  struct Context;
+}
 
 namespace chord {
   namespace fs {

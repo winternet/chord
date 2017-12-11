@@ -6,7 +6,6 @@
 #include <sstream>
 #include <experimental/filesystem>
 
-
 #include "chord.uri.h"
 #include "chord.exception.h"
 

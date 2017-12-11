@@ -1,6 +1,8 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
+#include "chord.router.h"
+#include "chord.context.h"
 #include "chord.service.h"
 
 using chord::common::Header;

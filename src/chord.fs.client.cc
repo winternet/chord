@@ -8,6 +8,7 @@
 #include <grpc++/security/credentials.h>
 
 #include "chord.log.h"
+#include "chord.peer.h"
 #include "chord.uuid.h"
 #include "chord.fs.client.h"
 #include "chord.router.h"
@@ -41,7 +42,7 @@ using namespace chord::common;
 namespace chord {
   namespace fs {
 
-    Client::Client(const std::shared_ptr<Context>& context, const std::shared_ptr<chord::Peer>& peer) 
+    Client::Client(std::shared_ptr<Context> context, std::shared_ptr<Peer> peer) 
       :context{context}
       ,peer{peer}
     {
@@ -51,7 +52,7 @@ namespace chord {
       };
     }
 
-    Client::Client(const std::shared_ptr<Context>& context, const std::shared_ptr<chord::Peer>& peer, StubFactory make_stub) 
+    Client::Client(std::shared_ptr<Context> context, std::shared_ptr<Peer> peer, StubFactory make_stub) 
       :context{context}
       ,peer{peer}
       ,make_stub{make_stub}
@@ -123,6 +124,32 @@ namespace chord {
 
       return reader->Finish();
     }
+
+    /*
+    Status Client::dir(const std::string& uri, std::ostream& ostream) {
+      auto hash = chord::crypto::sha256(uri);
+      auto endpoint = peer->successor(hash).endpoint();
+
+      CLIENT_LOG(trace, get) << uri << " (" << hash << ")";
+
+      ClientContext clientContext;
+      GetResponse res;
+      GetRequest req;
+
+      req.set_id(hash);
+      req.set_uri(uri);
+
+      // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
+      auto stub = Filesystem::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
+      unique_ptr<ClientReader<GetResponse> > reader(stub->get(&clientContext, req));
+
+      while(reader->Read(&res)) {
+        ostream.write(res.data().data(), res.size());
+      }
+
+      return reader->Finish();
+    }
+    */
 
   } // namespace fs
 } // namespace chord

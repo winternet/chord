@@ -6,16 +6,18 @@
 #include <grpc++/server_builder.h>
 #include <grpc++/server_context.h>
 
-#include "chord.peer.h"
-
 #include "chord.i.scheduler.h"
 #include "chord.scheduler.h"
 #include "chord.router.h"
+#include "chord.peer.h"
+#include "chord.context.h"
 #include "chord.client.h"
 #include "chord.service.h"
+#include "chord.fs.client.h"
 #include "chord.fs.service.h"
 
-#include "chord.context.h"
+#include "chord.controller.service.h"
+
 
 #define PEER_LOG(level) LOG(level) << "[peer] "
 
@@ -31,6 +33,8 @@ namespace chord {
     ServerBuilder builder;
     builder.AddListeningPort(bind_addr, grpc::InsecureServerCredentials());
     builder.RegisterService(service.get());
+    // controller service
+    builder.RegisterService(controller.get());
     // filesystem service
     builder.RegisterService(fs_service.get());
 
@@ -39,13 +43,15 @@ namespace chord {
     server->Wait();
   }
 
-  Peer::Peer(const shared_ptr<Context>& context) 
+  Peer::Peer(shared_ptr<Context> context) 
     : scheduler { new Scheduler() }
   , context { context }
   , router  { make_unique<Router>(context.get()) }
-  , client  { make_unique<chord::Client>(*context, *router) }
-  , service { make_unique<chord::Service>(*context, *router) }
-  , fs_service { make_unique<chord::fs::Service>(*context) }
+  , client  { make_unique<Client>(*context, *router) }
+  , service { make_unique<Service>(*context, *router) }
+  , fs_client { make_shared<fs::Client>(context, shared_from_this()) }
+  , fs_service { make_shared<fs::Service>(*context) }
+  , controller { make_unique<controller::Service>(fs_client) }
   {
   }
 

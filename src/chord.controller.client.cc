@@ -7,10 +7,6 @@
 #include <grpc++/security/credentials.h>
 
 #include "chord.log.h"
-#include "chord.uuid.h"
-#include "chord.client.h"
-#include "chord.router.h"
-#include "chord.context.h"
 #include "chord.grpc.pb.h"
 #include "chord.exception.h"
 #include "chord.controller.client.h"

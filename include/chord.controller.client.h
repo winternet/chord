@@ -3,9 +3,7 @@
 #include <memory>
 #include <functional>
 
-#include "chord.log.h"
-#include "chord.uuid.h"
-#include "chord.router.h"
+#include "chord.types.h"
 #include "chord_controller.grpc.pb.h"
 
 
