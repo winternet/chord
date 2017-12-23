@@ -67,7 +67,7 @@ optional_t<std::string> file::attr(const std::string &path, const std::string &n
   read = ::getxattr(path.c_str(), name.c_str(), buffer, read);
   std::string value(buffer, read);
 #endif
-  if (read==static_cast<size_t>(-1)) throw new chord::exception("failed to get xattr"s + strerror(errno));
+  if (read==static_cast<size_t>(-1)) throw chord::exception("failed to get xattr"s + strerror(errno));
 
   return value;
 }
@@ -76,7 +76,7 @@ optional_t<std::string> file::attr(const std::string &path, const std::string &n
 bool file::attr(const std::string &path, const std::string &name, const std::string &value) {
   using namespace std::string_literals;
   size_t err = ::setxattr(path.c_str(), name.c_str(), value.data(), value.size(), 0);
-  if (err==static_cast<size_t>(-1)) throw new chord::exception("failed to set xattr"s + strerror(errno));
+  if (err==static_cast<size_t>(-1)) throw chord::exception("failed to set xattr"s + strerror(errno));
 
   return true;
 }

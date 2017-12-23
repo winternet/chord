@@ -60,8 +60,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 
   // open
   if (reader->Read(&req)) {
-    auto id = req.id();
-    auto uri = uri::from(req.uri());
+    const auto uri = uri::from(req.uri());
 
     data /= uri.path().parent_path();
     if (!file::is_directory(data)) {
@@ -76,7 +75,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     //TODO auto-create parent paths if not exist
     try {
       file.open(data, fstream::binary);
-    } catch (ios_base::failure error) {
+    } catch (const ios_base::failure& error) {
       SERVICE_LOG(error, put) << "failed to open file " << data << ", " << error.what();
       return Status::CANCELLED;
     }
@@ -101,7 +100,7 @@ Status Service::get(ServerContext *context, const GetRequest *req, grpc::ServerW
     return Status::CANCELLED;
   }
 
-  auto id = req->id();
+  const auto& id = req->id();
   auto uri = chord::uri::from(req->uri());
 
   data /= uri.path();

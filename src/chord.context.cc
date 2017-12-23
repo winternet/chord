@@ -4,7 +4,6 @@
 using namespace std;
 
 namespace chord {
-Context::Context() {}
 
 Context Context::set_uuid(const uuid_t &uuid) {
   _uuid = uuid;

@@ -76,7 +76,7 @@ class uri {
  public:
   uri(const authority &authority);
 
-  virtual ~uri();
+  virtual ~uri() = default;
 
   static std::string pattern();
 

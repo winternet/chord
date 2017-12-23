@@ -94,8 +94,6 @@ void uri::authority::port(const int port) { _port = port; }
 uri::uri(const class authority &authority)
     : _authority{authority} {}
 
-uri::~uri() {}
-
 string uri::pattern() {
   return "^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)?([^#]*)?(#(.*))?"s;
 }

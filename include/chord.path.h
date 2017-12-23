@@ -11,13 +11,13 @@ class path {
   std::experimental::filesystem::path _path;
 
  public:
-  path();
+  path() = default;
 
-  path(const chord::path &other);
+  path(const chord::path &other) = default;
 
   path(const std::experimental::filesystem::path &path);
 
-  virtual ~path() {};
+  virtual ~path() = default;
 
   path canonical() const;
 

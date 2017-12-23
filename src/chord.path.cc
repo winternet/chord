@@ -5,13 +5,11 @@ namespace fs = std::experimental::filesystem;
 
 namespace chord {
 
-path::path() {}
-
 path::path(const fs::path &other)
     : _path{other} {}
 
-path::path(const chord::path &other)
-    : _path{other._path} {}
+//path::path(const chord::path &other)
+//    : _path{other._path} {}
 
 path path::filename() const { return path{_path.filename()}; }
 
@@ -23,7 +21,7 @@ std::string path::string() const { return _path.string(); }
 
 path path::canonical() const {
   path result;
-  for (auto dir : _path) {
+  for (const auto &dir : _path) {
     //for(auto it = begin(_path); it != end(_path); it++) {
     if (dir=="..") {
       result = result.parent_path();

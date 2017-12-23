@@ -108,7 +108,7 @@ void Client::stabilize() {
   if (res.has_predecessor()) {
     CLIENT_LOG(trace, stabilize) << "received stabilize response with predecessor "
                                  << res.predecessor().uuid() << "@" << res.predecessor().endpoint();
-    RouterEntry entry = res.predecessor();
+    const RouterEntry &entry = res.predecessor();
 
     //--- validate
     //if( !entry.has_uuid() and !entry.has_entrypoint() ) {

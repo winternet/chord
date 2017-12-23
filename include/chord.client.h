@@ -23,8 +23,6 @@ class Client {
 
   StubFactory make_stub;
 
-  chord::SuccessorRequest make_request();
-
  public:
   Client(Context &context, Router &router);
 

@@ -14,7 +14,7 @@ struct Router;
 namespace chord {
 struct Context {
 
-  Context();
+  Context() = default;
 
   //--- uuid
   uuid_t _uuid{chord::uuid::random()};
