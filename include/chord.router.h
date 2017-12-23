@@ -22,7 +22,7 @@ struct Router {
   std::array<uuid_t *, BITS> predecessors;
   std::array<uuid_t *, BITS> successors;
 
-  Router(chord::Context *context)
+  explicit Router(chord::Context *context)
       : context{context} {
     std::fill(std::begin(predecessors), std::end(predecessors), nullptr);
     std::fill(std::begin(successors), std::end(successors), nullptr);
@@ -62,7 +62,7 @@ struct Router {
     return routes[uuid];
   }
 
-  void set_successor(const size_t index, const uuid_t uuid, const endpoint_t endpoint) {
+  void set_successor(const size_t index, const uuid_t &uuid, const endpoint_t &endpoint) {
     ROUTER_LOG(info) << "set_successor[" << index << "][" << uuid << "] = " << endpoint;
     routes[uuid] = endpoint;
     delete successors[index];

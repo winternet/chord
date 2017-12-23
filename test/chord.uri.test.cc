@@ -98,3 +98,7 @@ TEST(chord_uri, encode_decode_url) {
   auto decoded = uri::decode(encoded);
   ASSERT_EQ(source, decoded);
 }
+
+TEST(chord_uri, authority) {
+  auto auth = uri::Authority(""s,8);
+}

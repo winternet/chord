@@ -8,7 +8,7 @@
 #include <thread>
 #include <memory>
 #include <sstream>
-#include <assert.h>
+#include <cassert>
 
 using std::string;
 using std::function;
@@ -22,5 +22,5 @@ class AbstractScheduler {
   //in format "%s %M %H %d %m %Y" "sec min hour date month year"
   virtual void schedule(const string &time, function<void()> func) = 0;
 
-  virtual ~AbstractScheduler() {}
+  virtual ~AbstractScheduler() = default;
 };

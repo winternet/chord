@@ -36,8 +36,6 @@ class Client {
 
   void check();
 
-  void fix_fingers();
-
   chord::common::RouterEntry successor(const uuid_t &id);
 
   grpc::Status
@@ -45,8 +43,5 @@ class Client {
 
   grpc::Status successor(const chord::SuccessorRequest *req, chord::SuccessorResponse *res);
 
-  grpc::Status put(const std::string &uri, std::istream &istream);
-
-  grpc::Status get(const std::string &uri, std::ostream &ostream);
 };
 }

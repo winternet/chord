@@ -40,7 +40,7 @@ inline uuid_t sha256(const std::string &str) {
 }
 
 inline uuid_t sha256(const std::istream &istream) {
-  std::string str = static_cast<std::stringstream const &>(std::stringstream() << istream.rdbuf()).str();
+  std::string str = dynamic_cast<std::stringstream const &>(std::stringstream() << istream.rdbuf()).str();
   return sha256(str.data(), str.length());
 }
 

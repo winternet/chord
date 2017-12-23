@@ -58,7 +58,7 @@ class Peer : std::enable_shared_from_this<Peer> {
   Peer(const Peer &) = delete;             // disable copying
   Peer &operator=(const Peer &) = delete;  // disable assignment
 
-  Peer(std::shared_ptr<chord::Context> context);
+  explicit Peer(std::shared_ptr<chord::Context> context);
 
   virtual ~Peer();
 

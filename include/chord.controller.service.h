@@ -15,7 +15,7 @@ namespace controller {
 class Service final : public chord::controller::Control::Service {
 
  public:
-  Service(std::shared_ptr<chord::fs::Client> fs_client);
+  explicit Service(std::shared_ptr<chord::fs::Client> fs_client);
 
   grpc::Status control(grpc::ServerContext *context, const chord::controller::ControlRequest *req,
                        chord::controller::ControlResponse *res) override;

@@ -112,7 +112,7 @@ Status Service::get(ServerContext *context, const GetRequest *req, grpc::ServerW
   file.exceptions(ifstream::failbit | ifstream::badbit);
   try {
     file.open(data, fstream::binary);
-  } catch (ios_base::failure error) {
+  } catch (const ios_base::failure &error) {
     SERVICE_LOG(error, put) << "failed to open file " << data << ", " << error.what();
     return Status::CANCELLED;
   }

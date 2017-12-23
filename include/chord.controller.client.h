@@ -18,7 +18,7 @@ class Client {
  public:
   Client();
 
-  Client(ControlStubFactory factory);
+  explicit Client(ControlStubFactory factory);
 
   void control(const std::string &command);
 

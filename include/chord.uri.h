@@ -22,7 +22,7 @@ class uri {
 
     builder host(const std::string &host);
 
-    builder port(const int port);
+    builder port(int port);
 
     builder user(const std::string &user);
 
@@ -39,15 +39,15 @@ class uri {
     uri build();
   };
 
-  class authority {
+  class Authority {
    private:
     std::string _user, _password, _host;
     int _port;
 
    public:
-    authority(std::string host, int port);
+    Authority(std::string host, int port);
 
-    authority(std::string user, std::string password, std::string host, int port);
+    Authority(std::string user, std::string password, std::string host, int port);
 
     const std::string &user() const;
 
@@ -57,24 +57,24 @@ class uri {
 
     const int &port() const;
 
-    void user(const std::string user);
+    void user(std::string user);
 
-    void password(const std::string password);
+    void password(std::string password);
 
-    void host(const std::string host);
+    void host(std::string host);
 
-    void port(const int port);
+    void port(int port);
   };
 
  private:
-  authority _authority;
+  Authority _authority;
   std::map<std::string, std::string> _query;
 
   std::string _scheme, _fragment;
   chord::path _path;
 
  public:
-  uri(const authority &authority);
+  explicit uri(const Authority &authority);
 
   virtual ~uri() = default;
 
@@ -82,17 +82,15 @@ class uri {
 
   static std::regex uri_regex();
 
-  //static chord::path canonical(const chord::path& path);
+  void scheme(std::string scheme);
 
-  void scheme(const std::string scheme);
+  void authority(Authority auth);
 
-  void authority(const authority auth);
+  void path(chord::path path);
 
-  void path(const chord::path path);
+  void query(std::map<std::string, std::string> query);
 
-  void query(const std::map<std::string, std::string> query);
-
-  void fragment(const std::string fragment);
+  void fragment(std::string fragment);
 
   const std::string &scheme() const;
 
@@ -109,9 +107,6 @@ class uri {
   const int &port() const;
 
   const std::string &fragment() const;
-  //const std::string directory() const;
-  //const std::string filename() const;
-  //const std::string extension() const;
 
   static std::string decode(const std::string &str);
 

@@ -17,15 +17,15 @@ namespace fs {
 class Service final : public chord::fs::Filesystem::Service {
 
  public:
-  Service(Context &context);
+  explicit Service(Context &context);
 
-  virtual grpc::Status put(grpc::ServerContext *context, grpc::ServerReader<chord::fs::PutRequest> *reader,
+  grpc::Status put(grpc::ServerContext *context, grpc::ServerReader<chord::fs::PutRequest> *reader,
                            chord::fs::PutResponse *response) override;
 
-  virtual grpc::Status get(grpc::ServerContext *context, const chord::fs::GetRequest *req,
+  grpc::Status get(grpc::ServerContext *context, const chord::fs::GetRequest *req,
                            grpc::ServerWriter<chord::fs::GetResponse> *writer) override;
 
-  virtual grpc::Status notify(grpc::ServerContext *serverContext, const chord::fs::NotifyRequest *request,
+  grpc::Status notify(grpc::ServerContext *serverContext, const chord::fs::NotifyRequest *request,
                               chord::fs::NotifyResponse *response) override;
 
  private:

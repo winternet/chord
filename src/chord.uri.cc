@@ -69,29 +69,29 @@ uri uri::builder::build() {
   return ret;
 }
 
-uri::authority::authority(string host, int port)
+uri::Authority::Authority(string host, int port)
     : _host{host}, _port{port} {}
 
-uri::authority::authority(string user, string password, string host, int port)
+uri::Authority::Authority(string user, string password, string host, int port)
     : _user{user}, _password{password}, _host{host}, _port{port} {}
 
-const string &uri::authority::user() const { return _user; }
+const string &uri::Authority::user() const { return _user; }
 
-const string &uri::authority::password() const { return _password; }
+const string &uri::Authority::password() const { return _password; }
 
-const string &uri::authority::host() const { return _host; }
+const string &uri::Authority::host() const { return _host; }
 
-const int &uri::authority::port() const { return _port; }
+const int &uri::Authority::port() const { return _port; }
 
-void uri::authority::user(const string user) { _user = user; }
+void uri::Authority::user(const string user) { _user = user; }
 
-void uri::authority::password(const string password) { _password = password; }
+void uri::Authority::password(const string password) { _password = password; }
 
-void uri::authority::host(const string host) { _host = host; }
+void uri::Authority::host(const string host) { _host = host; }
 
-void uri::authority::port(const int port) { _port = port; }
+void uri::Authority::port(const int port) { _port = port; }
 
-uri::uri(const class authority &authority)
+uri::uri(const class Authority &authority)
     : _authority{authority} {}
 
 string uri::pattern() {
@@ -104,7 +104,7 @@ regex uri::uri_regex() {
 
 void uri::scheme(const string scheme) { _scheme = scheme; }
 
-void uri::authority(const class authority auth) { _authority = auth; }
+void uri::authority(const class Authority auth) { _authority = auth; }
 
 void uri::path(const chord::path path) { _path = path; }
 
