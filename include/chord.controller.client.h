@@ -6,21 +6,22 @@
 #include "chord.types.h"
 #include "chord_controller.grpc.pb.h"
 
-
-typedef std::function<std::shared_ptr<chord::controller::Control::StubInterface>(const endpoint_t& endpoint)> ControlStubFactory;
+typedef std::function<std::shared_ptr<chord::controller::Control::StubInterface>(
+    const endpoint_t &endpoint)> ControlStubFactory;
 
 namespace chord {
-  namespace controller {
-    class Client {
-      private:
-        ControlStubFactory make_stub;
+namespace controller {
+class Client {
+ private:
+  ControlStubFactory make_stub;
 
-      public:
-        Client();
-        Client(ControlStubFactory factory);
+ public:
+  Client();
 
-        void control(const std::string& command);
+  Client(ControlStubFactory factory);
 
-    };
-  } //namespace controller
+  void control(const std::string &command);
+
+};
+} //namespace controller
 } //namespace chord

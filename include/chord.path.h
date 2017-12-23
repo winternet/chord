@@ -5,42 +5,41 @@
 
 namespace chord {
 
-  class path {
+class path {
 
-  private:
-    std::experimental::filesystem::path _path;
+ private:
+  std::experimental::filesystem::path _path;
 
-  public:
-    path();
+ public:
+  path();
 
-    path(const chord::path &other);
+  path(const chord::path &other);
 
-    path(const std::experimental::filesystem::path &path);
+  path(const std::experimental::filesystem::path &path);
 
-    virtual ~path() {};
+  virtual ~path() {};
 
-    path canonical() const;
+  path canonical() const;
 
-    path filename() const;
+  path filename() const;
 
-    path extension() const;
+  path extension() const;
 
-    path parent_path() const;
+  path parent_path() const;
 
-    std::string string() const;
+  std::string string() const;
 
+  operator std::string() const { return _path.string(); }
 
-    operator std::string() const { return _path.string(); }
+  path operator/=(const path &p);// { return path{_path /= p._path}; }
 
-    path operator/=(const path &p);// { return path{_path /= p._path}; }
+  bool operator==(const path &p) const;// { return _path == p._path; }
 
-    bool operator==(const path &p) const;// { return _path == p._path; }
+  bool operator==(const std::string &s) const;// { return s == string(); }
 
-    bool operator==(const std::string &s) const;// { return s == string(); }
+  friend bool operator==(const std::string &p1, const path &p2);
 
-    friend bool operator==(const std::string &p1, const path &p2);
-
-    friend std::ostream &operator<<(std::ostream &os, const path &path);
-  };
+  friend std::ostream &operator<<(std::ostream &os, const path &path);
+};
 
 } //namespace chord

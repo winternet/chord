@@ -2,7 +2,6 @@
 #include "gmock/gmock.h"
 
 #include "chord.router.h"
-#include "chord.context.h"
 #include "chord.service.h"
 
 using chord::common::Header;
@@ -18,28 +17,27 @@ using chord::SuccessorResponse;
 
 using namespace chord;
 
-Context make_context(const uuid_t& self) {
+Context make_context(const uuid_t &self) {
   Context context = Context();
   context.set_uuid(self);
   //std::shared_ptr<Context> context = std::shared_ptr<Context>(new Context);
   //context->set_uuid(self);
-  
+
   return context;
 }
 
-Router make_router(Context& context) {
+Router make_router(Context &context) {
   return Router(&context);
 }
 
-
-RouterEntry make_entry(const uuid_t& id, const endpoint_t& addr) {
+RouterEntry make_entry(const uuid_t &id, const endpoint_t &addr) {
   RouterEntry entry;
   entry.set_uuid(id);
   entry.set_endpoint(addr);
   return entry;
 }
 
-Header make_header(const uuid_t& id, const endpoint_t& addr) {
+Header make_header(const uuid_t &id, const endpoint_t &addr) {
   Header header;
   header.mutable_src()->CopyFrom(make_entry(id, addr));
   return header;
@@ -152,63 +150,64 @@ using ::testing::SetArgPointee;
 using ::testing::DoAll;
 
 class MockStub : public chord::Chord::StubInterface {
-public:
-	MockStub() {}
-	MockStub(const MockStub& stub) {}
+ public:
+  MockStub() {}
+
+  MockStub(const MockStub &stub) {}
 
   MOCK_METHOD3(successor, grpc::Status(
-			grpc::ClientContext* context,
-			const chord::SuccessorRequest&,
-			chord::SuccessorResponse*));
+      grpc::ClientContext*context,
+      const chord::SuccessorRequest&,
+      chord::SuccessorResponse*));
 
   MOCK_METHOD3(join, grpc::Status(
-			grpc::ClientContext*, 
-			const chord::JoinRequest&,
-			chord::JoinResponse*));
+      grpc::ClientContext*,
+      const chord::JoinRequest&,
+      chord::JoinResponse*));
 
   MOCK_METHOD3(stabilize, grpc::Status(
-			grpc::ClientContext*, 
-			const chord::StabilizeRequest&,
-			chord::StabilizeResponse*));
+      grpc::ClientContext*,
+      const chord::StabilizeRequest&,
+      chord::StabilizeResponse*));
 
-	MOCK_METHOD3(notify, grpc::Status(
-			grpc::ClientContext*,
-			const chord::NotifyRequest&,
-			chord::NotifyResponse*));
+  MOCK_METHOD3(notify, grpc::Status(
+      grpc::ClientContext*,
+      const chord::NotifyRequest&,
+      chord::NotifyResponse*));
 
-	MOCK_METHOD3(check, grpc::Status(
-			grpc::ClientContext*,
-			const chord::CheckRequest&,
-			chord::CheckResponse*));
+  MOCK_METHOD3(check, grpc::Status(
+      grpc::ClientContext*,
+      const chord::CheckRequest&,
+      chord::CheckResponse*));
 
   //MOCK_METHOD2(putRaw, grpc::ClientWriterInterface<chord::PutRequest>*(grpc::ClientContext* context, chord::PutResponse* response));
 
   //MOCK_METHOD2(getRaw, grpc::ClientReaderInterface<chord::GetResponse>*(grpc::ClientContext* context, const chord::GetRequest& request));
 
-	MOCK_METHOD3(AsyncsuccessorRaw, grpc::ClientAsyncResponseReaderInterface<chord::SuccessorResponse>*(
-			grpc::ClientContext*, 
-			const chord::SuccessorRequest&,
-			grpc::CompletionQueue*));
+  MOCK_METHOD3(AsyncsuccessorRaw, grpc::ClientAsyncResponseReaderInterface<chord::SuccessorResponse>*(
+      grpc::ClientContext*,
+      const chord::SuccessorRequest&,
+      grpc::CompletionQueue*));
 
-	MOCK_METHOD3(AsyncjoinRaw, grpc::ClientAsyncResponseReaderInterface<chord::JoinResponse>*(
-			grpc::ClientContext*,
-			const chord::JoinRequest&,
-			grpc::CompletionQueue*));
+  MOCK_METHOD3(AsyncjoinRaw, grpc::ClientAsyncResponseReaderInterface<chord::JoinResponse>*(
+      grpc::ClientContext*,
+      const chord::JoinRequest&,
+      grpc::CompletionQueue*));
 
-	MOCK_METHOD3(AsyncstabilizeRaw, grpc::ClientAsyncResponseReaderInterface<chord::StabilizeResponse>*(
-			grpc::ClientContext*,
-			const chord::StabilizeRequest&,
-			grpc::CompletionQueue*));
+  MOCK_METHOD3(AsyncstabilizeRaw, grpc::ClientAsyncResponseReaderInterface<chord::StabilizeResponse>*(
+      grpc::ClientContext*,
+      const chord::StabilizeRequest&,
+      grpc::CompletionQueue*));
 
-	MOCK_METHOD3(AsyncnotifyRaw, grpc::ClientAsyncResponseReaderInterface<chord::NotifyResponse>*(
-			grpc::ClientContext*,
-			const chord::NotifyRequest&,
-			grpc::CompletionQueue*));
+  MOCK_METHOD3(AsyncnotifyRaw, grpc::ClientAsyncResponseReaderInterface<chord::NotifyResponse>*(
+      grpc::ClientContext*,
+      const chord::NotifyRequest&,
+      grpc::CompletionQueue*));
 
-	MOCK_METHOD3(AsynccheckRaw, grpc::ClientAsyncResponseReaderInterface<chord::CheckResponse>*(
-			grpc::ClientContext*,
-			const chord::CheckRequest&,
-			grpc::CompletionQueue*));
+  MOCK_METHOD3(AsynccheckRaw, grpc::ClientAsyncResponseReaderInterface<chord::CheckResponse>*(
+      grpc::ClientContext*,
+      const chord::CheckRequest&,
+      grpc::CompletionQueue*));
 
   //MOCK_METHOD4(AsyncputRaw, grpc::ClientAsyncWriterInterface<chord::PutRequest>*(
   //      grpc::ClientContext* context, 
@@ -241,10 +240,10 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
 
   std::unique_ptr<MockStub> stub(new MockStub);
 
-	auto stub_factory = [&](const endpoint_t& endpoint){ return std::move(stub); };
+  auto stub_factory = [&](const endpoint_t &endpoint) { return std::move(stub); };
   chord::Client client(context, router, stub_factory);
 
-	auto client_factory = [&](){ return client; };
+  auto client_factory = [&]() { return client; };
   chord::Service service(context, router, client_factory);
 
   ServerContext serverContext;
@@ -258,13 +257,13 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   SuccessorRequest captured_request;
   //--- stub's mocked return parameter
   SuccessorResponse mocked_response;
-  RouterEntry* entry = mocked_response.mutable_successor();
+  RouterEntry *entry = mocked_response.mutable_successor();
   entry->set_uuid(uuid_t{5});
   entry->set_endpoint("0.0.0.0:50055");
 
-  EXPECT_CALL(*stub, successor(_,_,_))
-    .Times(1)
-    .WillOnce(DoAll(
+  EXPECT_CALL(*stub, successor(_, _, _))
+      .Times(1)
+      .WillOnce(DoAll(
           SaveArg<1>(&captured_request),
           SetArgPointee<2>(mocked_response),
           Return(Status::OK)));

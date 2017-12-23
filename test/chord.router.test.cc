@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <string>
 
 #include "chord.router.h"
 
@@ -20,11 +19,11 @@ TEST(RouterTest, initialize) {
   ASSERT_NOT_NULL(router.successor());
   EXPECT_EQ(*router.successor(), context.uuid());
 
-  for(int i=1; i < BITS; i++) {
+  for (int i = 1; i < BITS; i++) {
     ASSERT_NULL(router.successors[i]);
   }
 
-  for(int i=0; i < BITS; i++ ) {
+  for (int i = 0; i < BITS; i++) {
     ASSERT_NULL(router.predecessors[i]);
   }
 }
@@ -40,7 +39,7 @@ TEST(RouterTest, closest_preceding_node) {
   context.set_uuid(0);
   Router router(&context);
 
-  for(int i=0; i <= 100; i++ ) {
+  for (int i = 0; i <= 100; i++) {
     router.set_successor(i, i, to_string(i));
   }
 
@@ -68,7 +67,7 @@ TEST(RouterTest, closest_preceding_node_mod) {
   Router router(&context);
 
   // direct successor of 999 is 0
-  for(int i=0; i <= 100; i++ ) {
+  for (int i = 0; i <= 100; i++) {
     router.set_successor(i, i, to_string(i));
   }
 
@@ -97,7 +96,7 @@ TEST(RouterTest, closest_preceding_node_mod_2) {
  *   - 5 @ 0.0.0.0:50055
  * node 5 tries to find closest predecessor of id 2 -> 0
  */
-TEST(RouterTest, set_uuid_resets_router ) {
+TEST(RouterTest, set_uuid_resets_router) {
   Context context;
   Router router(&context);
   auto uuid = context.uuid();

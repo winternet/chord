@@ -8,94 +8,124 @@
 #include <boost/multiprecision/cpp_int.hpp>
 
 namespace chord {
-  class uuid {
-    private:
-      typedef boost::multiprecision::cpp_int value_t;
+class uuid {
+ private:
+  typedef boost::multiprecision::cpp_int value_t;
 
-      value_t val;
-    public:
-      uuid() {};
-      uuid(const std::string& str) {val = value_t{str};}
-      template<typename T>
-      uuid(const T& v) { val = value_t{v}; }
-      template<typename Iterator>
-      uuid(const Iterator beg, const Iterator end) {
-        boost::multiprecision::import_bits(val, (unsigned int*)beg, (unsigned int*)end);
-      }
+  value_t val;
+ public:
+  uuid() {};
 
-      value_t& value() { return val; }
+  uuid(const std::string &str) { val = value_t{str}; }
 
-      static const int UUID_BITS_MAX = 256;
+  template<typename T>
+  uuid(const T &v) { val = value_t{v}; }
 
-      /**
-      * generate random 256-bit number
-      */
-      static uuid random() {
-        auto array = std::array<char, UUID_BITS_MAX/8/sizeof(char)>{};
-        const int seed = std::chrono::system_clock::now().time_since_epoch().count();
+  template<typename Iterator>
+  uuid(const Iterator beg, const Iterator end) {
+    boost::multiprecision::import_bits(val, (unsigned int *) beg, (unsigned int *) end);
+  }
 
-        std::default_random_engine generator(seed);
-        std::uniform_int_distribution<char> distribution;
+  value_t &value() { return val; }
 
-        std::generate(std::begin(array), std::end(array), std::bind(distribution, generator));
+  static const int UUID_BITS_MAX = 256;
 
-        return uuid{ std::begin(array), std::end(array) };
-      }
+  /**
+  * generate random 256-bit number
+  */
+  static uuid random() {
+    auto array = std::array<char, UUID_BITS_MAX/8/sizeof(char)>{};
+    const int seed = std::chrono::system_clock::now().time_since_epoch().count();
 
-      /**
-      * implicit string conversion operator
-      */
-      operator std::string() const {
-        return value();
-      }
+    std::default_random_engine generator(seed);
+    std::uniform_int_distribution<char> distribution;
 
-      /**
-       * value as string
-       */
-      std::string value() const {
-        std::stringstream ss;
-        ss << val;
-        return ss.str();
-      }
+    std::generate(std::begin(array), std::end(array), std::bind(distribution, generator));
 
-      /**
-       * value as hex
-       */
-      std::string hex() const {
-        std::stringstream ss;
-        ss << std::hex << val;
-        auto str = ss.str();
-        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-        return str;
-      }
-      std::string short_hex() const {
-        return hex().substr(0,5);
-      }
+    return uuid{std::begin(array), std::end(array)};
+  }
 
-      uuid& operator+=(const uuid& other) { val += other.val; return *this; }
-      uuid& operator-=(const uuid& other) { val -= other.val; return *this; }
-      uuid& operator*=(const uuid& other) { val *= other.val; return *this; }
-      uuid& operator/=(const uuid& other) { val /= other.val; return *this; }
-      bool  operator==(const uuid& other) const { return val == other.val; }
-      bool  operator!=(const uuid& other) const { return val != other.val; }
-      bool  operator>=(const uuid& other) const { return val >= other.val; }
-      bool  operator<=(const uuid& other) const { return val <= other.val; }
-      bool  operator< (const uuid& other) const { return val <  other.val; }
-      bool  operator> (const uuid& other) const { return val >  other.val; }
-      uuid  operator+ (const uuid& other) const { return uuid{val+other.val}; }
-      uuid  operator- (const uuid& other) const { return uuid{val-other.val}; }
-      uuid  operator* (const uuid& other) const { return uuid{val*other.val}; }
-      uuid  operator/ (const uuid& other) const { return uuid{val/other.val}; }
+  /**
+  * implicit string conversion operator
+  */
+  operator std::string() const {
+    return value();
+  }
 
-      friend std::istream& operator>>(std::istream& is, uuid& hash) {
-        is >> hash.val;
-        return is;
-      }
-      friend std::ostream& operator<<(std::ostream& os, const uuid& hash) {
-        os << hash.hex();
-        return os;
-      }
-  };
+  /**
+   * value as string
+   */
+  std::string value() const {
+    std::stringstream ss;
+    ss << val;
+    return ss.str();
+  }
+
+  /**
+   * value as hex
+   */
+  std::string hex() const {
+    std::stringstream ss;
+    ss << std::hex << val;
+    auto str = ss.str();
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    return str;
+  }
+
+  std::string short_hex() const {
+    return hex().substr(0, 5);
+  }
+
+  uuid &operator+=(const uuid &other) {
+    val += other.val;
+    return *this;
+  }
+
+  uuid &operator-=(const uuid &other) {
+    val -= other.val;
+    return *this;
+  }
+
+  uuid &operator*=(const uuid &other) {
+    val *= other.val;
+    return *this;
+  }
+
+  uuid &operator/=(const uuid &other) {
+    val /= other.val;
+    return *this;
+  }
+
+  bool operator==(const uuid &other) const { return val==other.val; }
+
+  bool operator!=(const uuid &other) const { return val!=other.val; }
+
+  bool operator>=(const uuid &other) const { return val >= other.val; }
+
+  bool operator<=(const uuid &other) const { return val <= other.val; }
+
+  bool operator<(const uuid &other) const { return val < other.val; }
+
+  bool operator>(const uuid &other) const { return val > other.val; }
+
+  uuid operator+(const uuid &other) const { return uuid{val + other.val}; }
+
+  uuid operator-(const uuid &other) const { return uuid{val - other.val}; }
+
+  uuid operator*(const uuid &other) const { return uuid{val*other.val}; }
+
+  uuid operator/(const uuid &other) const { return uuid{val/other.val}; }
+
+  friend std::istream &operator>>(std::istream &is, uuid &hash) {
+    is >> hash.val;
+    return is;
+  }
+
+  friend std::ostream &operator<<(std::ostream &os, const uuid &hash) {
+    os << hash.hex();
+    return os;
+  }
+};
 }
 
 typedef chord::uuid uuid_t;

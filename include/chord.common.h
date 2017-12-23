@@ -4,9 +4,9 @@
 #include "chord.context.h"
 
 namespace chord {
-  namespace common {
+namespace common {
 
-    chord::common::Header make_header(const Context& context);
+chord::common::Header make_header(const Context &context);
 
-  }
+}
 }

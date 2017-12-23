@@ -1,8 +1,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <iomanip>
-
 #include "chord.file.h"
 
 using namespace std;
@@ -11,7 +9,7 @@ TEST(chord_file, getxattr) {
   auto file = "xattr.get";
   auto attr_name = "user.chord.link";
 
-  if(chord::file::exists(file)) chord::file::remove(file);
+  if (chord::file::exists(file)) chord::file::remove(file);
 
   //--- assert no attrs set on new file & nothing to remove
   chord::file::create_file(file);
@@ -38,7 +36,7 @@ TEST(chord_file, getxattr) {
 TEST(chord_file, create_directory) {
   auto dir = "testdir";
 
-  if(chord::file::exists(dir)) chord::file::remove(dir);
+  if (chord::file::exists(dir)) chord::file::remove(dir);
 
   ASSERT_TRUE(chord::file::create_directory(dir));
   ASSERT_TRUE(chord::file::exists(dir));
@@ -50,7 +48,7 @@ TEST(chord_file, create_directory) {
 TEST(chord_file, create_directories) {
   auto dir = "testdir/subfolder";
 
-  if(chord::file::exists(dir)) chord::file::remove_all(dir);
+  if (chord::file::exists(dir)) chord::file::remove_all(dir);
 
   ASSERT_TRUE(chord::file::create_directories(dir));
   ASSERT_TRUE(chord::file::exists(dir));
