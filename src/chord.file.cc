@@ -1,7 +1,5 @@
 #include <string>
 #include <fstream>
-#include <errno.h>
-#include <sys/types.h>
 #include <attr/xattr.h>
 #include <experimental/filesystem>
 

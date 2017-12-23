@@ -1,8 +1,6 @@
 #include <iostream>
-#include <fstream>
 #include <experimental/filesystem>
 
-#include <grpc/grpc.h>
 #include <grpc++/server_context.h>
 
 #include "chord.log.h"

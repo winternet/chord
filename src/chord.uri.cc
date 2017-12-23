@@ -1,9 +1,6 @@
 #include <string>
 #include <regex>
-#include <map>
-#include <cctype>
 #include <iomanip>
-#include <sstream>
 #include <experimental/filesystem>
 
 #include "chord.path.h"

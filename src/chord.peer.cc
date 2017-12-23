@@ -10,9 +10,6 @@
 #include "chord.scheduler.h"
 #include "chord.router.h"
 #include "chord.peer.h"
-#include "chord.context.h"
-#include "chord.client.h"
-#include "chord.service.h"
 #include "chord.fs.client.h"
 #include "chord.fs.service.h"
 

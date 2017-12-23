@@ -1,18 +1,13 @@
 #include <memory>
-#include <grpc/grpc.h>
 #include <fstream>
 
 #include <grpc++/channel.h>
-#include <grpc++/client_context.h>
 #include <grpc++/create_channel.h>
-#include <grpc++/security/credentials.h>
 
 #include "chord.log.h"
 #include "chord.uuid.h"
 #include "chord.client.h"
 #include "chord.router.h"
-#include "chord.context.h"
-#include "chord.grpc.pb.h"
 #include "chord.exception.h"
 
 #include "chord.common.h"

@@ -1,6 +1,5 @@
 #include "chord.context.h"
 #include "chord.router.h"
-#include <memory>
 
 using namespace std;
 

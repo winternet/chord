@@ -1,5 +1,4 @@
 #include <thread>
-#include <chrono>
 #include <iostream>
 
 #include <boost/program_options.hpp>
@@ -8,8 +7,6 @@
 #include "chord.peer.h"
 #include "chord.controller.client.h"
 #include "chord.controller.service.h"
-#include "chord.client.h"
-#include "chord.service.h"
 #include "chord.context.h"
 
 using namespace std;

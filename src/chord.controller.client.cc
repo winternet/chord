@@ -1,10 +1,7 @@
 #include <memory>
-#include <grpc/grpc.h>
 
 #include <grpc++/channel.h>
-#include <grpc++/client_context.h>
 #include <grpc++/create_channel.h>
-#include <grpc++/security/credentials.h>
 
 #include "chord.log.h"
 #include "chord.grpc.pb.h"
