@@ -31,7 +31,6 @@ namespace chord {
   class Peer : std::enable_shared_from_this<Peer> {
     private:
       size_t next { 0 };
-      chord::queue<std::string> commands;
 
       std::unique_ptr<AbstractScheduler> scheduler { nullptr };
       const std::shared_ptr<chord::Context>& context;

@@ -4,6 +4,7 @@
 #include <iomanip>
 
 #include "chord.uri.h"
+#include <experimental/filesystem>
 
 using namespace std;
 using namespace chord;
@@ -11,18 +12,34 @@ using namespace chord;
 TEST(chord_uri, parse_url_filename_only) {
   auto uri = chord::uri::from("chord:/file.ext");
   ASSERT_EQ("chord", uri.scheme());
-  ASSERT_EQ("file.ext", uri.filename());
-  ASSERT_EQ(".ext", uri.extension());
+  ASSERT_EQ("file.ext", uri.path().filename());
+  ASSERT_EQ(".ext", uri.path().extension());
+}
+
+TEST(chord_uri, url_builder_canonical) {
+  chord::uri::builder uri_builder;
+  auto uri = uri_builder.path("/folder/subfolder/./././////../subfolder/bar.ext").build();
+  ASSERT_EQ("/folder/subfolder/bar.ext", uri.path().canonical());
+}
+
+TEST(chord_uri, parse_url_returns_canonical) {
+  auto uri = chord::uri::from("chord://hostname/folder///////./subfolder/./../subfolder/bar.ext");
+  ASSERT_EQ("chord", uri.scheme());
+  ASSERT_EQ("hostname", uri.host());
+  ASSERT_EQ("/folder/subfolder/bar.ext", uri.path().canonical());
+  ASSERT_EQ("/folder/subfolder", uri.path().canonical().parent_path());
+  ASSERT_EQ("bar.ext", uri.path().filename());
+  ASSERT_EQ(".ext", uri.path().extension());
 }
 
 TEST(chord_uri, parse_url) {
   auto uri = chord::uri::from("chord://hostname/folder/subfolder/bar.ext");
   ASSERT_EQ("chord", uri.scheme());
   ASSERT_EQ("hostname", uri.host());
-  ASSERT_EQ("/folder/subfolder/bar.ext", uri.path());
-  ASSERT_EQ("/folder/subfolder", uri.directory());
-  ASSERT_EQ("bar.ext", uri.filename());
-  ASSERT_EQ(".ext", uri.extension());
+  ASSERT_EQ(path{"/folder/subfolder/bar.ext"s}, uri.path());
+  ASSERT_EQ(path{"/folder/subfolder"s}, uri.path().parent_path());
+  ASSERT_EQ(path{"bar.ext"s}, uri.path().filename());
+  ASSERT_EQ(".ext", uri.path().extension());
 }
 
 TEST(chord_uri, parse_urn) {
@@ -42,10 +59,10 @@ TEST(chord_uri, parse_success) {
   ASSERT_EQ("host", uri.host());
   ASSERT_EQ(50050, uri.port());
   // path
-  ASSERT_EQ("/path/sub/index.html", uri.path());
-  ASSERT_EQ("/path/sub", uri.directory());
-  ASSERT_EQ("index.html", uri.filename());
-  ASSERT_EQ(".html", uri.extension());
+  ASSERT_EQ(path{"/path/sub/index.html"s}, uri.path());
+  ASSERT_EQ(path{"/path/sub"s}, uri.path().parent_path());
+  ASSERT_EQ(path{"index.html"s}, uri.path().filename());
+  ASSERT_EQ(".html", uri.path().extension());
   // queries
   ASSERT_EQ("bar", uri.query().at("foo"));
   ASSERT_EQ("1", uri.query().at("zoom"));
@@ -56,8 +73,8 @@ TEST(chord_uri, parse_success) {
 }
 
 TEST(chord_uri, parse_path_only) {
-    auto uri = chord::uri::from("path/foo/bar");
-    ASSERT_EQ("path/foo/bar", uri.path());
+  auto uri = chord::uri::from("path/foo/bar");
+  ASSERT_EQ(path{"path/foo/bar"s}, uri.path());
 }
 
 TEST(chord_uri, encode_unescaped) {

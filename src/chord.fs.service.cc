@@ -3,13 +3,13 @@
 #include <experimental/filesystem>
 #include <grpc/grpc.h>
 
-//#include <grpc++/server.h>
-//#include <grpc++/server_builder.h>
 #include <grpc++/server_context.h>
 #include <grpc++/security/server_credentials.h>
 
 #include "chord.log.h"
 #include "chord.uri.h"
+#include "chord.file.h"
+#include "chord.path.h"
 #include "chord.context.h"
 #include "chord.exception.h"
 #include "chord_fs.grpc.pb.h"
@@ -35,8 +35,8 @@ using chord::fs::GetResponse;
 using chord::fs::GetRequest;
 
 
-namespace filesystem = std::experimental::filesystem::v1;
 using namespace std;
+using namespace chord;
 using namespace chord::common;
 
 namespace chord {
@@ -47,34 +47,38 @@ namespace chord {
     {
     }
 
+    Status Service::notify(ServerContext* serverContext, const NotifyRequest* request, NotifyResponse* response) {
+      return Status::OK;
+    }
+
     Status Service::put(ServerContext* serverContext, ServerReader<PutRequest>* reader, PutResponse* response) {
       PutRequest req;
       ofstream file;
 
       //TODO make configurable
-      filesystem::path data {"./data"};
-      if( !filesystem::is_directory(data) ) {
-        filesystem::create_directory(data);
+      path data {"./data"};
+      if( !file::is_directory(data) ) {
+        file::create_directory(data);
       }
 
       // open
       if(reader->Read(&req)) {
         auto id = req.id();
-        auto uri = chord::uri::from(req.uri());
+        auto uri = uri::from(req.uri());
 
-        data /= uri.directory();
-        if( !filesystem::is_directory(data) ) {
+        data /= uri.path().parent_path();
+        if( !file::is_directory(data) ) {
           SERVICE_LOG(trace, put) << "creating directories for " << data;
-          filesystem::create_directories(data);
+          file::create_directories(data);
         }
 
-        data /= uri.filename();
+        data /= uri.path().filename();
         SERVICE_LOG(trace, put) << "trying to put " << data;
         file.exceptions(ifstream::failbit | ifstream::badbit);
         //TODO make data path configurable
         //TODO auto-create parent paths if not exist
         try {
-          file.open(data, std::fstream::binary);
+          file.open(data, fstream::binary);
         } catch(ios_base::failure error) {
           SERVICE_LOG(error, put) << "failed to open file " << data << ", " << error.what();
           return Status::CANCELLED;
@@ -91,12 +95,12 @@ namespace chord {
       return Status::OK;
     }
 
-    Status Service::get(grpc::ServerContext* context, const GetRequest* req, grpc::ServerWriter<GetResponse>* writer) {
+    Status Service::get(ServerContext* context, const GetRequest* req, grpc::ServerWriter<GetResponse>* writer) {
       ifstream file;
 
       //TODO make configurable
-      filesystem::path data {"./data"};
-      if( !filesystem::is_directory(data) ) {
+      path data{"./data"};
+      if( !file::is_directory(data) ) {
         return Status::CANCELLED;
       }
 
@@ -104,14 +108,14 @@ namespace chord {
       auto uri = chord::uri::from(req->uri());
 
       data /= uri.path();
-      if( !filesystem::is_regular_file(data) ) {
+      if( !file::is_regular_file(data) ) {
         return Status::CANCELLED;
       }
 
       SERVICE_LOG(trace, put) << "trying to get " << data;
       file.exceptions(ifstream::failbit | ifstream::badbit);
       try {
-        file.open(data, std::fstream::binary);
+        file.open(data, fstream::binary);
       } catch(ios_base::failure error) {
         SERVICE_LOG(error, put) << "failed to open file " << data << ", " << error.what();
         return Status::CANCELLED;

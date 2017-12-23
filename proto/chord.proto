@@ -9,11 +9,6 @@ option objc_class_prefix = "CRD";
 
 package chord;
 
-service ChordControl {
-  //--- command
-  rpc control   (ControlRequest)  returns (ControlResponse) {}
-}
-
 service Chord {
 
   //--- common chord calls
@@ -22,33 +17,7 @@ service Chord {
   rpc stabilize (StabilizeRequest)  returns (StabilizeResponse) {}
   rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
   rpc check     (CheckRequest)      returns (CheckResponse) {}
-  //--- file 
-  //rpc put       (stream PutRequest) returns (PutResponse) {}
-  //rpc get       (GetRequest)        returns (stream GetResponse) {}
 }
-
-/**
- * Command
- */
-message ControlRequest {
-  string command = 1;
-}
-
-message ControlResponse { 
-  string result = 1;
-}
-
-/**
- * COMMON
- */
-//message RouterEntry {
-//  string uuid = 1;
-//  string endpoint = 2;
-//}
-//message Header {
-//  RouterEntry src = 1;
-//  //RouterEntry dst = 2;
-//}
 
 /**
  * SUCCESSOR 
@@ -108,42 +77,3 @@ message CheckResponse {
   chord.common.Header header = 1;
   string id = 2;
 }
-
-/**
- * PUT
- */
-//message PutRequest {
-//  //Header header = 1;
-//  //--- id to put
-//  string  id = 2;
-//  bytes   data = 3;
-//  uint64  offset = 4;
-//  uint64  size = 5;
-//  string  uri = 6;
-//}
-//
-//message PutResponse { 
-//  Header header = 1;
-//  //--- id that was put
-//  string id = 2;
-//}
-//
-///**
-// * GET
-// */
-//message GetRequest {
-//  //Header header = 1;
-//  //--- id to get
-//  string id = 2;
-//  string uri = 3;
-//
-//}
-//
-//message GetResponse { 
-//  //Header  header = 1;
-//  string  id = 2;
-//  bytes   data = 3;
-//  uint64  offset = 4;
-//  uint64  size = 5;
-//  string  uri = 6;
-//}

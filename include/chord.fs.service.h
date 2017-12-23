@@ -23,6 +23,8 @@ namespace chord {
 
         virtual grpc::Status get(grpc::ServerContext* context, const chord::fs::GetRequest* req, grpc::ServerWriter<chord::fs::GetResponse>* writer) override;
 
+        virtual grpc::Status notify(grpc::ServerContext* serverContext, const chord::fs::NotifyRequest* request, chord::fs::NotifyResponse* response) override;
+
       private:
         Context& context;
     };

@@ -13,19 +13,19 @@ service Filesystem {
   //--- file 
   rpc put       (stream PutRequest) returns (PutResponse) {}
   rpc get       (GetRequest)        returns (stream GetResponse) {}
+  rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
 }
 
 /**
  * PUT
  */
 message PutRequest {
-  //Header header = 1;
   //--- id to put
-  string  id = 2;
-  bytes   data = 3;
-  uint64  offset = 4;
-  uint64  size = 5;
-  string  uri = 6;
+  string  id = 1;
+  bytes   data = 2;
+  uint64  offset = 3;
+  uint64  size = 4;
+  string  uri = 5;
 }
 
 message PutResponse { 
@@ -38,18 +38,37 @@ message PutResponse {
  * GET
  */
 message GetRequest {
-  //Header header = 1;
   //--- id to get
-  string id = 2;
-  string uri = 3;
+  string id = 1;
+  string uri = 2;
 
 }
 
 message GetResponse { 
-  //Header  header = 1;
-  string  id = 2;
-  bytes   data = 3;
-  uint64  offset = 4;
-  uint64  size = 5;
-  string  uri = 6;
+  string  id = 1;
+  bytes   data = 2;
+  uint64  offset = 3;
+  uint64  size = 4;
+  string  uri = 5;
+}
+
+message Permission {
+
+}
+
+enum Type {
+  DIRECTORY = 0;
+  FILE = 1;
+}
+
+/**
+ * NOTIFY
+ */
+message NotifyRequest {
+  string id = 1;
+  string uri = 2;
+  Type type = 3;
+}
+
+message NotifyResponse { 
 }

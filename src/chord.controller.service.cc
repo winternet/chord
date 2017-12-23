@@ -103,7 +103,7 @@ namespace chord {
 
         ofstream file;
         file.exceptions(ofstream::failbit | ofstream::badbit);
-        file.open(uri.filename(), std::fstream::binary);
+        file.open(uri.path().filename(), std::fstream::binary);
 
         try {
           fs_client->get(target, file);

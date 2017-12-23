@@ -5,15 +5,17 @@
 #include <map>
 #include <cctype>
 
+#include "chord.path.h"
+
 namespace chord {
+
   class uri {
     public:
       class builder {
         std::map<std::string, std::string> _query;
-        std::string _scheme, _path, _fragment, _user, _password, _host;
+        std::string _scheme, _fragment, _user, _password, _host;
+        chord::path _path;
         int _port;
-
-        std::string _directory, _filename, _extension;
 
         public:
         builder scheme(const std::string& scheme);
@@ -25,9 +27,6 @@ namespace chord {
         builder query(const std::map<std::string, std::string>& query);
         builder add_query(const std::string& key, const std::string& value);
         builder fragment(const std::string& fragment);
-        builder directory(const std::string& directory);
-        builder filename(const std::string& filename);
-        builder extension(const std::string& extension);
 
         uri build();
       };
@@ -56,8 +55,8 @@ namespace chord {
       authority _authority;
       std::map<std::string, std::string> _query;
 
-      std::string _scheme, _path, _fragment;
-      std::string _directory, _filename, _extension;
+      std::string _scheme, _fragment;
+      chord::path _path;
 
     public:
       uri(const authority& authority);
@@ -67,26 +66,25 @@ namespace chord {
       static std::string pattern();
       static std::regex uri_regex();
 
+      //static chord::path canonical(const chord::path& path);
+
       void scheme(const std::string scheme);
       void authority(const authority auth);
-      void path(const std::string path);
+      void path(const chord::path path);
       void query(const std::map<std::string, std::string> query);
       void fragment(const std::string fragment);
-      void directory(const std::string directory);
-      void filename(const std::string filename);
-      void extension(const std::string extension);
 
       const std::string& scheme() const;
-      const std::string& path() const;
+      const chord::path& path() const;
       std::map<std::string, std::string>& query();
       const std::string& user() const;
       const std::string& password() const;
       const std::string& host() const;
       const int& port() const;
       const std::string& fragment() const;
-      const std::string& directory() const;
-      const std::string& filename() const;
-      const std::string& extension() const;
+      //const std::string directory() const;
+      //const std::string filename() const;
+      //const std::string extension() const;
 
       static std::string decode(const std::string& str);
       static std::string encode(const std::string& str);

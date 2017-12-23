@@ -19,6 +19,14 @@ namespace chord {
     return fs::exists({path});
   }
 
+  bool file::is_regular_file(const std::string& path) {
+    return fs::is_regular_file({path});
+  }
+
+  bool file::is_directory(const std::string& path) {
+    return fs::is_directory({path});
+  }
+
   bool file::remove(const std::string& path) {
     return fs::remove({path});
   }

@@ -18,6 +18,10 @@ namespace chord {
 
     static bool create_file(const std::string& path);
 
+    static bool is_regular_file(const std::string& path);
+
+    static bool is_directory(const std::string& path);
+
     static bool create_directory(const std::string& path);
 
     static bool create_directories(const std::string& path);

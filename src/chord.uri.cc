@@ -6,25 +6,27 @@
 #include <sstream>
 #include <experimental/filesystem>
 
+#include "chord.path.h"
 #include "chord.uri.h"
 #include "chord.exception.h"
 
-namespace chord {
+using namespace std;
+namespace fs = std::experimental::filesystem;
 
-  using namespace std;
+namespace chord {
 
   uri::builder uri::builder::scheme(const string& scheme) { _scheme = scheme; return *this;}
   uri::builder uri::builder::host(const string& host) { _host = host; return *this; }
   uri::builder uri::builder::port(const int port) { _port = port; return *this; }
   uri::builder uri::builder::user(const string& user) { _user = user; return *this; }
   uri::builder uri::builder::password(const string& password) { _password = password; return *this; }
-  uri::builder uri::builder::path(const string& path) { _path = path; return *this;}
+  uri::builder uri::builder::path(const string& path) { _path = chord::path{path}; return *this;}
   uri::builder uri::builder::query(const map<string, string>& query) { _query = query; return *this; }
   uri::builder uri::builder::add_query(const string& key, const string& value) { _query[key] = value; return *this; }
   uri::builder uri::builder::fragment(const string& fragment) { _fragment = fragment; return *this; }
-  uri::builder uri::builder::directory(const string& directory) { _directory = directory; return *this; }
-  uri::builder uri::builder::filename(const string& filename) { _filename = filename; return *this; }
-  uri::builder uri::builder::extension(const string& extension) { _extension = extension; return *this; }
+  //uri::builder uri::builder::directory(const string& directory) { _directory = directory; return *this; }
+  //uri::builder uri::builder::filename(const string& filename) { _filename = filename; return *this; }
+  //uri::builder uri::builder::extension(const string& extension) { _extension = extension; return *this; }
 
   uri uri::builder::build() {
     uri ret({_user, _password, _host, _port});
@@ -32,11 +34,9 @@ namespace chord {
     ret.path(_path);
     ret.query(_query);
     ret.fragment(_fragment);
-    ret.directory(_directory);
-    ret.filename(_filename);
-    ret.extension(_extension);
     return ret;
   }
+
 
   uri::authority::authority(string host, int port)
     :_host{host}, _port{port}
@@ -68,24 +68,24 @@ namespace chord {
 
   void uri::scheme(const string scheme) { _scheme = scheme; }
   void uri::authority(const class authority auth) { _authority = auth; }
-  void uri::path(const string path) { _path = path; }
+  void uri::path(const chord::path path) { _path = path; }
   void uri::query(const map<string, string> query) { _query = query; }
   void uri::fragment(const string fragment) { _fragment = fragment; }
-  void uri::directory(const string directory) { _directory = directory; }
-  void uri::filename(const string filename) { _filename = filename; }
-  void uri::extension(const string extension) { _extension = extension; }
+  //void uri::directory(const string directory) { _directory = canonical(directory); }
+  //void uri::filename(const string filename) { _filename = filename; }
+  //void uri::extension(const string extension) { _extension = extension; }
 
   const string& uri::scheme() const { return _scheme; }
-  const string& uri::path() const { return _path; }
+  const chord::path& uri::path() const { return _path; }
   map<string, string>& uri::query() { return _query; }
   const string& uri::user() const { return _authority.user(); }
   const string& uri::password() const { return _authority.password(); }
   const string& uri::host() const { return _authority.host(); }
   const int&    uri::port() const { return _authority.port(); }
   const string& uri::fragment() const { return _fragment; }
-  const string& uri::directory() const { return _directory; }
-  const string& uri::filename() const { return _filename; }
-  const string& uri::extension() const { return _extension; }
+  //const string uri::directory() const { return _path.parent_path().string(); }
+  //const string uri::filename() const { return _path.filename().string(); }
+  //const string uri::extension() const { return _path.extension().string(); }
 
   string uri::decode(const string& str) {
     ostringstream decoded;
@@ -119,7 +119,6 @@ namespace chord {
   }
 
   uri uri::from(const string& str) {
-    namespace fs = std::experimental::filesystem::v1;
     auto reg = uri_regex();
     smatch match;
     if(!regex_match(str, reg)) {
@@ -164,12 +163,8 @@ namespace chord {
     auto _fragment = match.str(8);
 
     uri_builder.scheme(_scheme);
-    uri_builder.path(_path);
-    fs::path p {_path};
 
-    uri_builder.directory(p.parent_path());
-    uri_builder.filename(p.filename());
-    uri_builder.extension(p.extension());
+    uri_builder.path(_path);
 
     uri_builder.fragment(_fragment);
     return uri_builder.build();
