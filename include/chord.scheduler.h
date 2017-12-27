@@ -11,6 +11,8 @@
 
 #include "chord.i.scheduler.h"
 
+namespace chord {
+
 struct function_timer {
   std::function<void()> func;
   std::chrono::system_clock::time_point time;
@@ -122,3 +124,5 @@ class Scheduler : public AbstractScheduler {
     }
   }
 };
+
+} //namespace chord

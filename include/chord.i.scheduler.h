@@ -13,6 +13,8 @@
 using std::string;
 using std::function;
 
+namespace chord {
+
 class AbstractScheduler {
  public:
   virtual void schedule(const std::chrono::system_clock::time_point &time, function<void()> &&func) = 0;
@@ -24,3 +26,5 @@ class AbstractScheduler {
 
   virtual ~AbstractScheduler() = default;
 };
+
+} //namespace chord

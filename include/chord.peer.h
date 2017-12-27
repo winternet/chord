@@ -3,13 +3,9 @@
 #include <memory>
 #include <grpc++/server_builder.h>
 
-#include "chord.client.h"
-#include "chord.service.h"
-#include "chord.i.scheduler.h"
-
-//#include "chord.queue.h"
 #include "chord.uuid.h"
 #include "chord.router.h"
+#include "chord.facade.h"
 
 class AbstractScheduler;
 
@@ -32,28 +28,20 @@ class Client;
 
 namespace chord {
 
-class Peer : std::enable_shared_from_this<Peer> {
+class Peer {
  private:
-  size_t next{0};
+  std::shared_ptr<chord::Context> context;
 
-  std::unique_ptr<AbstractScheduler> scheduler{nullptr};
-  const std::shared_ptr<chord::Context> &context;
-
-  std::unique_ptr<chord::Router> router;//       { nullptr };
-
-  //--- chord
-  std::unique_ptr<chord::Client> client;//  { nullptr };
-  std::unique_ptr<chord::Service> service; // { nullptr };
+  //--- chord facade
+  std::unique_ptr<chord::ChordFacade> chord;
 
   //--- filesystem
-  std::shared_ptr<chord::fs::Client> fs_client;// { nullptr };
-  std::shared_ptr<chord::fs::Service> fs_service;// { nullptr };
+  std::shared_ptr<chord::fs::Client> fs_client;
+  std::shared_ptr<chord::fs::Service> fs_service;
 
-  std::unique_ptr<chord::controller::Service> controller;// { nullptr };
+  std::unique_ptr<chord::controller::Service> controller;
 
   void start_server();
-
-  void start_scheduler();
 
  public:
   Peer(const Peer &) = delete;             // disable copying
@@ -63,35 +51,6 @@ class Peer : std::enable_shared_from_this<Peer> {
 
   void start();
 
-  /**
-   * create new chord ring
-   */
-  void create();
-
-  /**
-   * join chord ring containing client-id.
-   */
-  void join();
-
-  /**
-   * successor
-   */
-  chord::common::RouterEntry successor(const uuid_t &uuid);
-
-  /**
-   * stabilize the ring
-   */
-  void stabilize();
-
-  /**
-   * check predecessor
-   */
-  void check_predecessor();
-
-  /**
-   * fix finger table
-   */
-  void fix_fingers(size_t index);
 };
 
 } //namespace chord

@@ -35,21 +35,21 @@ using namespace chord::common;
 namespace chord {
 namespace fs {
 
-Client::Client(std::shared_ptr<Context> context, std::shared_ptr<Peer> peer)
-    : context{context}, peer{peer} {
+Client::Client(shared_ptr<Context> context, ChordFacade* chord)
+    : context{context}, chord{chord} {
   //--- default stub factory
   make_stub = [&](const endpoint_t &endpoint) {
     return chord::fs::Filesystem::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
   };
 }
 
-Client::Client(std::shared_ptr<Context> context, std::shared_ptr<Peer> peer, StubFactory make_stub)
-    : context{context}, peer{peer}, make_stub{make_stub} {
+Client::Client(shared_ptr<Context> context, ChordFacade* chord, StubFactory make_stub)
+    : context{context}, chord{chord}, make_stub{make_stub} {
 }
 
 Status Client::put(const std::string &uri, std::istream &istream) {
   auto hash = chord::crypto::sha256(uri);
-  auto endpoint = peer->successor(hash).endpoint();
+  auto endpoint = chord->successor(hash).endpoint();
 
   CLIENT_LOG(trace, put) << uri << " (" << hash << ")";
 
@@ -91,7 +91,7 @@ Status Client::put(const std::string &uri, std::istream &istream) {
 
 Status Client::get(const std::string &uri, std::ostream &ostream) {
   auto hash = chord::crypto::sha256(uri);
-  auto endpoint = peer->successor(hash).endpoint();
+  auto endpoint = chord->successor(hash).endpoint();
 
   CLIENT_LOG(trace, get) << uri << " (" << hash << ")";
 
@@ -116,7 +116,7 @@ Status Client::get(const std::string &uri, std::ostream &ostream) {
 /*
 Status Client::dir(const std::string& uri, std::ostream& ostream) {
   auto hash = chord::crypto::sha256(uri);
-  auto endpoint = peer->successor(hash).endpoint();
+  auto endpoint = chord->successor(hash).endpoint();
 
   CLIENT_LOG(trace, get) << uri << " (" << hash << ")";
 

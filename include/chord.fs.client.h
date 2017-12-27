@@ -5,6 +5,7 @@
 
 #include "chord.types.h"
 #include "chord_fs.grpc.pb.h"
+#include "chord.facade.h"
 
 namespace chord {
 class Peer;
@@ -22,14 +23,14 @@ typedef std::function<std::unique_ptr<chord::fs::Filesystem::StubInterface>(
 class Client {
  private:
   std::shared_ptr<chord::Context> context;
-  std::shared_ptr<chord::Peer> peer;
+  chord::ChordFacade* chord;
 
   StubFactory make_stub;
 
  public:
-  Client(std::shared_ptr<Context> context, std::shared_ptr<chord::Peer> peer);
+  Client(std::shared_ptr<Context> context, chord::ChordFacade* chord);
 
-  Client(std::shared_ptr<Context> context, std::shared_ptr<chord::Peer> peer, StubFactory factory);
+  Client(std::shared_ptr<Context> context, chord::ChordFacade* chord, StubFactory factory);
 
   grpc::Status put(const std::string &uri, std::istream &istream);
 
