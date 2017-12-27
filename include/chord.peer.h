@@ -7,8 +7,9 @@
 #include "chord.service.h"
 #include "chord.i.scheduler.h"
 
-#include "chord.queue.h"
+//#include "chord.queue.h"
 #include "chord.uuid.h"
+#include "chord.router.h"
 
 class AbstractScheduler;
 
@@ -59,8 +60,6 @@ class Peer : std::enable_shared_from_this<Peer> {
   Peer &operator=(const Peer &) = delete;  // disable assignment
 
   explicit Peer(std::shared_ptr<chord::Context> context);
-
-  virtual ~Peer();
 
   void start();
 

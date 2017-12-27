@@ -60,8 +60,6 @@ void Peer::start() {
   //--- blocks
 }
 
-Peer::~Peer() {}
-
 void Peer::start_scheduler() {
   //--- stabilize
   scheduler->schedule(chrono::milliseconds(context->stabilize_period_ms), [this] {

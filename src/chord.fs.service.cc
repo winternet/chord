@@ -9,7 +9,6 @@
 #include "chord.uri.h"
 #include "chord.file.h"
 #include "chord.context.h"
-#include "chord.exception.h"
 #include "chord_fs.grpc.pb.h"
 
 #include "chord.common.h"
@@ -100,7 +99,6 @@ Status Service::get(ServerContext *context, const GetRequest *req, grpc::ServerW
     return Status::CANCELLED;
   }
 
-  const auto& id = req->id();
   auto uri = chord::uri::from(req->uri());
 
   data /= uri.path();

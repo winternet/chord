@@ -5,12 +5,14 @@
 
 #include "chord.path.h"
 #include "chord.uri.h"
-#include "chord.exception.h"
 
 using namespace std;
 namespace fs = std::experimental::filesystem;
 
 namespace chord {
+
+uri::builder::builder(const std::string scheme, const chord::path path)
+    : _scheme{scheme}, _path{path} {}
 
 uri::builder uri::builder::scheme(const string &scheme) {
   _scheme = scheme;
@@ -56,43 +58,70 @@ uri::builder uri::builder::fragment(const string &fragment) {
   _fragment = fragment;
   return *this;
 }
-//uri::builder uri::builder::directory(const string& directory) { _directory = directory; return *this; }
-//uri::builder uri::builder::filename(const string& filename) { _filename = filename; return *this; }
-//uri::builder uri::builder::extension(const string& extension) { _extension = extension; return *this; }
 
 uri uri::builder::build() {
-  uri ret({_user, _password, _host, _port});
-  ret.scheme(_scheme);
-  ret.path(_path);
+  if(_scheme.empty() || _path.empty()) {
+    throw chord::exception{"Neither scheme nor path must be empty!"};
+  }
+  uri ret{_scheme, _path};
+
+  //--- authority
+  if(!_host.empty()) {
+    authority auth{_host};
+    auth.user(_user);
+    auth.password(_password);
+    if(_port) auth.port(_port.value());
+
+    ret.auth(auth);
+  }
+
   ret.query(_query);
   ret.fragment(_fragment);
   return ret;
 }
 
-uri::Authority::Authority(string host, int port)
+uri::authority::authority(string host)
+    : _host{host} {}
+
+uri::authority::authority(string host, int port)
     : _host{host}, _port{port} {}
 
-uri::Authority::Authority(string user, string password, string host, int port)
+uri::authority::authority(string user, string password, string host, int port)
     : _user{user}, _password{password}, _host{host}, _port{port} {}
 
-const string &uri::Authority::user() const { return _user; }
+const std::string &uri::authority::user() const { return _user; }
 
-const string &uri::Authority::password() const { return _password; }
+const std::string &uri::authority::password() const { return _password; }
 
-const string &uri::Authority::host() const { return _host; }
+const std::string &uri::authority::host() const { return _host; }
 
-const int &uri::Authority::port() const { return _port; }
+const std::experimental::optional<int> &uri::authority::port() const { return _port; }
 
-void uri::Authority::user(const string user) { _user = user; }
+void uri::authority::user(const string user) { _user = user; }
 
-void uri::Authority::password(const string password) { _password = password; }
+void uri::authority::password(const string password) { _password = password; }
 
-void uri::Authority::host(const string host) { _host = host; }
+void uri::authority::host(const string host) { _host = host; }
 
-void uri::Authority::port(const int port) { _port = port; }
+void uri::authority::port(const int port) { _port = port; }
 
-uri::uri(const class Authority &authority)
-    : _authority{authority} {}
+ostream &operator<<(std::ostream &os, const uri::authority &authority) {
+  if(!authority.user().empty()) {
+    os << authority.user();
+    if(!authority.password().empty()) {
+      os << ':' << authority.password();
+    }
+    os << '@';
+  }
+  os << authority.host();
+  if(authority.port())
+    os << ':'  << to_string(authority.port().value());
+
+  return os;
+}
+
+uri::uri(const string scheme, const chord::path path)
+: _scheme{scheme}, _path{path} {}
 
 string uri::pattern() {
   return "^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)?([^#]*)?(#(.*))?"s;
@@ -104,35 +133,23 @@ regex uri::uri_regex() {
 
 void uri::scheme(const string scheme) { _scheme = scheme; }
 
-void uri::authority(const class Authority auth) { _authority = auth; }
+void uri::auth(const class authority auth) { _authority = auth; }
 
 void uri::path(const chord::path path) { _path = path; }
 
 void uri::query(const map<string, string> query) { _query = query; }
 
 void uri::fragment(const string fragment) { _fragment = fragment; }
-//void uri::directory(const string directory) { _directory = canonical(directory); }
-//void uri::filename(const string filename) { _filename = filename; }
-//void uri::extension(const string extension) { _extension = extension; }
 
 const string &uri::scheme() const { return _scheme; }
 
+const std::experimental::optional<uri::authority> &uri::auth() const { return _authority; }
+
 const chord::path &uri::path() const { return _path; }
 
-map<string, string> &uri::query() { return _query; }
-
-const string &uri::user() const { return _authority.user(); }
-
-const string &uri::password() const { return _authority.password(); }
-
-const string &uri::host() const { return _authority.host(); }
-
-const int &uri::port() const { return _authority.port(); }
+const map<string, string> &uri::query() const { return _query; }
 
 const string &uri::fragment() const { return _fragment; }
-//const string uri::directory() const { return _path.parent_path().string(); }
-//const string uri::filename() const { return _path.filename().string(); }
-//const string uri::extension() const { return _path.extension().string(); }
 
 string uri::decode(const string &str) {
   ostringstream decoded;
@@ -215,6 +232,36 @@ uri uri::from(const string &str) {
 
   uri_builder.fragment(_fragment);
   return uri_builder.build();
+}
+
+ostream &operator<<(ostream &os, const uri &uri) {
+  os << to_string(uri);
+  return os;
+}
+
+uri::operator std::string() const {
+  return to_string(*this);
+}
+
+std::string to_string(const uri &uri) {
+  stringstream ss;
+  //--- important scheme etc.
+  ss << uri.scheme() << ':';
+  if(uri.auth()) ss << "//" << uri.auth().value();
+  ss << uri.path();
+
+  //--- query param handling
+  const auto &query = uri.query();
+  if(!query.empty()) ss << '?';
+
+  for(auto it = begin(query); it != end(query); it++ ) {
+    ss << it->first << "=" << it->second;
+    if(next(it) != end(query)) ss << '&';
+  }
+
+  //--- fragment
+  if(!uri.fragment().empty()) ss << '#' << uri.fragment();
+  return ss.str();
 }
 
 }

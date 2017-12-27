@@ -14,7 +14,7 @@ class uuid {
 
   value_t val;
  public:
-  uuid() {};
+  uuid() = default;
 
   uuid(const std::string &str) { val = value_t{str}; }
 

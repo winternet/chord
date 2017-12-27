@@ -7,7 +7,6 @@
 #include "chord.uri.h"
 #include "chord.context.h"
 #include "chord.router.h"
-#include "chord.grpc.pb.h"
 
 #include "chord.common.h"
 #include "chord.client.h"
@@ -87,7 +86,7 @@ RouterEntry Service::successor(const uuid_t &uuid) {
 
   Status status = successor(&serverContext, &req, &res);
 
-  if (!status.ok()) throw chord::exception("failed to query succesor", status);
+  if (!status.ok()) throw chord::exception("failed to query successor", status);
 
   return res.successor();
 }

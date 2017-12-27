@@ -10,5 +10,5 @@ class AbstractService {
   virtual grpc::Status
   successor(grpc::ServerContext *serverContext, const chord::SuccessorRequest *req, chord::SuccessorResponse *res) =0;
 
-  virtual ~AbstractService() {}
+  virtual ~AbstractService() = default;
 };

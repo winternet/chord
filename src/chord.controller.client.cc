@@ -52,4 +52,4 @@ void Client::control(const string &command) {
   throw chord::exception("failed to issue command: " + command);
 }
 } //namespace controller
-} //namesapce chord
+} //namespace chord

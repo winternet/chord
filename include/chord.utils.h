@@ -5,7 +5,7 @@
 #include "chord.router.h"
 
 endpoint_t peer_to_address(const std::string &peer, int server_port) {
-  const char delim = ":";
+  const char delim = ':';
   size_t beg = peer.find(delim);
   size_t end = peer.rfind(delim) + 1;
 

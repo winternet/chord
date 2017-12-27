@@ -15,6 +15,7 @@
 #define ROUTER_LOG(level) LOG(level) << "[router] "
 
 namespace chord {
+
 struct Router {
 
   std::map<uuid_t, endpoint_t> routes;

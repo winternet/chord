@@ -1,12 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <experimental/filesystem>
-#include <grpc/grpc.h>
 
-//#include <grpc++/server.h>
-//#include <grpc++/server_builder.h>
 #include <grpc++/server_context.h>
-//#include <grpc++/security/server_credentials.h>
 
 #include <boost/tokenizer.hpp>
 
@@ -14,7 +10,6 @@
 #include "chord.log.h"
 #include "chord.uri.h"
 #include "chord.context.h"
-#include "chord.exception.h"
 #include "chord_controller.grpc.pb.h"
 
 #include "chord.fs.client.h"
@@ -30,9 +25,6 @@ using grpc::Status;
 
 using chord::controller::ControlResponse;
 using chord::controller::ControlRequest;
-//using chord::controller::Chord;
-
-//#define CONTROL_LOG(level) LOG(level) << "[control] "
 
 using grpc::ServerBuilder;
 using namespace std;

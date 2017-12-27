@@ -7,7 +7,7 @@
 #include <thread>
 #include <memory>
 #include <sstream>
-#include <assert.h>
+#include <cassert>
 
 #include "chord.i.scheduler.h"
 
@@ -15,7 +15,7 @@ struct function_timer {
   std::function<void()> func;
   std::chrono::system_clock::time_point time;
 
-  function_timer() {}
+  function_timer() = default;
 
   function_timer(std::function<void()> &&f, const std::chrono::system_clock::time_point &t)
       : func(f), time(t) {}
@@ -43,11 +43,12 @@ class Scheduler : public AbstractScheduler {
   std::unique_ptr<std::thread> thread;
   std::priority_queue<function_timer> tasks;
 
+ public:
+
   Scheduler &operator=(const Scheduler &rhs) = delete;
 
   Scheduler(const Scheduler &rhs) = delete;
 
- public:
   Scheduler()
       : shutdown(false),
         thread(new std::thread([this] {
@@ -64,7 +65,7 @@ class Scheduler : public AbstractScheduler {
     thread->join();
   }
 
-  virtual void schedule(const std::chrono::system_clock::time_point &time, std::function<void()> &&func) override {
+  void schedule(const std::chrono::system_clock::time_point &time, std::function<void()> &&func) override {
     std::function<void()> threadFunc = [func]() {
       std::thread t(func);
       t.detach();
@@ -72,7 +73,7 @@ class Scheduler : public AbstractScheduler {
     tasks.push(function_timer(std::move(threadFunc), time));
   }
 
-  virtual void schedule(const std::chrono::system_clock::duration &interval, std::function<void()> func) override {
+  void schedule(const std::chrono::system_clock::duration &interval, std::function<void()> func) override {
     std::function<void()> threadFunc = [func]() {
       std::thread t(func);
       t.detach();
@@ -81,8 +82,8 @@ class Scheduler : public AbstractScheduler {
   }
 
   //in format "%s %M %H %d %m %Y" "sec min hour date month year"
-  virtual void schedule(const std::string &time, std::function<void()> func) override {
-    if (time.find("*")==std::string::npos && time.find("/")==std::string::npos) {
+  void schedule(const std::string &time, std::function<void()> func) override {
+    if (time.find('*')==std::string::npos && time.find('/')==std::string::npos) {
       std::tm tm = {};
       strptime(time.c_str(), "%s %M %H %d %m %Y", &tm);
       auto tp = std::chrono::system_clock::from_time_t(std::mktime(&tm));

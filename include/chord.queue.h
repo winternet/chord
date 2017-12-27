@@ -18,7 +18,7 @@ class queue {
   queue(const queue &) = delete;            // disable copying
   queue &operator=(const queue &) = delete; // disable assignment
 
-  virtual ~queue() {}
+  virtual ~queue() = default;
 
   T pop() {
     std::unique_lock<std::mutex> lock(mutex);

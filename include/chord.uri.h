@@ -4,7 +4,9 @@
 #include <regex>
 #include <map>
 #include <cctype>
+#include <experimental/optional>
 
+#include "chord.exception.h"
 #include "chord.path.h"
 
 namespace chord {
@@ -15,9 +17,13 @@ class uri {
     std::map<std::string, std::string> _query;
     std::string _scheme, _fragment, _user, _password, _host;
     chord::path _path;
-    int _port;
+    std::experimental::optional<int> _port;
 
    public:
+    builder() = default;
+
+    builder(const std::string scheme, const chord::path path);
+
     builder scheme(const std::string &scheme);
 
     builder host(const std::string &host);
@@ -39,15 +45,17 @@ class uri {
     uri build();
   };
 
-  class Authority {
+  class authority {
    private:
-    std::string _user, _password, _host;
-    int _port;
+    std::string _host;
+    std::string _user, _password;
+    std::experimental::optional<int> _port;
 
    public:
-    Authority(std::string host, int port);
+    explicit authority(std::string host);
+    authority(std::string host, int port);
 
-    Authority(std::string user, std::string password, std::string host, int port);
+    authority(std::string user, std::string password, std::string host, int port);
 
     const std::string &user() const;
 
@@ -55,7 +63,7 @@ class uri {
 
     const std::string &host() const;
 
-    const int &port() const;
+    const std::experimental::optional<int> &port() const;
 
     void user(std::string user);
 
@@ -64,17 +72,19 @@ class uri {
     void host(std::string host);
 
     void port(int port);
+
+    friend std::ostream &operator<<(std::ostream &os, const authority &authority);
   };
 
  private:
-  Authority _authority;
+  std::experimental::optional<authority> _authority;
   std::map<std::string, std::string> _query;
 
   std::string _scheme, _fragment;
   chord::path _path;
 
  public:
-  explicit uri(const Authority &authority);
+  uri(const std::string scheme, const chord::path path);
 
   virtual ~uri() = default;
 
@@ -84,7 +94,7 @@ class uri {
 
   void scheme(std::string scheme);
 
-  void authority(Authority auth);
+  void auth(authority auth);
 
   void path(chord::path path);
 
@@ -94,17 +104,11 @@ class uri {
 
   const std::string &scheme() const;
 
+  const std::experimental::optional<uri::authority> &auth() const;
+
   const chord::path &path() const;
 
-  std::map<std::string, std::string> &query();
-
-  const std::string &user() const;
-
-  const std::string &password() const;
-
-  const std::string &host() const;
-
-  const int &port() const;
+  const std::map<std::string, std::string> &query() const;
 
   const std::string &fragment() const;
 
@@ -113,5 +117,11 @@ class uri {
   static std::string encode(const std::string &str);
 
   static uri from(const std::string &str);
+
+  operator std::string() const;
+
+  friend std::ostream &operator<<(std::ostream &os, const uri &uri);
+
+  friend std::string to_string(const uri &uri);
 };
 }

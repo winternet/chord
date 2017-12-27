@@ -34,6 +34,12 @@ path path::canonical() const {
   return result;
 }
 
+bool path::empty() const noexcept {
+  return _path.empty();
+}
+
+path::operator std::string() const { return _path.string(); }
+
 path path::operator/=(const path &p) { return path{_path /= p._path}; }
 
 bool path::operator==(const path &p) const { return _path==p._path; }
@@ -45,7 +51,7 @@ bool operator==(const std::string &p1, const path &p2) {
 }
 
 std::ostream &operator<<(std::ostream &os, const path &path) {
-  return os << path._path;
+  return os << path.string();
 }
 
 } //namespace chord

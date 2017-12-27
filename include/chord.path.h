@@ -29,7 +29,9 @@ class path {
 
   std::string string() const;
 
-  operator std::string() const { return _path.string(); }
+  bool empty() const noexcept ;
+
+  operator std::string() const;
 
   path operator/=(const path &p);// { return path{_path /= p._path}; }
 

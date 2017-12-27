@@ -47,7 +47,7 @@ void parse_program_options(int ac, char *av[], const shared_ptr<chord::Context> 
 
     if (commands[0]=="put" || commands[0]=="get") {
       stringstream ss;
-      for (auto c:commands) ss << c << " ";
+      for (const auto &c:commands) ss << c << " ";
       controlClient.control(ss.str());
     }
 
