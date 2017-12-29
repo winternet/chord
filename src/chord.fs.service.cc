@@ -39,7 +39,7 @@ using namespace chord::common;
 namespace chord {
 namespace fs {
 
-Service::Service(Context &context)
+Service::Service(Context *context)
     : context{context} {
 }
 

@@ -6,13 +6,12 @@
 
 #include <boost/tokenizer.hpp>
 
-
 #include "chord.log.h"
 #include "chord.uri.h"
 #include "chord.context.h"
 #include "chord_controller.grpc.pb.h"
 
-#include "chord.fs.client.h"
+#include "chord.fs.facade.h"
 #include "chord.controller.service.h"
 
 #define log(level) LOG(level) << "[control] "
@@ -29,12 +28,10 @@ using chord::controller::ControlRequest;
 using grpc::ServerBuilder;
 using namespace std;
 
-namespace fs = std::experimental::filesystem;
-
 namespace chord {
   namespace controller {
-    Service::Service(shared_ptr<chord::fs::Client> fs_client)
-      : fs_client { fs_client }
+    Service::Service(chord::fs::Facade* filesystem)
+      : filesystem { filesystem }
     {
     }
 
@@ -69,14 +66,17 @@ namespace chord {
         auto source = words.at(1);
         auto target = words.at(2);
 
-        ifstream file;
-        file.exceptions(ifstream::failbit | ifstream::badbit);
-        file.open(source, std::fstream::binary);
-
         try {
-          fs_client->put(target, file);
+          ifstream file;
+          file.exceptions(ifstream::failbit | ifstream::badbit);
+          file.open(source, std::fstream::binary);
+
+          filesystem->put(target, file);
         } catch(const chord::exception& exception) {
           CONTROL_LOG(error,put) << "failed to issue put request: " << exception.what();
+          return Status::CANCELLED;
+        } catch(const std::ios_base::failure& exception) {
+          CONTROL_LOG(error, put) << "failed to issue put request: " << exception.what();
           return Status::CANCELLED;
         }
         return Status::OK;
@@ -93,15 +93,18 @@ namespace chord {
         //  fs::create_directories(uri.directory());
         //}
 
-        ofstream file;
-        file.exceptions(ofstream::failbit | ofstream::badbit);
-        file.open(uri.path().filename(), std::fstream::binary);
-
         try {
-          fs_client->get(target, file);
+          ofstream file;
+          file.exceptions(ofstream::failbit | ofstream::badbit);
+          file.open(uri.path().filename(), std::fstream::binary);
+
+          filesystem->get(target, file);
           file.close();
         } catch(const chord::exception& exception) {
           CONTROL_LOG(error,get) << "failed to issue put request: " << exception.what();
+          return Status::CANCELLED;
+        } catch(const std::ios_base::failure& exception) {
+          CONTROL_LOG(error, put) << "failed to issue put request: " << exception.what();
           return Status::CANCELLED;
         }
         return Status::OK;

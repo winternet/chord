@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <mutex>
 #include <memory>
 #include <string>
 #include <boost/array.hpp>
@@ -18,10 +19,13 @@ namespace chord {
 
 struct Router {
 
+  std::mutex mtx;
   std::map<uuid_t, endpoint_t> routes;
 
-  std::array<uuid_t *, BITS> predecessors;
-  std::array<uuid_t *, BITS> successors;
+  std::array<uuid_t*, BITS> predecessors;
+  std::array<uuid_t*, BITS> successors;
+
+  explicit Router(const chord::Router&) = default;
 
   explicit Router(chord::Context *context)
       : context{context} {
@@ -47,10 +51,12 @@ struct Router {
   }
 
   endpoint_t get_successor(const size_t &index) {
+    std::lock_guard<std::mutex> lock(mtx);
     return routes[*successors[index]];
   }
 
   endpoint_t get_predecessor(const size_t &index) {
+    std::lock_guard<std::mutex> lock(mtx);
     return routes[*successors[index]];
   }
 
@@ -63,60 +69,64 @@ struct Router {
     return routes[uuid];
   }
 
-  void set_successor(const size_t index, const uuid_t &uuid, const endpoint_t &endpoint) {
+  void set_successor(const size_t index, const uuid_t uuid, const endpoint_t endpoint) {
+    std::lock_guard<std::mutex> lock(mtx);
     ROUTER_LOG(info) << "set_successor[" << index << "][" << uuid << "] = " << endpoint;
     routes[uuid] = endpoint;
     delete successors[index];
-    successors[index] = new uuid_t(uuid);
+    successors[index] = new uuid_t{uuid};
   }
 
   void set_predecessor(const size_t index, const uuid_t uuid, const endpoint_t endpoint) {
+    std::lock_guard<std::mutex> lock(mtx);
     ROUTER_LOG(info) << "set_predecessor[" << index << "][" << uuid << "] = " << endpoint;
     routes[uuid] = endpoint;
     delete predecessors[index];
-    predecessors[index] = new uuid_t(uuid);
+    predecessors[index] = new uuid_t{uuid};
   }
 
   void reset_predecessor(const size_t index) {
+    std::lock_guard<std::mutex> lock(mtx);
     ROUTER_LOG(info) << "reset_predecessor[" << index << "]";
     uuid_t *pred = predecessors[index];
+
+    if(pred == nullptr) return;
+
     routes.erase(*pred);
     delete pred;
     predecessors[index] = nullptr;
   }
 
   void reset_successor(const size_t index) {
+    std::lock_guard<std::mutex> lock(mtx);
     ROUTER_LOG(info) << "reset_successor[" << index << "]";
     uuid_t *succ = successors[index];
+
+    if(succ == nullptr) return;
+
     routes.erase(*succ);
     delete succ;
     successors[index] = nullptr;
   }
 
-  //void reset(uuid_t uuid) {
-  //  reset(new uuid_t(uuid)));
-  //}
+  void reset(const uuid_t uuid) {
+    std::lock_guard<std::mutex> lock(mtx);
 
-  void reset(const uuid_t *uuid) {
-    if (uuid==nullptr) {
-      ROUTER_LOG(warning) << "failed to reset nullptr";
-      return;
-    }
-
-    ROUTER_LOG(info) << "reset_successor " << *uuid << "@...";
+    ROUTER_LOG(info) << "reset_successor " << uuid << "@...";
     //routes.erase(uuid);
 
     // TODO refactor
     for (int i = 0; i < BITS; i++) {
-      auto succ = successors[i];
-      if (succ!=nullptr && *succ==*uuid) {
+      uuid_t* succ = successors[i];
+      if (succ!=nullptr && *succ==uuid) {
+        ROUTER_LOG(info) << "succ=" << succ << ", uuid=" << &uuid << ", val= " << uuid;
         delete succ;
         successors[i] = nullptr;
       }
     }
     for (int i = 0; i < BITS; i++) {
-      auto pred = predecessors[i];
-      if (pred!=nullptr && *pred==*uuid) {
+      uuid_t* pred = predecessors[i];
+      if (pred!=nullptr && *pred==uuid) {
         delete pred;
         predecessors[i] = nullptr;
       }

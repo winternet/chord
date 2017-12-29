@@ -101,7 +101,7 @@ void Client::stabilize() {
 
   if (!status.ok()) {
     CLIENT_LOG(warning, stabilize) << "failed - should remove endpoint " << endpoint << "?";
-    router.reset(successor);
+    router.reset(*successor);
     return;
   }
 

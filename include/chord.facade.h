@@ -25,7 +25,7 @@ class ChordFacade {
   size_t next{0};
 
   std::unique_ptr<AbstractScheduler> _scheduler;
-  std::shared_ptr<chord::Context> _context;
+  chord::Context* _context;
 
   std::unique_ptr<chord::Router> _router;
 
@@ -39,7 +39,7 @@ class ChordFacade {
   ChordFacade(const ChordFacade &) = delete;             // disable copying
   ChordFacade &operator=(const ChordFacade &) = delete;  // disable assignment
 
-  explicit ChordFacade(std::shared_ptr<chord::Context> context);
+  explicit ChordFacade(chord::Context* context);
 
   void start();
 

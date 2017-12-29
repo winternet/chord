@@ -30,7 +30,7 @@ TEST(RouterTest, initialize) {
 
 TEST(RouterTest, dump) {
   auto context = Context{};
-  auto router = Router{&context};
+  Router router{&context};
   std::cout << router;
 }
 

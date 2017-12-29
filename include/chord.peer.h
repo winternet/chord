@@ -6,10 +6,11 @@
 #include "chord.uuid.h"
 #include "chord.router.h"
 #include "chord.facade.h"
+#include "chord.fs.facade.h"
 
-class AbstractScheduler;
 
 namespace chord {
+class AbstractScheduler;
 class Client;
 
 class Service;
@@ -18,11 +19,6 @@ struct Context;
 struct Router;
 namespace controller {
 class Service;
-}
-namespace fs {
-class Service;
-
-class Client;
 }
 }
 
@@ -36,8 +32,8 @@ class Peer {
   std::unique_ptr<chord::ChordFacade> chord;
 
   //--- filesystem
-  std::shared_ptr<chord::fs::Client> fs_client;
-  std::shared_ptr<chord::fs::Service> fs_service;
+  std::unique_ptr<chord::fs::Facade> filesystem;
+
 
   std::unique_ptr<chord::controller::Service> controller;
 

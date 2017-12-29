@@ -6,7 +6,7 @@
 
 namespace chord {
 namespace fs {
-class Client;
+class Facade;
 }
 }
 
@@ -15,7 +15,7 @@ namespace controller {
 class Service final : public chord::controller::Control::Service {
 
  public:
-  explicit Service(std::shared_ptr<chord::fs::Client> fs_client);
+  explicit Service(chord::fs::Facade* filesystem);
 
   grpc::Status control(grpc::ServerContext *context, const chord::controller::ControlRequest *req,
                        chord::controller::ControlResponse *res) override;
@@ -23,7 +23,7 @@ class Service final : public chord::controller::Control::Service {
  private:
   grpc::Status parse_command(const chord::controller::ControlRequest *req, chord::controller::ControlResponse *res);
 
-  std::shared_ptr<chord::fs::Client> fs_client;
+  chord::fs::Facade* filesystem;
 };
 }
 }

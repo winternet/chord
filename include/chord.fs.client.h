@@ -22,15 +22,15 @@ typedef std::function<std::unique_ptr<chord::fs::Filesystem::StubInterface>(
 
 class Client {
  private:
-  std::shared_ptr<chord::Context> context;
+  chord::Context* context;
   chord::ChordFacade* chord;
 
   StubFactory make_stub;
 
  public:
-  Client(std::shared_ptr<Context> context, chord::ChordFacade* chord);
+  Client(Context* context, chord::ChordFacade* chord);
 
-  Client(std::shared_ptr<Context> context, chord::ChordFacade* chord, StubFactory factory);
+  Client(Context* context, chord::ChordFacade* chord, StubFactory factory);
 
   grpc::Status put(const std::string &uri, std::istream &istream);
 

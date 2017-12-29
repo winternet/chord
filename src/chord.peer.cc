@@ -10,8 +10,7 @@
 #include "chord.scheduler.h"
 #include "chord.router.h"
 #include "chord.peer.h"
-#include "chord.fs.client.h"
-#include "chord.fs.service.h"
+#include "chord.fs.facade.h"
 
 #include "chord.controller.service.h"
 
@@ -32,7 +31,7 @@ void Peer::start_server() {
   // controller service
   builder.RegisterService(controller.get());
   // filesystem service
-  builder.RegisterService(fs_service.get());
+  builder.RegisterService(filesystem->service());
 
   unique_ptr<grpc::Server> server(builder.BuildAndStart());
   PEER_LOG(debug) << "server listening on " << bind_addr;
@@ -41,9 +40,10 @@ void Peer::start_server() {
 
 Peer::Peer(shared_ptr<Context> context)
     : context{context},
-      chord{make_unique<chord::ChordFacade>(context)},
-      fs_client{make_shared<fs::Client>(context, chord.get())},
-      fs_service{make_shared<fs::Service>(*context)}, controller{make_unique<controller::Service>(fs_client)} {
+      chord{make_unique<chord::ChordFacade>(context.get())},
+      filesystem{make_unique<chord::fs::Facade>(context.get(), chord.get())},
+      controller{make_unique<controller::Service>(filesystem.get())}
+{
 }
 
 void Peer::start() {
