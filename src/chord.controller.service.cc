@@ -71,7 +71,7 @@ namespace chord {
           file.exceptions(ifstream::failbit | ifstream::badbit);
           file.open(source, std::fstream::binary);
 
-          filesystem->put(target, file);
+          filesystem->put(uri::from(target), file);
         } catch(const chord::exception& exception) {
           CONTROL_LOG(error,put) << "failed to issue put request: " << exception.what();
           return Status::CANCELLED;
@@ -88,17 +88,18 @@ namespace chord {
 
         auto target = words.at(1);
 
-        auto uri = chord::uri::from(target);
         //if(!fs::is_directory(uri.directory())) {
         //  fs::create_directories(uri.directory());
         //}
 
         try {
+          auto uri = uri::from(target);
+
           ofstream file;
           file.exceptions(ofstream::failbit | ofstream::badbit);
           file.open(uri.path().filename(), std::fstream::binary);
 
-          filesystem->get(target, file);
+          filesystem->get(uri, file);
           file.close();
         } catch(const chord::exception& exception) {
           CONTROL_LOG(error,get) << "failed to issue put request: " << exception.what();

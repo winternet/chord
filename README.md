@@ -14,6 +14,11 @@
  $ [sudo] apt-get install libboost-dev
 ```
 
+* leveldb libraries
+```sh
+ $ [sudo] apt-get -y install libleveldb-dev
+```
+
 * xattr libraries
 ```sh
  $ [sudo] apt-get -y install attr-dev

@@ -87,7 +87,7 @@ uri::authority::authority(string host, int port)
     : _host{host}, _port{port} {}
 
 uri::authority::authority(string user, string password, string host, int port)
-    : _user{user}, _password{password}, _host{host}, _port{port} {}
+    : _host{host}, _user{user}, _password{password}, _port{port} {}
 
 const std::string &uri::authority::user() const { return _user; }
 

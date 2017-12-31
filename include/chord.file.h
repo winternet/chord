@@ -1,12 +1,9 @@
 #pragma once
 
 #include <string>
-#include <boost/optional.hpp>
+#include <experimental/optional>
 
 namespace chord {
-
-template<typename T>
-using optional_t = boost::optional<T>;
 
 struct file {
   // wrappers
@@ -29,7 +26,7 @@ struct file {
   static bool has_attr(const std::string &path, const std::string &name);
 
   /// xattr get
-  static optional_t<std::string> attr(const std::string &path, const std::string &name);
+  static std::experimental::optional<std::string> attr(const std::string &path, const std::string &name);
 
   /// xattr set
   static bool attr(const std::string &path, const std::string &name, const std::string &value);

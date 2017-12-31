@@ -15,14 +15,17 @@ Facade::Facade(Context* context, ChordFacade* chord)
   return fs_service.get();
 }
 
-void Facade::put(const string &uri, istream &istream) {
+void Facade::put(const chord::uri &uri, istream &istream) {
   auto status = fs_client->put(uri, istream);
-  if(!status.ok()) throw chord::exception("failed to put " + uri, status);
+  if(!status.ok()) throw chord::exception("failed to put " + to_string(uri), status);
+
+  auto notify_uri = uri::builder{uri.scheme(), uri.path().parent_path()}.build();
+  fs_client->notify(notify_uri, uri.path().filename());
 }
 
-void Facade::get(const string &uri, ostream &ostream) {
+void Facade::get(const chord::uri &uri, ostream &ostream) {
   auto status = fs_client->get(uri, ostream);
-  if(!status.ok()) throw chord::exception("failed to get " + uri, status);
+  if(!status.ok()) throw chord::exception("failed to get " + to_string(uri), status);
 }
 
 }

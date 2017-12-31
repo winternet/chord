@@ -44,6 +44,11 @@ jobs:
             cmake --version
 
       - run:
+          name: Install leveldb
+          command: |
+            apt-get -y install libleveldb-dev
+
+      - run:
           name: Install xattr
           command: |
             apt-get -y install attr-dev

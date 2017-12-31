@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "chord.path.h"
 #include "chord.uuid.h"
 #include "chord.types.h"
 
@@ -21,6 +22,9 @@ struct Context {
   //--- program options
   bool bootstrap{false};
   bool no_controller{false};
+  chord::path data_directory{"./data"};
+  chord::path meta_directory{"./metadata"};
+  chord::path config{"./config.yml"};
   //--- promoted endpoint
   endpoint_t bind_addr{"0.0.0.0:50050"};
   endpoint_t join_addr{"0.0.0.0:50050"};
@@ -38,6 +42,6 @@ struct Context {
   Context set_router(chord::Router *router);
 
  private:
-  Router *router{nullptr};
+  Router *router {nullptr};
 };
 } //namespace chord

@@ -15,9 +15,7 @@
 #include "chord.client.h"
 #include "chord.fs.service.h"
 
-#define log(level) LOG(level) << "[service] "
-
-#define SERVICE_LOG(level, method) LOG(level) << "[service][" << #method << "] "
+#define SERVICE_LOG(level, method) LOG(level) << "[fs.service][" << #method << "] "
 
 using grpc::ServerContext;
 using grpc::ClientContext;
@@ -40,10 +38,33 @@ namespace chord {
 namespace fs {
 
 Service::Service(Context *context)
-    : context{context} {
+    : context{context}, metadata{make_unique<MetadataManager>(context)} {
 }
 
-Status Service::notify(ServerContext *serverContext, const NotifyRequest *request, NotifyResponse *response) {
+Metadata Service::convert(const NotifyRequest *req) {
+	Metadata ret;
+  ret.name = req->filename();
+	return ret;
+}
+
+Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, NotifyResponse *res) {
+
+  SERVICE_LOG(trace, notify) 
+    << "filename=" << req->filename()
+    << ", uri=" << req->uri();
+
+  auto uri = uri::from(req->uri());
+
+	switch(req->action()) {
+	case ADD: 
+		metadata->add(uri, convert(req));
+		break;
+	case DEL: 
+		break;
+  case MOD: 
+		break;
+	}
+
   return Status::OK;
 }
 
@@ -51,18 +72,18 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   PutRequest req;
   ofstream file;
 
-  //TODO make configurable
-  path data{"./data"};
+  path data = context->data_directory;
   if (!file::is_directory(data)) {
-    file::create_directory(data);
+    file::create_directories(data);
   }
+
+  const auto uri = uri::from(req.uri());
 
   // open
   if (reader->Read(&req)) {
-    const auto uri = uri::from(req.uri());
 
     data /= uri.path().parent_path();
-    if (!file::is_directory(data)) {
+    if (!file::exists(data)) {
       SERVICE_LOG(trace, put) << "creating directories for " << data;
       file::create_directories(data);
     }
@@ -70,8 +91,6 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     data /= uri.path().filename();
     SERVICE_LOG(trace, put) << "trying to put " << data;
     file.exceptions(ifstream::failbit | ifstream::badbit);
-    //TODO make data path configurable
-    //TODO auto-create parent paths if not exist
     try {
       file.open(data, fstream::binary);
     } catch (const ios_base::failure& error) {
@@ -87,14 +106,22 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 
   // close
   file.close();
+
+  // metadata
+  try {
+    metadata->add(uri, {uri.path().filename()});
+  } catch(const chord::exception &e) {
+    SERVICE_LOG(error, put) << "failed to add metadata: " << e.what();
+    file::remove(data);
+    throw e;
+  }
   return Status::OK;
 }
 
-Status Service::get(ServerContext *context, const GetRequest *req, grpc::ServerWriter<GetResponse> *writer) {
+Status Service::get(ServerContext *serverContext, const GetRequest *req, grpc::ServerWriter<GetResponse> *writer) {
   ifstream file;
 
-  //TODO make configurable
-  path data{"./data"};
+  path data = context->data_directory;
   if (!file::is_directory(data)) {
     return Status::CANCELLED;
   }

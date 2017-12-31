@@ -28,6 +28,8 @@ using chord::fs::PutResponse;
 using chord::fs::PutRequest;
 using chord::fs::GetResponse;
 using chord::fs::GetRequest;
+using chord::fs::NotifyResponse;
+using chord::fs::NotifyRequest;
 
 using namespace std;
 using namespace chord::common;
@@ -47,7 +49,7 @@ Client::Client(Context* context, ChordFacade* chord, StubFactory make_stub)
     : context{context}, chord{chord}, make_stub{make_stub} {
 }
 
-Status Client::put(const std::string &uri, std::istream &istream) {
+Status Client::put(const chord::uri &uri, std::istream &istream) {
   auto hash = chord::crypto::sha256(uri);
   auto endpoint = chord->successor(hash).endpoint();
 
@@ -86,10 +88,31 @@ Status Client::put(const std::string &uri, std::istream &istream) {
   } while (read > 0);
 
   writer->WritesDone();
+
   return writer->Finish();
 }
 
-Status Client::get(const std::string &uri, std::ostream &ostream) {
+grpc::Status Client::notify(const chord::uri &notify_uri, const chord::path &file) {
+  auto hash = chord::crypto::sha256(notify_uri);
+  auto endpoint = chord->successor(hash).endpoint();
+
+  CLIENT_LOG(trace, notify) << notify_uri << " (" << hash << ")";
+
+  ClientContext clientContext;
+  NotifyResponse res;
+  NotifyRequest req;
+
+  req.set_id(hash);
+  req.set_uri(notify_uri);
+  req.set_type(FILE);
+  req.set_filename(file.filename().string());
+
+  auto status = make_stub(endpoint)->notify(&clientContext, req, &res);
+
+  return status;
+}
+
+Status Client::get(const chord::uri &uri, std::ostream &ostream) {
   auto hash = chord::crypto::sha256(uri);
   auto endpoint = chord->successor(hash).endpoint();
 

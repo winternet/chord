@@ -7,6 +7,7 @@ set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(ProtoPath "${CMAKE_CURRENT_SOURCE_DIR}/proto")
 set(ProtoGenerateTargetPath "./gen")
@@ -52,10 +53,12 @@ include(CTest)
 #
 # find packages
 #
-find_package(Boost REQUIRED COMPONENTS log thread system program_options)
+find_package(Boost REQUIRED COMPONENTS log thread system program_options serialization)
 find_package(Protobuf REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(LevelDB REQUIRED)
+find_package(YamlCpp REQUIRED)
 
 #
 # generate messages and services
@@ -86,9 +89,9 @@ include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}/gen")
 # create shared library chord++
 #
 add_library(${PROJECT_NAME}++ SHARED ${SOURCES} ${SOURCES_GEN} ${ProtoSources} ${ProtoHeaders} ${GrpcSources} ${GrpcHeaders})
-target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} 
+target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT}
   #debug asan
-  general stdc++fs grpc++ grpc ssl crypto)
+  general stdc++fs grpc++ grpc ssl crypto leveldb yaml-cpp)
 target_link_libraries(${PROJECT_NAME}++ --coverage)
 install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 

@@ -8,6 +8,8 @@
 #include "chord.controller.client.h"
 #include "chord.controller.service.h"
 #include "chord.context.h"
+#include "chord.file.h"
+#include "chord.context.manager.h"
 
 using namespace std;
 using namespace chord;
@@ -21,6 +23,7 @@ void parse_program_options(int ac, char *av[], const shared_ptr<chord::Context> 
 
   global.add_options()
       ("help,h", "produce help message")
+      ("config,c", po::value<string>(), "path to the configuration file.")
       ("join,j", po::value<endpoint_t>(&(context->join_addr)), "join to an existing address.")
       ("bootstrap,b", "bootstrap peer to create a new chord ring.")
       ("no-controller,n", "do not start the controller.")
@@ -40,6 +43,13 @@ void parse_program_options(int ac, char *av[], const shared_ptr<chord::Context> 
     cout << global << endl;
     exit(1);
   }
+
+  //--- read configuration file
+  if (vm.count("config")) {
+    auto config = path{vm["config"].as<string>()};
+    auto ctx = ContextManager::load(config);
+  }
+  //---
 
   vector<string> commands = po::collect_unrecognized(parsed.options, po::include_positional);
   if (!commands.empty()) {

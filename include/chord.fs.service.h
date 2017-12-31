@@ -5,6 +5,7 @@
 #include <grpc/grpc.h>
 #include <grpc++/server_context.h>
 
+#include "chord.metadata.manager.h"
 #include "chord_fs.grpc.pb.h"
 
 namespace chord {
@@ -15,6 +16,9 @@ namespace chord {
 namespace fs {
 
 class Service final : public chord::fs::Filesystem::Service {
+
+ private:
+	Metadata convert(const NotifyRequest *request);
 
  public:
   explicit Service(Context *context);
@@ -30,6 +34,7 @@ class Service final : public chord::fs::Filesystem::Service {
 
  private:
   Context *context;
+  std::unique_ptr<MetadataManager> metadata;
 };
 
 } //namespace fs

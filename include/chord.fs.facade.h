@@ -1,5 +1,6 @@
 #pragma once
 
+#include "chord.uri.h"
 #include "chord.fs.client.h"
 #include "chord.fs.service.h"
 
@@ -16,9 +17,11 @@ public:
 
   ::grpc::Service* service();
 
-  void put(const std::string &uri, std::istream &istream);
+  void put(const chord::uri &uri, std::istream &istream);
 
-  void get(const std::string &uri, std::ostream &ostream);
+  void get(const chord::uri &uri, std::ostream &ostream);
+
+  void notify(const std::string &uri);
 };
 
 } //namespace fs

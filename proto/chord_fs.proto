@@ -53,12 +53,18 @@ message GetResponse {
 }
 
 message Permission {
-
+  
 }
 
 enum Type {
   DIRECTORY = 0;
   FILE = 1;
+}
+
+enum Action {
+  ADD = 0;
+  DEL = 1;
+  MOD = 2;
 }
 
 /**
@@ -68,6 +74,9 @@ message NotifyRequest {
   string id = 1;
   string uri = 2;
   Type type = 3;
+  Permission permission = 4;
+  string filename = 5;
+  Action action = 6;
 }
 
 message NotifyResponse { 

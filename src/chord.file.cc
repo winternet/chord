@@ -54,7 +54,7 @@ bool file::has_attr(const std::string &path, const std::string &name) {
 }
 
 /// xattr get
-optional_t<std::string> file::attr(const std::string &path, const std::string &name) {
+std::experimental::optional<std::string> file::attr(const std::string &path, const std::string &name) {
   using namespace std::string_literals;
   size_t read = ::getxattr(path.c_str(), name.c_str(), nullptr, 0);
   if (read==static_cast<size_t>(-1)) return {};
