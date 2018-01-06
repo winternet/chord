@@ -49,6 +49,11 @@ jobs:
             apt-get -y install libleveldb-dev
 
       - run:
+          name: Install yaml-cpp
+          command: |
+            apt-get -y install libyaml-cpp-dev
+
+      - run:
           name: Install xattr
           command: |
             apt-get -y install attr-dev
