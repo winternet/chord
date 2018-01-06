@@ -1,32 +1,33 @@
 #pragma once
 
-#include <memory>
 #include <functional>
+#include <memory>
 
-#include "chord.uuid.h"
 #include "chord.grpc.pb.h"
 #include "chord.types.h"
+#include "chord.uuid.h"
 
 namespace chord {
 struct Router;
 struct Context;
-}
+}  // namespace chord
 
 namespace chord {
 
-typedef std::function<std::unique_ptr<chord::Chord::StubInterface>(const endpoint_t &endpoint)> StubFactory;
+using StubFactory = std::function<std::unique_ptr<chord::Chord::StubInterface>(
+    const endpoint_t &)>;
 
 class Client {
  private:
-  Context &context;
-  Router &router;
+  Context *context;
+  Router *router;
 
   StubFactory make_stub;
 
  public:
-  Client(Context &context, Router &router);
+  Client(Context *context, Router *router);
 
-  Client(Context &context, Router &router, StubFactory factory);
+  Client(Context *context, Router *router, StubFactory factory);
 
   void join(const endpoint_t &addr);
 
@@ -44,4 +45,4 @@ class Client {
   grpc::Status successor(const chord::SuccessorRequest *req, chord::SuccessorResponse *res);
 
 };
-}
+} // namespace chord

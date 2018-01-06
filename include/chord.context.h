@@ -3,14 +3,14 @@
 #include <memory>
 
 #include "chord.path.h"
-#include "chord.uuid.h"
 #include "chord.types.h"
+#include "chord.uuid.h"
 
 uuid_t generate_random();
 
 namespace chord {
 struct Router;
-}
+}  // namespace chord
 
 namespace chord {
 struct Context {
@@ -33,9 +33,9 @@ struct Context {
   size_t stabilize_period_ms{10000};
   size_t check_period_ms{10000};
 
-  uuid_t &uuid() { return _uuid; }
+  inline uuid_t &uuid() { return _uuid; }
 
-  const uuid_t &uuid() const { return _uuid; }
+  inline const uuid_t &uuid() const { return _uuid; }
 
   Context set_uuid(const uuid_t &uuid);
 

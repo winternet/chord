@@ -1,13 +1,12 @@
 #pragma once
 
-#include <memory>
 #include <grpc++/server_builder.h>
+#include <memory>
 
-#include "chord.uuid.h"
-#include "chord.router.h"
 #include "chord.facade.h"
 #include "chord.fs.facade.h"
-
+#include "chord.router.h"
+#include "chord.uuid.h"
 
 namespace chord {
 class AbstractScheduler;
@@ -19,8 +18,8 @@ struct Context;
 struct Router;
 namespace controller {
 class Service;
-}
-}
+}  // namespace controller
+}  // namespace chord
 
 namespace chord {
 
@@ -34,7 +33,6 @@ class Peer {
   //--- filesystem
   std::unique_ptr<chord::fs::Facade> filesystem;
 
-
   std::unique_ptr<chord::controller::Service> controller;
 
   void start_server();
@@ -46,7 +44,6 @@ class Peer {
   explicit Peer(std::shared_ptr<chord::Context> context);
 
   void start();
-
 };
 
-} //namespace chord
+}  // namespace chord

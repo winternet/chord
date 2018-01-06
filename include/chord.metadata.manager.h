@@ -1,13 +1,12 @@
 #pragma once
 
-#include <set>
 #include <boost/algorithm/string.hpp>
-
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/set.hpp>
 // metadata strategy: leveldb
 #include <leveldb/db.h>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/serialization/set.hpp>
+#include <set>
 
 #include "chord.context.h"
 #include "chord.uri.h"

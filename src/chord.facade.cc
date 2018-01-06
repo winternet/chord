@@ -22,11 +22,11 @@ using chord::common::RouterEntry;
 namespace chord {
 
 ChordFacade::ChordFacade(Context* context)
-    : _scheduler{new Scheduler()}, _context{context}, _router{make_unique<Router>(_context)},
-      _client{make_unique<Client>(*_context, *_router)}, _service{make_unique<Service>(*_context, *_router)}//,
-//      _controller{make_unique<controller::Service>(fs_client)}
-{
-}
+    : _context{context},
+      _scheduler{make_unique<Scheduler>()},
+      _router{make_unique<Router>(_context)},
+      _client{make_unique<Client>(_context, _router.get())},
+      _service{make_unique<Service>(_context, _router.get())} {}
 
 ::grpc::Service* ChordFacade::service() {
   return _service.get();

@@ -1,3 +1,3 @@
 #pragma once
 
-typedef std::string endpoint_t;
+using endpoint_t = std::string;

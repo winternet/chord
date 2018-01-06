@@ -1,8 +1,8 @@
 #pragma once
 
-#include "chord.uri.h"
 #include "chord.fs.client.h"
 #include "chord.fs.service.h"
+#include "chord.uri.h"
 
 namespace chord {
 namespace fs {

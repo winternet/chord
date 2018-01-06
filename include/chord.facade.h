@@ -1,14 +1,13 @@
 #pragma once
 
-#include <memory>
 #include <grpc++/server_builder.h>
+#include <memory>
 
 #include "chord.client.h"
-#include "chord.service.h"
 #include "chord.i.scheduler.h"
-
-#include "chord.uuid.h"
 #include "chord.router.h"
+#include "chord.service.h"
+#include "chord.uuid.h"
 
 namespace chord {
 //--- forward declarations
@@ -24,9 +23,9 @@ class ChordFacade {
  private:
   size_t next{0};
 
-  std::unique_ptr<AbstractScheduler> _scheduler;
   chord::Context* _context;
 
+  std::unique_ptr<AbstractScheduler> _scheduler;
   std::unique_ptr<chord::Router> _router;
 
   //--- chord
@@ -76,4 +75,4 @@ class ChordFacade {
   void fix_fingers(size_t index);
 };
 
-} //namespace chord
+}  // namespace chord

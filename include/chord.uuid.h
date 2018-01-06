@@ -1,61 +1,64 @@
 #pragma once
 
+#include <boost/multiprecision/cpp_int.hpp>
 #include <chrono>
 #include <random>
-#include <string>
 #include <sstream>
-
-#include <boost/multiprecision/cpp_int.hpp>
+#include <string>
 
 namespace chord {
 class uuid {
  private:
-  typedef boost::multiprecision::cpp_int value_t;
+  using value_t = boost::multiprecision::cpp_int;
 
   value_t val;
+
  public:
   uuid() = default;
 
-  uuid(const std::string &str) { val = value_t{str}; }
+  inline uuid(const std::string &str) { val = value_t{str}; }
 
-  template<typename T>
-  uuid(const T &v) { val = value_t{v}; }
-
-  template<typename Iterator>
-  uuid(const Iterator beg, const Iterator end) {
-    boost::multiprecision::import_bits(val, (unsigned int *) beg, (unsigned int *) end);
+  template <typename T>
+  inline uuid(const T &v) {
+    val = value_t{v};
   }
 
-  value_t &value() { return val; }
+  template <typename Iterator>
+  inline uuid(const Iterator beg, const Iterator end) {
+    boost::multiprecision::import_bits(val, (unsigned int *)beg,
+                                       (unsigned int *)end);
+  }
+
+  inline value_t &value() { return val; }
 
   static const int UUID_BITS_MAX = 256;
 
   /**
-  * generate random 256-bit number
-  */
+   * generate random 256-bit number
+   */
   static uuid random() {
-    auto array = std::array<char, UUID_BITS_MAX/8/sizeof(char)>{};
-    const int seed = std::chrono::system_clock::now().time_since_epoch().count();
+    auto array = std::array<char, UUID_BITS_MAX / 8 / sizeof(char)>{};
+    const int seed =
+        std::chrono::system_clock::now().time_since_epoch().count();
 
     std::default_random_engine generator(seed);
     std::uniform_int_distribution<char> distribution;
 
-    std::generate(std::begin(array), std::end(array), std::bind(distribution, generator));
+    std::generate(std::begin(array), std::end(array),
+                  std::bind(distribution, generator));
 
     return uuid{std::begin(array), std::end(array)};
   }
 
   /**
-  * implicit string conversion operator
-  */
-  operator std::string() const {
-    return value();
-  }
+   * implicit string conversion operator
+   */
+  inline operator std::string() const { return value(); }
 
   /**
    * value as string
    */
-  std::string value() const {
+  inline std::string value() const {
     std::stringstream ss;
     ss << val;
     return ss.str();
@@ -64,7 +67,7 @@ class uuid {
   /**
    * value as hex
    */
-  std::string hex() const {
+  inline std::string hex() const {
     std::stringstream ss;
     ss << std::hex << val;
     auto str = ss.str();
@@ -72,49 +75,47 @@ class uuid {
     return str;
   }
 
-  std::string short_hex() const {
-    return hex().substr(0, 5);
-  }
+  inline std::string short_hex() const { return hex().substr(0, 5); }
 
-  uuid &operator+=(const uuid &other) {
+  inline uuid &operator+=(const uuid &other) {
     val += other.val;
     return *this;
   }
 
-  uuid &operator-=(const uuid &other) {
+  inline uuid &operator-=(const uuid &other) {
     val -= other.val;
     return *this;
   }
 
-  uuid &operator*=(const uuid &other) {
+  inline uuid &operator*=(const uuid &other) {
     val *= other.val;
     return *this;
   }
 
-  uuid &operator/=(const uuid &other) {
+  inline uuid &operator/=(const uuid &other) {
     val /= other.val;
     return *this;
   }
 
-  bool operator==(const uuid &other) const { return val==other.val; }
+  inline bool operator==(const uuid &other) const { return val == other.val; }
 
-  bool operator!=(const uuid &other) const { return val!=other.val; }
+  inline bool operator!=(const uuid &other) const { return val != other.val; }
 
-  bool operator>=(const uuid &other) const { return val >= other.val; }
+  inline bool operator>=(const uuid &other) const { return val >= other.val; }
 
-  bool operator<=(const uuid &other) const { return val <= other.val; }
+  inline bool operator<=(const uuid &other) const { return val <= other.val; }
 
-  bool operator<(const uuid &other) const { return val < other.val; }
+  inline bool operator<(const uuid &other) const { return val < other.val; }
 
-  bool operator>(const uuid &other) const { return val > other.val; }
+  inline bool operator>(const uuid &other) const { return val > other.val; }
 
-  uuid operator+(const uuid &other) const { return uuid{val + other.val}; }
+  inline uuid operator+(const uuid &other) const { return uuid{val + other.val}; }
 
-  uuid operator-(const uuid &other) const { return uuid{val - other.val}; }
+  inline uuid operator-(const uuid &other) const { return uuid{val - other.val}; }
 
-  uuid operator*(const uuid &other) const { return uuid{val*other.val}; }
+  inline uuid operator*(const uuid &other) const { return uuid{val * other.val}; }
 
-  uuid operator/(const uuid &other) const { return uuid{val/other.val}; }
+  inline uuid operator/(const uuid &other) const { return uuid{val / other.val}; }
 
   friend std::istream &operator>>(std::istream &is, uuid &hash) {
     is >> hash.val;
@@ -126,6 +127,6 @@ class uuid {
     return os;
   }
 };
-}
+}  // namespace chord
 
-typedef chord::uuid uuid_t;
+using uuid_t = chord::uuid;

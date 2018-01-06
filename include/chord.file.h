@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <experimental/optional>
+#include <string>
 
 namespace chord {
 

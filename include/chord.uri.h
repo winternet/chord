@@ -1,10 +1,10 @@
 #pragma once
 
-#include <string>
-#include <regex>
-#include <map>
 #include <cctype>
 #include <experimental/optional>
+#include <map>
+#include <regex>
+#include <string>
 
 #include "chord.exception.h"
 #include "chord.path.h"
@@ -55,7 +55,8 @@ class uri {
     explicit authority(std::string host);
     authority(std::string host, int port);
 
-    authority(std::string user, std::string password, std::string host, int port);
+    authority(std::string user, std::string password, std::string host,
+              int port);
 
     const std::string &user() const;
 
@@ -124,4 +125,4 @@ class uri {
 
   friend std::string to_string(const uri &uri);
 };
-}
+}  // namespace chord

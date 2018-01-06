@@ -1,24 +1,25 @@
 #pragma once
 
-#include <memory>
 #include <functional>
+#include <memory>
 
-#include "chord.types.h"
-#include "chord_fs.grpc.pb.h"
 #include "chord.facade.h"
+#include "chord.types.h"
+#include "chord.uri.h"
+#include "chord_fs.grpc.pb.h"
 
 namespace chord {
 class Peer;
 
 struct Context;
 struct Router;
-}
+}  // namespace chord
 
 namespace chord {
 namespace fs {
 
-typedef std::function<std::unique_ptr<chord::fs::Filesystem::StubInterface>(
-    const endpoint_t &endpoint)> StubFactory;
+using StubFactory = std::function<std::unique_ptr<chord::fs::Filesystem::StubInterface>(
+    const endpoint_t &endpoint)>;
 
 class Client {
  private:
@@ -40,5 +41,5 @@ class Client {
   //grpc::Status dir(const std::string& uri, std::ostream& ostream);
 };
 
-} // namespace fs
-} // namespace chord
+}  // namespace fs
+}  // namespace chord

@@ -6,6 +6,8 @@
 namespace chord {
 namespace common {
 
+chord::common::Header make_header(const Context *context);
+
 chord::common::Header make_header(const Context &context);
 
 }

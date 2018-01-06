@@ -1,16 +1,15 @@
 #pragma once
 
-#include <functional>
-
-#include <grpc/grpc.h>
 #include <grpc++/server_context.h>
+#include <grpc/grpc.h>
+#include <functional>
 
 #include "chord.metadata.manager.h"
 #include "chord_fs.grpc.pb.h"
 
 namespace chord {
 struct Context;
-}
+} // namespace chord
 
 namespace chord {
 namespace fs {

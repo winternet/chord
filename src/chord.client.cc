@@ -41,7 +41,7 @@ using namespace std;
 using namespace chord::common;
 
 namespace chord {
-Client::Client(Context &context, Router &router)
+Client::Client(Context *context, Router *router)
     : context{context}, router{router} {
   //--- default stub factory
   make_stub = [&](const endpoint_t &endpoint) {
@@ -49,9 +49,8 @@ Client::Client(Context &context, Router &router)
   };
 }
 
-Client::Client(Context &context, Router &router, StubFactory make_stub)
-    : context{context}, router{router}, make_stub{make_stub} {
-}
+Client::Client(Context *context, Router *router, StubFactory make_stub)
+    : context{context}, router{router}, make_stub{make_stub} {}
 
 void Client::join(const endpoint_t &addr) {
   CLIENT_LOG(debug, join) << "joining " << addr;
@@ -73,7 +72,7 @@ void Client::join(const endpoint_t &addr) {
   auto endpoint = entry.endpoint();
 
   CLIENT_LOG(trace, join) << "successful, received successor " << id << "@" << endpoint;
-  router.set_successor(0, uuid_t{id}, endpoint);
+  router->set_successor(0, uuid_t{id}, endpoint);
 }
 
 void Client::stabilize() {
@@ -83,25 +82,25 @@ void Client::stabilize() {
 
   req.mutable_header()->CopyFrom(make_header(context));
 
-  auto successor = router.successor();
+  auto successor = router->successor();
 
   //--- return if join failed or uuid == successor (create)
   if (successor==nullptr) {
     CLIENT_LOG(trace, stabilize) << "no successor found";
     return;
-  } else if ((*successor)==context.uuid()) {
+  } else if ((*successor)==context->uuid()) {
     CLIENT_LOG(trace, stabilize) << "successor is me, still bootstrapping";
     return;
   }
 
-  endpoint_t endpoint = router.get(successor);
+  endpoint_t endpoint = router->get(successor);
 
   CLIENT_LOG(trace, stabilize) << "calling stabilize on successor " << endpoint;
   Status status = make_stub(endpoint)->stabilize(&clientContext, req, &res);
 
   if (!status.ok()) {
     CLIENT_LOG(warning, stabilize) << "failed - should remove endpoint " << endpoint << "?";
-    router.reset(*successor);
+    router->reset(*successor);
     return;
   }
 
@@ -116,14 +115,14 @@ void Client::stabilize() {
     //  return;
     //}
 
-    uuid_t self(context.uuid());
+    uuid_t self(context->uuid());
     uuid_t pred(entry.uuid());
-    uuid_t succ(*router.successor());
+    uuid_t succ(*router->successor());
 
     if ((pred > self and pred < succ) or
         (pred > self and succ < pred)) {
       //if(   (pred > self and succ < pred)) {
-      router.set_successor(0, pred, entry.endpoint());
+      router->set_successor(0, pred, entry.endpoint());
     }
   } else {
     CLIENT_LOG(trace, stabilize) << "received empty routing entry";
@@ -135,8 +134,8 @@ void Client::stabilize() {
 void Client::notify() {
 
   // get successor
-  auto successor = router.successor();
-  endpoint_t endpoint = router.get(successor);
+  auto successor = router->successor();
+  endpoint_t endpoint = router->get(successor);
 
   ClientContext clientContext;
   NotifyRequest req;
@@ -155,8 +154,8 @@ Status Client::successor(ClientContext *clientContext, const SuccessorRequest *r
   SuccessorRequest copy(*req);
   copy.mutable_header()->CopyFrom(make_header(context));
 
-  uuid_t predecessor = router.closest_preceding_node(uuid_t(req->id()));
-  endpoint_t endpoint = router.get(predecessor);
+  uuid_t predecessor = router->closest_preceding_node(uuid_t(req->id()));
+  endpoint_t endpoint = router->get(predecessor);
   CLIENT_LOG(trace, successor) << "forwarding request to " << endpoint;
 
   return make_stub(endpoint)->successor(clientContext, copy, res);
@@ -184,8 +183,8 @@ RouterEntry Client::successor(const uuid_t &uuid) {
 }
 
 void Client::check() {
-  auto predecessor = router.predecessor();
-  auto successor = router.successor();
+  auto predecessor = router->predecessor();
+  auto successor = router->successor();
 
   if (predecessor==nullptr) {
     CLIENT_LOG(trace, check) << "no predecessor, skip.";
@@ -202,14 +201,14 @@ void Client::check() {
 
   req.mutable_header()->CopyFrom(make_header(context));
 
-  auto endpoint = router.get(predecessor);
+  auto endpoint = router->get(predecessor);
 
   CLIENT_LOG(trace, check) << "checking predecessor " << *predecessor << "@" << endpoint;
   const grpc::Status status = make_stub(endpoint)->check(&clientContext, req, &res);
 
   if (!status.ok()) {
     CLIENT_LOG(warning, check) << "predecessor failed.";
-    router.reset_predecessor(0);
+    router->reset_predecessor(0);
   }
   if (!res.has_header()) {
     cerr << "CHECK RETURNED WITHOUT HEADER! SHOULD REMOVE " << endpoint << " ?";

@@ -1,15 +1,15 @@
 #pragma once
 
-#include <map>
-#include <mutex>
-#include <memory>
-#include <string>
 #include <boost/array.hpp>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <string>
 
-#include "chord.types.h"
 #include "chord.context.h"
-#include "chord.uuid.h"
 #include "chord.log.h"
+#include "chord.types.h"
+#include "chord.uuid.h"
 
 #define BITS 256
 
@@ -171,10 +171,10 @@ struct Router {
   friend std::ostream &operator<<(std::ostream &os, Router &router) {
     for (int i = 0; i < 8; i++) {
       os << "\n::router [successor  ][" << i << "] "
-         << (router.successors[i]==nullptr ? (std::string) "<unknown>" : (std::string) *router.successors[i]);
+         << (router.successors[i]==nullptr ? std::string("<unknown>") : std::string(*router.successors[i]));
     }
     os << "\n::router [predecessor] "
-       << (router.predecessor()!=nullptr ? (std::string) *router.predecessor() : (std::string) "<unknown>");
+       << (router.predecessor()!=nullptr ? std::string(*router.predecessor()) : std::string("<unknown>"));
     return os;
   }
 

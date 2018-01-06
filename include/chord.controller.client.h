@@ -1,13 +1,14 @@
 #pragma once
 
-#include <memory>
 #include <functional>
+#include <memory>
 
 #include "chord.types.h"
 #include "chord_controller.grpc.pb.h"
 
-typedef std::function<std::shared_ptr<chord::controller::Control::StubInterface>(
-    const endpoint_t &endpoint)> ControlStubFactory;
+using ControlStubFactory =
+    std::function<std::shared_ptr<chord::controller::Control::StubInterface>(
+        const endpoint_t &endpoint)>;
 
 namespace chord {
 namespace controller {

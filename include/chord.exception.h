@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 #include <utility>
+
 #include "chord.grpc.pb.h"
 
 namespace chord {
@@ -15,4 +16,4 @@ class exception : public std::runtime_error {
   explicit exception(const std::string& what)
       : runtime_error(what) {}
 };
-}
+}  // namespace chord

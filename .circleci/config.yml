@@ -72,7 +72,7 @@ jobs:
           command: |
             cd $DEPS
             git clone -b boost-1.65.0 --depth 1 --recursive http://github.com/boostorg/boost.git boost || exit 1
-            (cd boost && ./bootstrap.sh --prefix=/usr --with-libraries=log,thread,system,program_options && ./b2 headers && ./b2 link=shared install) || exit 1
+            (cd boost && ./bootstrap.sh --prefix=/usr --with-libraries=log,thread,system,program_options,serialization && ./b2 headers && ./b2 link=shared install) || exit 1
             ldconfig
 
       - run:
