@@ -37,27 +37,6 @@ struct Metadata {
     ar & name & files;
   }
 };
-/*
-struct FileMetadata : public Metadata {
-  friend class boost::serialization::access;
-  template<class Archive>
-  void serialize(Archive & ar, const unsigned int version)
-  {
-		ar & boost::serialization::base_object<Metadata>(*this);
-  }
-};
-struct DirectoryMetadata : public Metadata {
-  friend class boost::serialization::access;
-
-
-  template<class Archive>
-  void serialize(Archive & ar, const unsigned int version)
-  {
-		ar & boost::serialization::base_object<Metadata>(*this);
-    ar & files;
-  }
-};
-*/
 
 class Strategy {
   //...
