@@ -23,12 +23,12 @@ void parse_program_options(int ac, char *av[],
   po::options_description global("[program options]");
 
   global.add_options()("help,h", "produce help message")(
-      "config,c", po::value<string>(), "path to the configuration file.")(
+      "config,c", po::value<string>(), "path to the yaml configuration file.")(
       "join,j", po::value<endpoint_t>(&(context->join_addr)),
       "join to an existing address.")(
       "bootstrap,b", "bootstrap peer to create a new chord ring.")(
       "no-controller,n", "do not start the controller.")(
-      "uuid,u,id", po::value<uuid_t>(&(context->uuid())), "client uuid.")(
+      "uuid,u,id", po::value<uuid_t>(), "client uuid.")(
       "bind", po::value<endpoint_t>(&(context->bind_addr)),
       "bind address that is promoted to clients.");
 
@@ -73,6 +73,13 @@ void parse_program_options(int ac, char *av[],
     fatal << "please specify either a join address or the bootstrap flag\n\n"
           << global << endl;
     exit(2);
+  }
+
+  //--- uuid
+  if (vm.count("uuid")) {
+    auto id = vm["uuid"].as<string>();
+    context->set_uuid(id);
+    LOG(trace) << "[uuid] " << id;
   }
 
   //--- join

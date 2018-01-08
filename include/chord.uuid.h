@@ -53,12 +53,12 @@ class uuid {
   /**
    * implicit string conversion operator
    */
-  inline operator std::string() const { return value(); }
+  inline operator std::string() const { return string(); }
 
   /**
    * value as string
    */
-  inline std::string value() const {
+  inline std::string string() const {
     std::stringstream ss;
     ss << val;
     return ss.str();

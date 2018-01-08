@@ -25,7 +25,7 @@ struct Router {
   std::array<uuid_t*, BITS> predecessors;
   std::array<uuid_t*, BITS> successors;
 
-  explicit Router(const chord::Router&) = default;
+  explicit Router(const chord::Router&) = delete;
 
   explicit Router(chord::Context *context)
       : context{context} {
@@ -133,7 +133,7 @@ struct Router {
     }
   }
 
-  uuid_t *successor() {
+  const uuid_t *successor() {
     for (auto succ : successors) {
       if (succ!=nullptr) return succ;
     }

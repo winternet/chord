@@ -1,0 +1,17 @@
+version: 1
+
+##data
+data-directory: "./data"
+meta-directory: "./meta"
+
+##networking
+bind-addr: "0.0.0.0:50050"
+join-addr: "0.0.0.0:50050"
+bootstrap: Yes
+no-controller: No
+
+## details
+stabilize_ms: 10000
+check_ms: 10000
+
+

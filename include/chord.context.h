@@ -33,11 +33,9 @@ struct Context {
   size_t stabilize_period_ms{10000};
   size_t check_period_ms{10000};
 
-  inline uuid_t &uuid() { return _uuid; }
-
   inline const uuid_t &uuid() const { return _uuid; }
 
-  Context set_uuid(const uuid_t &uuid);
+  void set_uuid(const uuid_t &uuid);
 
   Context set_router(chord::Router *router);
 

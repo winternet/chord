@@ -19,6 +19,11 @@
  $ [sudo] apt-get -y install libleveldb-dev
 ```
 
+* yaml-cpp libraries
+```sh
+ $ [sudo] apt-get -y install libyaml-cpp-dev
+```
+
 * xattr libraries
 ```sh
  $ [sudo] apt-get -y install attr-dev
