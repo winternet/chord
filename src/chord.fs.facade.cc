@@ -20,7 +20,9 @@ void Facade::put(const chord::uri &uri, istream &istream) {
   if(!status.ok()) throw chord::exception("failed to put " + to_string(uri), status);
 
   auto meta_uri = uri::builder{uri.scheme(), uri.path().parent_path()}.build();
-  fs_client->meta(meta_uri, uri.path().filename());
+  status = fs_client->meta(meta_uri, uri.path().filename());
+  //TODO handle error
+  if(!status.ok()) throw chord::exception("failed to safe metadata " + to_string(uri), status);
 }
 
 void Facade::get(const chord::uri &uri, ostream &ostream) {

@@ -23,6 +23,8 @@ class Service final : public chord::controller::Control::Service {
  private:
   grpc::Status parse_command(const chord::controller::ControlRequest *req,
                              chord::controller::ControlResponse *res);
+  grpc::Status handle_put(const std::vector<std::string>& token, ControlResponse* res);
+  grpc::Status handle_get(const std::vector<std::string>& token, ControlResponse* res);
 
   chord::fs::Facade *filesystem;
 };

@@ -17,19 +17,22 @@ namespace fs {
 class Service final : public chord::fs::Filesystem::Service {
 
  private:
-	Metadata convert(const MetaRequest *request);
+  Metadata convert(const MetaRequest *request);
 
  public:
   explicit Service(Context *context);
 
-  grpc::Status put(grpc::ServerContext *context, grpc::ServerReader<chord::fs::PutRequest> *reader,
-                           chord::fs::PutResponse *response) override;
+  grpc::Status put(grpc::ServerContext *context,
+                   grpc::ServerReader<chord::fs::PutRequest> *reader,
+                   chord::fs::PutResponse *response) override;
 
-  grpc::Status get(grpc::ServerContext *context, const chord::fs::GetRequest *req,
-                           grpc::ServerWriter<chord::fs::GetResponse> *writer) override;
+  grpc::Status get(grpc::ServerContext *context,
+                   const chord::fs::GetRequest *req,
+                   grpc::ServerWriter<chord::fs::GetResponse> *writer) override;
 
-  grpc::Status meta(grpc::ServerContext *serverContext, const chord::fs::MetaRequest *request,
-                              chord::fs::MetaResponse *response) override;
+  grpc::Status meta(grpc::ServerContext *serverContext,
+                    const chord::fs::MetaRequest *request,
+                    chord::fs::MetaResponse *response) override;
 
  private:
   Context *context;
