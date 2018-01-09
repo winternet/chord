@@ -37,7 +37,7 @@ class Client {
 
   grpc::Status get(const chord::uri &uri, std::ostream &ostream);
 
-  grpc::Status notify(const chord::uri &notify_uri, const chord::path &file);
+  grpc::Status meta(const chord::uri &notify_uri, const chord::path &file);
   //grpc::Status dir(const std::string& uri, std::ostream& ostream);
 };
 

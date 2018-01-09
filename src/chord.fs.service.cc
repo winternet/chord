@@ -41,14 +41,14 @@ Service::Service(Context *context)
     : context{context}, metadata{make_unique<MetadataManager>(context)} {
 }
 
-Metadata Service::convert(const NotifyRequest *req) {
+Metadata Service::convert(const MetaRequest *req) {
 	Metadata ret;
   ret.name = req->filename();
 	return ret;
 }
 
-Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, NotifyResponse *res) {
-
+Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
+  (void)serverContext;
   SERVICE_LOG(trace, notify) 
     << "filename=" << req->filename()
     << ", uri=" << req->uri();
@@ -57,18 +57,25 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
 
 	switch(req->action()) {
 	case ADD: 
-		metadata->add(uri, convert(req));
+    metadata->add(uri, convert(req));
 		break;
 	case DEL: 
+    metadata->del(uri, convert(req));
 		break;
   case MOD: 
+    return Status::CANCELLED;
 		break;
+  case LST:
+    return Status::CANCELLED;
+    break;
 	}
 
   return Status::OK;
 }
 
 Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *reader, PutResponse *response) {
+  (void)serverContext;
+  (void)response;
   PutRequest req;
   ofstream file;
 
@@ -119,6 +126,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 }
 
 Status Service::get(ServerContext *serverContext, const GetRequest *req, grpc::ServerWriter<GetResponse> *writer) {
+  (void)serverContext;
   ifstream file;
 
   path data = context->data_directory;

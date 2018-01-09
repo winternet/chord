@@ -28,8 +28,8 @@ using chord::fs::PutResponse;
 using chord::fs::PutRequest;
 using chord::fs::GetResponse;
 using chord::fs::GetRequest;
-using chord::fs::NotifyResponse;
-using chord::fs::NotifyRequest;
+using chord::fs::MetaResponse;
+using chord::fs::MetaRequest;
 
 using namespace std;
 using namespace chord::common;
@@ -92,22 +92,22 @@ Status Client::put(const chord::uri &uri, std::istream &istream) {
   return writer->Finish();
 }
 
-grpc::Status Client::notify(const chord::uri &notify_uri, const chord::path &file) {
-  auto hash = chord::crypto::sha256(notify_uri);
+grpc::Status Client::meta(const chord::uri &meta_uri, const chord::path &file) {
+  auto hash = chord::crypto::sha256(meta_uri);
   auto endpoint = chord->successor(hash).endpoint();
 
-  CLIENT_LOG(trace, notify) << notify_uri << " (" << hash << ")";
+  CLIENT_LOG(trace, meta) << meta_uri << " (" << hash << ")";
 
   ClientContext clientContext;
-  NotifyResponse res;
-  NotifyRequest req;
+  MetaResponse res;
+  MetaRequest req;
 
   req.set_id(hash);
-  req.set_uri(notify_uri);
+  req.set_uri(meta_uri);
   req.set_type(FILE);
   req.set_filename(file.filename().string());
 
-  auto status = make_stub(endpoint)->notify(&clientContext, req, &res);
+  auto status = make_stub(endpoint)->meta(&clientContext, req, &res);
 
   return status;
 }

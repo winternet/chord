@@ -13,7 +13,7 @@ service Filesystem {
   //--- file 
   rpc put       (stream PutRequest) returns (PutResponse) {}
   rpc get       (GetRequest)        returns (stream GetResponse) {}
-  rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
+  rpc meta      (MetaRequest)       returns (MetaResponse) {}
 }
 
 /**
@@ -65,12 +65,13 @@ enum Action {
   ADD = 0;
   DEL = 1;
   MOD = 2;
+  LST = 3;
 }
 
 /**
  * NOTIFY
  */
-message NotifyRequest {
+message MetaRequest {
   string id = 1;
   string uri = 2;
   Type type = 3;
@@ -79,5 +80,5 @@ message NotifyRequest {
   Action action = 6;
 }
 
-message NotifyResponse { 
+message MetaResponse { 
 }

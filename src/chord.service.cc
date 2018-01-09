@@ -53,6 +53,7 @@ Service::Service(Context *context, Router *router, ClientFactory make_client)
     : context{context}, router{router}, make_client{make_client} {}
 
 Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
+  (void)serverContext;
   auto id = req->header().src().uuid();
   auto endpoint = req->header().src().endpoint();
 
@@ -92,6 +93,7 @@ RouterEntry Service::successor(const uuid_t &uuid) {
 }
 
 Status Service::successor(ServerContext *serverContext, const SuccessorRequest *req, SuccessorResponse *res) {
+  (void)serverContext;
   SERVICE_LOG(trace, successor) << "from " << req->header().src().uuid()
                                 << "@" << req->header().src().endpoint()
                                 << " successor of? " << req->id();
@@ -138,6 +140,7 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
 }
 
 Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *req, StabilizeResponse *res) {
+  (void)serverContext;
   SERVICE_LOG(trace, stabilize) << "from " << req->header().src().uuid()
                                 << "@" << req->header().src().endpoint();
 
@@ -157,6 +160,7 @@ Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *
 }
 
 Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, NotifyResponse *res) {
+  (void)serverContext;
   SERVICE_LOG(trace, notify) << "from " << req->header().src().uuid()
                              << "@" << req->header().src().endpoint();
 
@@ -188,6 +192,7 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
 }
 
 Status Service::check(ServerContext *serverContext, const CheckRequest *req, CheckResponse *res) {
+  (void)serverContext;
   SERVICE_LOG(trace, check) << "from " << req->header().src().uuid()
                             << "@" << req->header().src().endpoint();
   res->mutable_header()->CopyFrom(make_header(context));
