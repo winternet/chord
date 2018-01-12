@@ -1,6 +1,7 @@
 #pragma once
 
 #include <experimental/filesystem>
+#include <set>
 #include <string>
 
 namespace chord {
@@ -27,7 +28,7 @@ class path {
 
   path parent_path() const;
 
-  std::vector<path> contents() const;
+  std::set<path> contents() const;
 
   std::string string() const;
 
@@ -38,6 +39,10 @@ class path {
   path operator/=(const path &p);
 
   bool operator==(const path &p) const;
+
+  bool operator<(const path &p) const;
+
+  bool operator>(const path &p) const;
 
   bool operator==(const std::string &s) const;
 

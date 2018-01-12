@@ -16,14 +16,14 @@ path path::extension() const { return path{_path.extension()}; }
 path path::parent_path() const { return path{_path.parent_path()}; }
 
 
-std::vector<path> path::contents() const {
-  std::vector<path> files_and_dirs;
+std::set<path> path::contents() const {
+  std::set<path> files_and_dirs;
   if (chord::file::is_regular_file(_path)) {
     return files_and_dirs;
   }
 
   for (const auto& entity : std::experimental::filesystem::directory_iterator(_path)) {
-    files_and_dirs.emplace_back(entity);
+    files_and_dirs.emplace(entity);
   }
 	return files_and_dirs;
 }
@@ -54,6 +54,14 @@ path::operator std::string() const { return _path.string(); }
 path path::operator/=(const path &p) { return path{_path /= p._path}; }
 
 bool path::operator==(const path &p) const { return _path==p._path; }
+
+bool path::operator<(const path &p) const {
+  return _path < p._path;
+}
+
+bool path::operator>(const path &p) const {
+  return _path > p._path;
+}
 
 bool path::operator==(const std::string &s) const { return s==string(); }
 
