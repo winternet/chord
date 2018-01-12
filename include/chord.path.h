@@ -27,17 +27,19 @@ class path {
 
   path parent_path() const;
 
+  std::vector<path> contents() const;
+
   std::string string() const;
 
   bool empty() const noexcept ;
 
   operator std::string() const;
 
-  path operator/=(const path &p);// { return path{_path /= p._path}; }
+  path operator/=(const path &p);
 
-  bool operator==(const path &p) const;// { return _path == p._path; }
+  bool operator==(const path &p) const;
 
-  bool operator==(const std::string &s) const;// { return s == string(); }
+  bool operator==(const std::string &s) const;
 
   friend bool operator==(const std::string &p1, const path &p2);
 

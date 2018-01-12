@@ -1,4 +1,5 @@
 #include "chord.path.h"
+#include "chord.file.h"
 
 using namespace std;
 namespace fs = std::experimental::filesystem;
@@ -8,14 +9,24 @@ namespace chord {
 path::path(const fs::path &other)
     : _path{other} {}
 
-//path::path(const chord::path &other)
-//    : _path{other._path} {}
-
 path path::filename() const { return path{_path.filename()}; }
 
 path path::extension() const { return path{_path.extension()}; }
 
 path path::parent_path() const { return path{_path.parent_path()}; }
+
+
+std::vector<path> path::contents() const {
+  std::vector<path> files_and_dirs;
+  if (chord::file::is_regular_file(_path)) {
+    return files_and_dirs;
+  }
+
+  for (const auto& entity : std::experimental::filesystem::directory_iterator(_path)) {
+    files_and_dirs.emplace_back(entity);
+  }
+	return files_and_dirs;
+}
 
 std::string path::string() const { return _path.string(); }
 

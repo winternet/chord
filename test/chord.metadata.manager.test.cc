@@ -6,7 +6,18 @@
 
 using namespace std;
 using namespace chord;
+using namespace chord::fs;
 using ::testing::ElementsAre;
+
+TEST(chord_metadata_manager, type) {
+  Types types{Types::DIRECTORY};
+  ASSERT_TRUE(types.isDirectory());
+}
+
+TEST(chord_metadata_manager, permissions) {
+   ASSERT_EQ(7, (uint32_t)(Permissions::READ | Permissions::WRITE | Permissions::EXECUTE));
+   ASSERT_EQ(0, (uint32_t)(Permissions::READ & Permissions::WRITE & Permissions::EXECUTE));
+}
 
 TEST(chord_metadata_manager, constructor_initializes_database) {
   Context context;

@@ -16,19 +16,37 @@
 namespace chord {
 namespace fs {
 
+struct Permissions {
+  using Flag = uint32_t;
+  static const Flag NONE    = 0;
+  static const Flag EXECUTE = (1 << 0);
+  static const Flag WRITE   = (1 << 1);
+  static const Flag READ    = (1 << 2);
+
+  Flag owner, group, others;
+};
+
+struct Types {
+  using Flag = uint32_t;
+  static const Flag DIRECTORY= (1 << 3);
+  Flag special;
+  bool isDirectory() { return special & DIRECTORY; }
+};
+
 struct Metadata {
   friend class boost::serialization::access;
 
   Metadata() = default;
-	Metadata(std::string name) : name{name} {}
+  Metadata(std::string name) : name{name} {}
   Metadata(std::string name, std::set<Metadata> files)
     : name{name}, files{files} {}
 
   std::string name;
+  Permissions permissions;
   //--- only set for directories
   std::set<Metadata> files;
 
-	bool operator<(const Metadata &other) const { return name < other.name; }
+  bool operator<(const Metadata &other) const { return name < other.name; }
   bool operator==(const Metadata &other) const { return name==other.name && files == other.files; }
 
   template<class Archive>
@@ -56,18 +74,18 @@ class MetadataManager {
   }
 
   Metadata deserialize(const std::string& metadata) {
-		Metadata ret;
-		std::stringstream ss{metadata};
-		boost::archive::text_iarchive ia(ss);
-		ia >> ret;
-		return ret;
+    Metadata ret;
+    std::stringstream ss{metadata};
+    boost::archive::text_iarchive ia(ss);
+    ia >> ret;
+    return ret;
   }
 
   std::string serialize(const Metadata& metadata) {
-		std::stringstream ss;
+    std::stringstream ss;
     boost::archive::text_oarchive oa(ss);
-		oa << metadata;
-		return ss.str();
+    oa << metadata;
+    return ss.str();
   }
 
   void initialize() {
@@ -86,49 +104,49 @@ class MetadataManager {
   MetadataManager(const MetadataManager&) = delete;
 
   void del(const chord::uri& directory) {
-		Metadata current{directory.path().canonical().string()};
+    Metadata current{directory.path().canonical().string()};
     check_status(db->Delete(leveldb::WriteOptions(), directory.path().string()));
   }
 
   void del(const chord::uri& directory, const Metadata &metadata) {
-		std::string value;
-		Metadata current{directory.path().canonical().string()};
+    std::string value;
+    Metadata current{directory.path().canonical().string()};
     check_status(db->Get(leveldb::ReadOptions(), current.name, &value));
 
-		current = deserialize(value);
-		current.files.erase(metadata);
-		
-		value = serialize(current);
-		check_status(db->Put(leveldb::WriteOptions(), current.name, value));
+    current = deserialize(value);
+    current.files.erase(metadata);
+    
+    value = serialize(current);
+    check_status(db->Put(leveldb::WriteOptions(), current.name, value));
   }
 
   void mod(const chord::uri &directory, const Metadata& metadata) {
-		throw chord::exception("currently not supported");
+    throw chord::exception("currently not supported");
   }
 
   void add(const chord::uri& directory, const Metadata& metadata) {
     std::string value;
-		Metadata current{directory.path().canonical().string()};
+    Metadata current{directory.path().canonical().string()};
     auto status = db->Get(leveldb::ReadOptions(), current.name, &value);
 
-		if(status.ok()) {
-			Metadata current = deserialize(value);
-		} else if(!status.IsNotFound()){
-		  check_status(status);
-		}
-		
-		current.files.insert(metadata);
-		value = serialize(current);
+    if(status.ok()) {
+      Metadata current = deserialize(value);
+    } else if(!status.IsNotFound()){
+      check_status(status);
+    }
+    
+    current.files.insert(metadata);
+    value = serialize(current);
 
-		check_status(db->Put(leveldb::WriteOptions(), current.name, value));
+    check_status(db->Put(leveldb::WriteOptions(), current.name, value));
   }
 
   Metadata get(const chord::uri& directory) {
     std::string value;
     check_status(db->Get(leveldb::ReadOptions(), directory.path().string(), &value));
 
-		return deserialize(value);
-	}
+    return deserialize(value);
+  }
 
 };
 
