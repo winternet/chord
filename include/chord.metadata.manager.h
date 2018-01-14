@@ -1,65 +1,17 @@
 #pragma once
 
-#include <boost/algorithm/string.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/set.hpp>
 // metadata strategy: leveldb
 #include <leveldb/db.h>
-#include <set>
 
 #include "chord.context.h"
+#include "chord.fs.metadata.h"
+#include "chord.fs.metadata.builder.h"
 #include "chord.uri.h"
 
 #define MANAGER_LOG(level, method) LOG(level) << "[meta.mgr][" << #method << "] "
 
 namespace chord {
 namespace fs {
-
-struct Permissions {
-  using Flag = uint32_t;
-  static const Flag NONE    = 0;
-  static const Flag EXECUTE = (1 << 0);
-  static const Flag WRITE   = (1 << 1);
-  static const Flag READ    = (1 << 2);
-
-  Flag owner, group, others;
-};
-
-struct Types {
-  using Flag = uint32_t;
-  static const Flag DIRECTORY= (1 << 3);
-  Flag special;
-  bool isDirectory() { return special & DIRECTORY; }
-};
-
-struct Metadata {
-  friend class boost::serialization::access;
-
-  Metadata() = default;
-  Metadata(std::string name) : name{name} {}
-  Metadata(std::string name, std::set<Metadata> files)
-    : name{name}, files{files} {}
-
-  std::string name;
-  Permissions permissions;
-  //--- only set for directories
-  std::set<Metadata> files;
-
-  bool operator<(const Metadata &other) const { return name < other.name; }
-  bool operator==(const Metadata &other) const { return name==other.name && files == other.files; }
-
-  template<class Archive>
-  void serialize(Archive & ar, const unsigned int version)
-  {
-    (void)version;
-    ar & name & files;
-  }
-};
-
-class Strategy {
-  //...
-};
 
 class MetadataManager {
 

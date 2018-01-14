@@ -77,7 +77,7 @@ void parse_program_options(int ac, char *av[],
 
   //--- uuid
   if (vm.count("uuid")) {
-    auto id = vm["uuid"].as<string>();
+    auto id = vm["uuid"].as<uuid_t>();
     context->set_uuid(id);
     LOG(trace) << "[uuid] " << id;
   }

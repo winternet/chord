@@ -41,26 +41,23 @@ Service::Service(Context *context)
     : context{context}, metadata{make_unique<MetadataManager>(context)} {
 }
 
-Metadata Service::convert(const MetaRequest *req) {
-	Metadata ret;
-  ret.name = req->filename();
-	return ret;
-}
-
 Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
   (void)serverContext;
+  if(!req->has_metadata()) {
+    throw chord::exception("Failed to process meta request: metadata is missing.");
+  }
   SERVICE_LOG(trace, notify) 
-    << "filename=" << req->filename()
+    << "filename=" << req->metadata().filename()
     << ", uri=" << req->uri();
 
   auto uri = uri::from(req->uri());
 
 	switch(req->action()) {
 	case ADD: 
-    metadata->add(uri, convert(req));
+    metadata->add(uri, MetadataBuilder::from(req));
 		break;
 	case DEL: 
-    metadata->del(uri, convert(req));
+    metadata->del(uri, MetadataBuilder::from(req));
 		break;
   case MOD: 
     return Status::CANCELLED;

@@ -9,14 +9,14 @@ using namespace chord;
 using namespace chord::fs;
 using ::testing::ElementsAre;
 
-TEST(chord_metadata_manager, type) {
-  Types types{Types::DIRECTORY};
-  ASSERT_TRUE(types.isDirectory());
-}
-
 TEST(chord_metadata_manager, permissions) {
-   ASSERT_EQ(7, (uint32_t)(Permissions::READ | Permissions::WRITE | Permissions::EXECUTE));
-   ASSERT_EQ(0, (uint32_t)(Permissions::READ & Permissions::WRITE & Permissions::EXECUTE));
+   ASSERT_EQ(perms::owner_all, (perms::owner_read | perms::owner_write | perms::owner_exec));
+   ASSERT_EQ(perms::group_all, (perms::group_read | perms::group_write | perms::group_exec));
+   ASSERT_EQ(perms::others_all,(perms::others_read | perms::others_write | perms::others_exec));
+
+   ASSERT_EQ(perms::none, ((perms::owner_read & perms::owner_write & perms::owner_exec)
+                          &(perms::group_read & perms::group_write & perms::group_exec)
+                          &(perms::others_read & perms::others_write & perms::others_exec)));
 }
 
 TEST(chord_metadata_manager, constructor_initializes_database) {

@@ -16,9 +16,6 @@ namespace fs {
 
 class Service final : public chord::fs::Filesystem::Service {
 
- private:
-  Metadata convert(const MetaRequest *request);
-
  public:
   explicit Service(Context *context);
 

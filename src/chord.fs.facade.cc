@@ -1,6 +1,5 @@
 #include "chord.fs.facade.h"
 
-
 using namespace std;
 
 namespace chord {
@@ -19,8 +18,7 @@ void Facade::put(const chord::uri &uri, istream &istream) {
   auto status = fs_client->put(uri, istream);
   if(!status.ok()) throw chord::exception("failed to put " + to_string(uri), status);
 
-  auto meta_uri = uri::builder{uri.scheme(), uri.path().parent_path()}.build();
-  status = fs_client->meta(meta_uri, uri.path().filename());
+  status = fs_client->meta(uri, chord::fs::Client::Action::ADD);
   //TODO handle error
   if(!status.ok()) throw chord::exception("failed to safe metadata " + to_string(uri), status);
 }
