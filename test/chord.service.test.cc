@@ -26,8 +26,8 @@ Context make_context(const uuid_t &self) {
   return context;
 }
 
-//Router make_router(Context &context) {
-//  return Router(&context);
+//Router make_router(Context context) {
+//  return Router(context);
 //}
 
 RouterEntry make_entry(const uuid_t &id, const endpoint_t &addr) {
@@ -45,8 +45,8 @@ Header make_header(const uuid_t &id, const endpoint_t &addr) {
 
 TEST(ServiceTest, join) {
   Context context = Context();
-  Router router(&context);
-  chord::Service service(&context, &router);
+  Router router(context);
+  chord::Service service(context, &router);
 
   //TODO assertions and request
 
@@ -63,9 +63,9 @@ TEST(ServiceTest, join) {
  */
 TEST(ServiceTest, successor_single_node) {
   Context context = make_context(0);
-  Router router(&context);
+  Router router(context);
 
-  chord::Service service(&context, &router);
+  chord::Service service(context, &router);
 
   ServerContext serverContext;
   SuccessorRequest req;
@@ -88,12 +88,12 @@ TEST(ServiceTest, successor_single_node) {
  */
 TEST(ServiceTest, successor_two_nodes) {
   Context context = make_context(0);
-  Router router(&context);
+  Router router(context);
 
   router.set_successor(0, 5, "0.0.0.0:50055");
   router.set_predecessor(0, 5, "0.0.0.0:50055");
 
-  chord::Service service(&context, &router);
+  chord::Service service(context, &router);
 
   ServerContext serverContext;
   SuccessorRequest req;
@@ -116,12 +116,12 @@ TEST(ServiceTest, successor_two_nodes) {
  */
 TEST(ServiceTest, successor_two_nodes_mod) {
   Context context = make_context(5);
-  Router router(&context);
+  Router router(context);
 
   router.set_successor(0, 0, "0.0.0.0:50050");
   router.set_predecessor(0, 0, "0.0.0.0:50050");
 
-  chord::Service service(&context, &router);
+  chord::Service service(context, &router);
 
   ServerContext serverContext;
   SuccessorRequest req;
@@ -233,7 +233,7 @@ class MockStub : public chord::Chord::StubInterface {
  */
 TEST(ServiceTest, successor_two_nodes_modulo) {
   Context context = make_context(5);
-  Router router(&context);
+  Router router(context);
 
   router.set_successor(0, 0, "0.0.0.0:50050");
   router.set_predecessor(0, 0, "0.0.0.0:50050");
@@ -241,10 +241,10 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   std::unique_ptr<MockStub> stub(new MockStub);
 
   auto stub_factory = [&](const endpoint_t &endpoint) { return std::move(stub); };
-  chord::Client client(&context, &router, stub_factory);
+  chord::Client client(context, &router, stub_factory);
 
   auto client_factory = [&]() { return client; };
-  chord::Service service(&context, &router, client_factory);
+  chord::Service service(context, &router, client_factory);
 
   ServerContext serverContext;
   SuccessorRequest req;

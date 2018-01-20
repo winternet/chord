@@ -25,14 +25,14 @@ TEST(chord_metadata_manager, constructor_initializes_database) {
   std::string meta_dir = context.meta_directory;
   if(file::exists(meta_dir)) file::remove_all(meta_dir);
 
-  fs::MetadataManager metadata{&context};
+  fs::MetadataManager metadata{context};
   ASSERT_TRUE(chord::file::is_directory(meta_dir));
 }
 
 TEST(chord_metadata_manager, set_and_get) {
   Context context;
 
-  fs::MetadataManager metadata{&context};
+  fs::MetadataManager metadata{context};
   auto uri = uri::from("chord:/folder");
   fs::Metadata meta_set;
   meta_set.name = "file1";
@@ -48,7 +48,7 @@ TEST(chord_metadata_manager, set_and_get) {
 TEST(chord_metadata_manager, set_delete_get) {
   Context context;
 
-  fs::MetadataManager metadata{&context};
+  fs::MetadataManager metadata{context};
   auto uri = uri::from("chord:/folder");
   fs::Metadata meta_set;
   meta_set.name = "file1";

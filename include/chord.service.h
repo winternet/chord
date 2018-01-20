@@ -20,9 +20,9 @@ using ClientFactory = std::function<chord::Client()>;
 
 class Service final : public chord::Chord::Service, AbstractService {
  public:
-  Service(Context *context, Router *router);
+  Service(Context &context, Router *router);
 
-  Service(Context *context, Router *router, ClientFactory make_client);
+  Service(Context &context, Router *router, ClientFactory make_client);
 
   grpc::Status join(grpc::ServerContext *context, const chord::JoinRequest *req,
                     chord::JoinResponse *res) override;
@@ -49,7 +49,7 @@ class Service final : public chord::Chord::Service, AbstractService {
   void fix_fingers(size_t index);
 
  private:
-  Context *context;
+  Context &context;
   Router *router;
   ClientFactory make_client;
 };

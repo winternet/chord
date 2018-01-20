@@ -37,7 +37,7 @@ using namespace chord::common;
 namespace chord {
 namespace fs {
 
-Service::Service(Context *context)
+Service::Service(Context &context)
     : context{context}, metadata{make_unique<MetadataManager>(context)} {
 }
 
@@ -76,7 +76,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   PutRequest req;
   ofstream file;
 
-  path data = context->data_directory;
+  path data = context.data_directory;
   if (!file::is_directory(data)) {
     file::create_directories(data);
   }
@@ -126,7 +126,7 @@ Status Service::get(ServerContext *serverContext, const GetRequest *req, grpc::S
   (void)serverContext;
   ifstream file;
 
-  path data = context->data_directory;
+  path data = context.data_directory;
   if (!file::is_directory(data)) {
     return Status::CANCELLED;
   }

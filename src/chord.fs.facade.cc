@@ -5,12 +5,12 @@ using namespace std;
 namespace chord {
 namespace fs {
 
-Facade::Facade(Context* context, ChordFacade* chord)
+Facade::Facade(Context& context, ChordFacade* chord)
     : fs_client{make_unique<fs::Client>(context, chord)},
       fs_service{make_unique<fs::Service>(context)}
 {}
 
-::grpc::Service* Facade::service() {
+::grpc::Service* Facade::grpc_service() {
   return fs_service.get();
 }
 

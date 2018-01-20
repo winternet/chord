@@ -19,15 +19,15 @@ using StubFactory = std::function<std::unique_ptr<chord::Chord::StubInterface>(
 
 class Client {
  private:
-  Context *context;
+  Context &context;
   Router *router;
 
   StubFactory make_stub;
 
  public:
-  Client(Context *context, Router *router);
+  Client(Context &context, Router *router);
 
-  Client(Context *context, Router *router, StubFactory factory);
+  Client(Context &context, Router *router, StubFactory factory);
 
   void join(const endpoint_t &addr);
 

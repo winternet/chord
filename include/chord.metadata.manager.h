@@ -16,7 +16,7 @@ namespace fs {
 class MetadataManager {
 
  private:
-  Context* context;
+  Context &context;
   std::unique_ptr<leveldb::DB> db;
 
   void check_status(const leveldb::Status &status) {
@@ -45,12 +45,12 @@ class MetadataManager {
     leveldb::Options options;
     options.create_if_missing = true;
 
-    check_status(leveldb::DB::Open(options, context->meta_directory, &db_tmp));
+    check_status(leveldb::DB::Open(options, context.meta_directory, &db_tmp));
     db.reset(db_tmp);
   }
 
  public:
-  MetadataManager(Context* context)
+  MetadataManager(Context &context)
     : context{context} { initialize(); }
 
   MetadataManager(const MetadataManager&) = delete;

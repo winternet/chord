@@ -24,30 +24,30 @@ using chord::common::RouterEntry;
 namespace chord {
 
 void Peer::start_server() {
-  endpoint_t bind_addr = context->bind_addr;
+  endpoint_t bind_addr = context.bind_addr;
   ServerBuilder builder;
   builder.AddListeningPort(bind_addr, grpc::InsecureServerCredentials());
-  builder.RegisterService(chord->service());
+  builder.RegisterService(chord->grpc_service());
   // controller service
   builder.RegisterService(controller.get());
   // filesystem service
-  builder.RegisterService(filesystem->service());
+  builder.RegisterService(filesystem->grpc_service());
 
   unique_ptr<grpc::Server> server(builder.BuildAndStart());
   PEER_LOG(debug) << "server listening on " << bind_addr;
   server->Wait();
 }
 
-Peer::Peer(shared_ptr<Context> context)
-    : context{context},
-      chord{make_unique<chord::ChordFacade>(context.get())},
-      filesystem{make_unique<chord::fs::Facade>(context.get(), chord.get())},
+Peer::Peer(Context ctx)
+    : context{ctx},
+      chord{make_unique<chord::ChordFacade>(context)},
+      filesystem{make_unique<chord::fs::Facade>(context, chord.get())},
       controller{make_unique<controller::Service>(filesystem.get())}
 {
 }
 
 void Peer::start() {
-  PEER_LOG(trace) << "peer with client-id " << context->uuid();
+  PEER_LOG(trace) << "peer with client-id " << context.uuid();
 
   chord->start();
 

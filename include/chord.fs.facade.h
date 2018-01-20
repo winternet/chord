@@ -13,9 +13,9 @@ private:
   std::unique_ptr<chord::fs::Service> fs_service;
 
 public:
-  Facade(Context* context, ChordFacade* chord);
+  Facade(Context& context, ChordFacade* chord);
 
-  ::grpc::Service* service();
+  ::grpc::Service* grpc_service();
 
   void put(const chord::uri &uri, std::istream &istream);
 

@@ -23,14 +23,14 @@ class ChordFacade {
  private:
   size_t next{0};
 
-  chord::Context* _context;
+  chord::Context& context;
 
-  std::unique_ptr<AbstractScheduler> _scheduler;
-  std::unique_ptr<chord::Router> _router;
+  std::unique_ptr<AbstractScheduler> scheduler;
+  std::unique_ptr<chord::Router> router;
 
   //--- chord
-  std::unique_ptr<chord::Client> _client;
-  std::unique_ptr<chord::Service> _service;
+  std::unique_ptr<chord::Client> client;
+  std::unique_ptr<chord::Service> service;
 
   void start_scheduler();
 
@@ -38,11 +38,11 @@ class ChordFacade {
   ChordFacade(const ChordFacade &) = delete;             // disable copying
   ChordFacade &operator=(const ChordFacade &) = delete;  // disable assignment
 
-  explicit ChordFacade(chord::Context* context);
+  explicit ChordFacade(chord::Context& context);
 
   void start();
 
-  ::grpc::Service* service();
+  ::grpc::Service* grpc_service();
 
   /**
    * create new chord ring

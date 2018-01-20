@@ -38,7 +38,7 @@ using namespace chord::file;
 namespace chord {
 namespace fs {
 
-Client::Client(Context* context, ChordFacade* chord)
+Client::Client(Context &context, ChordFacade* chord)
     : context{context}, chord{chord} {
   //--- default stub factory
   make_stub = [&](const endpoint_t &endpoint) {
@@ -46,7 +46,7 @@ Client::Client(Context* context, ChordFacade* chord)
   };
 }
 
-Client::Client(Context* context, ChordFacade* chord, StubFactory make_stub)
+Client::Client(Context &context, ChordFacade* chord, StubFactory make_stub)
     : context{context}, chord{chord}, make_stub{make_stub} {
 }
 

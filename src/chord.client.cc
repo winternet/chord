@@ -41,7 +41,7 @@ using namespace std;
 using namespace chord::common;
 
 namespace chord {
-Client::Client(Context *context, Router *router)
+Client::Client(Context &context, Router *router)
     : context{context}, router{router} {
   //--- default stub factory
   make_stub = [&](const endpoint_t &endpoint) {
@@ -49,7 +49,7 @@ Client::Client(Context *context, Router *router)
   };
 }
 
-Client::Client(Context *context, Router *router, StubFactory make_stub)
+Client::Client(Context &context, Router *router, StubFactory make_stub)
     : context{context}, router{router}, make_stub{make_stub} {}
 
 void Client::join(const endpoint_t &addr) {
@@ -88,7 +88,7 @@ void Client::stabilize() {
   if (successor==nullptr) {
     CLIENT_LOG(trace, stabilize) << "no successor found";
     return;
-  } else if ((*successor)==context->uuid()) {
+  } else if ((*successor)==context.uuid()) {
     CLIENT_LOG(trace, stabilize) << "successor is me, still bootstrapping";
     return;
   }
@@ -115,7 +115,7 @@ void Client::stabilize() {
     //  return;
     //}
 
-    uuid_t self(context->uuid());
+    uuid_t self(context.uuid());
     uuid_t pred(entry.uuid());
     uuid_t succ(*router->successor());
 

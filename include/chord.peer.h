@@ -25,7 +25,7 @@ namespace chord {
 
 class Peer {
  private:
-  std::shared_ptr<chord::Context> context;
+  chord::Context context;
 
   //--- chord facade
   std::unique_ptr<chord::ChordFacade> chord;
@@ -41,7 +41,7 @@ class Peer {
   Peer(const Peer &) = delete;             // disable copying
   Peer &operator=(const Peer &) = delete;  // disable assignment
 
-  explicit Peer(std::shared_ptr<chord::Context> context);
+  explicit Peer(chord::Context context);
 
   void start();
 };

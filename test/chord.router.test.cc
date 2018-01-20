@@ -14,7 +14,7 @@ using namespace chord;
 
 TEST(RouterTest, initialize) {
   Context context;
-  Router router(&context);
+  Router router(context);
 
   ASSERT_NOT_NULL(router.successor());
   EXPECT_EQ(*router.successor(), context.uuid());
@@ -30,14 +30,14 @@ TEST(RouterTest, initialize) {
 
 TEST(RouterTest, dump) {
   auto context = Context{};
-  Router router{&context};
+  Router router{context};
   std::cout << router;
 }
 
 TEST(RouterTest, closest_preceding_node) {
   Context context;
   context.set_uuid(0);
-  Router router(&context);
+  Router router(context);
 
   for (int i = 0; i <= 100; i++) {
     router.set_successor(i, i, to_string(i));
@@ -51,7 +51,7 @@ TEST(RouterTest, closest_preceding_node) {
 TEST(RouterTest, closest_preceding_node_less_1) {
   Context context;
   context.set_uuid(1);
-  Router router(&context);
+  Router router(context);
 
   router.set_successor(7, 100, to_string(100));
 
@@ -64,7 +64,7 @@ TEST(RouterTest, closest_preceding_node_less_1) {
 TEST(RouterTest, closest_preceding_node_mod) {
   Context context;
   context.set_uuid(999);
-  Router router(&context);
+  Router router(context);
 
   // direct successor of 999 is 0
   for (int i = 0; i <= 100; i++) {
@@ -79,7 +79,7 @@ TEST(RouterTest, closest_preceding_node_mod) {
 TEST(RouterTest, closest_preceding_node_mod_2) {
   Context context;
   context.set_uuid(5);
-  Router router(&context);
+  Router router(context);
 
   // direct successor of 5 is 0
   router.set_successor(0, 0, "0.0.0.0:50050");
@@ -98,7 +98,7 @@ TEST(RouterTest, closest_preceding_node_mod_2) {
  */
 TEST(RouterTest, set_uuid_resets_router) {
   Context context;
-  Router router(&context);
+  Router router(context);
   auto uuid = context.uuid();
 
   auto successor = router.successor();

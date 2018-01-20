@@ -27,12 +27,12 @@ struct Router {
 
   explicit Router(const chord::Router&) = delete;
 
-  explicit Router(chord::Context *context)
+  explicit Router(chord::Context &context)
       : context{context} {
     std::fill(std::begin(predecessors), std::end(predecessors), nullptr);
     std::fill(std::begin(successors), std::end(successors), nullptr);
-    routes[context->uuid()] = context->bind_addr;
-    context->set_router(this);
+    routes[context.uuid()] = context.bind_addr;
+    context.set_router(this);
   }
 
   virtual ~Router() {
@@ -47,7 +47,7 @@ struct Router {
   void reset() {
     cleanup();
 
-    routes[context->uuid()] = context->bind_addr;
+    routes[context.uuid()] = context.bind_addr;
   }
 
   endpoint_t get_successor(const size_t &index) {
@@ -140,7 +140,7 @@ struct Router {
     for (auto pred : predecessors) {
       if (pred!=nullptr) return pred;
     }
-    return &(context->uuid());
+    return &(context.uuid());
   }
 
   uuid_t *predecessor() {
@@ -164,8 +164,8 @@ struct Router {
       if (*candidate > uuid) return *candidate;
     }
 
-    ROUTER_LOG(info) << "no closest preceding node found, returning self " << context->uuid();
-    return context->uuid();
+    ROUTER_LOG(info) << "no closest preceding node found, returning self " << context.uuid();
+    return context.uuid();
   }
 
   friend std::ostream &operator<<(std::ostream &os, Router &router) {
@@ -179,6 +179,6 @@ struct Router {
   }
 
  private:
-  chord::Context *context;
+  chord::Context &context;
 };
 } //namespace chord

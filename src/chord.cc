@@ -18,18 +18,19 @@ namespace po = boost::program_options;
 
 #define fatal cerr << "\nFATAL - "
 
-void parse_program_options(int ac, char *av[],
-                           const shared_ptr<chord::Context> &context) {
+Context parse_program_options(int ac, char *av[]) {
   po::options_description global("[program options]");
+
+  Context context;
 
   global.add_options()("help,h", "produce help message")(
       "config,c", po::value<string>(), "path to the yaml configuration file.")(
-      "join,j", po::value<endpoint_t>(&(context->join_addr)),
+      "join,j", po::value<endpoint_t>(&(context.join_addr)),
       "join to an existing address.")(
       "bootstrap,b", "bootstrap peer to create a new chord ring.")(
       "no-controller,n", "do not start the controller.")(
       "uuid,u,id", po::value<uuid_t>(), "client uuid.")(
-      "bind", po::value<endpoint_t>(&(context->bind_addr)),
+      "bind", po::value<endpoint_t>(&(context.bind_addr)),
       "bind address that is promoted to clients.");
 
   po::variables_map vm;
@@ -46,10 +47,11 @@ void parse_program_options(int ac, char *av[],
     exit(1);
   }
 
+  bool has_config = vm.count("config");
   //--- read configuration file
-  if (vm.count("config")) {
+  if (has_config) {
     auto config = path{vm["config"].as<string>()};
-    auto ctx = ContextManager::load(config);
+    context = ContextManager::load(config);
   }
   //---
 
@@ -68,7 +70,7 @@ void parse_program_options(int ac, char *av[],
   }
 
   //--- validate
-  if ((!vm.count("join") && !vm.count("bootstrap")) ||
+  if (!has_config && (!vm.count("join") && !vm.count("bootstrap")) ||
       (vm.count("join") && vm.count("bootstrap"))) {
     fatal << "please specify either a join address or the bootstrap flag\n\n"
           << global << endl;
@@ -78,7 +80,7 @@ void parse_program_options(int ac, char *av[],
   //--- uuid
   if (vm.count("uuid")) {
     auto id = vm["uuid"].as<uuid_t>();
-    context->set_uuid(id);
+    context.set_uuid(id);
     LOG(trace) << "[uuid] " << id;
   }
 
@@ -91,20 +93,21 @@ void parse_program_options(int ac, char *av[],
   if (vm.count("bootstrap")) {
     LOG(trace) << "[option-bootstrap] "
                << "true";
-    context->bootstrap = true;
+    context.bootstrap = true;
   }
 
   //--- interactive
   if (vm.count("no-controller")) {
     LOG(trace) << "[option-no-controller] "
                << "true";
-    context->no_controller = true;
+    context.no_controller = true;
   }
 
   //--- client-id
   if (vm.count("uuid")) {
     LOG(trace) << "[option-uuid] " << vm["uuid"].as<uuid_t>() << endl;
   }
+  return context;
 }
 
 // void start_controller(const shared_ptr<chord::fs::Client>& fs_client) {
@@ -114,8 +117,7 @@ void parse_program_options(int ac, char *av[],
 int main(int argc, char *argv[]) {
   //--- parse program options to context
   //--- or issue client command
-  auto context = make_shared<chord::Context>();
-  parse_program_options(argc, argv, context);
+  auto context = parse_program_options(argc, argv);
 
   //--- start peer
   auto peer = make_shared<chord::Peer>(context);

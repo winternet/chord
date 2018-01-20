@@ -26,7 +26,7 @@ class Client {
   enum class Action { ADD, DEL };
 
  private:
-  chord::Context* context;
+  chord::Context &context;
   chord::ChordFacade* chord;
 
   StubFactory make_stub;
@@ -34,9 +34,9 @@ class Client {
 void add_metadata(chord::fs::MetaRequest& req, const chord::path& path);
 
  public:
-  Client(Context* context, chord::ChordFacade* chord);
+  Client(Context &context, chord::ChordFacade* chord);
 
-  Client(Context* context, chord::ChordFacade* chord, StubFactory factory);
+  Client(Context &context, chord::ChordFacade* chord, StubFactory factory);
 
   grpc::Status put(const chord::uri &uri, std::istream &istream);
 

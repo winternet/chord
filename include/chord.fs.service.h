@@ -17,7 +17,7 @@ namespace fs {
 class Service final : public chord::fs::Filesystem::Service {
 
  public:
-  explicit Service(Context *context);
+  explicit Service(Context &context);
 
   grpc::Status put(grpc::ServerContext *context,
                    grpc::ServerReader<chord::fs::PutRequest> *reader,
@@ -32,7 +32,7 @@ class Service final : public chord::fs::Filesystem::Service {
                     chord::fs::MetaResponse *response) override;
 
  private:
-  Context *context;
+  Context &context;
   std::unique_ptr<MetadataManager> metadata;
 };
 

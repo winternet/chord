@@ -42,14 +42,14 @@ using namespace chord::common;
 
 namespace chord {
 
-Service::Service(Context *context, Router *router)
+Service::Service(Context &context, Router *router)
     : context{context}, router{router} {
   make_client = [&]() {
     return chord::Client(context, router);
   };
 }
 
-Service::Service(Context *context, Router *router, ClientFactory make_client)
+Service::Service(Context &context, Router *router, ClientFactory make_client)
     : context{context}, router{router}, make_client{make_client} {}
 
 Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
@@ -100,7 +100,7 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
 
   //--- destination of the request
   uuid_t id(req->id());
-  uuid_t self(context->uuid());
+  uuid_t self(context.uuid());
   uuid_t successor(*router->successor());
 
   SERVICE_LOG(trace, successor) << "id: " << id << ", self: " << self << ", successor " << successor;
@@ -114,7 +114,7 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
 
     res->mutable_successor()->CopyFrom(entry);
   } else {
-    SERVICE_LOG(trace, successor) << "id not within self(" << context->uuid() << ") <--> successor("
+    SERVICE_LOG(trace, successor) << "id not within self(" << context.uuid() << ") <--> successor("
                                   << *router->successor() << ") trying to forward.";
     uuid_t next = router->closest_preceding_node(id);
     SERVICE_LOG(trace, successor) << "CLOSEST PRECEDING NODE: " << next;
@@ -172,7 +172,7 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
     return Status::CANCELLED;
   }
 
-  uuid_t self(context->uuid());
+  uuid_t self(context.uuid());
   uuid_t uuid = uuid_t(req->header().src().uuid());
   endpoint_t endpoint = req->header().src().endpoint();
 
@@ -201,7 +201,7 @@ Status Service::check(ServerContext *serverContext, const CheckRequest *req, Che
 }
 
 void Service::fix_fingers(size_t index) {
-  uuid_t fix = context->uuid();
+  uuid_t fix = context.uuid();
   if (router->successors[0]!=nullptr) {
     fix += uuid_t(pow(2., (double) index - 1));
     SERVICE_LOG(trace, fix_fingers) << " router successor is not null, increasing uuid ";
@@ -213,7 +213,7 @@ void Service::fix_fingers(size_t index) {
     auto entry = successor(fix);
     SERVICE_LOG(trace, fix_fingers) << "fixing finger for " << fix << ". received successor " << entry.uuid()
                                     << "@" << entry.endpoint();
-    //if( uuid_t(router_entry.uuid()) == context->uuid() ) return;
+    //if( uuid_t(router_entry.uuid()) == context.uuid() ) return;
 
     router->set_successor(index, uuid_t{entry.uuid()}, entry.endpoint());
   } catch (const chord::exception &e) {
