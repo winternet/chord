@@ -81,10 +81,9 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     file::create_directories(data);
   }
 
-  const auto uri = uri::from(req.uri());
-
   // open
   if (reader->Read(&req)) {
+    const auto uri = uri::from(req.uri());
 
     data /= uri.path().parent_path();
     if (!file::exists(data)) {
@@ -113,6 +112,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 
   // metadata
   try {
+    const auto uri = uri::from(req.uri());
     metadata->add(uri, {uri.path().filename()});
   } catch(const chord::exception &e) {
     SERVICE_LOG(error, put) << "failed to add metadata: " << e.what();

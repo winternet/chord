@@ -122,12 +122,12 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
   req.set_id(hash);
   req.set_uri(meta_uri);
   {
-    auto data = req.metadata();
-    data.set_type(is_directory(path)
+    auto data = req.mutable_metadata();
+    data->set_type(is_directory(path)
                       ? value_of(type::directory)
                       : is_regular_file(path) ? value_of(type::regular)
                                               : value_of(type::unknown));
-    data.set_filename(path.filename());
+    data->set_filename(path.filename());
   }
 
   switch (action) {

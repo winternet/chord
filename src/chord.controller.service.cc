@@ -44,10 +44,10 @@ namespace chord {
     Status Service::parse_command(const ControlRequest* req, ControlResponse* res) {
 
       const string &command = req->command();
-      boost::char_separator<char> separator(" ");
-      boost::tokenizer< boost::char_separator<char> > tokenizer(command, separator);
+      boost::char_separator<char> separator{" "};
+      boost::tokenizer< boost::char_separator<char> > tokenizer{command, separator};
 
-      vector<string> token(distance(begin(tokenizer), end(tokenizer)));
+      vector<string> token{distance(begin(tokenizer), end(tokenizer))};
       copy(begin(tokenizer), end(tokenizer), begin(token));
 
       CONTROL_LOG(trace, parse_command) << "received following token: ";
@@ -59,9 +59,9 @@ namespace chord {
       }
 
       if(token.at(0) == "put") {
-        handle_put(token, res);
+        return handle_put(token, res);
       } else if(token.at(0) == "get") {
-        handle_get(token, res);
+        return handle_get(token, res);
       }
 
       res->set_result("unknown error.");

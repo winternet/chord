@@ -95,6 +95,9 @@ struct ContextManager {
     tokens.emplace_back(new Token<endpoint_t>{"bind-addr", context.bind_addr});
     tokens.emplace_back(new Token<endpoint_t>{"join-addr", context.join_addr});
 
+    tokens.emplace_back(new Token<bool>{"bootstrap", context.bootstrap});
+    tokens.emplace_back(new Token<bool>{"no-controller", context.no_controller});
+
     tokens.emplace_back(new Token<size_t>{"stabilize-ms", context.stabilize_period_ms});
     tokens.emplace_back(new Token<size_t>{"check-ms", context.check_period_ms});
 
