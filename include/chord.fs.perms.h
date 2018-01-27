@@ -53,5 +53,18 @@ inline perms& operator|=(perms& a, perms b) noexcept { return a = a | b; }
 
 inline perms& operator^=(perms& a, perms b) noexcept { return a = a ^ b; }
 
+inline std::ostream& operator<<(std::ostream& os, const perms& permissions) { 
+  os<< ((perms::none != (permissions & perms::owner_read )) ? "r" : "-")
+    << ((perms::none != (permissions & perms::owner_write)) ? "w" : "-")
+    << ((perms::none != (permissions & perms::owner_exec )) ? "x" : "-")
+    << ((perms::none != (permissions & perms::group_read )) ? "r" : "-")
+    << ((perms::none != (permissions & perms::group_write)) ? "w" : "-")
+    << ((perms::none != (permissions & perms::group_exec )) ? "x" : "-")
+    << ((perms::none != (permissions & perms::others_read)) ? "r" : "-")
+    << ((perms::none != (permissions & perms::others_write))? "w" : "-")
+    << ((perms::none != (permissions & perms::others_exec)) ? "x" : "-");
+  return os;
+}
+
 }  // namespace fs
 }  // namespace chord

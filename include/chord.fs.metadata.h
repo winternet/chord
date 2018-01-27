@@ -4,6 +4,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/set.hpp>
+#include <iomanip>
 #include <set>
 
 #include "chord.fs.perms.h"
@@ -17,10 +18,16 @@ struct Metadata {
 
   Metadata() = default;
   Metadata(std::string name) : name{name} {}
+  Metadata(std::string name, std::string owner, std::string group) 
+    : name{name}, owner{owner}, group{group} {}
+  Metadata(std::string name, std::string owner, std::string group, perms perms) 
+    : name{name}, owner{owner}, group{group}, permissions{perms} {}
   Metadata(std::string name, std::set<Metadata> files)
     : name{name}, files{files} {}
 
   std::string name;
+  std::string owner;
+  std::string group;
   perms permissions;
   type file_type;
 
@@ -35,6 +42,44 @@ struct Metadata {
   {
     (void)version;
     ar & name & files;
+  }
+
+  friend std::ostream &operator<<(std::ostream &os, const Metadata &metadata) {
+
+    std::vector<std::string> owners = {"", metadata.owner};
+    std::vector<std::string> groups = {"", metadata.group};
+    for(const auto &meta : metadata.files) {
+      owners.emplace_back(meta.owner);
+      groups.emplace_back(meta.group);
+    }
+
+    struct MaxLen {
+      bool operator()(const std::string &a, const std::string &b) {
+        return a.size() < b.size();
+      }
+
+    } cmp;
+
+    int max_owner_len = std::max_element(std::begin(owners), std::end(owners), cmp)->size();
+    int max_group_len = std::max_element(std::begin(groups), std::end(groups), cmp)->size();
+
+    os<< metadata.name << ":\n"
+      << (metadata.file_type == type::directory ? "d" : "-")
+      << metadata.permissions << " "
+      << std::left << std::setw(max_owner_len+1) << metadata.owner
+      << std::left << std::setw(max_group_len+1) << metadata.group
+      << ".\n";
+
+
+    for(const Metadata& m : metadata.files) {
+      os<< (m.file_type == type::directory ? "d" : "-")
+        << m.permissions << " " 
+        << std::left << std::setw(max_owner_len+1) << m.owner
+        << std::left << std::setw(max_group_len+1) << m.group
+        << m.name
+        << "\n";
+    }
+    return os;
   }
 };
 

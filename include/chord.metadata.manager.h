@@ -56,8 +56,8 @@ class MetadataManager {
   MetadataManager(const MetadataManager&) = delete;
 
   void del(const chord::uri& directory) {
-    Metadata current{directory.path().canonical().string()};
-    check_status(db->Delete(leveldb::WriteOptions(), directory.path().string()));
+    //Metadata current{directory.path().canonical().string()};
+    check_status(db->Delete(leveldb::WriteOptions(), directory.path().canonical().string()));
   }
 
   void del(const chord::uri& directory, const Metadata &metadata) {
@@ -88,6 +88,8 @@ class MetadataManager {
     }
     
     current.files.insert(metadata);
+
+    //MANAGER_LOG(trace, add) << "new metadata for " << directory << ":" << metadata;
     value = serialize(current);
 
     check_status(db->Put(leveldb::WriteOptions(), current.name, value));
