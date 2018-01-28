@@ -44,8 +44,8 @@ namespace chord {
 
 Service::Service(Context &context, Router *router)
     : context{context}, router{router} {
-  make_client = [&]() {
-    return chord::Client(context, router);
+  make_client = [this] {
+    return chord::Client(this->context, this->router);
   };
 }
 
