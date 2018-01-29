@@ -183,10 +183,20 @@ class MockStub : public chord::Chord::StubInterface {
   //MOCK_METHOD2(putRaw, grpc::ClientWriterInterface<chord::PutRequest>*(grpc::ClientContext* context, chord::PutResponse* response));
 
   //MOCK_METHOD2(getRaw, grpc::ClientReaderInterface<chord::GetResponse>*(grpc::ClientContext* context, const chord::GetRequest& request));
+ 
+  MOCK_METHOD3(PrepareAsyncsuccessorRaw, grpc::ClientAsyncResponseReaderInterface<chord::SuccessorResponse>*(
+      grpc::ClientContext*,
+      const chord::SuccessorRequest&,
+      grpc::CompletionQueue*));
 
   MOCK_METHOD3(AsyncsuccessorRaw, grpc::ClientAsyncResponseReaderInterface<chord::SuccessorResponse>*(
       grpc::ClientContext*,
       const chord::SuccessorRequest&,
+      grpc::CompletionQueue*));
+
+  MOCK_METHOD3(PrepareAsyncjoinRaw, grpc::ClientAsyncResponseReaderInterface<chord::JoinResponse>*(
+      grpc::ClientContext*,
+      const chord::JoinRequest&,
       grpc::CompletionQueue*));
 
   MOCK_METHOD3(AsyncjoinRaw, grpc::ClientAsyncResponseReaderInterface<chord::JoinResponse>*(
@@ -194,14 +204,29 @@ class MockStub : public chord::Chord::StubInterface {
       const chord::JoinRequest&,
       grpc::CompletionQueue*));
 
+  MOCK_METHOD3(PrepareAsyncstabilizeRaw, grpc::ClientAsyncResponseReaderInterface<chord::StabilizeResponse>*(
+      grpc::ClientContext*,
+      const chord::StabilizeRequest&,
+      grpc::CompletionQueue*));
+
   MOCK_METHOD3(AsyncstabilizeRaw, grpc::ClientAsyncResponseReaderInterface<chord::StabilizeResponse>*(
       grpc::ClientContext*,
       const chord::StabilizeRequest&,
       grpc::CompletionQueue*));
 
+  MOCK_METHOD3(PrepareAsyncnotifyRaw, grpc::ClientAsyncResponseReaderInterface<chord::NotifyResponse>*(
+      grpc::ClientContext*,
+      const chord::NotifyRequest&,
+      grpc::CompletionQueue*));
+
   MOCK_METHOD3(AsyncnotifyRaw, grpc::ClientAsyncResponseReaderInterface<chord::NotifyResponse>*(
       grpc::ClientContext*,
       const chord::NotifyRequest&,
+      grpc::CompletionQueue*));
+
+  MOCK_METHOD3(PrepareAsynccheckRaw, grpc::ClientAsyncResponseReaderInterface<chord::CheckResponse>*(
+      grpc::ClientContext*,
+      const chord::CheckRequest&,
       grpc::CompletionQueue*));
 
   MOCK_METHOD3(AsynccheckRaw, grpc::ClientAsyncResponseReaderInterface<chord::CheckResponse>*(
