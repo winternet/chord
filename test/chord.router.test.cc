@@ -111,3 +111,17 @@ TEST(RouterTest, set_uuid_resets_router) {
   ASSERT_EQ(*successor, 0);
   ASSERT_EQ(router.get(uuid_t(0)), context.bind_addr);
 }
+
+TEST(RouterTest, closest_preceding_node_mod_3) {
+  Context context;
+  context.set_uuid(8);
+  Router router(context);
+
+  // direct successor of 4 is 8
+  router.set_successor(0, 4, "0.0.0.0:50050");
+  router.set_predecessor(0, 4, "0.0.0.0:50050");
+
+  uuid_t predecessor = router.closest_preceding_node(1);
+
+  ASSERT_EQ(predecessor, 8);
+}

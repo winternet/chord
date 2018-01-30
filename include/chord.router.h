@@ -148,17 +148,32 @@ struct Router {
   }
 
   uuid_t closest_preceding_node(const uuid_t &uuid) {
-    int m = BITS;
-    do {
-      m--;
-      auto candidate = successors[m];
+    // try to find successors in reverse order
+    {
+      int m = BITS;
+      do {
+        m--;
+        auto candidate = successors[m];
 
-      if (candidate==nullptr) continue;
+        if (candidate == nullptr) continue;
+        if (*candidate < uuid) return *candidate;
+      } while (m > 0);
+    }
 
-      if (*candidate < uuid)
-        return *candidate;
-    } while (m > 0);
+    // try to find successors that can be reached by flipping to the other side
+    {
+      int m = BITS;
+      do {
+        m--;
+        auto candidate = successors[m];
 
+        if (candidate == nullptr) continue;
+        if (*candidate > uuid && *candidate < context.uuid())
+          return context.uuid();
+      } while (m > 0);
+    }
+
+    // find closest from beginning
     for (auto candidate : successors) {
       if (candidate==nullptr) continue;
       if (*candidate > uuid) return *candidate;
