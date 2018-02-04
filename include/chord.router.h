@@ -148,7 +148,8 @@ struct Router {
   }
 
   uuid_t closest_preceding_node(const uuid_t &uuid) {
-    // try to find successors in reverse order
+    const uuid_t *direct_predecessor = nullptr;
+    const uuid_t *max_predecessor = &context.uuid();
     {
       int m = BITS;
       do {
@@ -156,28 +157,22 @@ struct Router {
         auto candidate = successors[m];
 
         if (candidate == nullptr) continue;
-        if (*candidate < uuid) return *candidate;
+
+        // max predecessor
+        if (*candidate > *max_predecessor) {
+          max_predecessor = candidate;
+        }
+
+        // try to find predecessor
+        if (*candidate < uuid) {
+          direct_predecessor = candidate;
+          break;
+        }
       } while (m > 0);
     }
 
-    // try to find successors that can be reached by flipping to the other side
-    {
-      int m = BITS;
-      do {
-        m--;
-        auto candidate = successors[m];
-
-        if (candidate == nullptr) continue;
-        if (*candidate > uuid && *candidate < context.uuid())
-          return context.uuid();
-      } while (m > 0);
-    }
-
-    // find closest from beginning
-    for (auto candidate : successors) {
-      if (candidate==nullptr) continue;
-      if (*candidate > uuid) return *candidate;
-    }
+    if (direct_predecessor != nullptr) return *direct_predecessor;
+    if (max_predecessor != nullptr) return *max_predecessor;
 
     ROUTER_LOG(info) << "no closest preceding node found, returning self " << context.uuid();
     return context.uuid();

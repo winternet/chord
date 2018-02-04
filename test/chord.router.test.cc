@@ -81,7 +81,7 @@ TEST(RouterTest, closest_preceding_node_mod_2) {
   context.set_uuid(5);
   Router router(context);
 
-  // direct successor of 5 is 0
+  // 5 -> [0]
   router.set_successor(0, 0, "0.0.0.0:50050");
   router.set_predecessor(0, 0, "0.0.0.0:50050");
 
@@ -117,11 +117,27 @@ TEST(RouterTest, closest_preceding_node_mod_3) {
   context.set_uuid(8);
   Router router(context);
 
-  // direct successor of 4 is 8
+  //  4<-8-[1]->4
   router.set_successor(0, 4, "0.0.0.0:50050");
   router.set_predecessor(0, 4, "0.0.0.0:50050");
 
   uuid_t predecessor = router.closest_preceding_node(1);
 
   ASSERT_EQ(predecessor, 8);
+}
+
+TEST(RouterTest, closest_preceding_node_3) {
+  Context context;
+  context.set_uuid(8);
+  Router router(context);
+
+  // direct successor of 4<-8->10-[1]->4->...
+  router.set_successor(0, 10, "0.0.0.0:50050");
+  router.set_successor(1,  4, "0.0.0.0:50050");
+
+  router.set_predecessor(0, 4, "0.0.0.0:50050");
+
+  uuid_t predecessor = router.closest_preceding_node(1);
+
+  ASSERT_EQ(predecessor, 10);
 }
