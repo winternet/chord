@@ -52,7 +52,7 @@ struct ContextManager {
   struct AbstractToken {
     std::string name;
 
-    AbstractToken(std::string name) : name{name} {};
+    explicit AbstractToken(const std::string name) : name{name} {};
     virtual ~AbstractToken() = default;
 
     virtual void set(const YAML::Node& config) = 0;
@@ -130,7 +130,7 @@ struct ContextManager {
   }
 
   static void parse(const YAML::Node& root, Context& context) {
-    const int version = root["version"].as<int>();
+    const auto version = root["version"].as<int>();
     switch (version) {
       case 1:
         parse_v1(root, context);

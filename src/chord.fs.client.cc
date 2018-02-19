@@ -8,6 +8,7 @@
 #include "chord.crypto.h"
 #include "chord.file.h"
 #include "chord.fs.client.h"
+#include "chord.fs.metadata.builder.h"
 #include "chord.log.h"
 #include "chord.peer.h"
 #include "chord.router.h"
@@ -50,7 +51,8 @@ Client::Client(Context &context, ChordFacade* chord, StubFactory make_stub)
     : context{context}, chord{chord}, make_stub{make_stub} {
 }
 
-Status Client::put(const chord::uri &uri, std::istream &istream) {
+
+Status Client::put(const chord::uri &uri, istream &istream) {
   auto hash = chord::crypto::sha256(uri);
   auto endpoint = chord->successor(hash).endpoint();
 
@@ -60,13 +62,13 @@ Status Client::put(const chord::uri &uri, std::istream &istream) {
   constexpr size_t len = 512*1024; // 512k
   char buffer[len];
   size_t offset = 0,
-      read = 0;
+         read = 0;
 
   ClientContext clientContext;
   PutResponse res;
   // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
   auto stub = Filesystem::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
-  std::unique_ptr<ClientWriter<PutRequest> > writer(stub->put(&clientContext, &res));
+  unique_ptr<ClientWriter<PutRequest> > writer(stub->put(&clientContext, &res));
 
   do {
     read = istream.readsome(buffer, len);
@@ -105,6 +107,55 @@ void Client::add_metadata(MetaRequest& req, const chord::path& parent_path) {
   }
 }
 
+grpc::Status Client::meta(const chord::uri &uri, const Action &action, const Metadata& metadata) {
+  //--- find responsible node for uri.parent_path()
+  auto meta_uri = uri::builder{uri.scheme(), uri.path().parent_path().canonical()}.build();
+  auto hash = chord::crypto::sha256(meta_uri);
+  auto endpoint = chord->successor(hash).endpoint();
+
+  CLIENT_LOG(trace, meta) << meta_uri << " (" << hash << ")";
+
+  ClientContext clientContext;
+  MetaResponse res;
+  MetaRequest req;
+
+  auto path = uri.path().canonical();
+
+  req.set_id(hash);
+  req.set_uri(meta_uri);
+  {
+    auto data = req.mutable_metadata();
+    data->set_filename(metadata.name);
+    data->set_type(value_of(metadata.file_type));
+    data->set_permissions(value_of(metadata.permissions));
+    data->set_owner(metadata.owner);
+    data->set_group(metadata.group);
+    //data->set_type(is_directory(path)
+    //                  ? value_of(type::directory)
+    //                  : is_regular_file(path) ? value_of(type::regular)
+    //                                          : value_of(type::unknown));
+    //data->set_filename(path.filename());
+    ////TODO implement someday
+    //data->set_permission(value_of(perms::all));
+    //data->set_user("chord");
+    //data->set_group("chord");
+  }
+
+  switch (action) {
+    case Action::ADD:
+      req.set_action(ADD); 
+      if(is_directory(path)) add_metadata(req, meta_uri.path());
+      break;
+    case Action::DEL:
+      req.set_action(DEL); 
+      break;
+  }
+
+  auto status = make_stub(endpoint)->meta(&clientContext, req, &res);
+
+  return status;
+}
+
 grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
   //--- find responsible node
   auto meta_uri = uri::builder{uri.scheme(), uri.path().parent_path().canonical()}.build();
@@ -128,6 +179,10 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
                       : is_regular_file(path) ? value_of(type::regular)
                                               : value_of(type::unknown));
     data->set_filename(path.filename());
+    //TODO implement someday
+    data->set_permissions(value_of(perms::all));
+    data->set_owner("chord");
+    data->set_group("chord");
   }
 
   switch (action) {
@@ -145,7 +200,50 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
   return status;
 }
 
-Status Client::get(const chord::uri &uri, std::ostream &ostream) {
+Status Client::del(const chord::uri &uri) {
+  auto hash = chord::crypto::sha256(uri);
+  auto endpoint = chord->successor(hash).endpoint();
+
+  CLIENT_LOG(trace, del) << uri << " (" << hash << ")";
+
+  ClientContext clientContext;
+  DelResponse res;
+  DelRequest req;
+
+  req.set_id(hash);
+  req.set_uri(uri);
+
+  auto status = make_stub(endpoint)->del(&clientContext, req, &res);
+
+  return status;
+}
+
+grpc::Status Client::dir(const chord::uri &uri, iostream &stream) {
+  //--- find responsible node
+  auto meta_uri = uri::builder{uri.scheme(), uri.path().canonical()}.build();
+  auto hash = chord::crypto::sha256(meta_uri);
+  auto endpoint = chord->successor(hash).endpoint();
+
+  CLIENT_LOG(trace, dir) << meta_uri << " (" << hash << ")";
+
+  ClientContext clientContext;
+  MetaResponse res;
+  MetaRequest req;
+
+  auto path = uri.path().canonical();
+
+  req.set_id(hash);
+  req.set_uri(meta_uri);
+  req.set_action(DIR);
+
+  auto status = make_stub(endpoint)->meta(&clientContext, req, &res);
+
+  stream << MetadataBuilder::from(res);
+
+  return status;
+}
+
+Status Client::get(const chord::uri &uri, ostream &ostream) {
   auto hash = chord::crypto::sha256(uri);
   auto endpoint = chord->successor(hash).endpoint();
 
@@ -168,32 +266,6 @@ Status Client::get(const chord::uri &uri, std::ostream &ostream) {
 
   return reader->Finish();
 }
-
-/*
-Status Client::dir(const std::string& uri, std::ostream& ostream) {
-  auto hash = chord::crypto::sha256(uri);
-  auto endpoint = chord->successor(hash).endpoint();
-
-  CLIENT_LOG(trace, get) << uri << " (" << hash << ")";
-
-  ClientContext clientContext;
-  GetResponse res;
-  GetRequest req;
-
-  req.set_id(hash);
-  req.set_uri(uri);
-
-  // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
-  auto stub = Filesystem::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
-  unique_ptr<ClientReader<GetResponse> > reader(stub->get(&clientContext, req));
-
-  while(reader->Read(&res)) {
-    ostream.write(res.data().data(), res.size());
-  }
-
-  return reader->Finish();
-}
-*/
 
 } // namespace fs
 } // namespace chord

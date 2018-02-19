@@ -21,7 +21,10 @@ public:
 
   void get(const chord::uri &uri, std::ostream &ostream);
 
-  void notify(const std::string &uri);
+  void dir(const chord::uri &uri, std::iostream &iostream);
+
+  void del(const chord::uri &uri);
+
 };
 
 } //namespace fs

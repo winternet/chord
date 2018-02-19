@@ -15,7 +15,6 @@ path path::extension() const { return path{_path.extension()}; }
 
 path path::parent_path() const { return path{_path.parent_path()}; }
 
-
 std::set<path> path::contents() const {
   std::set<path> files_and_dirs;
   if (chord::file::is_regular_file(_path)) {

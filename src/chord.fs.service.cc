@@ -37,18 +37,15 @@ using namespace chord::common;
 namespace chord {
 namespace fs {
 
-Service::Service(Context &context)
-    : context{context}, metadata{make_unique<MetadataManager>(context)} {
+Service::Service(Context &context, chord::ChordFacade *chord)
+    : context{context}, chord{chord}, metadata{make_unique<MetadataManager>(context)} {
+  make_client = [this] {
+    return chord::fs::Client(this->context, this->chord);
+  };
 }
 
 Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
   (void)serverContext;
-  if(!req->has_metadata()) {
-    throw chord::exception("Failed to process meta request: metadata is missing.");
-  }
-  SERVICE_LOG(trace, notify) 
-    << "filename=" << req->metadata().filename()
-    << ", uri=" << req->uri();
 
   auto uri = uri::from(req->uri());
 
@@ -62,8 +59,23 @@ Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaR
   case MOD: 
     return Status::CANCELLED;
 		break;
-  case LST:
-    return Status::CANCELLED;
+  case DIR:
+    Metadata returnValue = metadata->get(uri);
+
+    //TODO move to builder
+    Data *data = res->mutable_metadata();
+    data->set_filename(returnValue.name);
+    data->set_type(value_of(returnValue.file_type));
+    data->set_permissions(value_of(returnValue.permissions));
+
+    for(auto file : returnValue.files) {
+      auto *d = res->add_files();
+      d->set_filename(file.name);
+      d->set_type(value_of(file.file_type));
+      d->set_permissions(value_of(file.permissions));
+    }
+    //----
+    
     break;
 	}
 
@@ -113,12 +125,49 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   // metadata
   try {
     const auto uri = uri::from(req.uri());
-    metadata->add(uri, {uri.path().filename()});
+    auto meta = MetadataBuilder::from(data);
+    // local
+    metadata->add(uri, meta);
+    // remote
+    make_client().meta(uri, Client::Action::ADD, meta);
   } catch(const chord::exception &e) {
     SERVICE_LOG(error, put) << "failed to add metadata: " << e.what();
     file::remove(data);
     throw e;
   }
+  return Status::OK;
+}
+
+Status Service::del(grpc::ServerContext *serverContext, const chord::fs::DelRequest *req,
+           chord::fs::DelResponse *res) {
+  (void)serverContext;
+
+  path data = context.data_directory;
+  //TODO support directories
+  if (!file::is_directory(data)) {
+    return Status::CANCELLED;
+  }
+
+  auto uri = chord::uri::from(req->uri());
+
+  data /= uri.path();
+
+  if(file::exists(data)) {
+    file::remove_all(data);
+  } else {
+    return Status::CANCELLED;
+    //TODO look on some other node (e.g. the successor that this node initially joined)
+    //     maybe some other node is responsible for that file recently
+  }
+
+  // local
+  metadata->del(uri);
+  // remote
+  auto status = make_client().meta(uri, Client::Action::DEL);
+  if (!status.ok()) {
+    //TODO handle error
+  }
+
   return Status::OK;
 }
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "chord.uuid.h"
 #include "chord.grpc.pb.h"
+#include "chord.uuid.h"
 
 class AbstractService {
  public:

@@ -5,7 +5,7 @@ namespace fs {
 
 enum class type : unsigned {
     none		  =  0,
-    not_found	=  (unsigned)-1,
+    not_found	=  static_cast<unsigned>(-1),
     regular	  =  1,
     directory =  2,
     unknown		=  0xFFFF,

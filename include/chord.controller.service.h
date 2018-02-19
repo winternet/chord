@@ -25,6 +25,8 @@ class Service final : public chord::controller::Control::Service {
                              chord::controller::ControlResponse *res);
   grpc::Status handle_put(const std::vector<std::string>& token, ControlResponse* res);
   grpc::Status handle_get(const std::vector<std::string>& token, ControlResponse* res);
+  grpc::Status handle_dir(const std::vector<std::string>& token, ControlResponse* res);
+  grpc::Status handle_del(const std::vector<std::string>& token, ControlResponse* res);
 
   chord::fs::Facade *filesystem;
 };

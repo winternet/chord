@@ -28,6 +28,7 @@ TEST(chord_path, parent_path) {
   ASSERT_EQ("/folder/subfolder", path{"/folder/subfolder/bar.ext"}.parent_path());
   ASSERT_EQ("/folder/subfolder", path{"/folder/subfolder/"}.parent_path());
   ASSERT_EQ("/folder", path{"/folder/subfolder"}.parent_path());
+  ASSERT_EQ("", path{"/"}.parent_path());
 }
 
 TEST(chord_path, filename) {

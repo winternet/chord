@@ -69,7 +69,7 @@ struct Router {
     return routes[uuid];
   }
 
-  void set_successor(const size_t index, const uuid_t uuid, const endpoint_t endpoint) {
+  void set_successor(const size_t index, const uuid_t &uuid, const endpoint_t &endpoint) {
     std::lock_guard<std::mutex> lock(mtx);
     ROUTER_LOG(info) << "set_successor[" << index << "][" << uuid << "] = " << endpoint;
     routes[uuid] = endpoint;
@@ -77,7 +77,7 @@ struct Router {
     successors[index] = new uuid_t{uuid};
   }
 
-  void set_predecessor(const size_t index, const uuid_t uuid, const endpoint_t endpoint) {
+  void set_predecessor(const size_t index, const uuid_t &uuid, const endpoint_t &endpoint) {
     std::lock_guard<std::mutex> lock(mtx);
     ROUTER_LOG(info) << "set_predecessor[" << index << "][" << uuid << "] = " << endpoint;
     routes[uuid] = endpoint;
@@ -115,7 +115,7 @@ struct Router {
     ROUTER_LOG(info) << "reset_successor " << uuid << "@...";
     //routes.erase(uuid);
 
-    // TODO refactor
+    // TODO(muffin): refactor
     for (int i = 0; i < BITS; i++) {
       uuid_t* succ = successors[i];
       if (succ!=nullptr && *succ==uuid) {

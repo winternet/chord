@@ -4,8 +4,8 @@
 #include <leveldb/db.h>
 
 #include "chord.context.h"
-#include "chord.fs.metadata.h"
 #include "chord.fs.metadata.builder.h"
+#include "chord.fs.metadata.h"
 #include "chord.uri.h"
 
 #define MANAGER_LOG(level, method) LOG(level) << "[meta.mgr][" << #method << "] "
@@ -50,7 +50,7 @@ class MetadataManager {
   }
 
  public:
-  MetadataManager(Context &context)
+  explicit MetadataManager(Context &context)
     : context{context} { initialize(); }
 
   MetadataManager(const MetadataManager&) = delete;
@@ -75,6 +75,21 @@ class MetadataManager {
   void mod(const chord::uri &directory, const Metadata& metadata) {
     throw chord::exception("currently not supported");
   }
+  /*
+
+  void dir(const chord::uri& directory, Metadata& metadata) {
+    std::string value;
+    Metadata current{directory.path().canonical().string()};
+    auto status = db->Get(leveldb::ReadOptions(), current.name, &value);
+
+    if(status.ok()) {
+      Metadata current = deserialize(value);
+      metadata = current;
+    } else if(status.IsNotFound()) {
+      throw chord::exception("not found");
+    }
+  }
+  */
 
   void add(const chord::uri& directory, const Metadata& metadata) {
     std::string value;
@@ -82,14 +97,15 @@ class MetadataManager {
     auto status = db->Get(leveldb::ReadOptions(), current.name, &value);
 
     if(status.ok()) {
-      Metadata current = deserialize(value);
+      current = deserialize(value);
+      //MANAGER_LOG(trace, add) << "current mentadata for " << directory << "\n" << current;
     } else if(!status.IsNotFound()){
       check_status(status);
     }
     
     current.files.insert(metadata);
 
-    //MANAGER_LOG(trace, add) << "new metadata for " << directory << ":" << metadata;
+    //MANAGER_LOG(trace, add) << "new metadata for " << directory << "\n" << current;
     value = serialize(current);
 
     check_status(db->Put(leveldb::WriteOptions(), current.name, value));

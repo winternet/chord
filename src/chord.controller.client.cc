@@ -45,11 +45,13 @@ void Client::control(const string &command) {
   req.set_command(command);
   //TODO make configurable (at least port)
   auto status = make_stub("127.0.0.1:50050")->control(&clientContext, req, &res);
-  if (status.ok()) {
-    return;
+
+  if (!status.ok()) {
+    throw chord::exception("failed to issue command: " + command);
   }
 
-  throw chord::exception("failed to issue command: " + command);
+  cout << res.result() << endl;
+
 }
 } //namespace controller
 } //namespace chord

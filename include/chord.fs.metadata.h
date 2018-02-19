@@ -17,13 +17,13 @@ struct Metadata {
   friend class boost::serialization::access;
 
   Metadata() = default;
-  Metadata(std::string name) : name{name} {}
+  Metadata(std::string name) : name{std::move(name)} {}
   Metadata(std::string name, std::string owner, std::string group) 
-    : name{name}, owner{owner}, group{group} {}
+    : name{std::move(name)}, owner{std::move(owner)}, group{std::move(group)} {}
   Metadata(std::string name, std::string owner, std::string group, perms perms) 
-    : name{name}, owner{owner}, group{group}, permissions{perms} {}
+    : name{std::move(name)}, owner{std::move(owner)}, group{std::move(group)}, permissions{perms} {}
   Metadata(std::string name, std::set<Metadata> files)
-    : name{name}, files{files} {}
+    : name{std::move(name)}, files{std::move(files)} {}
 
   std::string name;
   std::string owner;

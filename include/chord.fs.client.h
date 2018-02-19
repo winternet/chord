@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "chord.facade.h"
+#include "chord.fs.metadata.h"
 #include "chord.types.h"
 #include "chord.uri.h"
 #include "chord_fs.grpc.pb.h"
@@ -23,7 +24,7 @@ using StubFactory = std::function<std::unique_ptr<chord::fs::Filesystem::StubInt
 
 class Client {
  public:
-  enum class Action { ADD, DEL };
+  enum class Action { ADD, DEL, DIR };
 
  private:
   chord::Context &context;
@@ -42,7 +43,14 @@ void add_metadata(chord::fs::MetaRequest& req, const chord::path& path);
 
   grpc::Status get(const chord::uri &uri, std::ostream &ostream);
 
+  grpc::Status del(const chord::uri &uri);
+
+  grpc::Status dir(const chord::uri &uri, std::iostream &ostream);
+
+  //TODO(muffin): remove metadata for DEL / DIR
   grpc::Status meta(const chord::uri &uri, const Action &action);
+
+  grpc::Status meta(const chord::uri &uri, const Action &action, const Metadata& metadata);
 
 };
 

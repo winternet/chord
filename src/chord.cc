@@ -60,7 +60,9 @@ Context parse_program_options(int ac, char *av[]) {
   if (!commands.empty()) {
     chord::controller::Client controlClient;
 
-    if (commands[0] == "put" || commands[0] == "get") {
+    const string &cmd = commands[0];
+    if (cmd == "put" || cmd == "get" || cmd == "dir" || cmd == "ls" || cmd == "ll" ||
+        cmd == "del" || cmd == "rm") {
       stringstream ss;
       for (const auto &c : commands) ss << c << " ";
       controlClient.control(ss.str());

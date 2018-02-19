@@ -58,16 +58,38 @@ namespace chord {
         return Status::CANCELLED;
       }
 
-      if(token.at(0) == "put") {
+      const string &cmd = token.at(0);
+      if(cmd == "put") {
         return handle_put(token, res);
-      } else if(token.at(0) == "get") {
+      } else if(cmd == "get") {
         return handle_get(token, res);
+      } else if(cmd == "dir" || cmd == "ls" || cmd == "ll") {
+        return handle_dir(token, res);
+      } else if(cmd == "del" || cmd == "rm") {
+        return handle_del(token, res);
       }
 
       res->set_result("unknown error.");
       return Status::CANCELLED;
     }
 
+    Status Service::handle_del(const vector<string>& token, ControlResponse* res) {
+      if (token.size() != 2) {
+        res->set_result("invalid arguments.");
+        return Status::CANCELLED;
+      }
+
+      auto directory = token.at(1);
+
+      try {
+        filesystem->del(uri::from(directory));
+      } catch (const chord::exception& exception) {
+        CONTROL_LOG(error, del)
+            << "failed to issue del request: " << exception.what();
+        return Status::CANCELLED;
+      }
+      return Status::OK;
+    }
     Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
       if (token.size() < 3) {
         res->set_result("invalid arguments.");
@@ -119,11 +141,31 @@ namespace chord {
         file.close();
       } catch (const chord::exception& exception) {
         CONTROL_LOG(error, get)
-            << "failed to issue put request: " << exception.what();
+            << "failed to issue get request: " << exception.what();
         return Status::CANCELLED;
       } catch (const std::ios_base::failure& exception) {
-        CONTROL_LOG(error, put)
-            << "failed to issue put request: " << exception.what();
+        CONTROL_LOG(error, get)
+            << "failed to issue get request: " << exception.what();
+        return Status::CANCELLED;
+      }
+      return Status::OK;
+    }
+
+    Status Service::handle_dir(const vector<string>& token, ControlResponse* res) {
+      if (token.size() != 2) {
+        res->set_result("invalid arguments.");
+        return Status::CANCELLED;
+      }
+
+      auto directory = token.at(1);
+
+      try {
+        stringstream sstream;
+        filesystem->dir(uri::from(directory), sstream);
+        res->set_result(sstream.str());
+      } catch (const chord::exception& exception) {
+        CONTROL_LOG(error, dir)
+            << "failed to issue dir request: " << exception.what();
         return Status::CANCELLED;
       }
       return Status::OK;

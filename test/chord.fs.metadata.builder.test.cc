@@ -21,7 +21,7 @@ TEST(chord_fs_metadata_builder, from_data) {
   Data data;
   data.set_type(value_of(type::regular));
   data.set_filename("foo.txt");
-  data.set_permission(value_of(perms::all));
+  data.set_permissions(value_of(perms::all));
 
   auto metadata = MetadataBuilder::from(data);
 
@@ -35,17 +35,17 @@ TEST(chord_fs_metadata_builder, from_request) {
   auto *dir = req.mutable_metadata();
   dir->set_filename("folder");
   dir->set_type(value_of(type::directory));
-  dir->set_permission(value_of(perms::all));
+  dir->set_permissions(value_of(perms::all));
 
   auto *file1 = req.add_files();
   file1->set_filename("file1.txt");
   file1->set_type(value_of(type::regular));
-  file1->set_permission(value_of(perms::all));
+  file1->set_permissions(value_of(perms::all));
 
   auto *file2 = req.add_files();
   file2->set_filename("file2.txt");
   file2->set_type(value_of(type::regular));
-  file2->set_permission(value_of(perms::all));
+  file2->set_permissions(value_of(perms::all));
 
   //--- assert output correct
   auto meta = MetadataBuilder::from(&req);
