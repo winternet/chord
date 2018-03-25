@@ -32,32 +32,35 @@ TEST(chord_fs_metadata_builder, from_data) {
 
 TEST(chord_fs_metadata_builder, from_request) {
   MetaRequest req;
-  auto *dir = req.mutable_metadata();
+  auto *dir = req.add_metadata();
   dir->set_filename("folder");
   dir->set_type(value_of(type::directory));
   dir->set_permissions(value_of(perms::all));
 
-  auto *file1 = req.add_files();
+  auto *file1 = req.add_metadata();
   file1->set_filename("file1.txt");
   file1->set_type(value_of(type::regular));
   file1->set_permissions(value_of(perms::all));
 
-  auto *file2 = req.add_files();
+  auto *file2 = req.add_metadata();
   file2->set_filename("file2.txt");
   file2->set_type(value_of(type::regular));
   file2->set_permissions(value_of(perms::all));
 
   //--- assert output correct
-  auto meta = MetadataBuilder::from(&req);
-  ASSERT_EQ(meta.name, "folder");
-  ASSERT_EQ(meta.file_type, type::directory);
-  ASSERT_EQ(meta.permissions, perms::all);
+  auto metadata_set = MetadataBuilder::from(&req);
 
-  ASSERT_EQ(meta.files.size(), 2);
-  for(const auto &file : meta.files) {
-    ASSERT_THAT(file.name, AllOf(StartsWith("file"), EndsWith(".txt")));
-    ASSERT_EQ(file.file_type, type::regular);
-    ASSERT_EQ(file.permissions, perms::all);
+  ASSERT_EQ(metadata_set.size(), 3);
+  for(const auto &file : metadata_set) {
+    if(file.name == "folder") {
+      ASSERT_EQ(file.name, "folder");
+      ASSERT_EQ(file.file_type, type::directory);
+      ASSERT_EQ(file.permissions, perms::all);
+    } else {
+      ASSERT_THAT(file.name, AllOf(StartsWith("file"), EndsWith(".txt")));
+      ASSERT_EQ(file.file_type, type::regular);
+      ASSERT_EQ(file.permissions, perms::all);
+    }
   }
 }
 

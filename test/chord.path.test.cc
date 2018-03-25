@@ -8,6 +8,7 @@ using namespace std;
 using namespace chord;
 
 using ::testing::UnorderedElementsAre;
+using ::testing::ElementsAre;
 
 TEST(chord_path, canonical) {
   ASSERT_EQ(path{"/folder/subfolder/bar.ext"}, path{"/folder/subfolder/././///../subfolder/bar.ext"}.canonical());
@@ -40,6 +41,21 @@ TEST(chord_path, filename) {
 TEST(chord_path, extension) {
   ASSERT_EQ(".ext", path{"/folder/subfolder/bar.ext"}.extension());
   ASSERT_EQ(""s, path{"/folder/subfolder/foo"}.extension());
+}
+
+TEST(chord_path, all_directories) {
+  set<path> directories = path{"/folder/subfolder/bar.ext"}.all_paths();
+  ASSERT_THAT(directories, ElementsAre(
+      path{"/"},
+      path{"/folder"},
+      path{"/folder/subfolder"},
+      path{"/folder/subfolder/bar.ext"}
+      ));
+}
+
+TEST(chord_path, path_append_slash_operator) {
+  ASSERT_EQ("/folder/sub//subsub/bar.ext", path{"/folder/sub/"} / path{"/subsub/bar.ext"});
+  ASSERT_EQ("/folder/sub/subsub/bar.ext", (path{"/folder/sub/"} / path{"/subsub/bar.ext"}).canonical());
 }
 
 TEST(chord_path, contents) {

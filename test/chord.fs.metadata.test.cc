@@ -30,21 +30,18 @@ TEST(chord_metadata, output_empty_directory) {
 
   stringstream ss;
   ss << meta;
-  ASSERT_EQ(R"(/:
-drwxrwxrwx usr grp .
-)", ss.str());
+  ASSERT_EQ(R"(drwxrwxrwx usr grp /)", ss.str());
 }
 
 TEST(chord_metadata, output_directory) {
-  Metadata meta{"/", "usr", "grp"};
-  meta.permissions = perms::all;
-  meta.file_type = type::directory;
-  meta.files = {{"foo", "usr", "grp", perms::owner_all}, {"bar", "usr2", "grp", perms::owner_all | perms::group_read}};
+  set<Metadata> contents(
+      {{"/", "usr", "grp", perms::all, type::directory},
+       {"foo", "usr", "grp", perms::owner_all},
+       {"bar", "usr2", "grp", perms::owner_all | perms::group_read}});
 
   stringstream ss;
-  ss << meta;
-  ASSERT_EQ(R"(/:
-drwxrwxrwx usr  grp .
+  ss << contents;
+  ASSERT_EQ(R"(drwxrwxrwx usr  grp /
 -rwxr----- usr2 grp bar
 -rwx------ usr  grp foo
 )", ss.str());

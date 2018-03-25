@@ -27,12 +27,12 @@ TEST(chord_metadata_manager, set_and_get) {
   fs::Metadata meta_set;
   meta_set.name = "file1";
 
-  metadata.add(uri, meta_set);
-  fs::Metadata meta_get = metadata.get(uri);
+  metadata.add(uri, {meta_set});
+  set<fs::Metadata> meta_get = metadata.get(uri);
 
   fs::Metadata expected{"file1"};
-  ASSERT_EQ(meta_get.name, "/folder");
-  ASSERT_THAT(meta_get.files, ElementsAre(expected));
+  //ASSERT_EQ(meta_get.name, "/folder");
+  ASSERT_THAT(meta_get, ElementsAre(expected));
 }
 
 TEST(chord_metadata_manager, set_delete_get) {
@@ -43,7 +43,7 @@ TEST(chord_metadata_manager, set_delete_get) {
   fs::Metadata meta_set;
   meta_set.name = "file1";
 
-  metadata.add(uri, meta_set);
+  metadata.add(uri, {meta_set});
   metadata.del(uri);
   try {
     metadata.get(uri);

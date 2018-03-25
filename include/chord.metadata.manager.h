@@ -25,15 +25,18 @@ class MetadataManager {
     throw chord::exception(status.ToString());
   }
 
-  Metadata deserialize(const std::string& metadata) {
-    Metadata ret;
+  std::map<std::string, Metadata> deserialize(const std::string& metadata) {
+    std::map<std::string, Metadata> ret;
+
+    if(metadata.empty()) return ret;
+
     std::stringstream ss{metadata};
     boost::archive::text_iarchive ia(ss);
     ia >> ret;
     return ret;
   }
 
-  std::string serialize(const Metadata& metadata) {
+  std::string serialize(const std::map<std::string, Metadata>& metadata) {
     std::stringstream ss;
     boost::archive::text_oarchive oa(ss);
     oa << metadata;
@@ -60,16 +63,19 @@ class MetadataManager {
     check_status(db->Delete(leveldb::WriteOptions(), directory.path().canonical().string()));
   }
 
-  void del(const chord::uri& directory, const Metadata &metadata) {
+  void del(const chord::uri& directory, const set<Metadata> &metadata) {
     std::string value;
-    Metadata current{directory.path().canonical().string()};
-    check_status(db->Get(leveldb::ReadOptions(), current.name, &value));
+    auto path = directory.path().canonical().string();
+    check_status(db->Get(leveldb::ReadOptions(), path, &value));
 
-    current = deserialize(value);
-    current.files.erase(metadata);
+    //map['path'] = metadata
+    auto current = deserialize(value);
+    for(const auto &m:metadata) {
+      current.erase(m.name);
+    }
     
     value = serialize(current);
-    check_status(db->Put(leveldb::WriteOptions(), current.name, value));
+    check_status(db->Put(leveldb::WriteOptions(), path, value));
   }
 
   void mod(const chord::uri &directory, const Metadata& metadata) {
@@ -91,31 +97,35 @@ class MetadataManager {
   }
   */
 
-  void add(const chord::uri& directory, const Metadata& metadata) {
+  void add(const chord::uri& directory, const std::set<Metadata>& metadata) {
     std::string value;
-    Metadata current{directory.path().canonical().string()};
-    auto status = db->Get(leveldb::ReadOptions(), current.name, &value);
+    auto path = directory.path().canonical().string();
+    auto status = db->Get(leveldb::ReadOptions(), path, &value);
 
-    if(status.ok()) {
-      current = deserialize(value);
-      //MANAGER_LOG(trace, add) << "current mentadata for " << directory << "\n" << current;
-    } else if(!status.IsNotFound()){
+    if(!status.ok() && !status.IsNotFound()){
       check_status(status);
     }
-    
-    current.files.insert(metadata);
 
-    //MANAGER_LOG(trace, add) << "new metadata for " << directory << "\n" << current;
+    std::map<std::string, Metadata> current = deserialize(value);
+
+    for (const auto& m : metadata) {
+      current.insert({m.name, m});
+    }
+
     value = serialize(current);
 
-    check_status(db->Put(leveldb::WriteOptions(), current.name, value));
+    check_status(db->Put(leveldb::WriteOptions(), path, value));
   }
 
-  Metadata get(const chord::uri& directory) {
+  std::set<Metadata> get(const chord::uri& directory) {
     std::string value;
     check_status(db->Get(leveldb::ReadOptions(), directory.path().string(), &value));
 
-    return deserialize(value);
+    const auto map = deserialize(value);
+
+    set<Metadata> ret;
+    for(const auto& m:map) ret.insert(m.second);
+    return ret;
   }
 
 };

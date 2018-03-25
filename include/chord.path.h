@@ -20,6 +20,8 @@ class path {
 
   virtual ~path() = default;
 
+  std::set<path> all_paths() const;
+
   path canonical() const;
 
   path filename() const;
@@ -37,6 +39,8 @@ class path {
   operator std::string() const;
 
   path operator/=(const path &p);
+
+  path operator/(const path& p) const;
 
   bool operator==(const path &p) const;
 

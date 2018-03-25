@@ -29,10 +29,19 @@ std::set<path> path::contents() const {
 
 std::string path::string() const { return _path.string(); }
 
+set<path> path::all_paths() const {
+  set<path> paths;
+  path current_path;
+  for (const auto &dir : canonical()._path) {
+    current_path /= dir;
+    paths.emplace(current_path);
+  }
+  return paths;
+}
+
 path path::canonical() const {
   path result;
   for (const auto &dir : _path) {
-    //for(auto it = begin(_path); it != end(_path); it++) {
     if (dir=="..") {
       result = result.parent_path();
     } else if (dir==".") {
@@ -51,6 +60,8 @@ bool path::empty() const noexcept {
 path::operator std::string() const { return _path.string(); }
 
 path path::operator/=(const path &p) { return path{_path /= p._path}; }
+
+path path::operator/(const path &p) const { return path{_path / p._path}; }
 
 bool path::operator==(const path &p) const { return _path==p._path; }
 

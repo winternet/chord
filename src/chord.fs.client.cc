@@ -53,8 +53,8 @@ Client::Client(Context &context, ChordFacade* chord, StubFactory make_stub)
 
 
 Status Client::put(const chord::uri &uri, istream &istream) {
-  auto hash = chord::crypto::sha256(uri);
-  auto endpoint = chord->successor(hash).endpoint();
+  const auto hash = chord::crypto::sha256(uri);
+  const auto endpoint = chord->successor(hash).endpoint();
 
   CLIENT_LOG(trace, put) << uri << " (" << hash << ")";
 
@@ -97,7 +97,7 @@ Status Client::put(const chord::uri &uri, istream &istream) {
 
 void Client::add_metadata(MetaRequest& req, const chord::path& parent_path) {
   for (const auto &c : parent_path.contents()) {
-    auto *item = req.add_files();
+    auto *item = req.add_metadata();
     item->set_type(is_directory(c)
                        ? value_of(type::directory)
                        : is_regular_file(c) ? value_of(type::regular)
@@ -107,11 +107,12 @@ void Client::add_metadata(MetaRequest& req, const chord::path& parent_path) {
   }
 }
 
-grpc::Status Client::meta(const chord::uri &uri, const Action &action, const Metadata& metadata) {
+grpc::Status Client::meta(const chord::uri &uri, const Action &action, const set<Metadata> metadata) {
   //--- find responsible node for uri.parent_path()
-  auto meta_uri = uri::builder{uri.scheme(), uri.path().parent_path().canonical()}.build();
-  auto hash = chord::crypto::sha256(meta_uri);
-  auto endpoint = chord->successor(hash).endpoint();
+  const auto path = uri.path()/*.parent_path()*/.canonical();
+  const auto meta_uri = uri::builder{uri.scheme(), path}.build();
+  const auto hash = chord::crypto::sha256(meta_uri);
+  const auto endpoint = chord->successor(hash).endpoint();
 
   CLIENT_LOG(trace, meta) << meta_uri << " (" << hash << ")";
 
@@ -119,32 +120,25 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action, const Met
   MetaResponse res;
   MetaRequest req;
 
-  auto path = uri.path().canonical();
+  auto local_path = context.data_directory / path;
 
   req.set_id(hash);
   req.set_uri(meta_uri);
   {
-    auto data = req.mutable_metadata();
-    data->set_filename(metadata.name);
-    data->set_type(value_of(metadata.file_type));
-    data->set_permissions(value_of(metadata.permissions));
-    data->set_owner(metadata.owner);
-    data->set_group(metadata.group);
-    //data->set_type(is_directory(path)
-    //                  ? value_of(type::directory)
-    //                  : is_regular_file(path) ? value_of(type::regular)
-    //                                          : value_of(type::unknown));
-    //data->set_filename(path.filename());
-    ////TODO implement someday
-    //data->set_permission(value_of(perms::all));
-    //data->set_user("chord");
-    //data->set_group("chord");
+    for(const auto& m:metadata) {
+      auto data = req.add_metadata();
+      data->set_filename(m.name);
+      data->set_type(value_of(m.file_type));
+      data->set_permissions(value_of(m.permissions));
+      data->set_owner(m.owner);
+      data->set_group(m.group);
+    }
   }
 
   switch (action) {
     case Action::ADD:
       req.set_action(ADD); 
-      if(is_directory(path)) add_metadata(req, meta_uri.path());
+      if(chord::file::is_directory(local_path)) add_metadata(req, local_path);
       break;
     case Action::DEL:
       req.set_action(DEL); 
@@ -158,9 +152,9 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action, const Met
 
 grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
   //--- find responsible node
-  auto meta_uri = uri::builder{uri.scheme(), uri.path().parent_path().canonical()}.build();
-  auto hash = chord::crypto::sha256(meta_uri);
-  auto endpoint = chord->successor(hash).endpoint();
+  const auto meta_uri = uri::builder{uri.scheme(), uri.path()/*.parent_path()*/.canonical()}.build();
+  const auto hash = chord::crypto::sha256(meta_uri);
+  const auto endpoint = chord->successor(hash).endpoint();
 
   CLIENT_LOG(trace, meta) << meta_uri << " (" << hash << ")";
 
@@ -170,13 +164,15 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
 
   auto path = uri.path().canonical();
 
+  auto local_path = context.data_directory / path;
+
   req.set_id(hash);
   req.set_uri(meta_uri);
   {
-    auto data = req.mutable_metadata();
-    data->set_type(is_directory(path)
+    auto data = req.add_metadata();
+    data->set_type(is_directory(local_path)
                       ? value_of(type::directory)
-                      : is_regular_file(path) ? value_of(type::regular)
+                      : is_regular_file(local_path) ? value_of(type::regular)
                                               : value_of(type::unknown));
     data->set_filename(path.filename());
     //TODO implement someday
@@ -188,7 +184,7 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
   switch (action) {
     case Action::ADD:
       req.set_action(ADD); 
-      if(is_directory(path)) add_metadata(req, meta_uri.path());
+      if(is_directory(local_path)) add_metadata(req, local_path);
       break;
     case Action::DEL:
       req.set_action(DEL); 
@@ -201,8 +197,8 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
 }
 
 Status Client::del(const chord::uri &uri) {
-  auto hash = chord::crypto::sha256(uri);
-  auto endpoint = chord->successor(hash).endpoint();
+  const auto hash = chord::crypto::sha256(uri);
+  const auto endpoint = chord->successor(hash).endpoint();
 
   CLIENT_LOG(trace, del) << uri << " (" << hash << ")";
 
@@ -220,9 +216,9 @@ Status Client::del(const chord::uri &uri) {
 
 grpc::Status Client::dir(const chord::uri &uri, iostream &stream) {
   //--- find responsible node
-  auto meta_uri = uri::builder{uri.scheme(), uri.path().canonical()}.build();
-  auto hash = chord::crypto::sha256(meta_uri);
-  auto endpoint = chord->successor(hash).endpoint();
+  const auto meta_uri = uri::builder{uri.scheme(), uri.path().canonical()}.build();
+  const auto hash = chord::crypto::sha256(meta_uri);
+  const auto endpoint = chord->successor(hash).endpoint();
 
   CLIENT_LOG(trace, dir) << meta_uri << " (" << hash << ")";
 
@@ -244,8 +240,8 @@ grpc::Status Client::dir(const chord::uri &uri, iostream &stream) {
 }
 
 Status Client::get(const chord::uri &uri, ostream &ostream) {
-  auto hash = chord::crypto::sha256(uri);
-  auto endpoint = chord->successor(hash).endpoint();
+  const auto hash = chord::crypto::sha256(uri);
+  const auto endpoint = chord->successor(hash).endpoint();
 
   CLIENT_LOG(trace, get) << uri << " (" << hash << ")";
 

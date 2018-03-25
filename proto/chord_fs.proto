@@ -86,11 +86,9 @@ message MetaRequest {
   string uri = 2;
   Action action = 3;
 
-  Data metadata = 4;
-  repeated Data files = 5; //<! set if metadata is a directory
+  repeated Data metadata = 4;
 }
 
 message MetaResponse { 
-  Data metadata = 1;
-  repeated Data files = 2; //<! set if metadata is a directory
+  repeated Data metadata = 1;
 }

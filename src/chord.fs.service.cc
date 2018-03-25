@@ -49,35 +49,35 @@ Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaR
 
   auto uri = uri::from(req->uri());
 
-	switch(req->action()) {
-	case ADD: 
-    metadata->add(uri, MetadataBuilder::from(req));
-		break;
-	case DEL: 
-    metadata->del(uri, MetadataBuilder::from(req));
-		break;
-  case MOD: 
-    return Status::CANCELLED;
-		break;
-  case DIR:
-    Metadata returnValue = metadata->get(uri);
+  try {
+    switch (req->action()) {
+      case ADD:
+        metadata->add(uri, MetadataBuilder::from(req));
+        break;
+      case DEL:
+        metadata->del(uri, MetadataBuilder::from(req));
+        break;
+      case MOD:
+        return Status::CANCELLED;
+        break;
+      case DIR:
+        set<Metadata> returnValue = metadata->get(uri);
 
-    //TODO move to builder
-    Data *data = res->mutable_metadata();
-    data->set_filename(returnValue.name);
-    data->set_type(value_of(returnValue.file_type));
-    data->set_permissions(value_of(returnValue.permissions));
+        // TODO move to builder
+        for(const auto& m:returnValue) {
+          Data *data = res->add_metadata();
+          data->set_filename(m.name);
+          data->set_type(value_of(m.file_type));
+          data->set_permissions(value_of(m.permissions));
+        }
 
-    for(auto file : returnValue.files) {
-      auto *d = res->add_files();
-      d->set_filename(file.name);
-      d->set_type(value_of(file.file_type));
-      d->set_permissions(value_of(file.permissions));
+        //----
+
+        break;
     }
-    //----
-    
-    break;
-	}
+  } catch(const chord::exception& e) {
+    SERVICE_LOG(error, meta) << "failed in meta for uri " << uri << " reason: " << e.what();
+  }
 
   return Status::OK;
 }
@@ -98,6 +98,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     const auto uri = uri::from(req.uri());
 
     data /= uri.path().parent_path();
+
     if (!file::exists(data)) {
       SERVICE_LOG(trace, put) << "creating directories for " << data;
       file::create_directories(data);
@@ -125,11 +126,13 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   // metadata
   try {
     const auto uri = uri::from(req.uri());
-    auto meta = MetadataBuilder::from(data);
-    // local
-    metadata->add(uri, meta);
-    // remote
-    make_client().meta(uri, Client::Action::ADD, meta);
+
+    // remote / local(last)
+    for (const path &path : uri.path().all_paths()) {
+      const auto sub_uri = uri::builder{uri.scheme(), path}.build();
+      const auto meta = MetadataBuilder::for_path(context.data_directory / path);
+      make_client().meta(sub_uri, Client::Action::ADD, meta);
+    }
   } catch(const chord::exception &e) {
     SERVICE_LOG(error, put) << "failed to add metadata: " << e.what();
     file::remove(data);
@@ -140,6 +143,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 
 Status Service::del(grpc::ServerContext *serverContext, const chord::fs::DelRequest *req,
            chord::fs::DelResponse *res) {
+  (void)res;
   (void)serverContext;
 
   path data = context.data_directory;
