@@ -78,24 +78,21 @@ class MetadataManager {
     check_status(db->Put(leveldb::WriteOptions(), path, value));
   }
 
-  void mod(const chord::uri &directory, const Metadata& metadata) {
-    throw chord::exception("currently not supported");
-  }
-  /*
-
-  void dir(const chord::uri& directory, Metadata& metadata) {
+  set<Metadata> dir(const chord::uri& directory) {
     std::string value;
-    Metadata current{directory.path().canonical().string()};
-    auto status = db->Get(leveldb::ReadOptions(), current.name, &value);
+    auto status = db->Get(leveldb::ReadOptions(), directory.path().canonical().string(), &value);
 
     if(status.ok()) {
-      Metadata current = deserialize(value);
-      metadata = current;
+      auto current = deserialize(value);
+      set<Metadata> ret;
+      for(const auto &m:current) {
+        ret.insert(m.second);
+      }
+      return ret;
     } else if(status.IsNotFound()) {
       throw chord::exception("not found");
     }
   }
-  */
 
   void add(const chord::uri& directory, const std::set<Metadata>& metadata) {
     std::string value;

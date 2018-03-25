@@ -72,7 +72,7 @@ Context parse_program_options(int ac, char *av[]) {
   }
 
   //--- validate
-  if (!has_config && (!vm.count("join") && !vm.count("bootstrap")) ||
+  if ((!has_config && (!vm.count("join") && !vm.count("bootstrap"))) ||
       (vm.count("join") && vm.count("bootstrap"))) {
     fatal << "please specify either a join address or the bootstrap flag\n\n"
           << global << endl;

@@ -24,13 +24,12 @@ TEST(chord_metadata_manager, set_and_get) {
 
   fs::MetadataManager metadata{context};
   auto uri = uri::from("chord:/folder");
-  fs::Metadata meta_set;
-  meta_set.name = "file1";
+  fs::Metadata meta_set{"file1", "owner", "group", perms::all, type::regular};
 
   metadata.add(uri, {meta_set});
   set<fs::Metadata> meta_get = metadata.get(uri);
 
-  fs::Metadata expected{"file1"};
+  fs::Metadata expected{"file1", "owner", "group", perms::all, type::regular};
   //ASSERT_EQ(meta_get.name, "/folder");
   ASSERT_THAT(meta_get, ElementsAre(expected));
 }

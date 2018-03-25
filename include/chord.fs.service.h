@@ -40,9 +40,9 @@ class Service final : public chord::fs::Filesystem::Service {
 
  private:
   Context &context;
+  ChordFacade *chord;
   std::unique_ptr<MetadataManager> metadata;
   ClientFactory make_client;
-  ChordFacade *chord;
 };
 
 } //namespace fs

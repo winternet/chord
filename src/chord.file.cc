@@ -63,9 +63,10 @@ std::experimental::optional<std::string> file::attr(const std::string &path, con
   std::string value; value.resize(read);
   read = ::getxattr(path.c_str(), name.c_str(), value.data(), value.size());
 #else
-  char buffer[read];
+  char *buffer = new char[read];
   read = ::getxattr(path.c_str(), name.c_str(), buffer, read);
   std::string value(buffer, read);
+  delete[] buffer;
 #endif
   if (read==static_cast<size_t>(-1)) throw chord::exception("failed to get xattr"s + strerror(errno));
 

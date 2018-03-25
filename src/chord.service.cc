@@ -161,6 +161,7 @@ Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *
 
 Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, NotifyResponse *res) {
   (void)serverContext;
+  (void)res;
   SERVICE_LOG(trace, notify) << "from " << req->header().src().uuid()
                              << "@" << req->header().src().endpoint();
 

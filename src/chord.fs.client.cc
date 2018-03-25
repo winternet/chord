@@ -1,8 +1,8 @@
-#include <memory>
-#include <fstream>
-
 #include <grpc++/channel.h>
 #include <grpc++/create_channel.h>
+#include <array>
+#include <fstream>
+#include <memory>
 
 #include "chord.common.h"
 #include "chord.crypto.h"
@@ -60,7 +60,7 @@ Status Client::put(const chord::uri &uri, istream &istream) {
 
   //TODO make configurable
   constexpr size_t len = 512*1024; // 512k
-  char buffer[len];
+  array<char, len> buffer;
   size_t offset = 0,
          read = 0;
 
@@ -71,14 +71,14 @@ Status Client::put(const chord::uri &uri, istream &istream) {
   unique_ptr<ClientWriter<PutRequest> > writer(stub->put(&clientContext, &res));
 
   do {
-    read = istream.readsome(buffer, len);
+    read = istream.readsome(buffer.data(), len);
     if (read <= 0) {
       break;
     }
 
     PutRequest req;
     req.set_id(hash);
-    req.set_data(buffer, read);
+    req.set_data(buffer.data(), read);
     req.set_offset(offset);
     req.set_size(read);
     req.set_uri(uri);
@@ -143,6 +143,8 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action, const set
     case Action::DEL:
       req.set_action(DEL); 
       break;
+    case Action::DIR:
+      return dir(uri, cout);
   }
 
   auto status = make_stub(endpoint)->meta(&clientContext, req, &res);
@@ -189,6 +191,8 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
     case Action::DEL:
       req.set_action(DEL); 
       break;
+    case Action::DIR:
+      return dir(uri, cout);
   }
 
   auto status = make_stub(endpoint)->meta(&clientContext, req, &res);
@@ -214,7 +218,7 @@ Status Client::del(const chord::uri &uri) {
   return status;
 }
 
-grpc::Status Client::dir(const chord::uri &uri, iostream &stream) {
+grpc::Status Client::dir(const chord::uri &uri, ostream &stream) {
   //--- find responsible node
   const auto meta_uri = uri::builder{uri.scheme(), uri.path().canonical()}.build();
   const auto hash = chord::crypto::sha256(meta_uri);

@@ -153,7 +153,9 @@ class MockStub : public chord::Chord::StubInterface {
  public:
   MockStub() {}
 
-  MockStub(const MockStub &stub) {}
+  MockStub(const MockStub &stub) {
+    (void)stub;
+  }
 
   MOCK_METHOD3(successor, grpc::Status(
       grpc::ClientContext*context,
@@ -265,7 +267,7 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
 
   std::unique_ptr<MockStub> stub(new MockStub);
 
-  auto stub_factory = [&](const endpoint_t &endpoint) { return std::move(stub); };
+  auto stub_factory = [&](const endpoint_t &endpoint) { (void)endpoint; return std::move(stub); };
   chord::Client client(context, &router, stub_factory);
 
   auto client_factory = [&]() { return client; };

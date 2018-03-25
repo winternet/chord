@@ -42,11 +42,11 @@ struct MetadataBuilder {
       throw chord::exception("not found: " + local_path.string());
     }
 
-    Metadata meta{local_path.filename()};
-    //TODO(muffin): implement this someday
-    meta.permissions = perms::all;
-    //TODO(muffin): extend
-    meta.file_type = is_directory(local_path) ? type::directory : type::regular;
+    Metadata meta{local_path.filename(),
+                  "",  // owner
+                  "",  // group
+                  perms::all,
+                  is_directory(local_path) ? type::directory : type::regular};
 
     for(const auto &content : local_path.contents()) {
       auto meta = MetadataBuilder::from(content);
@@ -56,9 +56,11 @@ struct MetadataBuilder {
   }
 
   static Metadata from(const Data& item) {
-    Metadata meta{item.filename()};
-    meta.permissions = static_cast<perms>(item.permissions());
-    meta.file_type = static_cast<type>(item.type());
+    Metadata meta{item.filename(),
+                  "",  // owner
+                  "",  // group
+                  static_cast<perms>(item.permissions()),
+                  static_cast<type>(item.type())};
 
     return meta;
   }
