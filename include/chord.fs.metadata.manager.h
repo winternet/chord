@@ -2,6 +2,7 @@
 
 // metadata strategy: leveldb
 #include <leveldb/db.h>
+#include <set>
 
 #include "chord.context.h"
 #include "chord.fs.metadata.builder.h"
@@ -63,7 +64,7 @@ class MetadataManager {
     check_status(db->Delete(leveldb::WriteOptions(), directory.path().canonical().string()));
   }
 
-  void del(const chord::uri& directory, const set<Metadata> &metadata) {
+  void del(const chord::uri& directory, const std::set<Metadata> &metadata) {
     std::string value;
     auto path = directory.path().canonical().string();
     check_status(db->Get(leveldb::ReadOptions(), path, &value));
@@ -78,13 +79,13 @@ class MetadataManager {
     check_status(db->Put(leveldb::WriteOptions(), path, value));
   }
 
-  set<Metadata> dir(const chord::uri& directory) {
+  std::set<Metadata> dir(const chord::uri& directory) {
     std::string value;
     auto status = db->Get(leveldb::ReadOptions(), directory.path().canonical().string(), &value);
 
     if(status.ok()) {
       auto current = deserialize(value);
-      set<Metadata> ret;
+      std::set<Metadata> ret;
       for(const auto &m:current) {
         ret.insert(m.second);
       }
@@ -120,7 +121,7 @@ class MetadataManager {
 
     const auto map = deserialize(value);
 
-    set<Metadata> ret;
+    std::set<Metadata> ret;
     for(const auto& m:map) ret.insert(m.second);
     return ret;
   }

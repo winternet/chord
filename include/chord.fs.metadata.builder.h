@@ -10,21 +10,14 @@
 namespace chord {
 namespace fs {
 
-using std::set;
-using chord::fs::MetaRequest;
-using chord::fs::Data;
-using chord::path;
-using chord::file::exists;
-using chord::file::is_directory;
-
 struct MetadataBuilder {
 
-  static set<Metadata> for_path(const path& local_path) {
+  static std::set<Metadata> for_path(const path& local_path) {
     if (!file::exists(local_path)) {
       throw chord::exception("not found: " + local_path.string());
     }
 
-    set<Metadata> ret = {};
+    std::set<Metadata> ret = {};
     auto root = MetadataBuilder::from(local_path);
     if(root.file_type == type::directory) root.name = ".";
     ret.insert(root);
@@ -46,7 +39,7 @@ struct MetadataBuilder {
                   "",  // owner
                   "",  // group
                   perms::all,
-                  is_directory(local_path) ? type::directory : type::regular};
+                  file::is_directory(local_path) ? type::directory : type::regular};
 
     for(const auto &content : local_path.contents()) {
       auto meta = MetadataBuilder::from(content);
@@ -55,7 +48,7 @@ struct MetadataBuilder {
     return meta;
   }
 
-  static Metadata from(const Data& item) {
+  static Metadata from(const chord::fs::Data& item) {
     Metadata meta{item.filename(),
                   "",  // owner
                   "",  // group
@@ -65,12 +58,12 @@ struct MetadataBuilder {
     return meta;
   }
 
-  static set<Metadata> from(const MetaRequest* req) {
+  static std::set<Metadata> from(const chord::fs::MetaRequest* req) {
     if (req->metadata_size() <= 0)
       throw chord::exception(
           "Failed to convert MetaRequest since metadata is missing");
 
-    set<Metadata> returnValue;
+    std::set<Metadata> returnValue;
     for( const auto &data : req->metadata()) {
       const Metadata meta = MetadataBuilder::from(data);
       returnValue.insert(meta);
@@ -79,12 +72,12 @@ struct MetadataBuilder {
     return returnValue;
   }
 
-  static set<Metadata> from(const MetaResponse& res) {
+  static std::set<Metadata> from(const chord::fs::MetaResponse& res) {
     if (res.metadata_size() <= 0)
       throw chord::exception(
           "Failed to convert MetaRequest since metadata is missing");
 
-    set<Metadata> ret;
+    std::set<Metadata> ret;
     for (const auto& m : res.metadata()) {
       ret.insert(MetadataBuilder::from(m));
     }

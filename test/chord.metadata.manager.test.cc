@@ -2,7 +2,7 @@
 #include <gmock/gmock.h>
 
 #include "chord.file.h"
-#include "chord.metadata.manager.h"
+#include "chord.fs.metadata.manager.h"
 
 using namespace std;
 using namespace chord;

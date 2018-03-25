@@ -5,7 +5,7 @@
 #include <functional>
 
 #include "chord.fs.client.h"
-#include "chord.metadata.manager.h"
+#include "chord.fs.metadata.manager.h"
 #include "chord_fs.grpc.pb.h"
 
 namespace chord {
