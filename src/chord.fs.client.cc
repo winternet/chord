@@ -107,7 +107,7 @@ void Client::add_metadata(MetaRequest& req, const chord::path& parent_path) {
   }
 }
 
-grpc::Status Client::meta(const chord::uri &uri, const Action &action, const set<Metadata> metadata) {
+grpc::Status Client::meta(const chord::uri &uri, const Action &action, const set<Metadata>& metadata) {
   //--- find responsible node for uri.parent_path()
   const auto path = uri.path()/*.parent_path()*/.canonical();
   const auto meta_uri = uri::builder{uri.scheme(), path}.build();

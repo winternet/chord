@@ -51,7 +51,7 @@ void add_metadata(chord::fs::MetaRequest& req, const chord::path& path);
   //TODO(muffin): remove metadata for DEL / DIR
   grpc::Status meta(const chord::uri &uri, const Action &action);
 
-  grpc::Status meta(const chord::uri &uri, const Action &action, const std::set<Metadata> metadata);
+  grpc::Status meta(const chord::uri &uri, const Action &action, const std::set<Metadata>& metadata);
 
 };
 
