@@ -9,8 +9,8 @@ namespace fs {
 
 class Facade {
 private:
-  std::unique_ptr<chord::fs::Client> fs_client;
-  std::unique_ptr<chord::fs::Service> fs_service;
+  std::unique_ptr<Client> fs_client;
+  std::unique_ptr<Service> fs_service;
 
 public:
   Facade(Context& context, ChordFacade* chord);

@@ -85,6 +85,8 @@ class uri {
   chord::path _path;
 
  public:
+  uri(const std::string& str);
+
   uri(const std::string scheme, const chord::path path);
 
   virtual ~uri() = default;

@@ -28,7 +28,7 @@ class Client {
   enum class Action { ADD, DEL, DIR };
 
  private:
-  chord::Context &context;
+  Context &context;
   chord::ChordFacade* chord;
 
   StubFactory make_stub;

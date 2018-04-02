@@ -52,7 +52,7 @@ struct ContextManager {
   struct AbstractToken {
     std::string name;
 
-    explicit AbstractToken(const std::string name) : name{name} {};
+    explicit AbstractToken(const std::string& name) : name{name} {};
     virtual ~AbstractToken() = default;
 
     virtual void set(const YAML::Node& config) = 0;
@@ -137,8 +137,8 @@ struct ContextManager {
         break;
       default:
         throw chord::exception(
-            std::string(
-                "Failed to prase configuration file: unknown version (") +
+            std::string{
+                "Failed to prase configuration file: unknown version ("} +
             std::to_string(version) + std::string(")"));
     }
   }

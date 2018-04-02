@@ -120,6 +120,10 @@ ostream &operator<<(std::ostream &os, const uri::authority &authority) {
   return os;
 }
 
+uri::uri(const string& str) {
+  *this = uri::from(str);
+}
+
 uri::uri(const string scheme, const chord::path path)
 : _scheme{scheme}, _path{path} {}
 

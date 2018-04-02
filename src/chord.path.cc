@@ -1,3 +1,5 @@
+#include <regex>
+
 #include "chord.path.h"
 #include "chord.file.h"
 
@@ -14,6 +16,14 @@ path path::filename() const { return path{_path.filename()}; }
 path path::extension() const { return path{_path.extension()}; }
 
 path path::parent_path() const { return path{_path.parent_path()}; }
+
+std::set<path> path::recursive_contents() const {
+  std::set<path> files_and_dirs;
+  for (const auto& entity : std::experimental::filesystem::recursive_directory_iterator(_path)) {
+    files_and_dirs.emplace(entity);
+  }
+  return files_and_dirs;
+}
 
 std::set<path> path::contents() const {
   std::set<path> files_and_dirs;
@@ -46,6 +56,8 @@ path path::canonical() const {
       result = result.parent_path();
     } else if (dir==".") {
       //ignore
+    } else if (dir=="/" && result.string().back() == '/') {
+      //ignore
     } else {
       result /= dir;
     }
@@ -58,6 +70,27 @@ bool path::empty() const noexcept {
 }
 
 path::operator std::string() const { return _path.string(); }
+
+/**
+ * example: {/tmp/foo/file1.txt}-{/tmp/foo} => file1.txt
+ */
+path path::operator-(const path &p) const {
+  path result;
+  auto can_rop = p.canonical();
+  auto can_lop = canonical();
+
+  regex pattern(can_rop.string());
+  return path{regex_replace(can_lop.string(), pattern, "")}.canonical();
+  //auto j = begin(can_rop._path);
+  //for (auto i = begin(can_lop._path); i != end(can_lop._path); i++) {
+  //  if (j != end(can_rop._path) && *i == *j){
+  //    ++j;
+  //    continue;
+  //  } 
+  //  result /= *i;
+  //}
+  //return result.canonical();
+}
 
 path path::operator/=(const path &p) { return path{_path /= p._path}; }
 

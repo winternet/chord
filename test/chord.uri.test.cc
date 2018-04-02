@@ -72,6 +72,30 @@ TEST(chord_uri, parse_success) {
   ASSERT_EQ("fragment", uri.fragment());
 }
 
+TEST(chord_uri, string_ctor) {
+  auto u = uri{"scheme://user:password@host:50050/path/sub/index.html?foo=bar&zoom=1&ignored#fragment"};
+
+  // scheme
+  ASSERT_EQ("scheme", u.scheme());
+  // authorization
+  ASSERT_EQ("user", u.auth()->user());
+  ASSERT_EQ("password", u.auth()->password());
+  ASSERT_EQ("host", u.auth()->host());
+  ASSERT_EQ(50050, u.auth()->port().value());
+  // path
+  ASSERT_EQ(path{"/path/sub/index.html"s}, u.path());
+  ASSERT_EQ(path{"/path/sub"s}, u.path().parent_path());
+  ASSERT_EQ(path{"index.html"s}, u.path().filename());
+  ASSERT_EQ(".html", u.path().extension());
+  // queries
+  ASSERT_EQ("bar", u.query().at("foo"));
+  ASSERT_EQ("1", u.query().at("zoom"));
+  // ignored not in query
+  ASSERT_EQ(u.query().end(), u.query().find("ignored"));
+  // fragment
+  ASSERT_EQ("fragment", u.fragment());
+}
+
 TEST(chord_uri, parse_path_only) {
   auto uri = chord::uri::from("chord:path/foo/bar");
   ASSERT_EQ("chord", uri.scheme());

@@ -2,9 +2,11 @@
 
 #include <grpc++/server_context.h>
 
+#include "chord.path.h"
 #include "chord_controller.grpc.pb.h"
 
 namespace chord {
+  class uri;
 namespace fs {
 class Facade;
 }  // namespace fs
@@ -27,6 +29,8 @@ class Service final : public chord::controller::Control::Service {
   grpc::Status handle_get(const std::vector<std::string>& token, ControlResponse* res);
   grpc::Status handle_dir(const std::vector<std::string>& token, ControlResponse* res);
   grpc::Status handle_del(const std::vector<std::string>& token, ControlResponse* res);
+
+  grpc::Status send_file(const path, const chord::uri);
 
   chord::fs::Facade *filesystem;
 };

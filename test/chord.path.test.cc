@@ -13,6 +13,8 @@ using ::testing::ElementsAre;
 TEST(chord_path, canonical) {
   ASSERT_EQ(path{"/folder/subfolder/bar.ext"}, path{"/folder/subfolder/././///../subfolder/bar.ext"}.canonical());
   ASSERT_EQ(path{"/folder/subfolder/bar.ext"}, path{"/folder/subfolder/bar.ext"}.canonical());
+  ASSERT_EQ(path{"/folder/subfolder/bar.ext"}, path{"/folder//subfolder/bar.ext"}.canonical());
+  ASSERT_EQ(path{"/folder/subfolder/bar.ext"}, path{"/folder//subfolder/////bar.ext"}.canonical());
 }
 
 TEST(chord_path, compare_path_with_string) {
@@ -53,6 +55,14 @@ TEST(chord_path, all_directories) {
       ));
 }
 
+TEST(chord_path, path_minus_operator) {
+  ASSERT_EQ("/subsub/bar.ext", path{"/folder/sub/subsub/bar.ext"} - path{"/folder/sub"});
+  ASSERT_EQ("/folder/sub/bar.ext", path{"/folder/sub/subsub/bar.ext"} - path{"subsub"});
+  ASSERT_EQ("/folder/sub/bar.ext", path{"/folder/sub/subsub/bar.ext"} - path{"/subsub"});
+  // attention - two slashes (!)
+  ASSERT_EQ("//subsub/bar.ext", path{"/folder/sub/subsub/bar.ext"} - path{"folder/sub"});
+}
+
 TEST(chord_path, path_append_slash_operator) {
   ASSERT_EQ("/folder/sub//subsub/bar.ext", path{"/folder/sub/"} / path{"/subsub/bar.ext"});
   ASSERT_EQ("/folder/sub/subsub/bar.ext", (path{"/folder/sub/"} / path{"/subsub/bar.ext"}).canonical());
@@ -67,13 +77,26 @@ TEST(chord_path, contents) {
 
   file::remove_all("./folder");
 
-  vector<path> expected{
-		path{"./folder/a"}, 
-		path{"./folder/file1.txt"}, 
-		path{"./folder/file2.txt"}};
-
 	ASSERT_THAT(directory_contents, UnorderedElementsAre(
 				path{"./folder/a"},
 				path{"./folder/file1.txt"},
 				path{"./folder/file2.txt"}));
+}
+
+TEST(chord_path, recursive_contents) {
+  file::create_directories("./folder/a/b");
+  file::create_file("./folder/a/b/file_ab.txt");
+  file::create_file("./folder/file1.txt");
+  file::create_file("./folder/file2.txt");
+
+  auto directory_contents = path{"./folder"}.recursive_contents();
+
+  file::remove_all("./folder");
+
+	ASSERT_THAT(directory_contents, UnorderedElementsAre(
+		path{"./folder/a"}, 
+		path{"./folder/a/b"}, 
+		path{"./folder/a/b/file_ab.txt"}, 
+		path{"./folder/file1.txt"}, 
+		path{"./folder/file2.txt"}));
 }

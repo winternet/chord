@@ -20,25 +20,11 @@ struct Context;
 struct Router;
 
 class ChordFacade {
- private:
-  size_t next{0};
-
-  chord::Context& context;
-
-  std::unique_ptr<AbstractScheduler> scheduler;
-  std::unique_ptr<chord::Router> router;
-
-  //--- chord
-  std::unique_ptr<chord::Client> client;
-  std::unique_ptr<chord::Service> service;
-
-  void start_scheduler();
-
  public:
   ChordFacade(const ChordFacade &) = delete;             // disable copying
   ChordFacade &operator=(const ChordFacade &) = delete;  // disable assignment
 
-  explicit ChordFacade(chord::Context& context);
+  explicit ChordFacade(Context& context);
 
   void start();
 
@@ -73,6 +59,20 @@ class ChordFacade {
    * fix finger table
    */
   void fix_fingers(size_t index);
+
+ private:
+  size_t next{0};
+
+  chord::Context& context;
+
+  std::unique_ptr<AbstractScheduler> scheduler;
+  std::unique_ptr<chord::Router> router;
+
+  //--- chord
+  std::unique_ptr<chord::Client> client;
+  std::unique_ptr<chord::Service> service;
+
+  void start_scheduler();
 };
 
 }  // namespace chord

@@ -30,6 +30,7 @@ class path {
 
   path parent_path() const;
 
+  std::set<path> recursive_contents() const;
   std::set<path> contents() const;
 
   std::string string() const;
@@ -39,6 +40,8 @@ class path {
   operator std::string() const;
 
   path operator/=(const path &p);
+
+  path operator-(const path &p) const;
 
   path operator/(const path& p) const;
 

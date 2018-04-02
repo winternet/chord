@@ -109,7 +109,7 @@ void Client::add_metadata(MetaRequest& req, const chord::path& parent_path) {
 
 grpc::Status Client::meta(const chord::uri &uri, const Action &action, const set<Metadata>& metadata) {
   //--- find responsible node for uri.parent_path()
-  const auto path = uri.path()/*.parent_path()*/.canonical();
+  const auto path = uri.path().canonical();
   const auto meta_uri = uri::builder{uri.scheme(), path}.build();
   const auto hash = chord::crypto::sha256(meta_uri);
   const auto endpoint = chord->successor(hash).endpoint();
@@ -153,51 +153,7 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action, const set
 }
 
 grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
-  //--- find responsible node
-  const auto meta_uri = uri::builder{uri.scheme(), uri.path()/*.parent_path()*/.canonical()}.build();
-  const auto hash = chord::crypto::sha256(meta_uri);
-  const auto endpoint = chord->successor(hash).endpoint();
-
-  CLIENT_LOG(trace, meta) << meta_uri << " (" << hash << ")";
-
-  ClientContext clientContext;
-  MetaResponse res;
-  MetaRequest req;
-
-  auto path = uri.path().canonical();
-
-  auto local_path = context.data_directory / path;
-
-  req.set_id(hash);
-  req.set_uri(meta_uri);
-  {
-    auto data = req.add_metadata();
-    data->set_type(is_directory(local_path)
-                      ? value_of(type::directory)
-                      : is_regular_file(local_path) ? value_of(type::regular)
-                                              : value_of(type::unknown));
-    data->set_filename(path.filename());
-    //TODO implement someday
-    data->set_permissions(value_of(perms::all));
-    data->set_owner("chord");
-    data->set_group("chord");
-  }
-
-  switch (action) {
-    case Action::ADD:
-      req.set_action(ADD); 
-      if(is_directory(local_path)) add_metadata(req, local_path);
-      break;
-    case Action::DEL:
-      req.set_action(DEL); 
-      break;
-    case Action::DIR:
-      return dir(uri, cout);
-  }
-
-  auto status = make_stub(endpoint)->meta(&clientContext, req, &res);
-
-  return status;
+  return meta(uri, action, {});
 }
 
 Status Client::del(const chord::uri &uri) {
