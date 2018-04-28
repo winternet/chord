@@ -14,11 +14,13 @@ class exception : public std::runtime_error {
   private:
     std::experimental::optional<std::string> file;
     std::experimental::optional<size_t> line;
+    std::string msg;
   public:
     // inherit ctors
     using std::runtime_error::runtime_error;
     explicit exception(std::string message, std::string file, size_t line)
-        : runtime_error(message), file{file}, line{line} {}
+        : runtime_error(message), file{file}, line{line}, msg{this->message()} {
+        }
 
     virtual std::string message() const {
       return (file && line)
@@ -26,7 +28,7 @@ class exception : public std::runtime_error {
         : std::string{runtime_error::what()};
     }
     virtual const char* what() const noexcept {
-      return message().c_str();
+      return msg.c_str();
     }
 };
 
