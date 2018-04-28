@@ -87,7 +87,7 @@ RouterEntry Service::successor(const uuid_t &uuid) {
 
   Status status = successor(&serverContext, &req, &res);
 
-  if (!status.ok()) throw chord::exception("failed to query successor", status);
+  if (!status.ok()) throw__grpc_exception("failed to query successor", status);
 
   return res.successor();
 }

@@ -16,13 +16,13 @@ using boost::multiprecision::import_bits;
 inline void sha256(const void *input, unsigned long length, unsigned char *hash) {
   SHA256_CTX context;
   if (!SHA256_Init(&context))
-    throw chord::exception("failed to initialize SHA256");
+    throw__exception("failed to initialize SHA256");
 
   if (!SHA256_Update(&context, (unsigned char *) input, length))
-    throw chord::exception("failed to update SHA256");
+    throw__exception("failed to update SHA256");
 
   if (!SHA256_Final(hash, &context))
-    throw chord::exception("failed to finalise SHA256");
+    throw__exception("failed to finalise SHA256");
 }
 
 inline uuid_t sha256(const void *input, unsigned long length) {

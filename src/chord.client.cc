@@ -64,7 +64,7 @@ void Client::join(const endpoint_t &addr) {
   Status status = make_stub(addr)->join(&clientContext, req, &res);
 
   if (!status.ok() || !res.has_successor()) {
-    throw chord::exception("Failed to join " + addr);
+    throw__exception("Failed to join " + addr);
   }
 
   auto entry = res.successor();
@@ -177,7 +177,7 @@ RouterEntry Client::successor(const uuid_t &uuid) {
 
   auto status = successor(&clientContext, &req, &res);
 
-  if (!status.ok()) throw chord::exception("failed to query succesor", status);
+  if (!status.ok()) throw__grpc_exception("failed to query succesor", status);
 
   return res.successor();
 }

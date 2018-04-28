@@ -136,7 +136,7 @@ struct ContextManager {
         parse_v1(root, context);
         break;
       default:
-        throw chord::exception(
+        throw__exception(
             std::string{
                 "Failed to prase configuration file: unknown version ("} +
             std::to_string(version) + std::string(")"));

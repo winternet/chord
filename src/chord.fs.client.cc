@@ -85,7 +85,7 @@ Status Client::put(const chord::uri &uri, istream &istream) {
     offset += read;
 
     if (!writer->Write(req)) {
-      throw chord::exception("broken stream.");
+      throw__exception("broken stream.");
     }
 
   } while (read > 0);

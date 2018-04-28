@@ -14,7 +14,7 @@ struct MetadataBuilder {
 
   static std::set<Metadata> for_path(const path& local_path) {
     if (!file::exists(local_path)) {
-      throw chord::exception("not found: " + local_path.string());
+      throw__exception("not found: " + local_path.string());
     }
 
     std::set<Metadata> ret = {};
@@ -32,7 +32,7 @@ struct MetadataBuilder {
 
   static Metadata from(const path& local_path) {
     if (!file::exists(local_path)) {
-      throw chord::exception("not found: " + local_path.string());
+      throw__exception("not found: " + local_path.string());
     }
 
     Metadata meta{local_path.filename(),
@@ -60,7 +60,7 @@ struct MetadataBuilder {
 
   static std::set<Metadata> from(const chord::fs::MetaRequest* req) {
     if (req->metadata_size() <= 0)
-      throw chord::exception(
+      throw__exception(
           "Failed to convert MetaRequest since metadata is missing");
 
     std::set<Metadata> returnValue;
@@ -74,7 +74,7 @@ struct MetadataBuilder {
 
   static std::set<Metadata> from(const chord::fs::MetaResponse& res) {
     if (res.metadata_size() <= 0)
-      throw chord::exception(
+      throw__exception(
           "Failed to convert MetaRequest since metadata is missing");
 
     std::set<Metadata> ret;

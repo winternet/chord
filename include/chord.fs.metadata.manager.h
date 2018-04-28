@@ -23,7 +23,7 @@ class MetadataManager {
   void check_status(const leveldb::Status &status) {
     if(status.ok()) return;
 
-    throw chord::exception(status.ToString());
+    throw__exception(status.ToString());
   }
 
   std::map<std::string, Metadata> deserialize(const std::string& metadata) {
@@ -91,7 +91,7 @@ class MetadataManager {
       }
       return ret;
     } else if(status.IsNotFound()) {
-      throw chord::exception("not found");
+      throw__exception("not found");
     }
   }
 

@@ -221,7 +221,7 @@ Status Service::get(ServerContext *serverContext, const GetRequest *req, grpc::S
     offset += read;
 
     if (!writer->Write(res)) {
-      throw chord::exception("broken stream.");
+      throw__exception("broken stream.");
     }
 
   } while (read > 0);

@@ -61,7 +61,7 @@ uri::builder uri::builder::fragment(const string &fragment) {
 
 uri uri::builder::build() {
   if(_scheme.empty() || _path.empty()) {
-    throw chord::exception{"Neither scheme nor path must be empty!"};
+    throw__exception("Neither scheme nor path must be empty!");
   }
   uri ret{_scheme, _path};
 
@@ -190,7 +190,7 @@ uri uri::from(const string &str) {
   auto reg = uri_regex();
   smatch match;
   if (!regex_match(str, reg)) {
-    throw chord::exception("failed to parse uri \'" + str + "\'");
+    throw__exception("failed to parse uri \'" + str + "\'");
   }
   regex_search(str, match, reg);
 
