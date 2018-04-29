@@ -15,6 +15,7 @@ TEST(chord_path, canonical) {
   ASSERT_EQ(path{"/folder/subfolder/bar.ext"}, path{"/folder/subfolder/bar.ext"}.canonical());
   ASSERT_EQ(path{"/folder/subfolder/bar.ext"}, path{"/folder//subfolder/bar.ext"}.canonical());
   ASSERT_EQ(path{"/folder/subfolder/bar.ext"}, path{"/folder//subfolder/////bar.ext"}.canonical());
+  ASSERT_EQ(path{"/folder/subfolder/bar.ext"}, path{"//folder//subfolder/////bar.ext"}.canonical());
 }
 
 TEST(chord_path, compare_path_with_string) {
@@ -59,8 +60,7 @@ TEST(chord_path, path_minus_operator) {
   ASSERT_EQ("/subsub/bar.ext", path{"/folder/sub/subsub/bar.ext"} - path{"/folder/sub"});
   ASSERT_EQ("/folder/sub/bar.ext", path{"/folder/sub/subsub/bar.ext"} - path{"subsub"});
   ASSERT_EQ("/folder/sub/bar.ext", path{"/folder/sub/subsub/bar.ext"} - path{"/subsub"});
-  // attention - two slashes (!)
-  ASSERT_EQ("//subsub/bar.ext", path{"/folder/sub/subsub/bar.ext"} - path{"folder/sub"});
+  ASSERT_EQ("/subsub/bar.ext", path{"/folder/sub/subsub/bar.ext"} - path{"folder/sub"});
 }
 
 TEST(chord_path, path_append_slash_operator) {

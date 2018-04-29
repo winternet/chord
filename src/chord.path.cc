@@ -59,7 +59,10 @@ path path::canonical() const {
     } else if (dir=="/" && result.string().back() == '/') {
       //ignore
     } else {
-      result /= dir;
+      auto str = dir.string();
+      auto pos = str.rfind(fs::path::preferred_separator);
+      // note: because std::path allows //<part>, we have to remove preceding separators
+      result /= (pos != string::npos) ? path{str.substr(pos)} : dir;
     }
   }
   return result;

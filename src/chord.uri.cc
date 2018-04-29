@@ -250,8 +250,8 @@ uri::operator std::string() const {
 std::string to_string(const uri &uri) {
   stringstream ss;
   //--- important scheme etc.
-  ss << uri.scheme() << ':';
-  if(uri.auth()) ss << "//" << uri.auth().value();
+  ss << uri.scheme() << "://";
+  if(uri.auth()) ss << uri.auth().value();
   ss << uri.path();
 
   //--- query param handling

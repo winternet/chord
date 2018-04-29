@@ -94,7 +94,7 @@ Status Service::send_file(const path source, const chord::uri target) {
     file.exceptions(ifstream::failbit | ifstream::badbit);
     file.open(source, std::fstream::binary);
 
-    filesystem->put(uri::from(target), file);
+    filesystem->put(target, file);
   } catch (const chord::exception& exception) {
     CONTROL_LOG(error, put)
         << "failed to issue put request: " << exception.what();
