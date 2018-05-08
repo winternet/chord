@@ -49,6 +49,7 @@ message(STATUS "Including custom cmake modules from ${CMAKE_MODULE_PATH}")
 include(grpc)
 include(protobuf)
 include(CTest)
+include(cppcheck)
 
 #
 # find packages
