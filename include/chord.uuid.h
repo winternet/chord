@@ -16,12 +16,11 @@ class uuid {
  public:
   uuid() = default;
 
-  inline uuid(const std::string &str) { val = value_t{str}; }
+  explicit inline uuid(const std::string &str) : val{value_t{str}} {}
 
   template <typename T>
-  inline uuid(const T &v) {
-    val = value_t{v};
-  }
+  //cppcheck-suppress noExplicitConstructor
+  inline uuid(const T &v) : val{value_t{v}} {}
 
   template <typename Iterator>
   inline uuid(const Iterator beg, const Iterator end) {

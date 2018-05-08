@@ -9,6 +9,7 @@ add_custom_target(
         --enable=all
         --std=c++11
         --language=c++
+        --inline-suppr
         --template="[{severity}];;[{id}];;{message};;{callstack};;\({file}:{line}\)"
         --verbose
         --quiet
