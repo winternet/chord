@@ -41,7 +41,7 @@ using namespace std;
 using namespace chord::common;
 
 namespace chord {
-Client::Client(Context &context, Router *router)
+Client::Client(const Context &context, Router *router)
     : context{context}, router{router}, make_stub{
   //--- default stub factory
   make_stub = [&](const endpoint_t &endpoint) {
@@ -49,7 +49,7 @@ Client::Client(Context &context, Router *router)
   }
 } {}
 
-Client::Client(Context &context, Router *router, StubFactory make_stub)
+Client::Client(const Context &context, Router *router, StubFactory make_stub)
     : context{context}, router{router}, make_stub{make_stub} {}
 
 void Client::join(const endpoint_t &addr) {

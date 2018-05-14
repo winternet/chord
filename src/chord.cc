@@ -11,8 +11,16 @@
 #include "chord.log.h"
 #include "chord.peer.h"
 
-using namespace std;
-using namespace chord;
+using chord::Context;
+using chord::ContextManager;
+using chord::path;
+using std::cerr;
+using std::cout;
+using std::endl;
+using std::make_shared;
+using std::string;
+using std::stringstream;
+using std::vector;
 
 namespace po = boost::program_options;
 

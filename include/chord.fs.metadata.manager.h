@@ -90,7 +90,9 @@ class MetadataManager {
         ret.insert(m.second);
       }
       return ret;
-    } else if(status.IsNotFound()) {
+    }
+
+    if(status.IsNotFound()) {
       throw__exception("not found");
     }
   }

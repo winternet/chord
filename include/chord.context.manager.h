@@ -52,7 +52,7 @@ struct ContextManager {
   struct AbstractToken {
     std::string name;
 
-    explicit AbstractToken(const std::string& name) : name{name} {};
+    explicit AbstractToken(std::string name) : name{std::move(name)} {};
     virtual ~AbstractToken() = default;
 
     virtual void set(const YAML::Node& config) = 0;

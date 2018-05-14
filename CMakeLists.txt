@@ -34,9 +34,6 @@ message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   # compile with address sanitizer (2x slowdown)
   add_compile_options(-fsanitize=address)
-#add_compile_options(
-#    $<$<NOT:$<STREQUAL:$<TARGET_PROPERTY:SOURCE_DIR>,${CMAKE_SOURCE_DIR}/test_app1>>:-Werror>
-#  )
 endif()
 
 
@@ -50,6 +47,7 @@ include(grpc)
 include(protobuf)
 include(CTest)
 include(cppcheck)
+include(clang-tidy)
 
 #
 # find packages
