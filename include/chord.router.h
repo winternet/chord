@@ -135,15 +135,18 @@ struct Router {
 
   const uuid_t *successor() {
     for (auto succ : successors) {
+      //cppcheck-suppress CastIntegerToAddressAtReturn
       if (succ!=nullptr) return succ;
     }
     for (auto pred : predecessors) {
+      //cppcheck-suppress CastIntegerToAddressAtReturn
       if (pred!=nullptr) return pred;
     }
     return &(context.uuid());
   }
 
   uuid_t *predecessor() {
+    //cppcheck-suppress CastIntegerToAddressAtReturn
     return predecessors[0];
   }
 

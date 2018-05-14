@@ -66,6 +66,7 @@ struct ContextManager {
     std::function<void(Context&, const T&)> setter;
 
     Token(std::string name, T& value) : AbstractToken{name}, value{value} {};
+    //cppcheck-suppress uninitMemberVar
     Token(std::string name, std::function<void(Context&, const T&)>&& setter)
         : AbstractToken{name}, setter{setter} {};
     void set(const YAML::Node& config) override {

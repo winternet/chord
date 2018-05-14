@@ -136,7 +136,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   } catch(const chord::exception &e) {
     SERVICE_LOG(error, put) << "failed to add metadata: " << e.what();
     file::remove(data);
-    throw e;
+    throw;
   }
   return Status::OK;
 }
@@ -205,10 +205,9 @@ Status Service::get(ServerContext *serverContext, const GetRequest *req, grpc::S
   char buffer[len];
   size_t offset = 0,
       read = 0;
-  //read
   do {
     read = file.readsome(buffer, len);
-    if (read <= 0) break;
+    if (read == 0) break;
 
     GetResponse res;
     //TODO validate hashes

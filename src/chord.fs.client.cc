@@ -72,9 +72,7 @@ Status Client::put(const chord::uri &uri, istream &istream) {
 
   do {
     read = istream.readsome(buffer.data(), len);
-    if (read <= 0) {
-      break;
-    }
+    if (read == 0) break;
 
     PutRequest req;
     req.set_id(hash);

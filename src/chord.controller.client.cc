@@ -26,12 +26,12 @@ using namespace std;
 
 namespace chord {
 namespace controller {
-Client::Client() {
+Client::Client() : make_stub{
   //--- default stub factory
-  make_stub = [&](const endpoint_t &endpoint) {
+   [&](const endpoint_t &endpoint) {
     return chord::controller::Control::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
-  };
-}
+  }
+}{}
 
 Client::Client(ControlStubFactory make_stub)
     : make_stub{make_stub} {

@@ -34,7 +34,7 @@ bool file::remove_all(const std::string &path) {
 }
 
 bool file::create_file(const std::string &path) {
-  std::ofstream created{fs::path(path)};
+  std::ofstream{fs::path(path)};
   return true;
 }
 
