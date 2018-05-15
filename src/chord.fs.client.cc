@@ -40,12 +40,12 @@ namespace chord {
 namespace fs {
 
 Client::Client(Context &context, ChordFacade* chord)
-    : context{context}, chord{chord} {
+    : context{context}, chord{chord}, make_stub{
   //--- default stub factory
-  make_stub = [&](const endpoint_t &endpoint) {
+  [](const endpoint_t &endpoint) {
     return chord::fs::Filesystem::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
-  };
-}
+  }
+}{}
 
 Client::Client(Context &context, ChordFacade* chord, StubFactory make_stub)
     : context{context}, chord{chord}, make_stub{make_stub} {

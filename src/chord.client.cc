@@ -44,7 +44,7 @@ namespace chord {
 Client::Client(const Context &context, Router *router)
     : context{context}, router{router}, make_stub{
   //--- default stub factory
-  make_stub = [&](const endpoint_t &endpoint) {
+  [](const endpoint_t &endpoint) {
     return Chord::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
   }
 } {}

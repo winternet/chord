@@ -108,6 +108,7 @@ Status Service::send_file(const path source, const chord::uri target) {
 }
 
 Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
+  //TODO support multiple sources
   if (token.size() < 3) {
     res->set_result("invalid arguments.");
     return Status::CANCELLED;
@@ -139,6 +140,7 @@ Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
 }
 
 Status Service::handle_get(const vector<string>& token, ControlResponse* res) {
+  //TODO support multiple sources
   if (token.size() < 2) {
     res->set_result("invalid arguments.");
     return Status::CANCELLED;
