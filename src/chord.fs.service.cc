@@ -86,7 +86,6 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   (void)serverContext;
   (void)response;
   PutRequest req;
-  ofstream file;
 
   path data = context.data_directory;
   if (!file::is_directory(data)) {
@@ -106,22 +105,23 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 
     data /= uri.path().filename();
     SERVICE_LOG(trace, put) << "trying to put " << data;
-    file.exceptions(ifstream::failbit | ifstream::badbit);
+
     try {
+      ofstream file;
+      file.exceptions(ifstream::failbit | ifstream::badbit);
       file.open(data, fstream::binary);
-    } catch (const ios_base::failure& error) {
-      SERVICE_LOG(error, put) << "failed to open file " << data << ", " << error.what();
+
+      // write
+      do {
+        file.write((const char *)req.data().data(), req.size());
+      } while (reader->Read(&req));
+
+    } catch (const ios_base::failure &error) {
+      SERVICE_LOG(error, put)
+          << "failed to open file " << data << ", " << error.what();
       return Status::CANCELLED;
     }
   }
-
-  //write
-  do {
-    file.write((const char *) req.data().data(), req.size());
-  } while (reader->Read(&req));
-
-  // close
-  file.close();
 
   // metadata
   try {
@@ -130,7 +130,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     // remote / local(last)
     for (const path &path : uri.path().all_paths()) {
       const auto sub_uri = uri::builder{uri.scheme(), path}.build();
-      const auto meta = MetadataBuilder::for_path(context.data_directory / path);
+      auto meta = MetadataBuilder::for_path(context.data_directory / path);
       make_client().meta(sub_uri, Client::Action::ADD, meta);
     }
   } catch(const chord::exception &e) {

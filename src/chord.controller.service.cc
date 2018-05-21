@@ -88,24 +88,6 @@ Status Service::handle_del(const vector<string>& token, ControlResponse* res) {
   return Status::OK;
 }
 
-Status Service::send_file(const path source, const chord::uri target) {
-  try {
-    ifstream file;
-    file.exceptions(ifstream::failbit | ifstream::badbit);
-    file.open(source, std::fstream::binary);
-
-    filesystem->put(target, file);
-  } catch (const chord::exception& exception) {
-    CONTROL_LOG(error, put)
-        << "failed to issue put request: " << exception.what();
-    return Status::CANCELLED;
-  } catch (const std::ios_base::failure& exception) {
-    CONTROL_LOG(error, put)
-        << "failed to issue put request: " << exception.what();
-    return Status::CANCELLED;
-  }
-  return Status::OK;
-}
 
 Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
   //TODO support multiple sources
@@ -122,21 +104,14 @@ Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
   //     the directory
   //     if taget is no directory rename the file
   //     and put it under that name
-
-  if (chord::file::is_directory(source)) {
-    for(const auto &child : source.recursive_contents()) {
-      // dont put empty folders for now
-      if(file::is_directory(child)) continue;
-
-      auto relative_path = child - source;
-      auto exact_target_path = target.path() / relative_path;
-      auto status = send_file(child, {target.scheme(), exact_target_path.canonical()});
-      if (!status.ok()) return status;
-    }
-    return Status::OK;
-  } else {
-    return send_file(source, target);
+  try {
+    filesystem->put(source, target);
+  } catch (const chord::exception& exception) {
+    CONTROL_LOG(error, dir)
+        << "failed to issue dir request: " << exception.what();
+    return Status::CANCELLED;
   }
+  return Status::OK;
 }
 
 Status Service::handle_get(const vector<string>& token, ControlResponse* res) {
@@ -146,28 +121,15 @@ Status Service::handle_get(const vector<string>& token, ControlResponse* res) {
     return Status::CANCELLED;
   }
 
-  auto target = token.at(1);
-
-  // if(!fs::is_directory(uri.directory())) {
-  //  fs::create_directories(uri.directory());
-  //}
+  //get chord:/// .
+  uri source  = {token.at(1)};
+  path target = {token.at(2)};
 
   try {
-    auto uri = uri::from(target);
-
-    ofstream file;
-    file.exceptions(ofstream::failbit | ofstream::badbit);
-    file.open(uri.path().filename(), std::fstream::binary);
-
-    filesystem->get(uri, file);
-    file.close();
+    filesystem->get(source, target);
   } catch (const chord::exception& exception) {
-    CONTROL_LOG(error, get)
-        << "failed to issue get request: " << exception.what();
-    return Status::CANCELLED;
-  } catch (const std::ios_base::failure& exception) {
-    CONTROL_LOG(error, get)
-        << "failed to issue get request: " << exception.what();
+    CONTROL_LOG(error, dir)
+        << "failed to issue dir request: " << exception.what();
     return Status::CANCELLED;
   }
   return Status::OK;

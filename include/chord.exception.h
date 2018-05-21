@@ -6,8 +6,8 @@
 
 #include "chord.grpc.pb.h"
 
-#define throw__exception(message) throw exception{message, __FILE__, __LINE__}
-#define throw__grpc_exception(message, status) throw grpc_exception{message, status, __FILE__, __LINE__}
+#define throw__exception(message) throw chord::exception{message, __FILE__, __LINE__}
+#define throw__grpc_exception(message, status) throw chord::grpc_exception{message, status, __FILE__, __LINE__}
 
 namespace chord {
 class exception : public std::runtime_error {

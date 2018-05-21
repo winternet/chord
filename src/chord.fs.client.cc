@@ -105,7 +105,7 @@ void Client::add_metadata(MetaRequest& req, const chord::path& parent_path) {
   }
 }
 
-grpc::Status Client::meta(const chord::uri &uri, const Action &action, const set<Metadata>& metadata) {
+grpc::Status Client::meta(const chord::uri &uri, const Action &action, set<Metadata>& metadata) {
   //--- find responsible node for uri.parent_path()
   const auto path = uri.path().canonical();
   const auto meta_uri = uri::builder{uri.scheme(), path}.build();
@@ -142,7 +142,7 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action, const set
       req.set_action(DEL); 
       break;
     case Action::DIR:
-      return dir(uri, cout);
+      return dir(uri, metadata);
   }
 
   auto status = make_stub(endpoint)->meta(&clientContext, req, &res);
@@ -151,7 +151,8 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action, const set
 }
 
 grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
-  return meta(uri, action, {});
+  std::set<Metadata> m;
+  return meta(uri, action, m);
 }
 
 Status Client::del(const chord::uri &uri) {
@@ -172,7 +173,8 @@ Status Client::del(const chord::uri &uri) {
   return status;
 }
 
-grpc::Status Client::dir(const chord::uri &uri, ostream &stream) {
+grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata) {
+  // grpc::Status Client::dir(const chord::uri &uri, ostream &stream) {
   //--- find responsible node
   const auto meta_uri = uri::builder{uri.scheme(), uri.path().canonical()}.build();
   const auto hash = chord::crypto::sha256(meta_uri);
@@ -192,7 +194,8 @@ grpc::Status Client::dir(const chord::uri &uri, ostream &stream) {
 
   auto status = make_stub(endpoint)->meta(&clientContext, req, &res);
 
-  stream << MetadataBuilder::from(res);
+  auto meta_res = MetadataBuilder::from(res);
+  metadata.insert(meta_res.begin(), meta_res.end());
 
   return status;
 }
