@@ -96,16 +96,15 @@ Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
     return Status::CANCELLED;
   }
 
-  path source = {token.at(1)};
-  uri  target = {token.at(2)};
-
-  //TODO check if target is a directory or not
-  //     if target is directory, put file under
-  //     the directory
-  //     if taget is no directory rename the file
-  //     and put it under that name
   try {
-    filesystem->put(source, target);
+    const auto target_it = prev(token.end());
+    for (auto it = next(token.begin()); it != target_it; ++it) {
+      const path& source = {*it};
+      const uri& target = {*target_it};
+      // TODO if taget is no directory rename the file
+      //      and put it under that name
+      filesystem->put(source, target);
+    }
   } catch (const chord::exception& exception) {
     CONTROL_LOG(error, dir)
         << "failed to issue dir request: " << exception.what();

@@ -23,12 +23,13 @@ void Facade::put(const chord::path &source, const chord::uri &target) {
       // dont put empty folders for now
       if(file::is_directory(child)) continue;
 
-      auto relative_path = child - source;
-      auto exact_target_path = target.path() / relative_path;
+      const auto relative_path = child - source;
+      const auto exact_target_path = target.path() / relative_path;
       put_file(child, {target.scheme(), exact_target_path.canonical()});
     }
   } else {
-    put_file(source, target);
+    const auto exact_target_path = target.path() / source.filename();
+    put_file(source, {target.scheme(), exact_target_path.canonical()});
   }
 }
 
