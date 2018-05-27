@@ -20,6 +20,9 @@ namespace controller {
 class Service;
 }  // namespace controller
 }  // namespace chord
+namespace spdlog {
+  class logger;
+}
 
 namespace chord {
 
@@ -34,6 +37,8 @@ class Peer {
   std::unique_ptr<chord::fs::Facade> filesystem;
 
   std::unique_ptr<chord::controller::Service> controller;
+
+  std::shared_ptr<spdlog::logger> logger;
 
   void start_server();
 

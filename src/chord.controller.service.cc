@@ -15,9 +15,6 @@
 #include "chord.controller.service.h"
 #include "chord.fs.facade.h"
 
-#define log(level) LOG(level) << "[control] "
-
-#define CONTROL_LOG(level, method) LOG(level) << "[control][" << #method << "] "
 
 using grpc::ServerBuilder;
 using grpc::ServerContext;
@@ -31,11 +28,13 @@ using namespace std;
 
 namespace chord {
 namespace controller {
-Service::Service(chord::fs::Facade* filesystem) : filesystem{filesystem} {}
+Service::Service(chord::fs::Facade* filesystem) : filesystem{filesystem} {
+  logger = spdlog::stdout_color_mt("chord.controller.service");
+}
 
 Status Service::control(ServerContext* serverContext __attribute__((unused)),
                         const ControlRequest* req, ControlResponse* res) {
-  CONTROL_LOG(trace, control) << "received command " << req->command();
+  logger->trace("received command {}", req->command());
   return parse_command(req, res);
 }
 
@@ -47,8 +46,8 @@ Status Service::parse_command(const ControlRequest* req, ControlResponse* res) {
   vector<string> token{distance(begin(tokenizer), end(tokenizer))};
   copy(begin(tokenizer), end(tokenizer), begin(token));
 
-  CONTROL_LOG(trace, parse_command) << "received following token: ";
-  for (auto t : token) CONTROL_LOG(trace, parse_command) << "token: " << t;
+  logger->trace("received following token");
+  for (auto t : token) logger->trace("token: {}", t);
 
   if (token.empty()) {
     res->set_result("no commands received.");
@@ -81,8 +80,7 @@ Status Service::handle_del(const vector<string>& token, ControlResponse* res) {
   try {
     filesystem->del(uri::from(directory));
   } catch (const chord::exception& exception) {
-    CONTROL_LOG(error, del)
-        << "failed to issue del request: " << exception.what();
+    logger->error("failed to issue del request: {}", exception.what());
     return Status::CANCELLED;
   }
   return Status::OK;
@@ -106,8 +104,7 @@ Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
       filesystem->put(source, target);
     }
   } catch (const chord::exception& exception) {
-    CONTROL_LOG(error, put)
-        << "failed to issue put request: " << exception.what();
+    logger->error("failed to issue put request: {}", exception.what());
     return Status::CANCELLED;
   }
   return Status::OK;
@@ -130,8 +127,7 @@ Status Service::handle_get(const vector<string>& token, ControlResponse* res) {
       filesystem->get(source, target);
     }
   } catch (const chord::exception& exception) {
-    CONTROL_LOG(error, get)
-        << "failed to issue get request: " << exception.what();
+    logger->error("failed to issue get request: {}", exception.what());
     return Status::CANCELLED;
   }
 
@@ -151,8 +147,7 @@ Status Service::handle_dir(const vector<string>& token, ControlResponse* res) {
     filesystem->dir(uri::from(directory), sstream);
     res->set_result(sstream.str());
   } catch (const chord::exception& exception) {
-    CONTROL_LOG(error, dir)
-        << "failed to issue dir request: " << exception.what();
+    logger->error("failed to issue dir request: {}", exception.what());
     return Status::CANCELLED;
   }
   return Status::OK;

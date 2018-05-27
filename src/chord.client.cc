@@ -13,8 +13,6 @@
 #include "chord.common.h"
 #include "chord.crypto.h"
 
-#define log(level) LOG(level) << "[client] "
-#define CLIENT_LOG(level, method) LOG(level) << "[client][" << #method << "] "
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -42,18 +40,20 @@ using namespace chord::common;
 
 namespace chord {
 Client::Client(const Context &context, Router *router)
-    : context{context}, router{router}, make_stub{
-  //--- default stub factory
-  [](const endpoint_t &endpoint) {
-    return Chord::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
-  }
-} {}
+    : context{context},
+      router{router},
+      make_stub{//--- default stub factory
+                [](const endpoint_t &endpoint) {
+                  return Chord::NewStub(grpc::CreateChannel(
+                      endpoint, grpc::InsecureChannelCredentials()));
+                }},
+      logger{spdlog::stdout_color_mt("chord.client")} {}
 
 Client::Client(const Context &context, Router *router, StubFactory make_stub)
-    : context{context}, router{router}, make_stub{make_stub} {}
+    : context{context}, router{router}, make_stub{make_stub}, logger{spdlog::stdout_color_mt("chord.client")} {}
 
 void Client::join(const endpoint_t &addr) {
-  CLIENT_LOG(debug, join) << "joining " << addr;
+  logger->debug("joining {}", addr);
 
   ClientContext clientContext;
   JoinRequest req;
@@ -71,7 +71,7 @@ void Client::join(const endpoint_t &addr) {
   auto id = entry.uuid();
   auto endpoint = entry.endpoint();
 
-  CLIENT_LOG(trace, join) << "successful, received successor " << id << "@" << endpoint;
+  logger->trace("successful, received successor {}@{}", id, endpoint);
   router->set_successor(0, uuid_t{id}, endpoint);
 }
 
@@ -86,27 +86,26 @@ void Client::stabilize() {
 
   //--- return if join failed or uuid == successor (create)
   if (successor==nullptr) {
-    CLIENT_LOG(trace, stabilize) << "no successor found";
+    logger->trace("[stabilize] no successor found");
     return;
   } else if ((*successor)==context.uuid()) {
-    CLIENT_LOG(trace, stabilize) << "successor is me, still bootstrapping";
+    logger->trace("[stabilize] successor is me, still bootstrapping");
     return;
   }
 
   endpoint_t endpoint = router->get(successor);
 
-  CLIENT_LOG(trace, stabilize) << "calling stabilize on successor " << endpoint;
+  logger->trace("[stabilize] calling stabilize on successor {}", endpoint);
   Status status = make_stub(endpoint)->stabilize(&clientContext, req, &res);
 
   if (!status.ok()) {
-    CLIENT_LOG(warning, stabilize) << "failed - should remove endpoint " << endpoint << "?";
+    logger->warn("[stabilize] failed - should remove endpoint {}?", endpoint);
     router->reset(*successor);
     return;
   }
 
   if (res.has_predecessor()) {
-    CLIENT_LOG(trace, stabilize) << "received stabilize response with predecessor "
-                                 << res.predecessor().uuid() << "@" << res.predecessor().endpoint();
+    logger->trace("received stabilize response with predecessor {}@{}",res.predecessor().uuid(), res.predecessor().endpoint());
     const RouterEntry &entry = res.predecessor();
 
     //--- validate
@@ -125,7 +124,7 @@ void Client::stabilize() {
       router->set_successor(0, pred, entry.endpoint());
     }
   } else {
-    CLIENT_LOG(trace, stabilize) << "received empty routing entry";
+    logger->trace("received empty routing entry");
   }
 
   notify();
@@ -141,7 +140,7 @@ void Client::notify() {
   NotifyRequest req;
   NotifyResponse res;
 
-  CLIENT_LOG(trace, notify) << "calling notify on address " << endpoint;
+  logger->trace("calling notify on address {}", endpoint);
 
   req.mutable_header()->CopyFrom(make_header(context));
   make_stub(endpoint)->notify(&clientContext, req, &res);
@@ -150,16 +149,15 @@ void Client::notify() {
 
 Status Client::successor(ClientContext *clientContext, const SuccessorRequest *req, SuccessorResponse *res) {
 
-  CLIENT_LOG(trace, successor) << "trying to find successor of " << req->id();
+  logger->trace("trying to find successor of {}", req->id());
   SuccessorRequest copy(*req);
   copy.mutable_header()->CopyFrom(make_header(context));
 
   uuid_t predecessor = router->closest_preceding_node(uuid_t(req->id()));
   endpoint_t endpoint = router->get(predecessor);
-  CLIENT_LOG(trace, successor) << "forwarding request to " << endpoint;
+  logger->trace("forwarding request to {}", endpoint);
 
   return make_stub(endpoint)->successor(clientContext, copy, res);
-
 }
 
 /** called by chord.service **/
@@ -187,11 +185,11 @@ void Client::check() {
   auto successor = router->successor();
 
   if (predecessor==nullptr) {
-    CLIENT_LOG(trace, check) << "no predecessor, skip.";
+    logger->trace("[check] no predecessor, skip.");
     return;
   }
   if (successor==nullptr) {
-    CLIENT_LOG(trace, check) << "no successor, skip.";
+    logger->trace("no successor, skip.");
     return;
   }
 
@@ -203,15 +201,15 @@ void Client::check() {
 
   auto endpoint = router->get(predecessor);
 
-  CLIENT_LOG(trace, check) << "checking predecessor " << *predecessor << "@" << endpoint;
+  logger->trace("checking predecessor {}@{}", *predecessor, endpoint);
   const grpc::Status status = make_stub(endpoint)->check(&clientContext, req, &res);
 
   if (!status.ok()) {
-    CLIENT_LOG(warning, check) << "predecessor failed.";
+    logger->warn("[check] predecessor failed.");
     router->reset_predecessor(0);
   }
   if (!res.has_header()) {
-    cerr << "CHECK RETURNED WITHOUT HEADER! SHOULD REMOVE " << endpoint << " ?";
+    logger->error("[check] returned without header, should remove endpoint {}?", endpoint);
   }
 }
 }

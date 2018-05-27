@@ -1,0 +1,18 @@
+include(ExternalProject)
+
+#
+# spdlog
+#
+ExternalProject_Add(
+  spdlog
+  GIT_REPOSITORY "https://github.com/gabime/spdlog.git"
+  GIT_TAG "v0.17.0"
+  # header-only
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
+  INSTALL_COMMAND ""
+  LOG_DOWNLOAD ON
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/externals/spdlog")
+
+set(spdlog_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/externals/spdlog/include")
+include_directories(${spdlog_INCLUDE_DIRS})

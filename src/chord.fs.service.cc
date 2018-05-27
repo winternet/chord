@@ -15,8 +15,6 @@
 #include "chord.client.h"
 #include "chord.fs.service.h"
 
-#define SERVICE_LOG(level, method) LOG(level) << "[fs.service][" << #method << "] "
-
 using grpc::ServerContext;
 using grpc::ClientContext;
 using grpc::ServerBuilder;
@@ -38,11 +36,13 @@ namespace chord {
 namespace fs {
 
 Service::Service(Context &context, chord::ChordFacade *chord)
-    : context{context}, chord{chord}, metadata{make_unique<MetadataManager>(context)} {
-  make_client = [this] {
-    return chord::fs::Client(this->context, this->chord);
-  };
-}
+    : context{context},
+      chord{chord},
+      metadata{make_unique<MetadataManager>(context)},
+      make_client {[this]{
+        return chord::fs::Client(this->context, this->chord);
+      }},
+      logger{spdlog::stdout_logger_mt("chord.fs.service")} {}
 
 Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
   (void)serverContext;
@@ -76,7 +76,7 @@ Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaR
         break;
     }
   } catch(const chord::exception& e) {
-    SERVICE_LOG(error, meta) << "failed in meta for uri " << uri << " reason: " << e.what();
+    logger->error("failed in meta for uri {}, reason: {}", uri, e.what());
   }
 
   return Status::OK;
@@ -99,12 +99,12 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     data /= uri.path().parent_path();
 
     if (!file::exists(data)) {
-      SERVICE_LOG(trace, put) << "creating directories for " << data;
+      logger->trace("creating directories for {}", data);
       file::create_directories(data);
     }
 
     data /= uri.path().filename();
-    SERVICE_LOG(trace, put) << "trying to put " << data;
+    logger->trace("trying to put {}", data);
 
     try {
       ofstream file;
@@ -117,8 +117,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
       } while (reader->Read(&req));
 
     } catch (const ios_base::failure &error) {
-      SERVICE_LOG(error, put)
-          << "failed to open file " << data << ", " << error.what();
+      logger->error("failed to open file {}, reason: {}", data, error.what());
       return Status::CANCELLED;
     }
   }
@@ -134,7 +133,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
       make_client().meta(sub_uri, Client::Action::ADD, meta);
     }
   } catch(const chord::exception &e) {
-    SERVICE_LOG(error, put) << "failed to add metadata: " << e.what();
+    logger->error("failed to add metadata: {}", e.what());
     file::remove(data);
     throw;
   }
@@ -191,12 +190,12 @@ Status Service::get(ServerContext *serverContext, const GetRequest *req, grpc::S
     return Status::CANCELLED;
   }
 
-  SERVICE_LOG(trace, put) << "trying to get " << data;
+  logger->trace("trying to get {}", data);
   file.exceptions(ifstream::failbit | ifstream::badbit);
   try {
     file.open(data, fstream::binary);
   } catch (const ios_base::failure &error) {
-    SERVICE_LOG(error, put) << "failed to open file " << data << ", " << error.what();
+    logger->error("failed to open file {}, reason: {}", data, error.what());
     return Status::CANCELLED;
   }
 

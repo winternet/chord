@@ -12,6 +12,10 @@ struct Router;
 struct Context;
 }  // namespace chord
 
+namespace spdlog {
+  class logger;
+}
+
 namespace chord {
 
 using StubFactory = std::function<std::unique_ptr<chord::Chord::StubInterface>(
@@ -23,6 +27,7 @@ class Client {
   Router *router;
 
   StubFactory make_stub;
+  std::shared_ptr<spdlog::logger> logger;
 
  public:
   Client(const Context &context, Router *router);

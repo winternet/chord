@@ -12,6 +12,10 @@ class Facade;
 }  // namespace fs
 }  // namespace chord
 
+namespace spdlog {
+  class logger;
+}
+
 namespace chord {
 namespace controller {
 class Service final : public chord::controller::Control::Service {
@@ -33,6 +37,8 @@ class Service final : public chord::controller::Control::Service {
   grpc::Status send_file(const path, const chord::uri);
 
   chord::fs::Facade *filesystem;
+
+  std::shared_ptr<spdlog::logger> logger;
 };
 }  // namespace controller
 }  // namespace chord

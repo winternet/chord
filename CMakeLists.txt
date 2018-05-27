@@ -36,6 +36,10 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_compile_options(-fsanitize=address)
 endif()
 
+#
+# external dependencies
+#
+include(CMakeLists-Externals.txt)
 
 #
 # custom modules

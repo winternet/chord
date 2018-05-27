@@ -19,11 +19,11 @@ TEST(RouterTest, initialize) {
   ASSERT_NOT_NULL(router.successor());
   EXPECT_EQ(*router.successor(), context.uuid());
 
-  for (int i = 1; i < Router::BITS; i++) {
+  for (size_t i = 1; i < Router::BITS; i++) {
     ASSERT_NULL(router.successors[i]);
   }
 
-  for (int i = 0; i < Router::BITS; i++) {
+  for (size_t i = 0; i < Router::BITS; i++) {
     ASSERT_NULL(router.predecessors[i]);
   }
 }

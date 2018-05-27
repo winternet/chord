@@ -11,8 +11,6 @@
 #include "chord.types.h"
 #include "chord.uuid.h"
 
-#define ROUTER_LOG(level) LOG(level) << "[router] "
-
 namespace chord {
 
 struct Router {
@@ -28,7 +26,7 @@ struct Router {
   explicit Router(const chord::Router&) = delete;
 
   explicit Router(chord::Context &context)
-      : context{context} {
+      : context{context}, logger{spdlog::stdout_logger_mt("chord.router")} {
     std::fill(std::begin(predecessors), std::end(predecessors), nullptr);
     std::fill(std::begin(successors), std::end(successors), nullptr);
     routes[context.uuid()] = context.bind_addr;
@@ -71,7 +69,7 @@ struct Router {
 
   void set_successor(const size_t index, const uuid_t &uuid, const endpoint_t &endpoint) {
     std::lock_guard<std::mutex> lock(mtx);
-    ROUTER_LOG(info) << "set_successor[" << index << "][" << uuid << "] = " << endpoint;
+    logger->info("set_successor[{}][{}] = {}", index, uuid, endpoint);
     routes[uuid] = endpoint;
     delete successors[index];
     successors[index] = new uuid_t{uuid};
@@ -79,7 +77,7 @@ struct Router {
 
   void set_predecessor(const size_t index, const uuid_t &uuid, const endpoint_t &endpoint) {
     std::lock_guard<std::mutex> lock(mtx);
-    ROUTER_LOG(info) << "set_predecessor[" << index << "][" << uuid << "] = " << endpoint;
+    logger->info("set_predecessor[{}][{}] = {}", index, uuid, endpoint);
     routes[uuid] = endpoint;
     delete predecessors[index];
     predecessors[index] = new uuid_t{uuid};
@@ -87,7 +85,7 @@ struct Router {
 
   void reset_predecessor(const size_t index) {
     std::lock_guard<std::mutex> lock(mtx);
-    ROUTER_LOG(info) << "reset_predecessor[" << index << "]";
+    logger->info("reset_predecessor[{}]", index);
     uuid_t *pred = predecessors[index];
 
     if(pred == nullptr) return;
@@ -99,7 +97,7 @@ struct Router {
 
   void reset_successor(const size_t index) {
     std::lock_guard<std::mutex> lock(mtx);
-    ROUTER_LOG(info) << "reset_successor[" << index << "]";
+    logger->info("reset_successor[{}]", index);
     uuid_t *succ = successors[index];
 
     if(succ == nullptr) return;
@@ -112,13 +110,13 @@ struct Router {
   void reset(const uuid_t uuid) {
     std::lock_guard<std::mutex> lock(mtx);
 
-    ROUTER_LOG(info) << "reset_successor " << uuid << "@...";
+    logger->info("reset_successor {}@...", uuid);
 
     // TODO refactor
     for (size_t i = 0; i < BITS; i++) {
       uuid_t* succ = successors[i];
       if (succ!=nullptr && *succ==uuid) {
-        ROUTER_LOG(info) << "succ=" << succ << ", uuid=" << &uuid << ", val= " << uuid;
+        //logger->info("succ={:p}, uuid={:p}, val={}", succ, uuid, uuid);
         delete succ;
         successors[i] = nullptr;
       }
@@ -142,6 +140,11 @@ struct Router {
       if (pred!=nullptr) return pred;
     }
     return &(context.uuid());
+  }
+
+  const uuid_t *predecessor() const {
+    //cppcheck-suppress CastIntegerToAddressAtReturn
+    return predecessors[0];
   }
 
   uuid_t *predecessor() {
@@ -176,11 +179,11 @@ struct Router {
     if (direct_predecessor != nullptr) return *direct_predecessor;
     if (max_predecessor != nullptr) return *max_predecessor;
 
-    ROUTER_LOG(info) << "no closest preceding node found, returning self " << context.uuid();
+    logger->info("no closest preceding node found, returning self {}", context.uuid());
     return context.uuid();
   }
 
-  friend std::ostream &operator<<(std::ostream &os, Router &router) {
+  friend std::ostream &operator<<(std::ostream &os, const Router &router) {
     for (size_t i = 0; i < 8; i++) {
       os << "\n::router [successor  ][" << i << "] "
          << (router.successors[i]==nullptr ? std::string("<unknown>") : std::string(*router.successors[i]));
@@ -192,5 +195,6 @@ struct Router {
 
  private:
   chord::Context &context;
+  std::shared_ptr<spdlog::logger> logger;
 };
 } //namespace chord

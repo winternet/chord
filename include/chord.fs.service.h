@@ -11,6 +11,9 @@
 namespace chord {
 struct Context;
 } // namespace chord
+namespace spdlog {
+  class logger;
+}
 
 namespace chord {
 namespace fs {
@@ -43,6 +46,8 @@ class Service final : public chord::fs::Filesystem::Service {
   ChordFacade *chord;
   std::unique_ptr<MetadataManager> metadata;
   ClientFactory make_client;
+
+  std::shared_ptr<spdlog::logger> logger;
 };
 
 } //namespace fs

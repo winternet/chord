@@ -9,6 +9,9 @@
 #include "chord.service.h"
 #include "chord.uuid.h"
 
+namespace spdlog {
+  class logger;
+}
 namespace chord {
 //--- forward declarations
 class AbstractScheduler;
@@ -71,6 +74,8 @@ class ChordFacade {
   //--- chord
   std::unique_ptr<chord::Client> client;
   std::unique_ptr<chord::Service> service;
+
+  std::shared_ptr<spdlog::logger> logger;
 
   void start_scheduler();
 };

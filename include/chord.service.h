@@ -15,6 +15,10 @@ struct Context;
 struct Router;
 }  // namespace chord
 
+namespace spdlog {
+  class logger;
+}
+
 namespace chord {
 using ClientFactory = std::function<chord::Client()>;
 
@@ -52,5 +56,6 @@ class Service final : public chord::Chord::Service, AbstractService {
   Context &context;
   Router *router;
   ClientFactory make_client;
+  std::shared_ptr<spdlog::logger> logger;
 };
 }  // namespace chord

@@ -17,6 +17,9 @@ struct Context;
 struct Router;
 }  // namespace chord
 
+namespace spdlog {
+  class logger;
+}
 namespace chord {
 namespace fs {
 
@@ -32,6 +35,7 @@ class Client {
   chord::ChordFacade* chord;
 
   StubFactory make_stub;
+  std::shared_ptr<spdlog::logger> logger;
 
 void add_metadata(chord::fs::MetaRequest& req, const chord::path& path);
 

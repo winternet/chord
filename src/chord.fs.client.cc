@@ -13,9 +13,6 @@
 #include "chord.peer.h"
 #include "chord.router.h"
 
-#define log(level) LOG(level) << "[client] "
-#define CLIENT_LOG(level, method) LOG(level) << "[client][" << #method << "] "
-
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
@@ -39,16 +36,24 @@ using namespace chord::file;
 namespace chord {
 namespace fs {
 
-Client::Client(Context &context, ChordFacade* chord)
-    : context{context}, chord{chord}, make_stub{
-  //--- default stub factory
-  [](const endpoint_t &endpoint) {
-    return chord::fs::Filesystem::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
+Client::Client(Context &context, ChordFacade *chord)
+    : context{context},
+      chord{chord},
+      make_stub{//--- default stub factory
+                [](const endpoint_t &endpoint) {
+                  return chord::fs::Filesystem::NewStub(grpc::CreateChannel(
+                      endpoint, grpc::InsecureChannelCredentials()));
+                }} {
+  if (logger = spdlog::get("chord.fs.client"); !logger) {
+    logger = spdlog::stdout_logger_mt("chord.fs.client");
   }
-}{}
+}
 
 Client::Client(Context &context, ChordFacade* chord, StubFactory make_stub)
-    : context{context}, chord{chord}, make_stub{make_stub} {
+    : context{context}, chord{chord}, make_stub{make_stub}  {
+  if (logger = spdlog::get("chord.fs.client"); !logger) {
+    logger = spdlog::stdout_logger_mt("chord.fs.client");
+  }
 }
 
 
@@ -56,7 +61,7 @@ Status Client::put(const chord::uri &uri, istream &istream) {
   const auto hash = chord::crypto::sha256(uri);
   const auto endpoint = chord->successor(hash).endpoint();
 
-  CLIENT_LOG(trace, put) << uri << " (" << hash << ")";
+  logger->trace("put {} ({})", uri, hash);
 
   //TODO make configurable
   constexpr size_t len = 512*1024; // 512k
@@ -112,7 +117,7 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action, set<Metad
   const auto hash = chord::crypto::sha256(meta_uri);
   const auto endpoint = chord->successor(hash).endpoint();
 
-  CLIENT_LOG(trace, meta) << meta_uri << " (" << hash << ")";
+  logger->trace("meta {} ({})", meta_uri, hash);
 
   ClientContext clientContext;
   MetaResponse res;
@@ -159,7 +164,7 @@ Status Client::del(const chord::uri &uri) {
   const auto hash = chord::crypto::sha256(uri);
   const auto endpoint = chord->successor(hash).endpoint();
 
-  CLIENT_LOG(trace, del) << uri << " (" << hash << ")";
+  logger->trace("del {} ({})", uri, hash);
 
   ClientContext clientContext;
   DelResponse res;
@@ -180,7 +185,7 @@ grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata) {
   const auto hash = chord::crypto::sha256(meta_uri);
   const auto endpoint = chord->successor(hash).endpoint();
 
-  CLIENT_LOG(trace, dir) << meta_uri << " (" << hash << ")";
+  logger->trace("dir {} ({})", meta_uri, hash);
 
   ClientContext clientContext;
   MetaResponse res;
@@ -204,7 +209,7 @@ Status Client::get(const chord::uri &uri, ostream &ostream) {
   const auto hash = chord::crypto::sha256(uri);
   const auto endpoint = chord->successor(hash).endpoint();
 
-  CLIENT_LOG(trace, get) << uri << " (" << hash << ")";
+  logger->trace("get {} ({})", uri, hash);
 
   ClientContext clientContext;
   GetResponse res;

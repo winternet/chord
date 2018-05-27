@@ -24,9 +24,10 @@ using std::vector;
 
 namespace po = boost::program_options;
 
-#define fatal cerr << "\nFATAL - "
-
 Context parse_program_options(int ac, char *av[]) {
+  auto logger = spdlog::get("chord.cc");
+  spdlog::set_level(spdlog::level::trace);
+
   po::options_description global("[program options]");
 
   Context context;
@@ -82,8 +83,8 @@ Context parse_program_options(int ac, char *av[]) {
   //--- validate
   if ((!has_config && (!vm.count("join") && !vm.count("bootstrap"))) ||
       (vm.count("join") && vm.count("bootstrap"))) {
-    fatal << "please specify either a join address or the bootstrap flag\n\n"
-          << global << endl;
+    logger->error("please specify either a join address or the bootstrap flag");
+    cerr << global;
     exit(2);
   }
 
@@ -91,31 +92,29 @@ Context parse_program_options(int ac, char *av[]) {
   if (vm.count("uuid")) {
     auto id = vm["uuid"].as<uuid_t>();
     context.set_uuid(id);
-    LOG(trace) << "[uuid] " << id;
+    logger->trace("[uuid] {}", id);
   }
 
   //--- join
   if (vm.count("join")) {
-    LOG(trace) << "[option-join] " << vm["join"].as<string>();
+    logger->trace("[option-join] {}", vm["join"].as<string>());
   }
 
   //--- bootstrap
   if (vm.count("bootstrap")) {
-    LOG(trace) << "[option-bootstrap] "
-               << "true";
+    logger->trace("[option-bootstrap] {}", "true");
     context.bootstrap = true;
   }
 
   //--- interactive
   if (vm.count("no-controller")) {
-    LOG(trace) << "[option-no-controller] "
-               << "true";
+    logger->trace("[option-no-controller] {}", "true");
     context.no_controller = true;
   }
 
   //--- client-id
   if (vm.count("uuid")) {
-    LOG(trace) << "[option-uuid] " << vm["uuid"].as<uuid_t>() << endl;
+    logger->trace("[option-uuid] {}", vm["uuid"].as<uuid_t>());
   }
   return context;
 }
@@ -125,6 +124,9 @@ Context parse_program_options(int ac, char *av[]) {
 //}
 
 int main(int argc, char *argv[]) {
+  //--- register console logger
+  auto logger = spdlog::stdout_color_mt("chord.cc");
+  logger->info("test");
   //--- parse program options to context
   //--- or issue client command
   auto context = parse_program_options(argc, argv);

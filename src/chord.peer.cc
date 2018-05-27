@@ -14,8 +14,6 @@
 
 #include "chord.controller.service.h"
 
-#define PEER_LOG(level) LOG(level) << "[peer] "
-
 using grpc::ServerBuilder;
 using namespace std;
 
@@ -34,7 +32,7 @@ void Peer::start_server() {
   builder.RegisterService(filesystem->grpc_service());
 
   unique_ptr<grpc::Server> server(builder.BuildAndStart());
-  PEER_LOG(debug) << "server listening on " << bind_addr;
+  logger->debug("server listening on {}", bind_addr);
   server->Wait();
 }
 
@@ -42,12 +40,13 @@ Peer::Peer(Context ctx)
     : context{ctx},
       chord{make_unique<chord::ChordFacade>(context)},
       filesystem{make_unique<chord::fs::Facade>(context, chord.get())},
-      controller{make_unique<controller::Service>(filesystem.get())}
+      controller{make_unique<controller::Service>(filesystem.get())},
+      logger{spdlog::stdout_color_mt("chord.peer")}
 {
 }
 
 void Peer::start() {
-  PEER_LOG(trace) << "peer with client-id " << context.uuid();
+  logger->trace("peer with client-id {}", context.uuid());
 
   chord->start();
 

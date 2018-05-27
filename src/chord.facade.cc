@@ -26,14 +26,16 @@ ChordFacade::ChordFacade(Context& ctx)
       scheduler{make_unique<Scheduler>()},
       router{make_unique<Router>(context)},
       client{make_unique<Client>(context, router.get())},
-      service{make_unique<Service>(context, router.get())} {}
+      service{make_unique<Service>(context, router.get())},
+      logger{spdlog::stdout_color_mt("chord.facade")}
+      {}
 
 ::grpc::Service* ChordFacade::grpc_service() {
   return service.get();
 }
 
 void ChordFacade::start() {
-  CHORD_FACADE_LOG(trace) << "peer with client-id " << context.uuid();
+  logger->trace("peer with client-id {}", context.uuid());
 
   if (context.bootstrap) {
     create();
@@ -48,13 +50,11 @@ void ChordFacade::start_scheduler() {
   //--- stabilize
   scheduler->schedule(chrono::milliseconds(context.stabilize_period_ms), [this] {
     stabilize();
-    //CHORD_FACADE_LOG(trace) << "[dump]" << *router;
   });
 
   //--- check predecessor
   scheduler->schedule(chrono::milliseconds(context.check_period_ms), [this] {
     check_predecessor();
-    //CHORD_FACADE_LOG(trace) << "[dump]" << *router;
   });
 
   //--- fix fingers
@@ -62,9 +62,9 @@ void ChordFacade::start_scheduler() {
     //TODO(christoph) use uuid::UUID_BITS_MAX
     next = (next%8) + 1;
     //next = 0;
-    CHORD_FACADE_LOG(trace) << "fix fingers with next index next: " << next;
+    logger->trace("fix fingers with next index next: {}", next);
     fix_fingers(next);
-    CHORD_FACADE_LOG(trace) << "[dump]" << *router;
+    logger->trace("[dump] {}", *router);
   });
 }
 
@@ -107,7 +107,7 @@ void ChordFacade::fix_fingers(size_t index) {
  * create new chord ring
  */
 void ChordFacade::create() {
-  CHORD_FACADE_LOG(trace) << "bootstrapping new chord ring.";
+  logger->trace("bootstrapping new chord ring.");
   router->reset();
 }
 
