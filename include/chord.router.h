@@ -11,13 +11,13 @@
 #include "chord.types.h"
 #include "chord.uuid.h"
 
-#define BITS 256
-
 #define ROUTER_LOG(level) LOG(level) << "[router] "
 
 namespace chord {
 
 struct Router {
+
+  static constexpr size_t BITS = 256;
 
   std::mutex mtx;
   std::map<uuid_t, endpoint_t> routes;
@@ -113,10 +113,9 @@ struct Router {
     std::lock_guard<std::mutex> lock(mtx);
 
     ROUTER_LOG(info) << "reset_successor " << uuid << "@...";
-    //routes.erase(uuid);
 
-    // TODO(muffin): refactor
-    for (int i = 0; i < BITS; i++) {
+    // TODO refactor
+    for (size_t i = 0; i < BITS; i++) {
       uuid_t* succ = successors[i];
       if (succ!=nullptr && *succ==uuid) {
         ROUTER_LOG(info) << "succ=" << succ << ", uuid=" << &uuid << ", val= " << uuid;
@@ -124,7 +123,7 @@ struct Router {
         successors[i] = nullptr;
       }
     }
-    for (int i = 0; i < BITS; i++) {
+    for (size_t i = 0; i < BITS; i++) {
       uuid_t* pred = predecessors[i];
       if (pred!=nullptr && *pred==uuid) {
         delete pred;
@@ -154,7 +153,7 @@ struct Router {
     const uuid_t *direct_predecessor = nullptr;
     const uuid_t *max_predecessor = &context.uuid();
     {
-      int m = BITS;
+      auto m = BITS;
       do {
         m--;
         auto candidate = successors[m];
@@ -182,7 +181,7 @@ struct Router {
   }
 
   friend std::ostream &operator<<(std::ostream &os, Router &router) {
-    for (int i = 0; i < 8; i++) {
+    for (size_t i = 0; i < 8; i++) {
       os << "\n::router [successor  ][" << i << "] "
          << (router.successors[i]==nullptr ? std::string("<unknown>") : std::string(*router.successors[i]));
     }
