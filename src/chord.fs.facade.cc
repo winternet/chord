@@ -38,14 +38,20 @@ void Facade::get(const chord::uri &source, const chord::path& target) {
   std::set<Metadata> metadata;
   fs_client->meta(source, Client::Action::DIR, metadata);
   for(const auto& meta:metadata) {
-    auto new_source = source.path().canonical() / path{meta.name};
+    // subtract and append, e.g.
+    // 1.1) source.path() == /file.txt
+    // 2.1) meta.name() == /file.txt
+    // => /file.txt
+    // 1.2) source.path() == /folder/
+    // 1.2) meta.name == file.txt
+    // => /folder/file.txt
+    auto new_source = (source.path().canonical() - path{meta.name}) / path{meta.name};
     if(meta.file_type == type::regular) {
       // issue get_file
       get_file({source.scheme(), new_source}, target / path{meta.name});
     } else if(meta.file_type == type::directory && meta.name != ".") {
       // issue recursive metadata call
       get({source.scheme(), new_source}, target / path{meta.name});
-    } else {
     }
   }
 }

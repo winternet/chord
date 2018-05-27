@@ -106,8 +106,8 @@ Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
       filesystem->put(source, target);
     }
   } catch (const chord::exception& exception) {
-    CONTROL_LOG(error, dir)
-        << "failed to issue dir request: " << exception.what();
+    CONTROL_LOG(error, put)
+        << "failed to issue put request: " << exception.what();
     return Status::CANCELLED;
   }
   return Status::OK;
@@ -120,17 +120,21 @@ Status Service::handle_get(const vector<string>& token, ControlResponse* res) {
     return Status::CANCELLED;
   }
 
-  //get chord:/// .
-  uri source  = {token.at(1)};
-  path target = {token.at(2)};
-
   try {
-    filesystem->get(source, target);
+    const auto target_it = prev(token.end());
+    for (auto it = next(token.begin()); it != target_it; ++it) {
+      const uri& source = {*it};
+      const path& target = {*target_it};
+      // TODO if taget is no directory rename the file
+      //      and put it under that name
+      filesystem->get(source, target);
+    }
   } catch (const chord::exception& exception) {
-    CONTROL_LOG(error, dir)
-        << "failed to issue dir request: " << exception.what();
+    CONTROL_LOG(error, get)
+        << "failed to issue get request: " << exception.what();
     return Status::CANCELLED;
   }
+
   return Status::OK;
 }
 
