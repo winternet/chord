@@ -116,6 +116,7 @@ target_link_libraries(${PROJECT_NAME}
 # add external project dependencies
 #
 add_dependencies(${PROJECT_NAME} spdlog)
+add_dependencies(${PROJECT_NAME}++ spdlog)
 
 ### TESTS ###
 ###
