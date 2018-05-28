@@ -44,7 +44,7 @@ Client::Client(Context &context, ChordFacade *chord)
                   return chord::fs::Filesystem::NewStub(grpc::CreateChannel(
                       endpoint, grpc::InsecureChannelCredentials()));
                 }} {
-  auto logger = spdlog::get("chord.fs.client");
+  logger = spdlog::get("chord.fs.client");
   if (!logger) {
     logger = spdlog::stdout_logger_mt("chord.fs.client");
   }
@@ -52,7 +52,7 @@ Client::Client(Context &context, ChordFacade *chord)
 
 Client::Client(Context &context, ChordFacade* chord, StubFactory make_stub)
     : context{context}, chord{chord}, make_stub{make_stub}  {
-  auto logger = spdlog::get("chord.fs.client");
+  logger = spdlog::get("chord.fs.client");
   if (!logger) {
     logger = spdlog::stdout_logger_mt("chord.fs.client");
   }
