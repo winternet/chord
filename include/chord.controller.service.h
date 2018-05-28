@@ -19,6 +19,8 @@ namespace spdlog {
 namespace chord {
 namespace controller {
 class Service final : public chord::controller::Control::Service {
+  static constexpr auto logger_name = "chord.controller.service";
+
  public:
   explicit Service(chord::fs::Facade *filesystem);
 

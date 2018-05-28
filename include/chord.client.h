@@ -22,6 +22,8 @@ using StubFactory = std::function<std::unique_ptr<chord::Chord::StubInterface>(
     const endpoint_t &)>;
 
 class Client {
+  static constexpr auto logger_name = "chord.client";
+
  private:
   const Context &context;
   Router *router;

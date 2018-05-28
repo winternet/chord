@@ -28,9 +28,8 @@ using namespace std;
 
 namespace chord {
 namespace controller {
-Service::Service(chord::fs::Facade* filesystem) : filesystem{filesystem} {
-  logger = spdlog::stdout_color_mt("chord.controller.service");
-}
+Service::Service(chord::fs::Facade* filesystem)
+    : filesystem{filesystem}, logger{log::get_or_create(logger_name)} {}
 
 Status Service::control(ServerContext* serverContext __attribute__((unused)),
                         const ControlRequest* req, ControlResponse* res) {

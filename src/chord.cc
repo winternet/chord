@@ -25,7 +25,7 @@ using std::vector;
 namespace po = boost::program_options;
 
 Context parse_program_options(int ac, char *av[]) {
-  auto logger = spdlog::get("chord.cc");
+  auto logger = chord::log::get_or_create("chord.cc");
   spdlog::set_level(spdlog::level::trace);
 
   po::options_description global("[program options]");
@@ -124,9 +124,6 @@ Context parse_program_options(int ac, char *av[]) {
 //}
 
 int main(int argc, char *argv[]) {
-  //--- register console logger
-  auto logger = spdlog::stdout_color_mt("chord.cc");
-  logger->info("test");
   //--- parse program options to context
   //--- or issue client command
   auto context = parse_program_options(argc, argv);

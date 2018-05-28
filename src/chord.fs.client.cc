@@ -43,21 +43,14 @@ Client::Client(Context &context, ChordFacade *chord)
                 [](const endpoint_t &endpoint) {
                   return chord::fs::Filesystem::NewStub(grpc::CreateChannel(
                       endpoint, grpc::InsecureChannelCredentials()));
-                }} {
-  logger = spdlog::get("chord.fs.client");
-  if (!logger) {
-    logger = spdlog::stdout_logger_mt("chord.fs.client");
-  }
-}
+                }},
+      logger{log::get_or_create(logger_name)} {}
 
-Client::Client(Context &context, ChordFacade* chord, StubFactory make_stub)
-    : context{context}, chord{chord}, make_stub{make_stub}  {
-  logger = spdlog::get("chord.fs.client");
-  if (!logger) {
-    logger = spdlog::stdout_logger_mt("chord.fs.client");
-  }
-}
-
+Client::Client(Context &context, ChordFacade *chord, StubFactory make_stub)
+    : context{context},
+      chord{chord},
+      make_stub{make_stub},
+      logger{log::get_or_create(logger_name)} {}
 
 Status Client::put(const chord::uri &uri, istream &istream) {
   const auto hash = chord::crypto::sha256(uri);

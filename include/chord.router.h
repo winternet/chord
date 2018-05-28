@@ -16,6 +16,7 @@ namespace chord {
 struct Router {
 
   static constexpr size_t BITS = 256;
+  static constexpr auto logger_name = "chord.router";
 
   std::mutex mtx;
   std::map<uuid_t, endpoint_t> routes;
@@ -26,7 +27,7 @@ struct Router {
   explicit Router(const chord::Router&) = delete;
 
   explicit Router(chord::Context &context)
-      : context{context}, logger{spdlog::stdout_logger_mt("chord.router")} {
+      : context{context}, logger{log::get_or_create(logger_name)} {
     std::fill(std::begin(predecessors), std::end(predecessors), nullptr);
     std::fill(std::begin(successors), std::end(successors), nullptr);
     routes[context.uuid()] = context.bind_addr;
@@ -40,6 +41,7 @@ struct Router {
   void cleanup() {
     for (auto pred:predecessors) delete pred;
     for (auto succ:successors) delete succ;
+    spdlog::drop(logger_name);
   }
 
   void reset() {

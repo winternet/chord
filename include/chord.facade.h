@@ -23,6 +23,8 @@ struct Context;
 struct Router;
 
 class ChordFacade {
+  static constexpr auto logger_name = "chord.facade";
+
  public:
   ChordFacade(const ChordFacade &) = delete;             // disable copying
   ChordFacade &operator=(const ChordFacade &) = delete;  // disable assignment

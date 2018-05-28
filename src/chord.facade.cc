@@ -12,8 +12,6 @@
 #include "chord.scheduler.h"
 #include "chord.router.h"
 
-#define CHORD_FACADE_LOG(level) LOG(level) << "[chord-facade] "
-
 using grpc::ServerBuilder;
 using namespace std;
 
@@ -27,7 +25,7 @@ ChordFacade::ChordFacade(Context& ctx)
       router{make_unique<Router>(context)},
       client{make_unique<Client>(context, router.get())},
       service{make_unique<Service>(context, router.get())},
-      logger{spdlog::stdout_color_mt("chord.facade")}
+      logger{log::get_or_create(logger_name)}
       {}
 
 ::grpc::Service* ChordFacade::grpc_service() {

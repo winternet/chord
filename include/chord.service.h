@@ -23,6 +23,8 @@ namespace chord {
 using ClientFactory = std::function<chord::Client()>;
 
 class Service final : public chord::Chord::Service, AbstractService {
+  static constexpr auto logger_name = "chord.service";
+
  public:
   Service(Context &context, Router *router);
 

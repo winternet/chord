@@ -41,7 +41,7 @@ Peer::Peer(Context ctx)
       chord{make_unique<chord::ChordFacade>(context)},
       filesystem{make_unique<chord::fs::Facade>(context, chord.get())},
       controller{make_unique<controller::Service>(filesystem.get())},
-      logger{spdlog::stdout_color_mt("chord.peer")}
+      logger{log::get_or_create(logger_name)}
 {
 }
 

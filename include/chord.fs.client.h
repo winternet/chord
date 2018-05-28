@@ -31,6 +31,8 @@ class Client {
   enum class Action { ADD, DEL, DIR };
 
  private:
+  static constexpr auto logger_name = "chord.fs.client";
+
   Context &context;
   chord::ChordFacade* chord;
 

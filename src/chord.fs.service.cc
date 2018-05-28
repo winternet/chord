@@ -42,7 +42,7 @@ Service::Service(Context &context, chord::ChordFacade *chord)
       make_client {[this]{
         return chord::fs::Client(this->context, this->chord);
       }},
-      logger{spdlog::stdout_logger_mt("chord.fs.service")} {}
+      logger{log::get_or_create(logger_name)} {}
 
 Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
   (void)serverContext;

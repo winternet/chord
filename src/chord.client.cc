@@ -47,10 +47,10 @@ Client::Client(const Context &context, Router *router)
                   return Chord::NewStub(grpc::CreateChannel(
                       endpoint, grpc::InsecureChannelCredentials()));
                 }},
-      logger{spdlog::stdout_color_mt("chord.client")} {}
+      logger{log::get_or_create(logger_name)} {}
 
 Client::Client(const Context &context, Router *router, StubFactory make_stub)
-    : context{context}, router{router}, make_stub{make_stub}, logger{spdlog::stdout_color_mt("chord.client")} {}
+    : context{context}, router{router}, make_stub{make_stub}, logger{log::get_or_create(logger_name)} {}
 
 void Client::join(const endpoint_t &addr) {
   logger->debug("joining {}", addr);

@@ -27,6 +27,8 @@ namespace spdlog {
 namespace chord {
 
 class Peer {
+  static constexpr auto logger_name = "chord.peer";
+
  private:
   chord::Context context;
 

@@ -44,10 +44,10 @@ Service::Service(Context &context, Router *router)
       router{router},
       make_client{
           [this] { return chord::Client(this->context, this->router); }},
-      logger{spdlog::stdout_logger_mt("chord.service")} {}
+      logger{log::get_or_create(logger_name)} {}
 
 Service::Service(Context &context, Router *router, ClientFactory make_client)
-    : context{context}, router{router}, make_client{make_client}, logger{spdlog::stdout_logger_mt("chord.service")} {}
+    : context{context}, router{router}, make_client{make_client}, logger{log::get_or_create(logger_name)} {}
 
 Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
   (void)serverContext;
