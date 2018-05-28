@@ -98,6 +98,7 @@ target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} $
 target_link_libraries(${PROJECT_NAME}++ --coverage)
 install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 
+
 #
 # compile executable
 # 
@@ -111,6 +112,10 @@ target_link_libraries(${PROJECT_NAME}
   debug asan
   general ${PROJECT_NAME}++)
 
+#
+# add external project dependencies
+#
+add_dependencies(${PROJECT_NAME} spdlog)
 
 ### TESTS ###
 ###
