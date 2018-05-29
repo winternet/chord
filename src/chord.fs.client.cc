@@ -174,7 +174,6 @@ Status Client::del(const chord::uri &uri) {
 }
 
 grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata) {
-  // grpc::Status Client::dir(const chord::uri &uri, ostream &stream) {
   //--- find responsible node
   const auto meta_uri = uri::builder{uri.scheme(), uri.path().canonical()}.build();
   const auto hash = chord::crypto::sha256(meta_uri);
