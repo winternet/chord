@@ -8,9 +8,6 @@
 #include "chord.exception.h"
 #include "chord.controller.client.h"
 
-#define log(level) LOG(level) << "[client] "
-#define CLIENT_LOG(level, method) LOG(level) << "[client][" << #method << "] "
-
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;

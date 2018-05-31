@@ -73,10 +73,6 @@ struct MetadataBuilder {
   }
 
   static std::set<Metadata> from(const chord::fs::MetaResponse& res) {
-    if (res.metadata_size() <= 0)
-      throw__exception(
-          "Failed to convert MetaRequest since metadata is missing");
-
     std::set<Metadata> ret;
     for (const auto& m : res.metadata()) {
       ret.insert(MetadataBuilder::from(m));

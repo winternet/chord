@@ -17,19 +17,27 @@ Facade::Facade(Context& context, ChordFacade* chord)
   return fs_service.get();
 }
 
+bool Facade::is_directory(const chord::uri& target) {
+  set<Metadata> metadata;
+  auto status = fs_client->dir(target, metadata);
+  if (!status.ok()) throw__grpc_exception("failed to dir " + to_string(target), status);
+  // check if exists?
+  return !metadata.empty();
+}
+
 void Facade::put(const chord::path &source, const chord::uri &target) {
   if (chord::file::is_directory(source)) {
     for(const auto &child : source.recursive_contents()) {
       // dont put empty folders for now
       if(file::is_directory(child)) continue;
 
-      const auto relative_path = child - source;
-      const auto exact_target_path = target.path() / relative_path;
-      put_file(child, {target.scheme(), exact_target_path.canonical()});
+      const auto relative_path = child - source.parent_path();
+      const auto new_target = target.path().canonical() / relative_path;
+      put_file(child, {target.scheme(), new_target});
     }
   } else {
-    const auto exact_target_path = target.path() / source.filename();
-    put_file(source, {target.scheme(), exact_target_path.canonical()});
+    const auto new_target = is_directory(target) ? target.path().canonical() / source.filename() : target.path().canonical();
+    put_file(source, {target.scheme(), new_target});
   }
 }
 

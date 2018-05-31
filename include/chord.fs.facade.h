@@ -8,15 +8,16 @@ namespace chord {
 namespace fs {
 
 class Facade {
-private:
+ private:
   std::unique_ptr<Client> fs_client;
   std::unique_ptr<Service> fs_service;
 
-private:
- void put_file(const chord::path& source, const chord::uri& target);
- void get_file(const chord::uri& source, const chord::path& target);
+ private:
+  void put_file(const chord::path& source, const chord::uri& target);
+  void get_file(const chord::uri& source, const chord::path& target);
+  bool is_directory(const chord::uri& target);
 
-public:
+ public:
   Facade(Context& context, ChordFacade* chord);
 
   ::grpc::Service* grpc_service();

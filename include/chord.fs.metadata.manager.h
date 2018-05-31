@@ -9,8 +9,6 @@
 #include "chord.fs.metadata.h"
 #include "chord.uri.h"
 
-#define MANAGER_LOG(level, method) LOG(level) << "[meta.mgr][" << #method << "] "
-
 namespace chord {
 namespace fs {
 
@@ -51,6 +49,9 @@ class MetadataManager {
 
     check_status(leveldb::DB::Open(options, context.meta_directory, &db_tmp));
     db.reset(db_tmp);
+
+    // make root
+    add({"chord:///"}, {{".", "", "", perms::all, type::directory}});
   }
 
  public:
