@@ -64,15 +64,6 @@ jobs:
             apt-get -y install openssl libssl-dev
 
       - run:
-          name: Install gtest
-          command: |
-            apt-get -y install libgtest-dev
-            cd /usr/src/googletest
-            mkdir build && cd build
-            cmake ..
-            make -j4 && make install
-
-      - run:
           name: Install boost
           command: |
             cd $DEPS

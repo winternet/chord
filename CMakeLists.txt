@@ -1,7 +1,7 @@
 #set(CMAKE_CXX_COMPILER      "/usr/bin/clang++")
 
 project(chord)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
@@ -40,6 +40,7 @@ endif()
 # external dependencies
 #
 include(CMakeLists-Externals.txt)
+
 
 #
 # custom modules
@@ -118,19 +119,20 @@ target_link_libraries(${PROJECT_NAME}
 add_dependencies(${PROJECT_NAME} spdlog)
 add_dependencies(${PROJECT_NAME}++ spdlog)
 
-### TESTS ###
-###
-### trivial example using gtest and gmock
-###
+#
+# tests
+#
 file(GLOB TEST_SOURCES test/*.cc)
 string(REPLACE ";" "\n--   " TEST_SOURCES_OUT "${TEST_SOURCES}")
 message(STATUS "Found tests:\n--   ${TEST_SOURCES_OUT}")
 #
 enable_testing()
+set(TEST_TARGET "${PROJECT_NAME}_test")
+
 include_directories(include)
-add_executable(chord_test ${TEST_SOURCES})
-target_link_libraries(chord_test 
+add_executable(${TEST_TARGET} ${TEST_SOURCES})
+target_link_libraries(${TEST_TARGET} 
   debug asan
   general gtest gmock gmock_main ${PROJECT_NAME}++)
-target_link_libraries(chord_test --coverage)
-add_test(NAME chord_test COMMAND chord_test)
+target_link_libraries(${TEST_TARGET} --coverage)
+add_test(NAME ${TEST_TARGET} COMMAND chord_test)
