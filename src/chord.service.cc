@@ -66,7 +66,7 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
   /**
    * initialize the ring
    */
-  if (router->successors[0]==nullptr) {
+  if (router->successor(0)==nullptr) {
     logger->info("first node joining, setting the node as successor");
     router->set_successor(0, src, endpoint);
   }
@@ -200,7 +200,7 @@ Status Service::check(ServerContext *serverContext, const CheckRequest *req, Che
 
 void Service::fix_fingers(size_t index) {
   uuid_t fix = context.uuid();
-  if (router->successors[0]!=nullptr) {
+  if (router->successor(0)!=nullptr) {
     fix += uuid_t(pow(2., (double) index - 1));
     logger->trace("fix_fingers router successor is not null, increasing uuid");
   }

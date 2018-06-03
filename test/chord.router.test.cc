@@ -20,12 +20,14 @@ TEST(RouterTest, initialize) {
   EXPECT_EQ(*router.successor(), context.uuid());
 
   for (size_t i = 1; i < Router::BITS; i++) {
-    ASSERT_NULL(router.successors[i]);
+    ASSERT_NULL(router.successor(i));
   }
 
   for (size_t i = 0; i < Router::BITS; i++) {
-    ASSERT_NULL(router.predecessors[i]);
+    ASSERT_NULL(router.predecessor(i));
   }
+
+  ASSERT_EQ(1, router.size());
 }
 
 TEST(RouterTest, dump) {
@@ -46,6 +48,7 @@ TEST(RouterTest, closest_preceding_node) {
   uuid_t predecessor = router.closest_preceding_node(200);
 
   ASSERT_EQ(predecessor, 100);
+  ASSERT_EQ(101, router.size());
 }
 
 TEST(RouterTest, closest_preceding_node_less_1) {
@@ -59,6 +62,7 @@ TEST(RouterTest, closest_preceding_node_less_1) {
   uuid_t predecessor = router.closest_preceding_node(1);
 
   ASSERT_EQ(predecessor, 100);
+  ASSERT_EQ(2, router.size());
 }
 
 TEST(RouterTest, closest_preceding_node_mod) {
@@ -74,6 +78,7 @@ TEST(RouterTest, closest_preceding_node_mod) {
   uuid_t predecessor = router.closest_preceding_node(50);
 
   ASSERT_EQ(predecessor, 49);
+  ASSERT_EQ(102, router.size());
 }
 
 TEST(RouterTest, closest_preceding_node_mod_2) {
@@ -88,6 +93,7 @@ TEST(RouterTest, closest_preceding_node_mod_2) {
   uuid_t predecessor = router.closest_preceding_node(5);
 
   ASSERT_EQ(predecessor, 0);
+  ASSERT_EQ(2, router.size());
 }
 
 /**
@@ -110,6 +116,8 @@ TEST(RouterTest, set_uuid_resets_router) {
   successor = router.successor();
   ASSERT_EQ(*successor, 0);
   ASSERT_EQ(router.get(uuid_t(0)), context.bind_addr);
+  // first uuid + second uuid
+  ASSERT_EQ(2, router.size());
 }
 
 TEST(RouterTest, closest_preceding_node_mod_3) {
@@ -124,6 +132,7 @@ TEST(RouterTest, closest_preceding_node_mod_3) {
   uuid_t predecessor = router.closest_preceding_node(1);
 
   ASSERT_EQ(predecessor, 8);
+  ASSERT_EQ(2, router.size());
 }
 
 TEST(RouterTest, closest_preceding_node_3) {
@@ -140,4 +149,5 @@ TEST(RouterTest, closest_preceding_node_3) {
   uuid_t predecessor = router.closest_preceding_node(1);
 
   ASSERT_EQ(predecessor, 10);
+  ASSERT_EQ(3, router.size());
 }

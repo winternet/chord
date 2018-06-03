@@ -18,11 +18,6 @@ struct Router {
   static constexpr size_t BITS = 256;
   static constexpr auto logger_name = "chord.router";
 
-  std::mutex mtx;
-  std::map<uuid_t, endpoint_t> routes;
-
-  std::array<uuid_t*, BITS> predecessors;
-  std::array<uuid_t*, BITS> successors;
 
   explicit Router(const chord::Router&) = delete;
 
@@ -36,18 +31,23 @@ struct Router {
 
   virtual ~Router() {
     cleanup();
+    spdlog::drop(logger_name);
   }
 
   void cleanup() {
     for (auto pred:predecessors) delete pred;
     for (auto succ:successors) delete succ;
-    spdlog::drop(logger_name);
   }
 
   void reset() {
     cleanup();
 
     routes[context.uuid()] = context.bind_addr;
+  }
+
+  size_t size() const {
+    std::lock_guard<std::mutex> lock(mtx);
+    return routes.size();
   }
 
   endpoint_t get_successor(const size_t &index) {
@@ -67,6 +67,14 @@ struct Router {
 
   endpoint_t get(const uuid_t &uuid) {
     return routes[uuid];
+  }
+
+  uuid_t* successor(size_t idx) {
+    return successors[idx];
+  }
+
+  uuid_t* predecessor(size_t idx) {
+    return predecessors[idx];
   }
 
   void set_successor(const size_t index, const uuid_t &uuid, const endpoint_t &endpoint) {
@@ -198,5 +206,11 @@ struct Router {
  private:
   chord::Context &context;
   std::shared_ptr<spdlog::logger> logger;
+
+  mutable std::mutex mtx;
+  std::map<uuid_t, endpoint_t> routes;
+
+  std::array<uuid_t*, BITS> predecessors;
+  std::array<uuid_t*, BITS> successors;
 };
 } //namespace chord
