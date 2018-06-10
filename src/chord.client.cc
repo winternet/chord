@@ -206,7 +206,8 @@ void Client::check() {
 
   if (!status.ok()) {
     logger->warn("[check] predecessor failed.");
-    router->reset_predecessor(0);
+    //router->reset_predecessor(0);
+    router->reset(*predecessor);
   }
   if (!res.has_header()) {
     logger->error("[check] returned without header, should remove endpoint {}?", endpoint);

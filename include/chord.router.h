@@ -93,51 +93,92 @@ struct Router {
     predecessors[index] = new uuid_t{uuid};
   }
 
-  void reset_predecessor(const size_t index) {
+  //void reset_predecessor(const size_t index) {
+  //  std::lock_guard<std::mutex> lock(mtx);
+  //  logger->info("reset_predecessor[{}]", index);
+  //  uuid_t *pred = predecessors[index];
+
+  //  if(pred == nullptr) return;
+
+  //  routes.erase(*pred);
+  //  delete pred;
+  //  predecessors[index] = nullptr;
+  //}
+
+  //void reset_successor(const size_t index) {
+  //  std::lock_guard<std::mutex> lock(mtx);
+  //  logger->info("reset_successor[{}]", index);
+  //  uuid_t *succ = successors[index];
+
+  //  if(succ == nullptr) return;
+
+  //  routes.erase(*succ);
+  //  delete succ;
+  //  successors[index] = nullptr;
+  //}
+
+  void reset(const uuid_t& uuid) {
     std::lock_guard<std::mutex> lock(mtx);
-    logger->info("reset_predecessor[{}]", index);
-    uuid_t *pred = predecessors[index];
 
-    if(pred == nullptr) return;
+    logger->info("reset {}@...", uuid);
 
-    routes.erase(*pred);
-    delete pred;
-    predecessors[index] = nullptr;
-  }
+    //replacement to fill holes in successors
+    uuid_t* replacement = nullptr;
+    for(int i=successors.size()-1; i>=0; --i) {
+      auto* succ = successors[i];
+      if(succ != nullptr) {
+        if(*succ == uuid) break;
+        replacement = succ;
+      }
+    }
 
-  void reset_successor(const size_t index) {
-    std::lock_guard<std::mutex> lock(mtx);
-    logger->info("reset_successor[{}]", index);
-    uuid_t *succ = successors[index];
+    if(replacement == nullptr) {
+      logger->debug("could not find a replacement for {}", uuid);
+    } else {
+      logger->debug("replacement for {} is {}", uuid, *replacement);
+    }
+    for(size_t i=0; i < successors.size(); i++) {
+      auto* succ = successors[i];
+      if(succ == nullptr) continue;
+      if(*succ == uuid) successors[i] = replacement != nullptr ? new uuid_t{*replacement} : nullptr;
+    }
 
-    if(succ == nullptr) return;
 
-    routes.erase(*succ);
-    delete succ;
-    successors[index] = nullptr;
-  }
+    //TODO replacement to fill holes in predecessors
+    replacement = nullptr;
+    if(predecessors[0] != nullptr && *predecessors[0] == uuid) {
+      predecessors[0] = nullptr;
+    }
+    //for(int i=predecessors.size()-1; i>=0; --i) {
+    //  auto* pred = predecessors[i];
+    //  if(pred != nullptr) {
+    //    if(*pred == uuid) break;
+    //    replacement = pred;
+    //  }
+    //}
 
-  void reset(const uuid_t uuid) {
-    std::lock_guard<std::mutex> lock(mtx);
-
-    logger->info("reset_successor {}@...", uuid);
+    //for(size_t i=0; i < predecessors.size(); i++) {
+    //  auto* pred = predecessors[i];
+    //  if(pred == nullptr) continue;
+    //  if(*pred == uuid) pred = replacement;
+    //}
 
     // TODO refactor
-    for (size_t i = 0; i < BITS; i++) {
-      uuid_t* succ = successors[i];
-      if (succ!=nullptr && *succ==uuid) {
-        //logger->info("succ={:p}, uuid={:p}, val={}", succ, uuid, uuid);
-        delete succ;
-        successors[i] = nullptr;
-      }
-    }
-    for (size_t i = 0; i < BITS; i++) {
-      uuid_t* pred = predecessors[i];
-      if (pred!=nullptr && *pred==uuid) {
-        delete pred;
-        predecessors[i] = nullptr;
-      }
-    }
+    //for (size_t i = 0; i < BITS; i++) {
+    //  uuid_t* succ = successors[i];
+    //  if (succ!=nullptr && *succ==uuid) {
+    //    //logger->info("succ={:p}, uuid={:p}, val={}", succ, uuid, uuid);
+    //    delete succ;
+    //    successors[i] = nullptr;
+    //  }
+    //}
+    //for (size_t i = 0; i < BITS; i++) {
+    //  uuid_t* pred = predecessors[i];
+    //  if (pred!=nullptr && *pred==uuid) {
+    //    delete pred;
+    //    predecessors[i] = nullptr;
+    //  }
+    //}
   }
 
   const uuid_t *successor() {
