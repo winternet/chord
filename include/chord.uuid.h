@@ -123,7 +123,7 @@ class uuid {
   }
 
   friend std::ostream &operator<<(std::ostream &os, const uuid &hash) {
-    os << hash.hex();
+    os << hash.string();
     return os;
   }
 };

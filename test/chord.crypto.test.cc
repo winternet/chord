@@ -20,9 +20,10 @@ TEST(CryptoTest, sha256) {
 
   stringstream actual;
   actual << std::hex << str;
-  auto expected = "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"s;
+  auto expected_hex = "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"s;
+  auto expected_num = "88504129774694501264414584963656750197241212201858038081545232447814102992114"s;
 
-  EXPECT_EQ(actual.str(), expected);
+  EXPECT_EQ(actual.str(), expected_num);
 }
 
 TEST(CryptoTest, initialize) {

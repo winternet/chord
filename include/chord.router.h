@@ -69,11 +69,11 @@ struct Router {
     return routes[uuid];
   }
 
-  uuid_t* successor(size_t idx) {
+  const uuid_t* successor(size_t idx) const {
     return successors[idx];
   }
 
-  uuid_t* predecessor(size_t idx) {
+  const uuid_t* predecessor(size_t idx) const {
     return predecessors[idx];
   }
 
@@ -194,9 +194,18 @@ struct Router {
   }
 
   friend std::ostream &operator<<(std::ostream &os, const Router &router) {
-    for (size_t i = 0; i < 8; i++) {
-      os << "\n::router [successor  ][" << i << "] "
-         << (router.successors[i]==nullptr ? std::string("<unknown>") : std::string(*router.successors[i]));
+    size_t beg = 0;
+    for (size_t i=1; i < BITS; i++) {
+      auto beg_a = (router.successors[i-1]==nullptr ? std::string{"<unknown>"} : std::string{*router.successors[i-1]});
+      auto beg_o = (router.successors[i]==nullptr ? std::string{"<unknown>"} : std::string{*router.successors[i]});
+      if(beg_a != beg_o) {
+        os << "\n::router[successor][" << beg << ".." << i-1 << "] " << beg_a;
+        beg=i;
+      }
+    }
+    if (beg != BITS) {
+      auto beg_o = (router.successors[beg]==nullptr ? std::string{"<unknown>"} : std::string{*router.successors[beg]});
+      os << "\n::router[successor][" << beg << ".." << BITS-1 << "] " << beg_o;
     }
     os << "\n::router [predecessor] "
        << (router.predecessor()!=nullptr ? std::string(*router.predecessor()) : std::string("<unknown>"));

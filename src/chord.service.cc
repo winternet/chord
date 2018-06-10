@@ -62,6 +62,7 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
   auto entry = successor(src);
 
   res->mutable_successor()->CopyFrom(entry);
+  res->mutable_header()->mutable_src()->CopyFrom(entry);
 
   /**
    * initialize the ring
@@ -69,6 +70,7 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
   if (router->successor(0)==nullptr) {
     logger->info("first node joining, setting the node as successor");
     router->set_successor(0, src, endpoint);
+    router->set_predecessor(0, src, endpoint);
   }
 
   return Status::OK;
@@ -91,19 +93,19 @@ RouterEntry Service::successor(const uuid_t &uuid) {
 
 Status Service::successor(ServerContext *serverContext, const SuccessorRequest *req, SuccessorResponse *res) {
   (void)serverContext;
-  logger->trace("successor from {}@{} successor of? {}",
+  logger->trace("[successor] from {}@{} successor of? {}",
                 req->header().src().uuid(), req->header().src().endpoint(),
                 req->id());
 
   //--- destination of the request
-  uuid_t id(req->id());
-  uuid_t self(context.uuid());
-  uuid_t successor(*router->successor());
+  uuid_t id{req->id()};
+  uuid_t self{context.uuid()};
+  uuid_t successor{*router->successor()};
 
-  logger->trace("[successor] id {}, self {}, successor{}", id, self, successor);
+  logger->trace("[successor] id {}, self {}, successor {}", id.string(), self.string(), successor.string());
 
   if (id > self and (id <= successor or (successor < self and id > successor))) {
-    logger->trace("successor of {} is {}", id, successor);
+    logger->trace("[successor] of {} is {}", id.string(), successor.string());
     //--- router entry
     RouterEntry entry;
     entry.set_uuid(successor);
@@ -111,7 +113,7 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
 
     res->mutable_successor()->CopyFrom(entry);
   } else {
-    logger->trace("[successor] id not within self ({}) <--> successor({}) trying to forward.", context.uuid() 
+    logger->trace("[successor] id not within self ({}) <--> successor({}) trying to forward.", context.uuid().string() 
                                   , *router->successor());
     uuid_t next = router->closest_preceding_node(id);
     logger->trace("[successor] closest preceding node {}", next);

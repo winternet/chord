@@ -71,6 +71,7 @@ void ChordFacade::start_scheduler() {
  */
 void ChordFacade::join() {
   client->join(context.join_addr);
+  client->stabilize();
 }
 
 /**

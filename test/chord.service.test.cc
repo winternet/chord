@@ -44,16 +44,35 @@ Header make_header(const uuid_t &id, const endpoint_t &addr) {
 }
 
 TEST(ServiceTest, join) {
+  spdlog::set_level(spdlog::level::trace);
+  JoinRequest req;
+  JoinResponse res;
+  ServerContext serverContext;
   Context context = Context();
+  context.set_uuid(50);
   Router router(context);
   chord::Service service(context, &router);
 
-  //TODO assertions and request
+  // assert we're the only one
+  ASSERT_EQ(router.size(), 1);
 
-  //ServerContext serverContext;
-  //JoinRequest req;
-  //JoinResponse res;
-  //service.join(&serverContext, &req, &res);
+  // join from 1
+  req.mutable_header()->CopyFrom(make_header({1},"1.1.1.1:1111"));
+  service.join(&serverContext, &req, &res);
+
+  //--- router
+  ASSERT_EQ(router.size(), 2);
+  auto successor = *router.successor(0);
+  auto predecessor = *router.predecessor(0);
+  ASSERT_EQ(successor, uuid_t{1});
+  ASSERT_EQ(predecessor, uuid_t{1});
+  ASSERT_EQ(router.get(successor), "1.1.1.1:1111");
+
+  //--- response
+  ASSERT_EQ(res.header().src().uuid(), "50");
+  ASSERT_EQ(res.header().src().endpoint(), "0.0.0.0:50050");
+  ASSERT_EQ(res.successor().uuid(), "50");
+  ASSERT_EQ(res.successor().endpoint(), "0.0.0.0:50050");
 }
 
 /**
@@ -306,3 +325,4 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   ASSERT_EQ(res.successor().endpoint(), "0.0.0.0:50055");
 
 }
+
