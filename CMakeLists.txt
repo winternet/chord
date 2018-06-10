@@ -27,7 +27,6 @@ add_compile_options(
   -Wextra
   -Wpedantic
   -std=c++14
-  -DBOOST_LOG_DYN_LINK
 )
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
@@ -57,7 +56,7 @@ include(clang-tidy)
 #
 # find packages
 #
-find_package(Boost REQUIRED COMPONENTS log thread system program_options serialization)
+find_package(Boost REQUIRED COMPONENTS thread system program_options serialization)
 find_package(Protobuf REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
