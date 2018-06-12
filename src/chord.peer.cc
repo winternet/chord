@@ -22,7 +22,7 @@ using chord::common::RouterEntry;
 namespace chord {
 
 void Peer::start_server() {
-  endpoint_t bind_addr = context.bind_addr;
+  const auto bind_addr = context.bind_addr;
   ServerBuilder builder;
   builder.AddListeningPort(bind_addr, grpc::InsecureServerCredentials());
   builder.RegisterService(chord->grpc_service());

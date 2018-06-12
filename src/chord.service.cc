@@ -51,15 +51,15 @@ Service::Service(Context &context, Router *router, ClientFactory make_client)
 
 Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
   (void)serverContext;
-  auto id = req->header().src().uuid();
-  auto endpoint = req->header().src().endpoint();
+  const auto id = req->header().src().uuid();
+  const auto endpoint = req->header().src().endpoint();
 
   logger->trace("join request from {}@{}", id, endpoint);
   /**
    * find successor
    */
-  auto src = uuid_t{id};
-  auto entry = successor(src);
+  const auto src = uuid_t{id};
+  const auto entry = successor(src);
 
   res->mutable_successor()->CopyFrom(entry);
   res->mutable_header()->mutable_src()->CopyFrom(entry);
@@ -67,7 +67,7 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
   /**
    * initialize the ring
    */
-  if (router->successor(0)==nullptr) {
+  if (!router->successor(0)) {
     logger->info("first node joining, setting the node as successor");
     router->set_successor(0, src, endpoint);
     router->set_predecessor(0, src, endpoint);
@@ -84,7 +84,7 @@ RouterEntry Service::successor(const uuid_t &uuid) {
   req.mutable_header()->CopyFrom(make_header(context));
   req.set_id(uuid);
 
-  Status status = successor(&serverContext, &req, &res);
+  const auto status = successor(&serverContext, &req, &res);
 
   if (!status.ok()) throw__grpc_exception("failed to query successor", status);
 
@@ -102,7 +102,7 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
   uuid_t self{context.uuid()};
 
   // only node on the ring
-  if(router->successor() == nullptr) {
+  if(!router->successor()) {
     logger->trace("[successor] im the only node in the ring, returning myself {}", self);
 
     RouterEntry entry;
@@ -124,10 +124,8 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
 
     res->mutable_successor()->CopyFrom(entry);
   } else {
-    uuid_t next = router->closest_preceding_node(id);
-    logger->trace("[successor] closest preceding node {}", next);
     logger->trace("[successor] trying to spawn client to forward request.");
-    Status status = make_client().successor(req, res);
+    const auto status = make_client().successor(req, res);
     if (!status.ok()) {
       logger->warn("[successor] failed to query successor from client!");
     } else {
@@ -145,8 +143,8 @@ Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *
   logger->trace("stabilize from {}@{}", req->header().src().uuid(),
                 req->header().src().endpoint());
 
-  auto predecessor = router->predecessor();
-  if (predecessor != nullptr) {
+  const auto predecessor = router->predecessor();
+  if (!predecessor) {
     logger->debug("returning predecessor {}", *predecessor);
     endpoint_t endpoint = router->get(predecessor);
 
@@ -166,7 +164,7 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
   logger->trace("notify from {}@{}", req->header().src().uuid(),
                 req->header().src().endpoint());
 
-  auto predecessor = router->predecessor();
+  const auto predecessor = router->predecessor();
 
   //--- validate
   if (!req->has_header() && !req->header().has_src()) {
@@ -174,15 +172,15 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
     return Status::CANCELLED;
   }
 
-  uuid_t self{context.uuid()};
-  uuid_t uuid{req->header().src().uuid()};
-  endpoint_t endpoint = req->header().src().endpoint();
+  const uuid_t self{context.uuid()};
+  const uuid_t uuid{req->header().src().uuid()};
+  const auto endpoint = req->header().src().endpoint();
 
-  if (predecessor==nullptr
+  if (!predecessor
       || uuid.between(*predecessor, self)) {
     router->set_predecessor(0, uuid, endpoint);
   } else {
-    if (predecessor==nullptr)
+    if (!predecessor)
       logger->info("predecessor is null");
     else {
       logger->info("n' = {}\npredecessor = {}\nself={}", uuid, *predecessor, self);
@@ -202,16 +200,16 @@ Status Service::check(ServerContext *serverContext, const CheckRequest *req, Che
 }
 
 void Service::fix_fingers(size_t index) {
-  uuid_t fix = context.uuid();
-  if (router->successor(0)!=nullptr) {
-    fix += uuid_t(pow(2., (double) index - 1));
+  auto fix = context.uuid();
+  if (!router->successor(0)) {
+    fix += uuid_t{pow(2., (double) index - 1)};
     logger->trace("fix_fingers router successor is not null, increasing uuid");
   }
 
   logger->trace("fixing finger for {}.", fix);
 
   try {
-    auto entry = successor(fix);
+    const auto entry = successor(fix);
     logger->trace("fixing finger for {}. received successor {}@{}", fix,
                   entry.uuid(), entry.endpoint());
     //if( uuid_t(router_entry.uuid()) == context.uuid() ) return;

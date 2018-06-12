@@ -1,11 +1,11 @@
 #pragma once
 
 #include <cctype>
-#include <experimental/optional>
 #include <map>
 #include <regex>
 #include <string>
 
+#include "chord.optional.h"
 #include "chord.exception.h"
 #include "chord.path.h"
 
@@ -17,7 +17,7 @@ class uri {
     std::map<std::string, std::string> _query;
     std::string _scheme, _fragment, _user, _password, _host;
     chord::path _path;
-    std::experimental::optional<int> _port;
+    optional<int> _port;
 
    public:
     builder() = default;

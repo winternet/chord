@@ -74,7 +74,7 @@ Status Service::handle_del(const vector<string>& token, ControlResponse* res) {
     return Status::CANCELLED;
   }
 
-  auto directory = token.at(1);
+  const auto directory = token.at(1);
 
   try {
     filesystem->del(uri::from(directory));
@@ -139,7 +139,7 @@ Status Service::handle_dir(const vector<string>& token, ControlResponse* res) {
     return Status::CANCELLED;
   }
 
-  auto directory = token.at(1);
+  const auto directory = token.at(1);
 
   try {
     stringstream sstream;

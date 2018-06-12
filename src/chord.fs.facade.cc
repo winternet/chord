@@ -19,7 +19,7 @@ Facade::Facade(Context& context, ChordFacade* chord)
 
 bool Facade::is_directory(const chord::uri& target) {
   set<Metadata> metadata;
-  auto status = fs_client->dir(target, metadata);
+  const auto status = fs_client->dir(target, metadata);
   if (!status.ok()) throw__grpc_exception("failed to dir " + to_string(target), status);
   // check if exists?
   return !metadata.empty();
@@ -53,11 +53,11 @@ void Facade::get(const chord::uri &source, const chord::path& target) {
     // 1.2) source.path() == /folder/
     // 1.2) meta.name == file.txt
     // => /folder/file.txt
-    auto new_source = (source.path().canonical() - path{meta.name}) / path{meta.name};
+    const auto new_source = (source.path().canonical() - path{meta.name}) / path{meta.name};
 
     if(meta.file_type == type::regular) {
       // issue get_file
-      auto new_target = file::exists(target) ? target / path{meta.name} : target;
+      const auto new_target = file::exists(target) ? target / path{meta.name} : target;
       get_file({source.scheme(), new_source}, new_target);
     } else if(meta.file_type == type::directory && meta.name != ".") {
       // issue recursive metadata call
@@ -68,13 +68,13 @@ void Facade::get(const chord::uri &source, const chord::path& target) {
 
 void Facade::dir(const chord::uri &uri, iostream &iostream) {
   std::set<Metadata> metadata;
-  auto status = fs_client->dir(uri, metadata);
+  const auto status = fs_client->dir(uri, metadata);
   if(!status.ok()) throw__grpc_exception("failed to dir " + to_string(uri), status);
   iostream << metadata;
 }
 
 void Facade::del(const chord::uri &uri) {
-  auto status = fs_client->del(uri);
+  const auto status = fs_client->del(uri);
   if(!status.ok()) throw__grpc_exception("failed to del file " + to_string(uri), status);
 
   //status = fs_client->meta(uri, Client::Action::DEL);
@@ -88,7 +88,7 @@ void Facade::put_file(const path& source, const chord::uri& target) {
     file.exceptions(ifstream::failbit | ifstream::badbit);
     file.open(source, std::fstream::binary);
 
-    auto status = fs_client->put(target, file);
+    const auto status = fs_client->put(target, file);
     if (!status.ok()) throw__grpc_exception("failed to put " + to_string(target), status);
   } catch (const std::ios_base::failure& exception) {
     throw__exception("failed to issue put_file " + std::string{exception.what()});
@@ -105,7 +105,7 @@ void Facade::get_file(const chord::uri& source, const chord::path& target) {
     file.exceptions(ofstream::failbit | ofstream::badbit);
     file.open(target, std::fstream::binary);
 
-    auto status = fs_client->get(source, file);
+    const auto status = fs_client->get(source, file);
     if(!status.ok()) throw__grpc_exception(std::string{"failed to get "} + to_string(source), status);
   } catch (const std::ios_base::failure& exception) {
     throw__exception("failed to issue get_file " + std::string{exception.what()});

@@ -47,7 +47,7 @@ Service::Service(Context &context, chord::ChordFacade *chord)
 Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
   (void)serverContext;
 
-  auto uri = uri::from(req->uri());
+  const auto uri = uri::from(req->uri());
 
   try {
     switch (req->action()) {
@@ -70,7 +70,6 @@ Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaR
           data->set_type(value_of(m.file_type));
           data->set_permissions(value_of(m.permissions));
         }
-
         //----
 
         break;
@@ -151,7 +150,7 @@ Status Service::del(grpc::ServerContext *serverContext, const chord::fs::DelRequ
     return Status::CANCELLED;
   }
 
-  auto uri = chord::uri::from(req->uri());
+  const auto uri = chord::uri::from(req->uri());
 
   data /= uri.path();
 
@@ -166,7 +165,7 @@ Status Service::del(grpc::ServerContext *serverContext, const chord::fs::DelRequ
   // local
   metadata->del(uri);
   // remote
-  auto status = make_client().meta(uri, Client::Action::DEL);
+  const auto status = make_client().meta(uri, Client::Action::DEL);
   if (!status.ok()) {
     //TODO handle error
   }
@@ -183,7 +182,7 @@ Status Service::get(ServerContext *serverContext, const GetRequest *req, grpc::S
     return Status::CANCELLED;
   }
 
-  auto uri = chord::uri::from(req->uri());
+  const auto uri = chord::uri::from(req->uri());
 
   data /= uri.path();
   if (!file::is_regular_file(data)) {

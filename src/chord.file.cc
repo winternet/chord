@@ -76,7 +76,7 @@ std::experimental::optional<std::string> file::attr(const std::string &path, con
 /// xattr set
 bool file::attr(const std::string &path, const std::string &name, const std::string &value) {
   using namespace std::string_literals;
-  size_t err = ::setxattr(path.c_str(), name.c_str(), value.data(), value.size(), 0);
+  const size_t err = ::setxattr(path.c_str(), name.c_str(), value.data(), value.size(), 0);
   if (err==static_cast<size_t>(-1)) throw__exception("failed to set xattr"s + strerror(errno));
 
   return true;
@@ -84,7 +84,7 @@ bool file::attr(const std::string &path, const std::string &name, const std::str
 
 bool file::attr_remove(const std::string &path, const std::string &name) {
   using namespace std::string_literals;
-  size_t err = ::removexattr(path.c_str(), name.c_str());
+  const size_t err = ::removexattr(path.c_str(), name.c_str());
   if (err==static_cast<size_t>(-1)) return false;
 
   return true;

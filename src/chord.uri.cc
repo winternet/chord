@@ -187,7 +187,7 @@ string uri::encode(const string &str) {
 }
 
 uri uri::from(const string &str) {
-  auto reg = uri_regex();
+  const auto reg = uri_regex();
   smatch match;
   if (!regex_match(str, reg)) {
     throw__exception("failed to parse uri \'" + str + "\'");
@@ -196,12 +196,12 @@ uri uri::from(const string &str) {
 
   auto uri_builder = uri::builder{};
 
-  auto _scheme = match.str(2);
-  auto _authority = match.str(4);
+  const auto _scheme = match.str(2);
+  const auto _authority = match.str(4);
   {
     smatch auth_match;
-    auto auth_reg = regex{"^(.*):(.*)@([^:]*)?[:]?([0-9]*)?$"};
-    auto has_authority = regex_match(_authority, auth_reg);
+    const auto auth_reg = regex{"^(.*):(.*)@([^:]*)?[:]?([0-9]*)?$"};
+    const auto has_authority = regex_match(_authority, auth_reg);
     if (has_authority) {
       regex_search(_authority, auth_match, auth_reg);
       uri_builder.user(auth_match.str(1));
@@ -214,9 +214,9 @@ uri uri::from(const string &str) {
     }
   }
 
-  auto _path = match.str(5);
+  const auto _path = match.str(5);
 
-  auto _query = match.str(6);
+  const auto _query = match.str(6);
   {
     smatch query_matches;
     auto query_reg = regex{"([^?&]*)=([^?&]*)"};
@@ -231,9 +231,7 @@ uri uri::from(const string &str) {
   auto _fragment = match.str(8);
 
   uri_builder.scheme(_scheme);
-
   uri_builder.path(_path);
-
   uri_builder.fragment(_fragment);
   return uri_builder.build();
 }

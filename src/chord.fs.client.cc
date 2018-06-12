@@ -118,7 +118,7 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action, set<Metad
   MetaResponse res;
   MetaRequest req;
 
-  auto local_path = context.data_directory / path;
+  const auto local_path = context.data_directory / path;
 
   req.set_id(hash);
   req.set_uri(meta_uri);
@@ -145,7 +145,7 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action, set<Metad
       return dir(uri, metadata);
   }
 
-  auto status = make_stub(endpoint)->meta(&clientContext, req, &res);
+  const auto status = make_stub(endpoint)->meta(&clientContext, req, &res);
 
   return status;
 }
@@ -168,7 +168,7 @@ Status Client::del(const chord::uri &uri) {
   req.set_id(hash);
   req.set_uri(uri);
 
-  auto status = make_stub(endpoint)->del(&clientContext, req, &res);
+  const auto status = make_stub(endpoint)->del(&clientContext, req, &res);
 
   return status;
 }
@@ -185,15 +185,15 @@ grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata) {
   MetaResponse res;
   MetaRequest req;
 
-  auto path = uri.path().canonical();
+  const auto path = uri.path().canonical();
 
   req.set_id(hash);
   req.set_uri(meta_uri);
   req.set_action(DIR);
 
-  auto status = make_stub(endpoint)->meta(&clientContext, req, &res);
+  const auto status = make_stub(endpoint)->meta(&clientContext, req, &res);
 
-  auto meta_res = MetadataBuilder::from(res);
+  const auto meta_res = MetadataBuilder::from(res);
   metadata.insert(meta_res.begin(), meta_res.end());
 
   return status;
@@ -213,7 +213,7 @@ Status Client::get(const chord::uri &uri, ostream &ostream) {
   req.set_uri(uri);
 
   // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
-  auto stub = Filesystem::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
+  const auto stub = Filesystem::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
   unique_ptr<ClientReader<GetResponse> > reader(stub->get(&clientContext, req));
 
   while (reader->Read(&res)) {

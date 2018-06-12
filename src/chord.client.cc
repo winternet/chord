@@ -61,15 +61,15 @@ void Client::join(const endpoint_t &addr) {
   req.mutable_header()->CopyFrom(make_header(context));
 
   JoinResponse res;
-  Status status = make_stub(addr)->join(&clientContext, req, &res);
+  const auto status = make_stub(addr)->join(&clientContext, req, &res);
 
   if (!status.ok() || !res.has_successor()) {
     throw__exception("Failed to join " + addr);
   }
 
-  auto entry = res.successor();
-  auto id = entry.uuid();
-  auto endpoint = entry.endpoint();
+  const auto entry = res.successor();
+  const auto id = entry.uuid();
+  const auto endpoint = entry.endpoint();
 
   logger->trace("successful, received successor {}@{}", id, endpoint);
   router->set_successor(0, uuid_t{id}, endpoint);
@@ -82,7 +82,7 @@ void Client::stabilize() {
 
   req.mutable_header()->CopyFrom(make_header(context));
 
-  auto successor = router->successor();
+  const auto successor = router->successor();
 
   //--- return if join failed or uuid == successor (create)
   if (successor==nullptr || *successor == context.uuid()) {
@@ -90,10 +90,10 @@ void Client::stabilize() {
     return;
   }
 
-  endpoint_t endpoint = router->get(successor);
+  const auto endpoint = router->get(successor);
 
   logger->trace("[stabilize] calling stabilize on successor {}", endpoint);
-  Status status = make_stub(endpoint)->stabilize(&clientContext, req, &res);
+  const auto status = make_stub(endpoint)->stabilize(&clientContext, req, &res);
 
   if (!status.ok()) {
     logger->warn("[stabilize] failed - removing endpoint {}@{}?", *successor, endpoint);
@@ -105,9 +105,9 @@ void Client::stabilize() {
     logger->trace("received stabilize response with predecessor {}@{}", res.predecessor().uuid(), res.predecessor().endpoint());
     const RouterEntry &entry = res.predecessor();
 
-    uuid_t self(context.uuid());
-    uuid_t pred(entry.uuid());
-    uuid_t succ(*router->successor());
+    const uuid_t self(context.uuid());
+    const uuid_t pred(entry.uuid());
+    const uuid_t succ(*router->successor());
     if(pred.between(self, succ)) {
       router->set_successor(0, pred, entry.endpoint());
     }
@@ -121,8 +121,8 @@ void Client::stabilize() {
 void Client::notify() {
 
   // get successor
-  auto successor = router->successor();
-  endpoint_t endpoint = router->get(successor);
+  const auto successor = router->successor();
+  const auto endpoint = router->get(successor);
 
   ClientContext clientContext;
   NotifyRequest req;
@@ -141,9 +141,9 @@ Status Client::successor(ClientContext *clientContext, const SuccessorRequest *r
   SuccessorRequest copy(*req);
   copy.mutable_header()->CopyFrom(make_header(context));
 
-  uuid_t predecessor = router->closest_preceding_node(uuid_t(req->id()));
-  endpoint_t endpoint = router->get(predecessor);
-  logger->trace("forwarding request to {}", endpoint);
+  const auto predecessor = router->closest_preceding_node(uuid_t(req->id()));
+  const auto endpoint = router->get(predecessor);
+  logger->trace("forwarding request to {}@{}", predecessor.string(), endpoint);
 
   return make_stub(endpoint)->successor(clientContext, copy, res);
 }
@@ -161,7 +161,7 @@ RouterEntry Client::successor(const uuid_t &uuid) {
   req.set_id(uuid);
   SuccessorResponse res;
 
-  auto status = successor(&clientContext, &req, &res);
+  const auto status = successor(&clientContext, &req, &res);
 
   if (!status.ok()) throw__grpc_exception("failed to query succesor", status);
 
@@ -169,8 +169,8 @@ RouterEntry Client::successor(const uuid_t &uuid) {
 }
 
 void Client::check() {
-  auto predecessor = router->predecessor();
-  auto successor = router->successor();
+  const auto predecessor = router->predecessor();
+  const auto successor = router->successor();
 
   if (predecessor == nullptr) {
     logger->trace("[check] no predecessor, skip.");
@@ -187,10 +187,10 @@ void Client::check() {
 
   req.mutable_header()->CopyFrom(make_header(context));
 
-  auto endpoint = router->get(predecessor);
+  const auto endpoint = router->get(predecessor);
 
   logger->trace("checking predecessor {}@{}", *predecessor, endpoint);
-  const grpc::Status status = make_stub(endpoint)->check(&clientContext, req, &res);
+  const auto status = make_stub(endpoint)->check(&clientContext, req, &res);
 
   if (!status.ok()) {
     logger->warn("[check] predecessor failed.");
