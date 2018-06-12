@@ -93,30 +93,6 @@ struct Router {
     predecessors[index] = new uuid_t{uuid};
   }
 
-  //void reset_predecessor(const size_t index) {
-  //  std::lock_guard<std::mutex> lock(mtx);
-  //  logger->info("reset_predecessor[{}]", index);
-  //  uuid_t *pred = predecessors[index];
-
-  //  if(pred == nullptr) return;
-
-  //  routes.erase(*pred);
-  //  delete pred;
-  //  predecessors[index] = nullptr;
-  //}
-
-  //void reset_successor(const size_t index) {
-  //  std::lock_guard<std::mutex> lock(mtx);
-  //  logger->info("reset_successor[{}]", index);
-  //  uuid_t *succ = successors[index];
-
-  //  if(succ == nullptr) return;
-
-  //  routes.erase(*succ);
-  //  delete succ;
-  //  successors[index] = nullptr;
-  //}
-
   void reset(const uuid_t& uuid) {
     std::lock_guard<std::mutex> lock(mtx);
 
@@ -140,9 +116,15 @@ struct Router {
     for(size_t i=0; i < successors.size(); i++) {
       auto* succ = successors[i];
       if(succ == nullptr) continue;
-      if(*succ == uuid) successors[i] = replacement != nullptr ? new uuid_t{*replacement} : nullptr;
+      if(*succ == uuid) {
+        if(replacement == nullptr) {
+          successors[i] = nullptr;
+        } else {
+          successors[i] = new uuid_t{*replacement};
+        }
+        //successors[i] = replacement != nullptr ? new uuid_t{*replacement} : nullptr;
+      }
     }
-
 
     //TODO replacement to fill holes in predecessors
     replacement = nullptr;
@@ -204,33 +186,15 @@ struct Router {
   }
 
   uuid_t closest_preceding_node(const uuid_t &uuid) {
-    const uuid_t *direct_predecessor = nullptr;
-    const uuid_t *max_predecessor = &context.uuid();
-    {
-      auto m = BITS;
-      do {
-        m--;
-        auto candidate = successors[m];
-
-        if (candidate == nullptr) continue;
-
-        // max predecessor
-        if (*candidate > *max_predecessor) {
-          max_predecessor = candidate;
-        }
-
-        // try to find predecessor
-        if (*candidate < uuid) {
-          direct_predecessor = candidate;
-          break;
-        }
-      } while (m > 0);
+    for(auto it=std::crbegin(successors); it != crend(successors); ++it) {
+      const auto* succ = *it;
+      if(succ != nullptr && succ->between(context.uuid(), uuid)) {
+        logger->info("closest preceding node for {} found is {}", uuid, *succ);
+        return *succ;
+      }
     }
 
-    if (direct_predecessor != nullptr) return *direct_predecessor;
-    if (max_predecessor != nullptr) return *max_predecessor;
-
-    logger->info("no closest preceding node found, returning self {}", context.uuid());
+    logger->info("no closest preceding node for {} found, returning self {}", uuid, context.uuid());
     return context.uuid();
   }
 

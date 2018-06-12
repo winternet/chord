@@ -2,6 +2,7 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 #include <chrono>
+#include <limits>
 #include <random>
 #include <sstream>
 #include <string>
@@ -9,7 +10,9 @@
 namespace chord {
 class uuid {
  private:
-  using value_t = boost::multiprecision::cpp_int;
+  using value_t = boost::multiprecision::uint256_t;
+
+  static constexpr int UUID_BITS_MAX = 256;
 
   value_t val;
 
@@ -31,7 +34,6 @@ class uuid {
 
   inline value_t &value() { return val; }
 
-  static const int UUID_BITS_MAX = 256;
 
   /**
    * generate random 256-bit number
@@ -95,6 +97,31 @@ class uuid {
   inline uuid &operator/=(const uuid &other) {
     val /= other.val;
     return *this;
+  }
+
+  /**
+   * check if the uuid is in the interval between the two given uuids on the ring.
+   *
+   * Neither of the boundaries is included in the interval. If both uuuíds
+   * match the interval is assumed to span the whole uuid ring.
+   */
+  inline bool between(const uuid& from, const uuid& to) const {
+    if(from == to) {
+      return (*this != from);
+    }
+
+    // interval does not cross zero
+    if(from < to) {
+      return (from < *this && *this < to);
+    }
+
+    const value_t max_value = std::numeric_limits<value_t>::max();
+    const value_t min_value = std::numeric_limits<value_t>::min();
+
+    // first interval (from, max]
+    // second interval [min, to)
+    return (from != max_value && from < *this && *this <= max_value)
+      || (to != min_value && *this < to && *this >= min_value);
   }
 
   inline bool operator==(const uuid &other) const { return val == other.val; }

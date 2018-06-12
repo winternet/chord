@@ -85,11 +85,8 @@ void Client::stabilize() {
   auto successor = router->successor();
 
   //--- return if join failed or uuid == successor (create)
-  if (successor==nullptr) {
+  if (successor==nullptr || *successor == context.uuid()) {
     logger->trace("[stabilize] no successor found");
-    return;
-  } else if ((*successor)==context.uuid()) {
-    logger->trace("[stabilize] successor is me, still bootstrapping");
     return;
   }
 
@@ -99,28 +96,19 @@ void Client::stabilize() {
   Status status = make_stub(endpoint)->stabilize(&clientContext, req, &res);
 
   if (!status.ok()) {
-    logger->warn("[stabilize] failed - should remove endpoint {}?", endpoint);
+    logger->warn("[stabilize] failed - removing endpoint {}@{}?", *successor, endpoint);
     router->reset(*successor);
     return;
   }
 
   if (res.has_predecessor()) {
-    logger->trace("received stabilize response with predecessor {}@{}",res.predecessor().uuid(), res.predecessor().endpoint());
+    logger->trace("received stabilize response with predecessor {}@{}", res.predecessor().uuid(), res.predecessor().endpoint());
     const RouterEntry &entry = res.predecessor();
-
-    //--- validate
-    //if( !entry.has_uuid() and !entry.has_entrypoint() ) {
-    //  CLIENT_LOG(warn) << "received empty routing entry";
-    //  return;
-    //}
 
     uuid_t self(context.uuid());
     uuid_t pred(entry.uuid());
     uuid_t succ(*router->successor());
-
-    if ((pred > self and pred < succ) or
-        (pred > self and succ < pred)) {
-      //if(   (pred > self and succ < pred)) {
+    if(pred.between(self, succ)) {
       router->set_successor(0, pred, entry.endpoint());
     }
   } else {
@@ -140,7 +128,7 @@ void Client::notify() {
   NotifyRequest req;
   NotifyResponse res;
 
-  logger->trace("calling notify on address {}", endpoint);
+  logger->trace("calling notify on address {}@{}", *successor, endpoint);
 
   req.mutable_header()->CopyFrom(make_header(context));
   make_stub(endpoint)->notify(&clientContext, req, &res);
@@ -184,11 +172,11 @@ void Client::check() {
   auto predecessor = router->predecessor();
   auto successor = router->successor();
 
-  if (predecessor==nullptr) {
+  if (predecessor == nullptr) {
     logger->trace("[check] no predecessor, skip.");
     return;
   }
-  if (successor==nullptr) {
+  if (successor == nullptr) {
     logger->trace("no successor, skip.");
     return;
   }
@@ -206,11 +194,9 @@ void Client::check() {
 
   if (!status.ok()) {
     logger->warn("[check] predecessor failed.");
-    //router->reset_predecessor(0);
     router->reset(*predecessor);
-  }
-  if (!res.has_header()) {
-    logger->error("[check] returned without header, should remove endpoint {}?", endpoint);
+  } else if(!res.has_header()) {
+    logger->error("[check] returned without header, should remove endpoint {}@{}?", *predecessor, endpoint);
   }
 }
 }

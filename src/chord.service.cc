@@ -100,12 +100,23 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
   //--- destination of the request
   uuid_t id{req->id()};
   uuid_t self{context.uuid()};
+
+  // only node on the ring
+  if(router->successor() == nullptr) {
+    logger->trace("[successor] im the only node in the ring, returning myself {}", self);
+
+    RouterEntry entry;
+    entry.set_uuid(self);
+    entry.set_endpoint(router->get(self));
+
+    res->mutable_successor()->CopyFrom(entry);
+    return Status::OK;
+  }
+
   uuid_t successor{*router->successor()};
+  if(id == self || id.between(self, successor)) {
+    logger->trace("[successor] the requested id {} lies between self {} and my successor {}, returning successor", id.string(), self.string(), successor.string());
 
-  logger->trace("[successor] id {}, self {}, successor {}", id.string(), self.string(), successor.string());
-
-  if (id > self and (id <= successor or (successor < self and id > successor))) {
-    logger->trace("[successor] of {} is {}", id.string(), successor.string());
     //--- router entry
     RouterEntry entry;
     entry.set_uuid(successor);
@@ -113,26 +124,17 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
 
     res->mutable_successor()->CopyFrom(entry);
   } else {
-    logger->trace("[successor] id not within self ({}) <--> successor({}) trying to forward.", context.uuid().string() 
-                                  , *router->successor());
     uuid_t next = router->closest_preceding_node(id);
     logger->trace("[successor] closest preceding node {}", next);
-    if (next==self) {
-      RouterEntry entry;
-      entry.set_uuid(self);
-      entry.set_endpoint(router->get(self));
-
-      res->mutable_successor()->CopyFrom(entry);
+    logger->trace("[successor] trying to spawn client to forward request.");
+    Status status = make_client().successor(req, res);
+    if (!status.ok()) {
+      logger->warn("[successor] failed to query successor from client!");
     } else {
-      logger->trace("[successor] trying to spawn client to forward request.");
-      Status status = make_client().successor(req, res);
-      if (!status.ok()) {
-        logger->warn("[successor] failed to query successor from client!");
-      } else {
-        logger->trace("spawned client, got result");
-        logger->trace("entry {}@{}", res->successor().uuid(), res->successor().endpoint());
-      }
+      logger->trace("spawned client, got result");
+      logger->trace("entry {}@{}", res->successor().uuid(), res->successor().endpoint());
     }
+    return status;
   }
 
   return Status::OK;
@@ -144,7 +146,7 @@ Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *
                 req->header().src().endpoint());
 
   auto predecessor = router->predecessor();
-  if (predecessor!=nullptr) {
+  if (predecessor != nullptr) {
     logger->debug("returning predecessor {}", *predecessor);
     endpoint_t endpoint = router->get(predecessor);
 
@@ -172,13 +174,12 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
     return Status::CANCELLED;
   }
 
-  uuid_t self(context.uuid());
-  uuid_t uuid = uuid_t(req->header().src().uuid());
+  uuid_t self{context.uuid()};
+  uuid_t uuid{req->header().src().uuid()};
   endpoint_t endpoint = req->header().src().endpoint();
 
-  if (predecessor==nullptr or
-      (uuid > *predecessor and uuid < self) or
-      (uuid > *predecessor and uuid > self)) {
+  if (predecessor==nullptr
+      || uuid.between(*predecessor, self)) {
     router->set_predecessor(0, uuid, endpoint);
   } else {
     if (predecessor==nullptr)
