@@ -26,8 +26,7 @@ struct Router {
 
   explicit Router(chord::Context &context)
       : context{context}, logger{log::get_or_create(logger_name)} {
-    std::fill(std::begin(predecessors), std::end(predecessors), nullptr);
-    std::fill(std::begin(successors), std::end(successors), nullptr);
+    cleanup();
     routes[context.uuid()] = context.bind_addr;
     context.set_router(this);
   }
@@ -38,13 +37,14 @@ struct Router {
   }
 
   void cleanup() {
-    for (auto pred:predecessors) delete pred;
-    for (auto succ:successors) delete succ;
+    std::fill(std::begin(predecessors), std::end(predecessors), optional<uuid>{});
+    std::fill(std::begin(successors), std::end(successors), optional<uuid>{});
+    //for (auto pred:predecessors) delete pred;
+    //for (auto succ:successors) delete succ;
   }
 
   void reset() {
     cleanup();
-
     routes[context.uuid()] = context.bind_addr;
   }
 
@@ -75,16 +75,16 @@ struct Router {
     std::lock_guard<std::mutex> lock(mtx);
     logger->info("set_successor[{}][{}] = {}", index, uuid, endpoint);
     routes[uuid] = endpoint;
-    delete successors[index];
-    successors[index] = new uuid_t{uuid};
+    //delete successors[index];
+    successors[index] = {uuid};
   }
 
   void set_predecessor(const size_t index, const uuid_t &uuid, const endpoint_t &endpoint) {
     std::lock_guard<std::mutex> lock(mtx);
     logger->info("set_predecessor[{}][{}] = {}", index, uuid, endpoint);
     routes[uuid] = endpoint;
-    delete predecessors[index];
-    predecessors[index] = new uuid_t{uuid};
+    //delete predecessors[index];
+    predecessors[index] = {uuid};
   }
 
   void reset(const node& n) {
@@ -94,37 +94,37 @@ struct Router {
     logger->info("reset {}@...", uuid);
 
     //replacement to fill holes in successors
-    uuid_t* replacement = nullptr;
+    optional<uuid_t> replacement;// = nullptr;
     for(int i=successors.size()-1; i>=0; --i) {
-      auto* succ = successors[i];
-      if(succ != nullptr) {
+      auto succ = successors[i];
+      if(succ) {
         if(*succ == uuid) break;
         replacement = succ;
       }
     }
 
-    if(replacement == nullptr) {
+    if(!replacement) {
       logger->debug("could not find a replacement for {}", uuid);
     } else {
       logger->debug("replacement for {} is {}", uuid, *replacement);
     }
     for(size_t i=0; i < successors.size(); i++) {
-      auto* succ = successors[i];
-      if(succ == nullptr) continue;
+      auto succ = successors[i];
+      if(!succ) continue;
       if(*succ == uuid) {
-        if(replacement == nullptr) {
-          successors[i] = nullptr;
+        if(!replacement) {
+          successors[i] = {};
         } else {
-          successors[i] = new uuid_t{*replacement};
+          successors[i] = replacement;
         }
         //successors[i] = replacement != nullptr ? new uuid_t{*replacement} : nullptr;
       }
     }
 
     //TODO replacement to fill holes in predecessors
-    replacement = nullptr;
-    if(predecessors[0] != nullptr && *predecessors[0] == uuid) {
-      predecessors[0] = nullptr;
+    replacement = {};
+    if(predecessors[0] && *predecessors[0] == uuid) {
+      predecessors[0] = {};
     }
     //for(int i=predecessors.size()-1; i>=0; --i) {
     //  auto* pred = predecessors[i];
@@ -161,11 +161,11 @@ struct Router {
   optional<node> successor() {
     for (auto succ : successors) {
       //cppcheck-suppress CastIntegerToAddressAtReturn
-      if (succ!=nullptr) return node{*succ, routes[*succ]};
+      if (succ) return node{*succ, routes[*succ]};
     }
     for (auto pred : predecessors) {
       //cppcheck-suppress CastIntegerToAddressAtReturn
-      if (pred!=nullptr) return node{*pred, routes[*pred]};
+      if (pred) return node{*pred, routes[*pred]};
     }
     return node{context.uuid(), routes[context.uuid()]};
   }
@@ -186,8 +186,8 @@ struct Router {
 
   optional<node> closest_preceding_node(const uuid_t &uuid) {
     for(auto it=std::crbegin(successors); it != crend(successors); ++it) {
-      const auto* succ = *it;
-      if(succ != nullptr && succ->between(context.uuid(), uuid)) {
+      const auto succ = *it;
+      if(succ && succ->between(context.uuid(), uuid)) {
         logger->info("closest preceding node for {} found is {}", uuid, *succ);
         return node{*succ, routes[*succ]};
       }
@@ -200,15 +200,15 @@ struct Router {
   friend std::ostream &operator<<(std::ostream &os, const Router &router) {
     size_t beg = 0;
     for (size_t i=1; i < BITS; i++) {
-      auto beg_a = (router.successors[i-1]==nullptr ? std::string{"<unknown>"} : std::string{*router.successors[i-1]});
-      auto beg_o = (router.successors[i]==nullptr ? std::string{"<unknown>"} : std::string{*router.successors[i]});
+      auto beg_a = (!(router.successors[i-1]) ? std::string{"<unknown>"} : std::string{*router.successors[i-1]});
+      auto beg_o = (!(router.successors[i]) ? std::string{"<unknown>"} : std::string{*router.successors[i]});
       if(beg_a != beg_o) {
         os << "\n::router[successor][" << beg << ".." << i-1 << "] " << beg_a;
         beg=i;
       }
     }
     if (beg != BITS) {
-      auto beg_o = (router.successors[beg]==nullptr ? std::string{"<unknown>"} : std::string{*router.successors[beg]});
+      auto beg_o = (!(router.successors[beg]) ? std::string{"<unknown>"} : std::string{*router.successors[beg]});
       os << "\n::router[successor][" << beg << ".." << BITS-1 << "] " << beg_o;
     }
     os << "\n::router [predecessor] ";
@@ -224,7 +224,7 @@ struct Router {
   mutable std::mutex mtx;
   std::map<uuid_t, endpoint_t> routes;
 
-  std::array<uuid_t*, BITS> predecessors;
-  std::array<uuid_t*, BITS> successors;
+  std::array<optional<uuid_t>, BITS> predecessors;
+  std::array<optional<uuid_t>, BITS> successors;
 };
-} //namespace chord
+}  // namespace chord

@@ -4,10 +4,8 @@
 
 namespace chord {
 
-  template<class T>
-  using optional = std::experimental::optional<T>;
+template <class T>
+using optional = std::experimental::optional<T>;
 
-  using nullopt_t = std::experimental::nullopt_t;
-
-} // namespace chord
+}  // namespace chord
 
