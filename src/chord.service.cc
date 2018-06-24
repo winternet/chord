@@ -211,7 +211,10 @@ void Service::fix_fingers(size_t index) {
     const auto entry = successor(fix);
     logger->trace("fixing finger for {}. received successor {}@{}", fix,
                   entry.uuid(), entry.endpoint());
-    //if( uuid_t(router_entry.uuid()) == context.uuid() ) return;
+    if( uuid_t{entry.uuid()} == context.uuid() ) {
+      router->reset(fix);
+      return;
+    } 
 
     router->set_successor(index, uuid_t{entry.uuid()}, entry.endpoint());
   } catch (const chord::exception &e) {

@@ -39,8 +39,6 @@ struct Router {
   void cleanup() {
     std::fill(std::begin(predecessors), std::end(predecessors), optional<uuid>{});
     std::fill(std::begin(successors), std::end(successors), optional<uuid>{});
-    //for (auto pred:predecessors) delete pred;
-    //for (auto succ:successors) delete succ;
   }
 
   void reset() {
@@ -55,7 +53,7 @@ struct Router {
    * chord ring.
    */
   size_t size() const {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::lock_guard<mutex_t> lock(mtx);
     return routes.size();
   }
 
@@ -72,29 +70,33 @@ struct Router {
   }
 
   void set_successor(const size_t index, const uuid_t &uuid, const endpoint_t &endpoint) {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::lock_guard<mutex_t> lock(mtx);
     logger->info("set_successor[{}][{}] = {}", index, uuid, endpoint);
+    const auto succ = successors[index];
+
     routes[uuid] = endpoint;
-    //delete successors[index];
-    successors[index] = {uuid};
+    // fill unset preceding nodes
+    for (int i = index; i >= 0; --i) {
+      if(!successors[i] || *successors[i] == *succ)
+        successors[i] = {uuid};
+      else break;
+    }
   }
 
   void set_predecessor(const size_t index, const uuid_t &uuid, const endpoint_t &endpoint) {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::lock_guard<mutex_t> lock(mtx);
     logger->info("set_predecessor[{}][{}] = {}", index, uuid, endpoint);
     routes[uuid] = endpoint;
-    //delete predecessors[index];
     predecessors[index] = {uuid};
   }
 
-  void reset(const node& n) {
-    std::lock_guard<std::mutex> lock(mtx);
+  void reset(const uuid_t& uuid) {
+    std::lock_guard<mutex_t> lock(mtx);
 
-    const auto uuid = n.uuid;
     logger->info("reset {}@...", uuid);
 
     //replacement to fill holes in successors
-    optional<uuid_t> replacement;// = nullptr;
+    optional<uuid_t> replacement;
     for(int i=successors.size()-1; i>=0; --i) {
       auto succ = successors[i];
       if(succ) {
@@ -157,6 +159,9 @@ struct Router {
     //  }
     //}
   }
+  void reset(const node& n) {
+    reset(n.uuid);
+  }
 
   optional<node> successor() {
     for (auto succ : successors) {
@@ -218,10 +223,11 @@ struct Router {
   }
 
  private:
+  using mutex_t = std::recursive_mutex;
   chord::Context &context;
   std::shared_ptr<spdlog::logger> logger;
 
-  mutable std::mutex mtx;
+  mutable mutex_t mtx;
   std::map<uuid_t, endpoint_t> routes;
 
   std::array<optional<uuid_t>, BITS> predecessors;

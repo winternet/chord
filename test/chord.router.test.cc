@@ -151,3 +151,63 @@ TEST(RouterTest, closest_preceding_node_3) {
   ASSERT_EQ(predecessor, 10);
   ASSERT_EQ(3, router.size());
 }
+
+TEST(RouterTest, set_successor_sets_preceding_nodes) {
+  Context context;
+  Router router{context};
+
+  ASSERT_NOT_NULL(router.successor());
+  EXPECT_EQ(router.successor()->uuid, context.uuid());
+
+  // --> 0: {}, 1: {}, 2: {}, ...
+  ASSERT_EQ(1, router.size());
+
+  for (size_t i = 5; i < 10; i++) {
+    router.set_successor(i, {1}, "1");
+  }
+
+  // --> 0: {1}, 1: {1}, 2: {1}, ..., 9:{1}, 10: {}
+  ASSERT_EQ(2, router.size());
+  for (size_t i = 0; i < 10; i++) {
+    ASSERT_NOT_NULL(router.successor(i));
+    ASSERT_EQ(router.successor(i)->uuid, uuid_t{1});
+  }
+}
+
+TEST(RouterTest, set_successor_rewrites_same_preceding_nodes) {
+  Context context;
+  Router router{context};
+
+  ASSERT_NOT_NULL(router.successor());
+  EXPECT_EQ(router.successor()->uuid, context.uuid());
+
+  // [0..5] -> uuid_t{5}
+  router.set_successor(5, {5}, "5");
+  // [6..10] -> uuid_t{5}
+  router.set_successor(10, {10}, "10");
+
+  for (size_t i = 0; i < 10; i++) {
+    const auto succ = router.successor(i);
+    ASSERT_NOT_NULL(succ);
+    if(i <= 5) {
+      ASSERT_EQ(router.successor(i)->uuid, uuid_t{5});
+    } else {
+      ASSERT_EQ(router.successor(i)->uuid, uuid_t{10});
+    }
+  }
+
+  // insert new node
+  router.set_successor(2, {2}, "2");
+
+  for (size_t i = 0; i < 10; i++) {
+    const auto succ = router.successor(i);
+    ASSERT_NOT_NULL(succ);
+    if(i <= 2) {
+      ASSERT_EQ(router.successor(i)->uuid, uuid_t{2});
+    } else if(i <= 5) {
+      ASSERT_EQ(router.successor(i)->uuid, uuid_t{5});
+    } else {
+      ASSERT_EQ(router.successor(i)->uuid, uuid_t{10});
+    }
+  }
+}
