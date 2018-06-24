@@ -10,10 +10,10 @@
 
 namespace chord {
 struct Context;
-} // namespace chord
+}  // namespace chord
 namespace spdlog {
-  class logger;
-}
+class logger;
+}  // namespace spdlog
 
 namespace chord {
 namespace fs {

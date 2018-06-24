@@ -62,11 +62,11 @@ TEST(ServiceTest, join) {
 
   //--- router
   ASSERT_EQ(router.size(), 2);
-  auto successor = *router.successor(0);
-  auto predecessor = *router.predecessor(0);
-  ASSERT_EQ(successor, uuid_t{1});
-  ASSERT_EQ(predecessor, uuid_t{1});
-  ASSERT_EQ(router.get(successor), "1.1.1.1:1111");
+  auto successor = router.successor(0);
+  auto predecessor = router.predecessor(0);
+  ASSERT_EQ(successor->uuid, uuid_t{1});
+  ASSERT_EQ(predecessor->uuid, uuid_t{1});
+  ASSERT_EQ(successor->endpoint, "1.1.1.1:1111");
 
   //--- response
   ASSERT_EQ(res.header().src().uuid(), "50");

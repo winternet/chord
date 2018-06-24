@@ -22,7 +22,7 @@ class Service;
 }  // namespace chord
 namespace spdlog {
   class logger;
-}
+}  // namespace spdlog
 
 namespace chord {
 

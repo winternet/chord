@@ -101,26 +101,26 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
   uuid_t id{req->id()};
   uuid_t self{context.uuid()};
 
+  const auto successor = router->successor();
   // only node on the ring
-  if(!router->successor()) {
+  if(!successor) {
     logger->trace("[successor] im the only node in the ring, returning myself {}", self);
 
     RouterEntry entry;
     entry.set_uuid(self);
-    entry.set_endpoint(router->get(self));
+    entry.set_endpoint(router->get(self)->endpoint);
 
     res->mutable_successor()->CopyFrom(entry);
     return Status::OK;
   }
 
-  uuid_t successor{*router->successor()};
-  if(id == self || id.between(self, successor)) {
-    logger->trace("[successor] the requested id {} lies between self {} and my successor {}, returning successor", id.string(), self.string(), successor.string());
+  if(id == self || id.between(self, successor->uuid)) {
+    logger->trace("[successor] the requested id {} lies between self {} and my successor {}, returning successor", id.string(), self.string(), successor->uuid);
 
     //--- router entry
     RouterEntry entry;
-    entry.set_uuid(successor);
-    entry.set_endpoint(router->get(successor));
+    entry.set_uuid(successor->uuid);
+    entry.set_endpoint(successor->endpoint);
 
     res->mutable_successor()->CopyFrom(entry);
   } else {
@@ -144,13 +144,12 @@ Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *
                 req->header().src().endpoint());
 
   const auto predecessor = router->predecessor();
-  if (!predecessor) {
-    logger->debug("returning predecessor {}", *predecessor);
-    endpoint_t endpoint = router->get(predecessor);
+  if (predecessor) {
+    logger->debug("returning predecessor {}", predecessor);
 
     RouterEntry entry;
-    entry.set_uuid(*predecessor);
-    entry.set_endpoint(endpoint);
+    entry.set_uuid(predecessor->uuid);
+    entry.set_endpoint(predecessor->endpoint);
 
     res->mutable_predecessor()->CopyFrom(entry);
   }
@@ -177,13 +176,13 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
   const auto endpoint = req->header().src().endpoint();
 
   if (!predecessor
-      || uuid.between(*predecessor, self)) {
+      || uuid.between(predecessor->uuid, self)) {
     router->set_predecessor(0, uuid, endpoint);
   } else {
     if (!predecessor)
       logger->info("predecessor is null");
     else {
-      logger->info("n' = {}\npredecessor = {}\nself={}", uuid, *predecessor, self);
+      logger->info("n' = {}\npredecessor = {}\nself={}", uuid, predecessor, self);
     }
   }
 

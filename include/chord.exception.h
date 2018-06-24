@@ -2,8 +2,8 @@
 
 #include <stdexcept>
 #include <utility>
-#include <experimental/optional>
 
+#include "chord.optional.h"
 #include "chord.grpc.pb.h"
 
 #define throw__exception(message) throw chord::exception{message, __FILE__, __LINE__}

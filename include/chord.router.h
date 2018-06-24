@@ -6,10 +6,13 @@
 #include <mutex>
 #include <string>
 
+#include "chord.node.h"
 #include "chord.context.h"
 #include "chord.log.h"
 #include "chord.types.h"
 #include "chord.uuid.h"
+#include "chord.optional.h"
+
 
 namespace chord {
 
@@ -50,31 +53,38 @@ struct Router {
     return routes.size();
   }
 
-  endpoint_t get_successor(const size_t &index) {
+  optional<node> get_successor(const size_t &index) const {
     std::lock_guard<std::mutex> lock(mtx);
-    return routes[*successors[index]];
+    const auto id = *successors[index];
+    return node{id, routes.at(id)};
   }
 
-  endpoint_t get_predecessor(const size_t &index) {
+  //TODO fix this use predecessors...
+  optional<node> get_predecessor(const size_t &index) const {
     std::lock_guard<std::mutex> lock(mtx);
-    return routes[*successors[index]];
+    const auto id = *successors[index];
+    return node{id, routes.at(id)}; //routes[*successors[index]];
   }
 
   //--- get endpoint to corresponding uuid
-  endpoint_t get(const uuid_t *uuid) {
-    return routes[*uuid];
+  optional<node> get(const uuid_t *uuid) {
+    return node{*uuid, routes[*uuid]};
   }
 
-  endpoint_t get(const uuid_t &uuid) {
-    return routes[uuid];
+  optional<node> get(const uuid_t &uuid) {
+    return node{uuid, routes[uuid]};
   }
 
-  const uuid_t* successor(size_t idx) const {
-    return successors[idx];
+  optional<node> successor(size_t idx) const {
+    auto succ = successors[idx];
+    if(succ) return node{*succ, routes.at(*succ)};
+    return {};
   }
 
-  const uuid_t* predecessor(size_t idx) const {
-    return predecessors[idx];
+  optional<node> predecessor(size_t idx) const {
+    auto pred = predecessors[idx];
+    if(pred) return node{*pred, routes.at(*pred)};
+    return {};
   }
 
   void set_successor(const size_t index, const uuid_t &uuid, const endpoint_t &endpoint) {
@@ -93,9 +103,10 @@ struct Router {
     predecessors[index] = new uuid_t{uuid};
   }
 
-  void reset(const uuid_t& uuid) {
+  void reset(const node& n) {
     std::lock_guard<std::mutex> lock(mtx);
 
+    const auto uuid = n.uuid;
     logger->info("reset {}@...", uuid);
 
     //replacement to fill holes in successors
@@ -163,39 +174,43 @@ struct Router {
     //}
   }
 
-  const uuid_t *successor() {
+  optional<node> successor() {
     for (auto succ : successors) {
       //cppcheck-suppress CastIntegerToAddressAtReturn
-      if (succ!=nullptr) return succ;
+      if (succ!=nullptr) return node{*succ, routes[*succ]};
     }
     for (auto pred : predecessors) {
       //cppcheck-suppress CastIntegerToAddressAtReturn
-      if (pred!=nullptr) return pred;
+      if (pred!=nullptr) return node{*pred, routes[*pred]};
     }
-    return &(context.uuid());
+    return node{context.uuid(), routes[context.uuid()]};
   }
 
-  const uuid_t *predecessor() const {
+  optional<node> predecessor() const {
     //cppcheck-suppress CastIntegerToAddressAtReturn
-    return predecessors[0];
+    auto pre = predecessors[0];
+    if(pre) return node{*predecessors[0], routes.at(*predecessors[0])};
+    return {};
   }
 
-  uuid_t *predecessor() {
+  optional<node> predecessor() {
     //cppcheck-suppress CastIntegerToAddressAtReturn
-    return predecessors[0];
+    auto pre = predecessors[0];
+    if(pre) return node{*predecessors[0], routes.at(*predecessors[0])};
+    return {};
   }
 
-  uuid_t closest_preceding_node(const uuid_t &uuid) {
+  optional<node> closest_preceding_node(const uuid_t &uuid) {
     for(auto it=std::crbegin(successors); it != crend(successors); ++it) {
       const auto* succ = *it;
       if(succ != nullptr && succ->between(context.uuid(), uuid)) {
         logger->info("closest preceding node for {} found is {}", uuid, *succ);
-        return *succ;
+        return node{*succ, routes[*succ]};
       }
     }
 
     logger->info("no closest preceding node for {} found, returning self {}", uuid, context.uuid());
-    return context.uuid();
+    return node{context.uuid(), routes[context.uuid()]};
   }
 
   friend std::ostream &operator<<(std::ostream &os, const Router &router) {
@@ -212,8 +227,9 @@ struct Router {
       auto beg_o = (router.successors[beg]==nullptr ? std::string{"<unknown>"} : std::string{*router.successors[beg]});
       os << "\n::router[successor][" << beg << ".." << BITS-1 << "] " << beg_o;
     }
-    os << "\n::router [predecessor] "
-       << (router.predecessor()!=nullptr ? std::string(*router.predecessor()) : std::string("<unknown>"));
+    os << "\n::router [predecessor] ";
+    if(router.predecessor()) os << *router.predecessor();
+    else os << "<unknown>";
     return os;
   }
 

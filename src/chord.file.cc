@@ -1,6 +1,6 @@
 #include <string>
 #include <fstream>
-#include <attr/xattr.h>
+#include <sys/xattr.h>
 #include <experimental/filesystem>
 
 #include "chord.exception.h"

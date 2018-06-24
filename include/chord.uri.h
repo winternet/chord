@@ -5,8 +5,8 @@
 #include <regex>
 #include <string>
 
-#include "chord.optional.h"
 #include "chord.exception.h"
+#include "chord.optional.h"
 #include "chord.path.h"
 
 namespace chord {
@@ -49,7 +49,7 @@ class uri {
    private:
     std::string _host;
     std::string _user, _password;
-    std::experimental::optional<int> _port;
+    optional<int> _port;
 
    public:
     explicit authority(std::string host);
@@ -64,7 +64,7 @@ class uri {
 
     const std::string &host() const;
 
-    const std::experimental::optional<int> &port() const;
+    const optional<int> &port() const;
 
     void user(std::string user);
 
@@ -78,7 +78,7 @@ class uri {
   };
 
  private:
-  std::experimental::optional<authority> _authority;
+  optional<authority> _authority;
   std::map<std::string, std::string> _query;
 
   std::string _scheme, _fragment;
@@ -107,7 +107,7 @@ class uri {
 
   const std::string &scheme() const;
 
-  const std::experimental::optional<uri::authority> &auth() const;
+  const optional<uri::authority> &auth() const;
 
   const chord::path &path() const;
 

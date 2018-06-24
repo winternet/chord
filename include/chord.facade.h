@@ -11,7 +11,7 @@
 
 namespace spdlog {
   class logger;
-}
+}  // namespace spdlog
 namespace chord {
 //--- forward declarations
 class AbstractScheduler;

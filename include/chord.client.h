@@ -14,7 +14,7 @@ struct Context;
 
 namespace spdlog {
   class logger;
-}
+}  // namespace spdlog
 
 namespace chord {
 

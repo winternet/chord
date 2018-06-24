@@ -19,7 +19,7 @@ struct Router;
 
 namespace spdlog {
   class logger;
-}
+}  // namespace spdlog
 namespace chord {
 namespace fs {
 

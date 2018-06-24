@@ -14,7 +14,7 @@ class Facade;
 
 namespace spdlog {
   class logger;
-}
+}  // namespace spdlog
 
 namespace chord {
 namespace controller {

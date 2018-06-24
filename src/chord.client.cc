@@ -85,12 +85,12 @@ void Client::stabilize() {
   const auto successor = router->successor();
 
   //--- return if join failed or uuid == successor (create)
-  if (successor==nullptr || *successor == context.uuid()) {
+  if (!successor || successor->uuid == context.uuid()) {
     logger->trace("[stabilize] no successor found");
     return;
   }
 
-  const auto endpoint = router->get(successor);
+  const auto endpoint = successor->endpoint;
 
   logger->trace("[stabilize] calling stabilize on successor {}", endpoint);
   const auto status = make_stub(endpoint)->stabilize(&clientContext, req, &res);
@@ -107,7 +107,7 @@ void Client::stabilize() {
 
     const uuid_t self(context.uuid());
     const uuid_t pred(entry.uuid());
-    const uuid_t succ(*router->successor());
+    const uuid_t succ(router->successor()->uuid);
     if(pred.between(self, succ)) {
       router->set_successor(0, pred, entry.endpoint());
     }
@@ -121,14 +121,15 @@ void Client::stabilize() {
 void Client::notify() {
 
   // get successor
-  const auto successor = router->successor();
-  const auto endpoint = router->get(successor);
+  const auto n = router->successor();
+  const auto successor = n->uuid;
+  const auto endpoint = n->endpoint;
 
   ClientContext clientContext;
   NotifyRequest req;
   NotifyResponse res;
 
-  logger->trace("calling notify on address {}@{}", *successor, endpoint);
+  logger->trace("calling notify on address {}@{}", successor, endpoint);
 
   req.mutable_header()->CopyFrom(make_header(context));
   make_stub(endpoint)->notify(&clientContext, req, &res);
@@ -142,10 +143,10 @@ Status Client::successor(ClientContext *clientContext, const SuccessorRequest *r
   copy.mutable_header()->CopyFrom(make_header(context));
 
   const auto predecessor = router->closest_preceding_node(uuid_t(req->id()));
-  const auto endpoint = router->get(predecessor);
-  logger->trace("forwarding request to {}@{}", predecessor.string(), endpoint);
+  //const auto endpoint = router->get(predecessor);
+  logger->trace("forwarding request to {}", predecessor);
 
-  return make_stub(endpoint)->successor(clientContext, copy, res);
+  return predecessor ? make_stub(predecessor->endpoint)->successor(clientContext, copy, res) : Status::CANCELLED;
 }
 
 /** called by chord.service **/
@@ -172,11 +173,11 @@ void Client::check() {
   const auto predecessor = router->predecessor();
   const auto successor = router->successor();
 
-  if (predecessor == nullptr) {
+  if (!predecessor) {
     logger->trace("[check] no predecessor, skip.");
     return;
   }
-  if (successor == nullptr) {
+  if (!successor) {
     logger->trace("no successor, skip.");
     return;
   }
@@ -187,9 +188,9 @@ void Client::check() {
 
   req.mutable_header()->CopyFrom(make_header(context));
 
-  const auto endpoint = router->get(predecessor);
+  const auto endpoint = predecessor->endpoint;//router->get(predecessor);
 
-  logger->trace("checking predecessor {}@{}", *predecessor, endpoint);
+  logger->trace("checking predecessor {}", *predecessor);
   const auto status = make_stub(endpoint)->check(&clientContext, req, &res);
 
   if (!status.ok()) {

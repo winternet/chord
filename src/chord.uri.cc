@@ -95,7 +95,7 @@ const std::string &uri::authority::password() const { return _password; }
 
 const std::string &uri::authority::host() const { return _host; }
 
-const std::experimental::optional<int> &uri::authority::port() const { return _port; }
+const optional<int> &uri::authority::port() const { return _port; }
 
 void uri::authority::user(const string user) { _user = user; }
 
@@ -147,7 +147,7 @@ void uri::fragment(const string fragment) { _fragment = fragment; }
 
 const string &uri::scheme() const { return _scheme; }
 
-const std::experimental::optional<uri::authority> &uri::auth() const { return _authority; }
+const optional<uri::authority> &uri::auth() const { return _authority; }
 
 const chord::path &uri::path() const { return _path; }
 

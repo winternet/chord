@@ -3,21 +3,21 @@
 
 #include "chord.router.h"
 
-#define ASSERT_NOT_NULL(pointer) ASSERT_TRUE(pointer != nullptr)
-#define ASSERT_NULL(pointer) ASSERT_TRUE(pointer == nullptr)
+#define ASSERT_NOT_NULL(pointer) ASSERT_TRUE(pointer)
+#define ASSERT_NULL(pointer) ASSERT_FALSE(pointer)
 
-#define EXPECT_NOT_NULL(pointer) EXPECT_TRUE(pointer != nullptr)
-#define EXPECT_NULL(pointer) EXPECT_TRUE(pointer == nullptr)
+#define EXPECT_NOT_NULL(pointer) EXPECT_TRUE(pointer)
+#define EXPECT_NULL(pointer) EXPECT_FALSE(pointer)
 
 using namespace std;
 using namespace chord;
 
 TEST(RouterTest, initialize) {
   Context context;
-  Router router(context);
+  Router router{context};
 
   ASSERT_NOT_NULL(router.successor());
-  EXPECT_EQ(*router.successor(), context.uuid());
+  EXPECT_EQ(router.successor()->uuid, context.uuid());
 
   for (size_t i = 1; i < Router::BITS; i++) {
     ASSERT_NULL(router.successor(i));
@@ -45,7 +45,7 @@ TEST(RouterTest, closest_preceding_node) {
     router.set_successor(i, i, to_string(i));
   }
 
-  uuid_t predecessor = router.closest_preceding_node(200);
+  auto predecessor = router.closest_preceding_node(200)->uuid;
 
   ASSERT_EQ(predecessor, 100);
   ASSERT_EQ(101, router.size());
@@ -59,7 +59,7 @@ TEST(RouterTest, closest_preceding_node_less_1) {
   router.set_successor(7, 100, to_string(100));
 
   // predecessor of 1 is 100
-  uuid_t predecessor = router.closest_preceding_node(1);
+  uuid_t predecessor = router.closest_preceding_node(1)->uuid;
 
   ASSERT_EQ(predecessor, 100);
   ASSERT_EQ(2, router.size());
@@ -75,7 +75,7 @@ TEST(RouterTest, closest_preceding_node_mod) {
     router.set_successor(i, i, to_string(i));
   }
 
-  uuid_t predecessor = router.closest_preceding_node(50);
+  uuid_t predecessor = router.closest_preceding_node(50)->uuid;
 
   ASSERT_EQ(predecessor, 49);
   ASSERT_EQ(102, router.size());
@@ -90,7 +90,7 @@ TEST(RouterTest, closest_preceding_node_mod_2) {
   router.set_successor(0, 0, "0.0.0.0:50050");
   router.set_predecessor(0, 0, "0.0.0.0:50050");
 
-  uuid_t predecessor = router.closest_preceding_node(5);
+  uuid_t predecessor = router.closest_preceding_node(5)->uuid;
 
   ASSERT_EQ(predecessor, 0);
   ASSERT_EQ(2, router.size());
@@ -108,14 +108,14 @@ TEST(RouterTest, set_uuid_resets_router) {
   auto uuid = context.uuid();
 
   auto successor = router.successor();
-  ASSERT_EQ(*successor, uuid);
+  ASSERT_EQ(successor->uuid, uuid);
 
   //--- calls router#reset() internally
   context.set_uuid(0);
 
-  successor = router.successor();
-  ASSERT_EQ(*successor, 0);
-  ASSERT_EQ(router.get(uuid_t(0)), context.bind_addr);
+  auto successor2 = router.successor();
+  ASSERT_EQ(successor2->uuid, 0);
+  ASSERT_EQ(successor2->endpoint, context.bind_addr);
   // first uuid + second uuid
   ASSERT_EQ(2, router.size());
 }
@@ -129,7 +129,7 @@ TEST(RouterTest, closest_preceding_node_mod_3) {
   router.set_successor(0, 4, "0.0.0.0:50050");
   router.set_predecessor(0, 4, "0.0.0.0:50050");
 
-  uuid_t predecessor = router.closest_preceding_node(1);
+  uuid_t predecessor = router.closest_preceding_node(1)->uuid;
 
   ASSERT_EQ(predecessor, 8);
   ASSERT_EQ(2, router.size());
@@ -146,7 +146,7 @@ TEST(RouterTest, closest_preceding_node_3) {
 
   router.set_predecessor(0, 4, "0.0.0.0:50050");
 
-  uuid_t predecessor = router.closest_preceding_node(1);
+  uuid_t predecessor = router.closest_preceding_node(1)->uuid;
 
   ASSERT_EQ(predecessor, 10);
   ASSERT_EQ(3, router.size());
