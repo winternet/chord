@@ -108,7 +108,7 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
 
     RouterEntry entry;
     entry.set_uuid(self);
-    entry.set_endpoint(router->get(self)->endpoint);
+    entry.set_endpoint(context.bind_addr);
 
     res->mutable_successor()->CopyFrom(entry);
     return Status::OK;

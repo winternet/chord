@@ -48,31 +48,15 @@ struct Router {
     routes[context.uuid()] = context.bind_addr;
   }
 
+  /**
+   * get the amount of known routes.
+   *
+   * note that this does _not_ return the size of the
+   * chord ring.
+   */
   size_t size() const {
     std::lock_guard<std::mutex> lock(mtx);
     return routes.size();
-  }
-
-  optional<node> get_successor(const size_t &index) const {
-    std::lock_guard<std::mutex> lock(mtx);
-    const auto id = *successors[index];
-    return node{id, routes.at(id)};
-  }
-
-  //TODO fix this use predecessors...
-  optional<node> get_predecessor(const size_t &index) const {
-    std::lock_guard<std::mutex> lock(mtx);
-    const auto id = *successors[index];
-    return node{id, routes.at(id)}; //routes[*successors[index]];
-  }
-
-  //--- get endpoint to corresponding uuid
-  optional<node> get(const uuid_t *uuid) {
-    return node{*uuid, routes[*uuid]};
-  }
-
-  optional<node> get(const uuid_t &uuid) {
-    return node{uuid, routes[uuid]};
   }
 
   optional<node> successor(size_t idx) const {
