@@ -186,6 +186,10 @@ class MockStub : public chord::Chord::StubInterface {
       const chord::JoinRequest&,
       chord::JoinResponse*));
 
+  MOCK_METHOD2(take, std::unique_ptr<grpc::ClientReaderInterface<chord::TakeResponse>>(
+      grpc::ClientContext *, 
+      const chord::TakeRequest &));
+
   MOCK_METHOD3(stabilize, grpc::Status(
       grpc::ClientContext*,
       const chord::StabilizeRequest&,
@@ -201,10 +205,7 @@ class MockStub : public chord::Chord::StubInterface {
       const chord::CheckRequest&,
       chord::CheckResponse*));
 
-  //MOCK_METHOD2(putRaw, grpc::ClientWriterInterface<chord::PutRequest>*(grpc::ClientContext* context, chord::PutResponse* response));
 
-  //MOCK_METHOD2(getRaw, grpc::ClientReaderInterface<chord::GetResponse>*(grpc::ClientContext* context, const chord::GetRequest& request));
- 
   MOCK_METHOD3(PrepareAsyncsuccessorRaw, grpc::ClientAsyncResponseReaderInterface<chord::SuccessorResponse>*(
       grpc::ClientContext*,
       const chord::SuccessorRequest&,
@@ -220,10 +221,20 @@ class MockStub : public chord::Chord::StubInterface {
       const chord::JoinRequest&,
       grpc::CompletionQueue*));
 
+
   MOCK_METHOD3(AsyncjoinRaw, grpc::ClientAsyncResponseReaderInterface<chord::JoinResponse>*(
       grpc::ClientContext*,
       const chord::JoinRequest&,
       grpc::CompletionQueue*));
+
+  MOCK_METHOD4(AsynctakeRaw, grpc::ClientAsyncReaderInterface<chord::TakeResponse>*(
+      grpc::ClientContext*,
+      const chord::TakeRequest&,
+      grpc::CompletionQueue* cq, void* tag));
+
+  MOCK_METHOD2(takeRaw, grpc::ClientReaderInterface<chord::TakeResponse>*(
+      grpc::ClientContext*,
+      const ::chord::TakeRequest&));
 
   MOCK_METHOD3(PrepareAsyncstabilizeRaw, grpc::ClientAsyncResponseReaderInterface<chord::StabilizeResponse>*(
       grpc::ClientContext*,

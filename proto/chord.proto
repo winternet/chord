@@ -17,6 +17,7 @@ service Chord {
   rpc stabilize (StabilizeRequest)  returns (StabilizeResponse) {}
   rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
   rpc check     (CheckRequest)      returns (CheckResponse) {}
+  rpc take      (TakeRequest)       returns (stream TakeResponse) {}
 }
 
 /**
@@ -76,4 +77,15 @@ message CheckRequest {
 message CheckResponse {
   chord.common.Header header = 1;
   string id = 2;
+}
+
+/**
+ * TAKE
+ */
+message TakeRequest {
+  chord.common.Header header = 1;
+}
+
+message TakeResponse { 
+  string  id = 1;
 }

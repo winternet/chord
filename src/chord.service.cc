@@ -76,6 +76,12 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
   return Status::OK;
 }
 
+grpc::Status Service::take(grpc::ServerContext *context,
+                  const chord::TakeRequest *req,
+                  grpc::ServerWriter<chord::TakeResponse> *writer) {
+  return Status::OK;
+}
+
 RouterEntry Service::successor(const uuid_t &uuid) {
   ServerContext serverContext;
   SuccessorRequest req;

@@ -3,8 +3,10 @@
 // metadata strategy: leveldb
 #include <leveldb/db.h>
 #include <set>
+#include <map>
 
 #include "chord.context.h"
+#include "chord.crypto.h"
 #include "chord.fs.metadata.builder.h"
 #include "chord.fs.metadata.h"
 #include "chord.uri.h"
@@ -118,15 +120,41 @@ class MetadataManager {
     check_status(db->Put(leveldb::WriteOptions(), path, value));
   }
 
+  /**
+   * @brief Get all metadata in range (from...to)
+   *
+   * @param from uuid (exclusive)
+   * @param to uuid (exclusive)
+   * @todo re-hashing with full-table scan is slow
+   *   1) use an 'index' or
+   *   2) save hash to Metadata
+   */
+  std::map<uuid, std::set<Metadata> > get(const chord::uuid& from, const chord::uuid& to) {
+    std::map<uuid, std::set<Metadata> > ret;
+    auto *it = db->NewIterator(leveldb::ReadOptions());
+    for(it->SeekToFirst(); it->Valid(); it->Next()) {
+      const std::string& uri = it->key().ToString();
+      const uuid hash = chord::crypto::sha256(uri);
+      if(hash.between(from, to)) {
+        const auto map = deserialize(it->value().ToString());
+        ret[hash] = extract_metadata_set(map);
+      }
+    }
+    return ret;
+  }
+
+  std::set<Metadata> extract_metadata_set(const std::map<std::string, Metadata>& map) {
+    std::set<Metadata> ret;
+    for(const auto& m:map) ret.insert(m.second);
+    return ret;
+  }
+
   std::set<Metadata> get(const chord::uri& directory) {
     std::string value;
     check_status(db->Get(leveldb::ReadOptions(), directory.path().string(), &value));
 
     const auto map = deserialize(value);
-
-    std::set<Metadata> ret;
-    for(const auto& m:map) ret.insert(m.second);
-    return ret;
+    return extract_metadata_set(map);
   }
 
 };

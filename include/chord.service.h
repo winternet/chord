@@ -36,6 +36,10 @@ class Service final : public chord::Chord::Service, AbstractService {
   chord::common::RouterEntry successor(const uuid_t &uuid) noexcept(
       false) override;
 
+  grpc::Status take(grpc::ServerContext *context, 
+                    const chord::TakeRequest *req,
+                    grpc::ServerWriter<chord::TakeResponse> *writer) override;
+
   grpc::Status successor(grpc::ServerContext *context,
                          const chord::SuccessorRequest *req,
                          chord::SuccessorResponse *res) override;

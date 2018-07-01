@@ -100,7 +100,7 @@ class uuid {
   }
 
   /**
-   * check if the uuid is in the interval between the two given uuids on the ring.
+   * \brief Check if the uuid is in the interval between the two given uuids on the ring.
    *
    * Neither of the boundaries is included in the interval. If both uuuíds
    * match the interval is assumed to span the whole uuid ring.
