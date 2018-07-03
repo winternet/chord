@@ -127,7 +127,7 @@ class MetadataManager {
    * @param to uuid (exclusive)
    * @todo re-hashing with full-table scan is slow
    *   1) use an 'index' or
-   *   2) save hash to Metadata
+   *   2) save hash to Metadata (deserialization needed)
    */
   std::map<uuid, std::set<Metadata> > get(const chord::uuid& from, const chord::uuid& to) {
     std::map<uuid, std::set<Metadata> > ret;

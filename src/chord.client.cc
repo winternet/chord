@@ -75,6 +75,25 @@ void Client::join(const endpoint_t &addr) {
   router->set_successor(0, uuid_t{id}, endpoint);
 }
 
+void Client::take() {
+  const auto node = router->successor();
+
+  ClientContext clientContext;
+  TakeResponse res;
+  TakeRequest req;
+  req.mutable_header()->CopyFrom(make_header(context));
+
+  // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
+  const auto stub = Chord::NewStub(grpc::CreateChannel(node->endpoint, grpc::InsecureChannelCredentials()));
+  unique_ptr<ClientReader<TakeResponse> > reader(stub->take(&clientContext, req));
+
+  while (reader->Read(&res)) {
+    std::cout << "gonna take: " << res.id();
+  }
+
+  reader->Finish();
+}
+
 void Client::stabilize() {
   ClientContext clientContext;
   StabilizeRequest req;

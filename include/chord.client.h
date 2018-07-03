@@ -38,6 +38,8 @@ class Client {
 
   void join(const endpoint_t &addr);
 
+  void take();
+
   void stabilize();
 
   void notify();

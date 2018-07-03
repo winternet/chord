@@ -21,6 +21,7 @@ namespace spdlog {
 
 namespace chord {
 using ClientFactory = std::function<chord::Client()>;
+using TakeFunctor = std::function<std::set<chord::uuid>()>;
 
 class Service final : public chord::Chord::Service, AbstractService {
   static constexpr auto logger_name = "chord.service";
@@ -63,5 +64,6 @@ class Service final : public chord::Chord::Service, AbstractService {
   Router *router;
   ClientFactory make_client;
   std::shared_ptr<spdlog::logger> logger;
+  TakeFunctor take_functor;
 };
 }  // namespace chord

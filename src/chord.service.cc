@@ -17,6 +17,7 @@ using grpc::ServerContext;
 using grpc::ClientContext;
 using grpc::ServerBuilder;
 using grpc::ServerReader;
+using grpc::ServerWriter;
 using grpc::Status;
 
 using chord::common::Header;
@@ -30,6 +31,8 @@ using chord::NotifyResponse;
 using chord::NotifyRequest;
 using chord::CheckResponse;
 using chord::CheckRequest;
+using chord::TakeResponse;
+using chord::TakeRequest;
 using chord::Chord;
 
 
@@ -47,7 +50,10 @@ Service::Service(Context &context, Router *router)
       logger{log::get_or_create(logger_name)} {}
 
 Service::Service(Context &context, Router *router, ClientFactory make_client)
-    : context{context}, router{router}, make_client{make_client}, logger{log::get_or_create(logger_name)} {}
+    : context{context},
+      router{router},
+      make_client{make_client},
+      logger{log::get_or_create(logger_name)} {}
 
 Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
   (void)serverContext;
@@ -76,9 +82,16 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
   return Status::OK;
 }
 
-grpc::Status Service::take(grpc::ServerContext *context,
-                  const chord::TakeRequest *req,
-                  grpc::ServerWriter<chord::TakeResponse> *writer) {
+grpc::Status Service::take(ServerContext *context,
+                           const TakeRequest *req,
+                           ServerWriter<TakeResponse> *writer) {
+  TakeResponse res;
+  while(false) {
+    if (!writer->Write(res)) {
+      throw__exception("broken stream.");
+    }
+  }
+
   return Status::OK;
 }
 
