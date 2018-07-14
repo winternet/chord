@@ -3,6 +3,7 @@
 #include <grpc++/server_context.h>
 #include <grpc/grpc.h>
 #include <functional>
+#include <vector>
 
 #include "chord.client.h"
 #include "chord.exception.h"
@@ -21,7 +22,13 @@ namespace spdlog {
 
 namespace chord {
 using ClientFactory = std::function<chord::Client()>;
-using TakeFunctor = std::function<std::set<chord::uuid>()>;
+/*
+ * @brief produces a set of chord::uuids
+ * @todo  let the callback return an iterator, however, the metadata might
+ *        change during the runtime of the call...
+ */
+using TakeProducerCallback = std::function< std::vector<chord::TakeResponse>(const chord::uuid&, const chord::uuid&) >;
+using take_producer_t = TakeProducerCallback;
 
 class Service final : public chord::Chord::Service, AbstractService {
   static constexpr auto logger_name = "chord.service";
@@ -59,11 +66,17 @@ class Service final : public chord::Chord::Service, AbstractService {
 
   void fix_fingers(size_t index);
 
+  //TODO move to cc
+  void set_take_callback(const take_producer_t callback) {
+    take_producer_callback = callback;
+  }
+
  private:
   Context &context;
   Router *router;
   ClientFactory make_client;
   std::shared_ptr<spdlog::logger> logger;
-  TakeFunctor take_functor;
+  // callbacks
+  take_producer_t take_producer_callback;
 };
 }  // namespace chord

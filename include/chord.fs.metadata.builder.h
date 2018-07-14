@@ -35,7 +35,7 @@ struct MetadataBuilder {
       throw__exception("not found: " + local_path.string());
     }
 
-    Metadata meta{local_path.filename(),
+    Metadata meta{local_path,
                   "",  // owner
                   "",  // group
                   perms::all,
@@ -78,6 +78,19 @@ struct MetadataBuilder {
       ret.insert(MetadataBuilder::from(m));
     }
     return ret;
+  }
+
+  static void addMetadata(const std::set<Metadata>& metadata, chord::fs::MetaResponse* response) {
+    MetadataBuilder::addMetadata(metadata, *response);
+  }
+
+  static void addMetadata(const std::set<Metadata>& metadata, chord::fs::MetaResponse& response) {
+    for (const auto& m : metadata) {
+      chord::fs::Data* data = response.add_metadata();
+      data->set_filename(m.name);
+      data->set_type(value_of(m.file_type));
+      data->set_permissions(value_of(m.permissions));
+    }
   }
 };
 }  // namespace fs

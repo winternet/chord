@@ -13,13 +13,16 @@ struct Context;
 }  // namespace chord
 
 namespace spdlog {
-  class logger;
+class logger;
 }  // namespace spdlog
 
 namespace chord {
 
 using StubFactory = std::function<std::unique_ptr<chord::Chord::StubInterface>(
     const endpoint_t &)>;
+
+using TakeConsumerCallback = std::function< void(const chord::TakeResponse&) >;
+using take_consumer_t = TakeConsumerCallback;
 
 class Client {
   static constexpr auto logger_name = "chord.client";
@@ -29,6 +32,7 @@ class Client {
   Router *router;
 
   StubFactory make_stub;
+  take_consumer_t take_consumer_callback;
   std::shared_ptr<spdlog::logger> logger;
 
  public:
@@ -46,10 +50,14 @@ class Client {
 
   void check();
 
+  //TODO move to cc
+  void set_take_callback(const take_consumer_t callback) {
+    take_consumer_callback = callback;
+  }
+
   chord::common::RouterEntry successor(const uuid_t &id);
 
-  grpc::Status
-  successor(grpc::ClientContext *context, const chord::SuccessorRequest *req, chord::SuccessorResponse *res);
+  grpc::Status successor(grpc::ClientContext *context, const chord::SuccessorRequest *req, chord::SuccessorResponse *res);
 
   grpc::Status successor(const chord::SuccessorRequest *req, chord::SuccessorResponse *res);
 

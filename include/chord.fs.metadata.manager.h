@@ -129,15 +129,17 @@ class MetadataManager {
    *   1) use an 'index' or
    *   2) save hash to Metadata (deserialization needed)
    */
-  std::map<uuid, std::set<Metadata> > get(const chord::uuid& from, const chord::uuid& to) {
-    std::map<uuid, std::set<Metadata> > ret;
+  std::map<chord::uri, std::set<Metadata> > get(const chord::uuid& from, const chord::uuid& to) {
+    std::map<chord::uri, std::set<Metadata> > ret;
     auto *it = db->NewIterator(leveldb::ReadOptions());
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
-      const std::string& uri = it->key().ToString();
-      const uuid hash = chord::crypto::sha256(uri);
+      const std::string& _path = it->key().ToString();
+      const chord::uuid hash = chord::crypto::sha256(_path);
       if(hash.between(from, to)) {
         const auto map = deserialize(it->value().ToString());
-        ret[hash] = extract_metadata_set(map);
+        //TODO refactor this, either always save uri
+        //     or save scheme in metadata
+        ret[chord::uri("chord", {_path})] = extract_metadata_set(map);
       }
     }
     return ret;

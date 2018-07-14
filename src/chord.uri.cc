@@ -125,7 +125,9 @@ uri::uri(const string& str) {
 }
 
 uri::uri(const string scheme, const chord::path path)
-: _scheme{scheme}, _path{path} {}
+: _scheme{scheme} {
+  this->path(path);
+}
 
 string uri::pattern() {
   return "^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)?([^#]*)?(#(.*))?"s;
@@ -139,7 +141,7 @@ void uri::scheme(const string scheme) { _scheme = scheme; }
 
 void uri::auth(const class authority auth) { _authority = auth; }
 
-void uri::path(const chord::path path) { _path = path; }
+void uri::path(const chord::path path) { _path = path.canonical(); }
 
 void uri::query(const map<string, string> query) { _query = query; }
 
@@ -264,6 +266,10 @@ std::string to_string(const uri &uri) {
   //--- fragment
   if(!uri.fragment().empty()) ss << '#' << uri.fragment();
   return ss.str();
+}
+
+bool uri::operator<(const uri &uri) const {
+    return to_string(*this) < to_string(uri);
 }
 
 }

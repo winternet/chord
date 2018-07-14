@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <thread>
 #include <experimental/filesystem>
 
 #include <grpc++/server_context.h>
@@ -14,6 +15,7 @@
 #include "chord.common.h"
 #include "chord.client.h"
 #include "chord.fs.service.h"
+#include "chord.concurrent.queue.h"
 
 using grpc::ServerContext;
 using grpc::ClientContext;
@@ -42,7 +44,12 @@ Service::Service(Context &context, chord::ChordFacade *chord)
       make_client {[this]{
         return chord::fs::Client(this->context, this->chord);
       }},
-      logger{log::get_or_create(logger_name)} {}
+      logger{log::get_or_create(logger_name)} {
+        //consumer = std::thread([&]{
+        //    logger->debug("starting consumer thread for take");
+        //    //chord->
+        //});
+      }
 
 Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
   (void)serverContext;
@@ -61,17 +68,8 @@ Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaR
         return Status::CANCELLED;
         break;
       case DIR:
-        set<Metadata> returnValue = metadata->get(uri);
-
-        // TODO move to builder
-        for(const auto& m:returnValue) {
-          Data *data = res->add_metadata();
-          data->set_filename(m.name);
-          data->set_type(value_of(m.file_type));
-          data->set_permissions(value_of(m.permissions));
-        }
-        //----
-
+        set<Metadata> meta = metadata->get(uri);
+        MetadataBuilder::addMetadata(meta, *res);
         break;
     }
   } catch(const chord::exception& e) {

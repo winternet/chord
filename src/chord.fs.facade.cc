@@ -9,7 +9,8 @@ namespace chord {
 namespace fs {
 
 Facade::Facade(Context& context, ChordFacade* chord)
-    : fs_client{make_unique<fs::Client>(context, chord)},
+    : context{context},
+      fs_client{make_unique<fs::Client>(context, chord)},
       fs_service{make_unique<fs::Service>(context, chord)}
 {}
 
@@ -48,7 +49,7 @@ void Facade::get(const chord::uri &source, const chord::path& target) {
   for(const auto& meta:metadata) {
     // subtract and append, e.g.
     // 1.1) source.path() == /file.txt
-    // 2.1) meta.name() == /file.txt
+    // 2.1) meta.name == /file.txt
     // => /file.txt
     // 1.2) source.path() == /folder/
     // 1.2) meta.name == file.txt

@@ -1,6 +1,8 @@
 syntax = "proto3";
 
+import "google/protobuf/any.proto";
 import "chord_common.proto";
+
 
 option java_multiple_files = true;
 option java_package = "onezero.chord";
@@ -84,8 +86,11 @@ message CheckResponse {
  */
 message TakeRequest {
   chord.common.Header header = 1;
+  string from = 2;
+  string to = 3;
 }
 
 message TakeResponse { 
   string  id = 1;
+  google.protobuf.Any detail = 2;
 }

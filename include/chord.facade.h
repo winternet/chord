@@ -65,6 +65,17 @@ class ChordFacade {
    */
   void fix_fingers(size_t index);
 
+  /**
+   * on-take-callback
+   */
+  //TODO move to cc
+  void set_take_callback(chord::take_producer_t callback) {
+    service->set_take_callback(callback);
+  }
+  void set_take_callback(chord::take_consumer_t callback) {
+    client->set_take_callback(callback);
+  }
+
  private:
   size_t next{0};
 

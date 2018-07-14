@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 #include "chord.fs.client.h"
 #include "chord.fs.service.h"
 #include "chord.uri.h"
@@ -9,6 +11,7 @@ namespace fs {
 
 class Facade {
  private:
+  Context& context;
   std::unique_ptr<Client> fs_client;
   std::unique_ptr<Service> fs_service;
 
@@ -29,6 +32,53 @@ class Facade {
   void dir(const chord::uri& uri, std::iostream& iostream);
 
   void del(const chord::uri& uri);
+
+  /**
+   * @note should be called only once - create on demand
+   * @todo move to cc
+   */
+  chord::take_consumer_t take_consumer_callback() {
+    return [&](const chord::TakeResponse& res) {
+      if(!res.has_detail()) return;
+
+      if(!res.detail().Is<chord::fs::MetaResponse>()) return;
+
+      chord::fs::MetaResponse meta_res;
+      res.detail().UnpackTo(&meta_res);
+      if(meta_res.uri().empty()) {
+        //TODO use logger
+        std::cerr << "received TakeResponse.MetaResponse without uri";
+        return;
+      }
+
+      const std::set<Metadata> metadata = MetadataBuilder::from(meta_res);
+      const auto uri = uri::from(meta_res.uri());
+      fs_service->metadata_manager()->add(uri, metadata);
+    };
+  }
+
+  /**
+   * @note should be called only once - create on demand
+   * @todo move to cc
+   */
+  chord::take_producer_t take_producer_callback() {
+    return [&](const auto& from, const auto& to) {
+      const auto map = fs_service->metadata_manager()->get(from, to);
+      std::vector<chord::TakeResponse> ret;
+      for (const auto& m : map) {
+        chord::TakeResponse res;
+        chord::fs::MetaResponse meta;
+
+        meta.set_uri(m.first);
+        meta.set_ref_id(context.uuid());
+        MetadataBuilder::addMetadata(m.second, meta);
+        res.set_id(m.first);
+        res.mutable_detail()->PackFrom(meta);
+        ret.push_back(res);
+      }
+      return ret;
+    };
+  }
 };
 
 } //namespace fs

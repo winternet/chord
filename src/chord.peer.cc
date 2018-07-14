@@ -43,6 +43,8 @@ Peer::Peer(Context ctx)
       controller{make_unique<controller::Service>(filesystem.get())},
       logger{log::get_or_create(logger_name)}
 {
+  chord->set_take_callback(filesystem->take_consumer_callback());
+  chord->set_take_callback(filesystem->take_producer_callback());
 }
 
 void Peer::start() {

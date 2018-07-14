@@ -9,6 +9,7 @@
 #include "chord.client.h"
 #include "chord.router.h"
 #include "chord.exception.h"
+#include "chord.concurrent.queue.h"
 
 #include "chord.common.h"
 #include "chord.crypto.h"
@@ -89,6 +90,10 @@ void Client::take() {
 
   while (reader->Read(&res)) {
     std::cout << "gonna take: " << res.id();
+    //TODO move check upwards
+    if(take_consumer_callback) {
+      take_consumer_callback(res);
+    }
   }
 
   reader->Finish();

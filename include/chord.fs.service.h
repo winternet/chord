@@ -42,6 +42,10 @@ class Service final : public chord::fs::Filesystem::Service {
                     const chord::fs::MetaRequest *request,
                     chord::fs::MetaResponse *response) override;
 
+  MetadataManager* metadata_manager() const {
+    return metadata.get();
+  }
+
  private:
   Context &context;
   ChordFacade *chord;

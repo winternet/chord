@@ -85,13 +85,20 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
 grpc::Status Service::take(ServerContext *context,
                            const TakeRequest *req,
                            ServerWriter<TakeResponse> *writer) {
+  if(!take_producer_callback) {
+    logger->error("take callback is not set - aborting");
+    return Status::CANCELLED;
+  }
   TakeResponse res;
-  while(false) {
+  const auto from = uuid_t{req->from()};
+  const auto to = uuid_t{req->to()};
+  const auto responses = take_producer_callback(from, to);
+
+  for(const auto& res:responses) {
     if (!writer->Write(res)) {
       throw__exception("broken stream.");
     }
   }
-
   return Status::OK;
 }
 
