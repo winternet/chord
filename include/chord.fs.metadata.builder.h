@@ -51,6 +51,9 @@ struct MetadataBuilder {
     return meta;
   }
 
+  /**
+   * @todo implement owner / group
+   */
   static Metadata from(const chord::fs::Data& item, std::string ref_id = std::string()) {
     Metadata meta{item.filename(),
                   "",  // owner
