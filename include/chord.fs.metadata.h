@@ -23,6 +23,20 @@ struct Metadata {
   perms permissions;
   type file_type;
 
+  // reference node
+  std::string ref_id;
+
+  Metadata() {
+    /** needed for (de-) serialization **/
+  }
+  Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, std::string ref_id = std::string())
+  : name{name},
+    owner{owner},
+    group{group},
+    permissions{permissions},
+    file_type{file_type},
+    ref_id{ref_id}{}
+
   bool operator<(const Metadata &other) const { return name < other.name; }
   bool operator==(const Metadata &other) const { return name==other.name && file_type==other.file_type; }
 

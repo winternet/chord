@@ -30,6 +30,9 @@ struct MetadataBuilder {
     return ret;
   }
 
+  /**
+   * @todo implement owner / group
+   */
   static Metadata from(const path& local_path) {
     if (!file::exists(local_path)) {
       throw__exception("not found: " + local_path.string());
@@ -48,12 +51,13 @@ struct MetadataBuilder {
     return meta;
   }
 
-  static Metadata from(const chord::fs::Data& item) {
+  static Metadata from(const chord::fs::Data& item, std::string ref_id = std::string()) {
     Metadata meta{item.filename(),
                   "",  // owner
                   "",  // group
                   static_cast<perms>(item.permissions()),
-                  static_cast<type>(item.type())};
+                  static_cast<type>(item.type()), 
+                  ref_id};
 
     return meta;
   }
@@ -75,7 +79,7 @@ struct MetadataBuilder {
   static std::set<Metadata> from(const chord::fs::MetaResponse& res) {
     std::set<Metadata> ret;
     for (const auto& m : res.metadata()) {
-      ret.insert(MetadataBuilder::from(m));
+      ret.insert(MetadataBuilder::from(m, res.ref_id()));
     }
     return ret;
   }

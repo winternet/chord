@@ -11,7 +11,7 @@ namespace fs {
 
 class Facade {
  private:
-  Context& context;
+  const Context& context;
   std::unique_ptr<Client> fs_client;
   std::unique_ptr<Service> fs_service;
 
