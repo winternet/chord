@@ -186,6 +186,11 @@ class MockStub : public chord::Chord::StubInterface {
       const chord::JoinRequest&,
       chord::JoinResponse*));
 
+  MOCK_METHOD3(leave, grpc::Status(
+      grpc::ClientContext*, 
+      const ::chord::LeaveRequest&,
+      chord::LeaveResponse*));
+
   MOCK_METHOD2(take, std::unique_ptr<grpc::ClientReaderInterface<chord::TakeResponse>>(
       grpc::ClientContext *, 
       const chord::TakeRequest &));
@@ -219,6 +224,11 @@ class MockStub : public chord::Chord::StubInterface {
   MOCK_METHOD3(PrepareAsyncjoinRaw, grpc::ClientAsyncResponseReaderInterface<chord::JoinResponse>*(
       grpc::ClientContext*,
       const chord::JoinRequest&,
+      grpc::CompletionQueue*));
+
+  MOCK_METHOD3(AsyncleaveRaw, grpc::ClientAsyncResponseReaderInterface<chord::LeaveResponse>*(
+      grpc::ClientContext*,
+      const chord::LeaveRequest&,
       grpc::CompletionQueue*));
 
   MOCK_METHOD3(PrepareAsynctakeRaw, grpc::ClientAsyncReaderInterface<chord::TakeResponse>*(

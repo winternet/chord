@@ -21,6 +21,8 @@ class AbstractScheduler {
   //in format "%s %M %H %d %m %Y" "sec min hour date month year"
   virtual void schedule(const std::string &time, std::function<void()> func) = 0;
 
+  virtual void shutdown() = 0;
+
   virtual ~AbstractScheduler() = default;
 };
 

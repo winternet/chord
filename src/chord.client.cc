@@ -53,6 +53,32 @@ Client::Client(const Context &context, Router *router)
 Client::Client(const Context &context, Router *router, StubFactory make_stub)
     : context{context}, router{router}, make_stub{make_stub}, logger{log::get_or_create(logger_name)} {}
 
+void Client::leave() {
+
+  // get successor
+  const auto n = router->successor();
+  const auto successor = n->uuid;
+  const auto endpoint = n->endpoint;
+
+  if(successor == context.uuid()) {
+    logger->info("[leaving] no successor - shutting down");
+    return;
+  }
+
+  ClientContext clientContext;
+  LeaveRequest req;
+  LeaveResponse res;
+
+  logger->trace("leaving chord ring, informing {}@{}", successor, endpoint);
+
+  req.mutable_header()->CopyFrom(make_header(context));
+  const auto status = make_stub(endpoint)->leave(&clientContext, req, &res);
+
+  if (!status.ok()) {
+    throw__exception("Failed to inform successor about leave");
+  }
+}
+
 void Client::join(const endpoint_t &addr) {
   logger->debug("joining {}", addr);
 
@@ -76,27 +102,39 @@ void Client::join(const endpoint_t &addr) {
   router->set_successor(0, uuid_t{id}, endpoint);
 }
 
-void Client::take() {
-  const auto node = router->successor();
-
+void Client::take(const node from, const node to, const take_consumer_t callback ) {
   ClientContext clientContext;
   TakeResponse res;
   TakeRequest req;
+
   req.mutable_header()->CopyFrom(make_header(context));
+  req.set_from(from.uuid);
+  req.set_to(to.uuid);
 
   // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
-  const auto stub = Chord::NewStub(grpc::CreateChannel(node->endpoint, grpc::InsecureChannelCredentials()));
+  const auto stub = Chord::NewStub(grpc::CreateChannel(from.endpoint, grpc::InsecureChannelCredentials()));
   unique_ptr<ClientReader<TakeResponse> > reader(stub->take(&clientContext, req));
 
   while (reader->Read(&res)) {
     std::cout << "gonna take: " << res.id();
-    //TODO move check upwards
-    if(take_consumer_callback) {
-      take_consumer_callback(res);
+    //TODO move check upwards, dont do request
+    if(callback) {
+      callback(res);
     }
   }
 
   reader->Finish();
+}
+
+void Client::take() {
+  const auto successor = router->successor();
+
+  if(!successor) {
+    logger->warn("[take] failed - no successor");
+    return;
+  }
+
+  take(context.node(), *successor, take_consumer_callback);
 }
 
 void Client::stabilize() {

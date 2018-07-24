@@ -127,10 +127,8 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 
     // remote / local(last)
     for (const path &path : uri.path().all_paths()) {
-      // prepend data directory
-      auto meta = MetadataBuilder::for_path(context, path);
-
       const auto sub_uri = uri::builder{uri.scheme(), path}.build();
+      auto meta = MetadataBuilder::for_path(context, path);
       make_client().meta(sub_uri, Client::Action::ADD, meta);
     }
   } catch(const chord::exception &e) {

@@ -7,6 +7,7 @@
 #include "chord.fs.facade.h"
 #include "chord.router.h"
 #include "chord.uuid.h"
+#include "chord.shutdown.handler.h"
 
 namespace chord {
 class AbstractScheduler;
@@ -26,7 +27,7 @@ namespace spdlog {
 
 namespace chord {
 
-class Peer {
+class Peer : public std::enable_shared_from_this<Peer> {
   static constexpr auto logger_name = "chord.peer";
 
  private:
@@ -40,6 +41,8 @@ class Peer {
 
   std::unique_ptr<chord::controller::Service> controller;
 
+  std::unique_ptr<chord::ShutdownHandler> shutdown_handler;
+
   std::shared_ptr<spdlog::logger> logger;
 
   void start_server();
@@ -51,6 +54,7 @@ class Peer {
   explicit Peer(chord::Context context);
 
   void start();
+  void stop();
 };
 
 }  // namespace chord

@@ -45,15 +45,22 @@ Peer::Peer(Context ctx)
 {
   chord->set_take_callback(filesystem->take_consumer_callback());
   chord->set_take_callback(filesystem->take_producer_callback());
+
+  chord->set_on_leave_callback(filesystem->on_leave_callback());
 }
 
 void Peer::start() {
+  shutdown_handler = make_unique<chord::ShutdownHandler>(shared_from_this());
   logger->trace("peer with client-id {}", context.uuid());
 
   chord->start();
 
   start_server();
   //--- blocks
+}
+
+void Peer::stop() {
+  chord->stop();
 }
 
 } //namespace chord

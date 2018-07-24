@@ -82,9 +82,10 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
   return Status::OK;
 }
 
-grpc::Status Service::take(ServerContext *context,
+grpc::Status Service::take(ServerContext *serverContext,
                            const TakeRequest *req,
                            ServerWriter<TakeResponse> *writer) {
+  (void)serverContext;
   if(!take_producer_callback) {
     logger->error("take callback is not set - aborting");
     return Status::CANCELLED;
@@ -180,6 +181,38 @@ Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *
     res->mutable_predecessor()->CopyFrom(entry);
   }
 
+  return Status::OK;
+}
+
+Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, LeaveResponse *res) {
+  (void)serverContext;
+  (void)res;
+  logger->trace("leaving node {}@{}", req->header().src().uuid(),
+                req->header().src().endpoint());
+
+  //--- validate
+  if (!req->has_header() && !req->header().has_src()) {
+    logger->warn("failed to validate header");
+    return Status::CANCELLED;
+  }
+
+  const uuid_t self{context.uuid()};
+  // we trust the sender
+  const uuid_t uuid{req->header().src().uuid()};
+  const auto endpoint = req->header().src().endpoint();
+
+  /**
+   * TODO
+   * 1) send TakeRequest to source
+   * 2) consumer needs to issue getRequests for each metadata
+   */
+  //const auto status = make_client().take(req, res);
+  if(!on_leave_callback) {
+    logger->warn("on leave callback not set - aborting.");
+    return Status::CANCELLED;
+  }
+
+  make_client().take({uuid, endpoint}, context.node(), on_leave_callback);
   return Status::OK;
 }
 

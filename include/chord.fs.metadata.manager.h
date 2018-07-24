@@ -10,15 +10,18 @@
 #include "chord.fs.metadata.builder.h"
 #include "chord.fs.metadata.h"
 #include "chord.uri.h"
+#include "chord.log.h"
 
 namespace chord {
 namespace fs {
 
 class MetadataManager {
+  static constexpr auto logger_name = "chord.fs.metadata.manager";
 
  private:
   Context &context;
   std::unique_ptr<leveldb::DB> db;
+  std::shared_ptr<spdlog::logger> logger;
 
   void check_status(const leveldb::Status &status) {
     if(status.ok()) return;
@@ -58,7 +61,9 @@ class MetadataManager {
 
  public:
   explicit MetadataManager(Context &context)
-    : context{context} { initialize(); }
+    : context{context},
+      logger{log::get_or_create(logger_name)}
+      { initialize(); }
 
   MetadataManager(const MetadataManager&) = delete;
 
@@ -110,9 +115,14 @@ class MetadataManager {
     }
 
     std::map<std::string, Metadata> current = deserialize(value);
+    logger->trace("adding metadata for {}", directory);
 
     for (const auto& m : metadata) {
       current.insert({m.name, m});
+    }
+
+    for (const auto& m: current) {
+      logger->trace("{} : {}", m.first, m.second);
     }
 
     value = serialize(current);
@@ -156,6 +166,9 @@ class MetadataManager {
     check_status(db->Get(leveldb::ReadOptions(), directory.path().string(), &value));
 
     const auto map = deserialize(value);
+    for (const auto& m: map) {
+      logger->trace("{} : {}", m.first, m.second);
+    }
     return extract_metadata_set(map);
   }
 

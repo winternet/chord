@@ -32,6 +32,17 @@ ChordFacade::ChordFacade(Context& ctx)
   return service.get();
 }
 
+void ChordFacade::stop() {
+  logger->trace("shutting down scheduler...");
+  stop_scheduler();
+  logger->trace("shutting down chord...");
+  leave();
+}
+
+void ChordFacade::stop_scheduler() {
+  scheduler->shutdown();
+}
+
 void ChordFacade::start() {
   logger->trace("peer with client-id {}", context.uuid());
 
@@ -57,7 +68,7 @@ void ChordFacade::start_scheduler() {
 
   //--- fix fingers
   scheduler->schedule(chrono::milliseconds(context.check_period_ms), [this] {
-    //TODO(christoph) use uuid::UUID_BITS_MAX
+    //TODO use uuid::UUID_BITS_MAX
     next = (next%8) + 1;
     //next = 0;
     logger->trace("fix fingers with next index next: {}", next);
@@ -66,6 +77,12 @@ void ChordFacade::start_scheduler() {
   });
 }
 
+/**
+ * leave chord ring
+ */
+void ChordFacade::leave() {
+  client->leave();
+}
 /**
  * join chord ring containing client-id.
  */

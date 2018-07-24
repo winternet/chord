@@ -5,6 +5,7 @@
 #include "chord.path.h"
 #include "chord.types.h"
 #include "chord.uuid.h"
+#include "chord.node.h"
 
 uuid_t generate_random();
 
@@ -34,6 +35,7 @@ struct Context {
   size_t check_period_ms{10000};
 
   inline const uuid_t &uuid() const { return _uuid; }
+  inline const chord::node node() const { return {_uuid, bind_addr}; }
 
   void set_uuid(const uuid_t &uuid);
 

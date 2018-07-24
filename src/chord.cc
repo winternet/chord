@@ -119,10 +119,6 @@ Context parse_program_options(int ac, char *av[]) {
   return context;
 }
 
-// void start_controller(const shared_ptr<chord::fs::Client>& fs_client) {
-//  chord::controller::Service controller(fs_client);
-//}
-
 int main(int argc, char *argv[]) {
   //--- parse program options to context
   //--- or issue client command

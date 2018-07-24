@@ -6,10 +6,12 @@
 #include "chord.grpc.pb.h"
 #include "chord.types.h"
 #include "chord.uuid.h"
+#include "chord.i.callback.h"
 
 namespace chord {
 struct Router;
 struct Context;
+class node;
 }  // namespace chord
 
 namespace spdlog {
@@ -20,9 +22,6 @@ namespace chord {
 
 using StubFactory = std::function<std::unique_ptr<chord::Chord::StubInterface>(
     const endpoint_t &)>;
-
-using TakeConsumerCallback = std::function< void(const chord::TakeResponse&) >;
-using take_consumer_t = TakeConsumerCallback;
 
 class Client {
   static constexpr auto logger_name = "chord.client";
@@ -40,9 +39,12 @@ class Client {
 
   Client(const Context &context, Router *router, StubFactory factory);
 
+  void leave();
+
   void join(const endpoint_t &addr);
 
   void take();
+  void take(const node from, const node to, take_consumer_t callback);
 
   void stabilize();
 

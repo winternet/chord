@@ -33,6 +33,37 @@ class Facade {
 
   void del(const chord::uri& uri);
 
+  chord::take_consumer_t on_leave_callback() {
+    return [&](const chord::TakeResponse& res) {
+      if (!res.has_detail()) return;
+      if (!res.detail().Is<chord::fs::MetaResponse>()) return;
+
+      chord::fs::MetaResponse meta_res;
+      res.detail().UnpackTo(&meta_res);
+      if (meta_res.uri().empty()) {
+        //TODO use logger
+        std::cerr << "received TakeResponse.MetaResponse without uri";
+      }
+
+      std::cerr << "\nprocessing MetaResponse: " << meta_res.uri() << "\n";
+      const auto data_set = MetadataBuilder::from(meta_res);
+      for (const auto& data : data_set) {
+        std::cerr << "... data    " << data.name << "\n";
+        if (data.file_type == type::regular) {
+          std::cerr << "... trying to get_file " << meta_res.uri() << " to ." << "\n";
+          //this->get_file(uri{meta_res.uri()}, context.data_directory);
+          this->get_file(uri{meta_res.uri()}, context.data_directory / uri{meta_res.uri()}.path());
+        } else {
+          std::cerr << "... skipping " << meta_res.uri() << "\n";
+        }
+      }
+
+      //const std::set<Metadata> metadata = MetadataBuilder::from(meta_res);
+      //const auto uri = uri::from(meta_res.uri());
+      //// make_client().
+      //fs_service->metadata_manager()->add(uri, metadata);
+    };
+  }
   /**
    * @note should be called only once - create on demand
    * @todo move to cc

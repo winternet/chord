@@ -20,6 +20,7 @@ service Chord {
   rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
   rpc check     (CheckRequest)      returns (CheckResponse) {}
   rpc take      (TakeRequest)       returns (stream TakeResponse) {}
+  rpc leave     (LeaveRequest)      returns (LeaveResponse) {}
 }
 
 /**
@@ -79,6 +80,18 @@ message CheckRequest {
 message CheckResponse {
   chord.common.Header header = 1;
   string id = 2;
+}
+
+/**
+ * LEAVE
+ */
+message LeaveRequest {
+  chord.common.Header header = 1;
+  chord.common.RouterEntry predecessor = 2;
+}
+
+message LeaveResponse { 
+  chord.common.Header header = 1;
 }
 
 /**

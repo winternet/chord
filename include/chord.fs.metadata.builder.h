@@ -6,46 +6,56 @@
 #include "chord.fs.metadata.h"
 #include "chord.path.h"
 #include "chord_fs.pb.h"
+#include "chord.context.h"
 
 namespace chord {
 namespace fs {
 
 struct MetadataBuilder {
 
-  static std::set<Metadata> for_path(const path& local_path) {
+  /**
+   * generate metadata from chord uri path
+   *
+   * @param context to prepend chord's data directory
+   * @param chord_path the path from chord:// e.g. /folder/file
+   */
+  static std::set<Metadata> for_path(const Context& context, const path& chord_path) {
+    const auto local_path = context.data_directory / chord_path;
     if (!file::exists(local_path)) {
       throw__exception("not found: " + local_path.string());
     }
 
     std::set<Metadata> ret = {};
-    auto root = MetadataBuilder::from(local_path);
+    auto root = MetadataBuilder::from(context, local_path);
     if(root.file_type == type::directory) root.name = ".";
     ret.insert(root);
 
     // add include contents if directory
     for(const auto &content : local_path.contents()) {
-      ret.insert(MetadataBuilder::from(content));
+      ret.insert(MetadataBuilder::from(context, content));
     }
 
     return ret;
   }
 
   /**
+   * Get metadata from existing local path
+   *
    * @todo implement owner / group
    */
-  static Metadata from(const path& local_path) {
+  static Metadata from(const Context& context, const path& local_path) {
     if (!file::exists(local_path)) {
       throw__exception("not found: " + local_path.string());
     }
 
-    Metadata meta{local_path,
+    Metadata meta{local_path.filename(),
                   "",  // owner
                   "",  // group
                   perms::all,
                   file::is_directory(local_path) ? type::directory : type::regular};
 
     for(const auto &content : local_path.contents()) {
-      auto meta = MetadataBuilder::from(content);
+      auto meta = MetadataBuilder::from(context, content);
     }
 
     return meta;

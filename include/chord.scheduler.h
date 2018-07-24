@@ -1,13 +1,14 @@
 #pragma once
 
-#include <functional>
-#include <chrono>
-#include <future>
-#include <queue>
-#include <thread>
-#include <memory>
-#include <sstream>
+#include <atomic>
 #include <cassert>
+#include <chrono>
+#include <functional>
+#include <future>
+#include <memory>
+#include <queue>
+#include <sstream>
+#include <thread>
 
 #include "chord.i.scheduler.h"
 
@@ -41,7 +42,7 @@ struct function_timer {
 
 class Scheduler : public AbstractScheduler {
  private:
-  bool shutdown;
+  std::atomic<bool> stop;
   std::unique_ptr<std::thread> thread;
   std::priority_queue<function_timer> tasks;
 
@@ -52,7 +53,7 @@ class Scheduler : public AbstractScheduler {
   Scheduler(const Scheduler &rhs) = delete;
 
   Scheduler()
-      : shutdown(false),
+      : stop{false},
         thread(new std::thread([this] {
                                  //--- setup time
                                  using namespace std::chrono_literals;
@@ -63,8 +64,12 @@ class Scheduler : public AbstractScheduler {
         )) {}
 
   virtual ~Scheduler() {
-    shutdown = true;
+    stop = true;
     thread->join();
+  }
+
+  void shutdown() {
+    stop = true;
   }
 
   void schedule(const std::chrono::system_clock::time_point &time, std::function<void()> &&func) override {
@@ -108,7 +113,7 @@ class Scheduler : public AbstractScheduler {
   }
 
   void loop() {
-    while (!shutdown) {
+    while (!stop) {
       auto now = std::chrono::system_clock::now();
       while (!tasks.empty() && tasks.top().time <= now) {
         function_timer f = tasks.top();

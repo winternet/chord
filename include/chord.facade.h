@@ -33,12 +33,19 @@ class ChordFacade {
 
   void start();
 
+  void stop();
+
   ::grpc::Service* grpc_service();
 
   /**
    * create new chord ring
    */
   void create();
+
+  /**
+   * leave chord ring containing.
+   */
+  void leave();
 
   /**
    * join chord ring containing client-id.
@@ -72,8 +79,12 @@ class ChordFacade {
   void set_take_callback(chord::take_producer_t callback) {
     service->set_take_callback(callback);
   }
+  //TODO move to cc
   void set_take_callback(chord::take_consumer_t callback) {
     client->set_take_callback(callback);
+  }
+  void set_on_leave_callback(chord::take_consumer_t callback) {
+    service->set_on_leave_callback(callback);
   }
 
  private:
@@ -91,6 +102,7 @@ class ChordFacade {
   std::shared_ptr<spdlog::logger> logger;
 
   void start_scheduler();
+  void stop_scheduler();
 };
 
 }  // namespace chord
