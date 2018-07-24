@@ -1,0 +1,17 @@
+version: 1
+
+##data
+data-directory: "./data0"
+meta-directory: "./meta0"
+
+##networking
+bind-addr: "0.0.0.0:50050"
+join-addr: "0.0.0.0:50050"
+bootstrap: Yes
+no-controller: No
+
+## details
+stabilize_ms: 10000
+check_ms: 10000
+
+#uuid: "0"

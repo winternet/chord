@@ -1,0 +1,3 @@
+-I./include
+-I./build/gen
+-I/usr/include/boost

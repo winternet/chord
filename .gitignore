@@ -8,3 +8,8 @@ gen
 tags
 build
 .idea
+.tags
+.gdb_history
+.gitconfig
+externals/
+test_data/
