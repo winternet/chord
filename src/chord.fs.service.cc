@@ -22,6 +22,7 @@ using grpc::ClientContext;
 using grpc::ServerBuilder;
 using grpc::ServerReader;
 using grpc::Status;
+using grpc::StatusCode;
 
 using chord::common::Header;
 using chord::fs::PutResponse;
@@ -74,6 +75,7 @@ Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaR
     }
   } catch(const chord::exception& e) {
     logger->error("failed in meta for uri {}, reason: {}", uri, e.what());
+    return Status{StatusCode::NOT_FOUND, e.what()};
   }
 
   return Status::OK;
@@ -125,8 +127,10 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 
     // remote / local(last)
     for (const path &path : uri.path().all_paths()) {
+      // prepend data directory
+      auto meta = MetadataBuilder::for_path(context, path);
+
       const auto sub_uri = uri::builder{uri.scheme(), path}.build();
-      auto meta = MetadataBuilder::for_path(context.data_directory / path);
       make_client().meta(sub_uri, Client::Action::ADD, meta);
     }
   } catch(const chord::exception &e) {
