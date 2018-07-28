@@ -61,9 +61,7 @@ class uuid {
    * value as string
    */
   inline std::string string() const {
-    std::stringstream ss;
-    ss << val;
-    return ss.str();
+    return val.str();
   }
 
   /**
@@ -100,7 +98,7 @@ class uuid {
   }
 
   /**
-   * \brief Check if the uuid is in the interval between the two given uuids on the ring.
+   * @brief Check if the uuid is in the interval between the two given uuids on the ring.
    *
    * Neither of the boundaries is included in the interval. If both uuuíds
    * match the interval is assumed to span the whole uuid ring.
