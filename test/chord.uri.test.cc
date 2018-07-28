@@ -163,6 +163,16 @@ TEST(chord_uri, builder_with_authority) {
   ASSERT_EQ("https://user:password@localhost:50050/foo/bar?key1=val1&key2=val2#fragment", to_string(uri));
 }
 
+TEST(chord_uri, builder_append_path) {
+  auto uri = uri::builder("chord:///etc/foo").append_path({"/bar.md"}).build();
+  ASSERT_EQ("chord:///etc/foo/bar.md", to_string(uri));
+}
+
+TEST(chord_uri, builder_append_path_trailing_slash) {
+  auto uri = uri::builder("chord:///etc/foo/").append_path({"/bar.md"}).build();
+  ASSERT_EQ("chord:///etc/foo/bar.md", to_string(uri));
+}
+
 TEST(chord_uri, builder_without_scheme_without_path) {
   auto builder = uri::builder();
   ASSERT_THROW(builder.build(), chord::exception);

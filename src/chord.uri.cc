@@ -11,6 +11,11 @@ namespace fs = std::experimental::filesystem;
 
 namespace chord {
 
+uri::builder::builder(const std::string uri) {
+  chord::uri parsed{uri};
+  _scheme = parsed.scheme();
+  _path = parsed.path();
+}
 uri::builder::builder(const std::string scheme, const chord::path path)
     : _scheme{scheme}, _path{path} {}
 
@@ -36,6 +41,11 @@ uri::builder uri::builder::user(const string &user) {
 
 uri::builder uri::builder::password(const string &password) {
   _password = password;
+  return *this;
+}
+
+uri::builder uri::builder::append_path(const chord::path& path) {
+  _path /= path;
   return *this;
 }
 

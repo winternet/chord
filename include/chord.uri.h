@@ -14,6 +14,7 @@ namespace chord {
 class uri {
  public:
   class builder {
+   private:
     std::map<std::string, std::string> _query;
     std::string _scheme, _fragment, _user, _password, _host;
     chord::path _path;
@@ -21,6 +22,8 @@ class uri {
 
    public:
     builder() = default;
+
+    builder(const std::string uri);
 
     builder(const std::string scheme, const chord::path path);
 
@@ -33,6 +36,8 @@ class uri {
     builder user(const std::string &user);
 
     builder password(const std::string &password);
+
+    builder append_path(const chord::path& path);
 
     builder path(const std::string &path);
 
