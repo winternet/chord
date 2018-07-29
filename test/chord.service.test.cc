@@ -231,6 +231,11 @@ class MockStub : public chord::Chord::StubInterface {
       const chord::LeaveRequest&,
       grpc::CompletionQueue*));
 
+  MOCK_METHOD3(PrepareAsyncleaveRaw, grpc::ClientAsyncResponseReaderInterface<chord::LeaveResponse>*(
+      grpc::ClientContext*,
+      const chord::LeaveRequest&,
+      grpc::CompletionQueue*));
+
   MOCK_METHOD3(PrepareAsynctakeRaw, grpc::ClientAsyncReaderInterface<chord::TakeResponse>*(
       grpc::ClientContext*, 
       const ::chord::TakeRequest&, 
