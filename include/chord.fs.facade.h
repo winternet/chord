@@ -49,6 +49,7 @@ class Facade {
       const auto data_set = MetadataBuilder::from(meta_res);
       // TODO integrate the metadata we get
       for (const auto& data : data_set) {
+        fs_service->metadata_manager()->add(uri, data_set);
         // uri might be a directory containing data.name as child
         // or uri might point to a file with the metadata containing
         // the file's name, we consider only those leaves

@@ -35,14 +35,14 @@ class MetadataManager {
     if(metadata.empty()) return ret;
 
     std::stringstream ss{metadata};
-    boost::archive::text_iarchive ia(ss);
+    boost::archive::text_iarchive ia{ss};
     ia >> ret;
     return ret;
   }
 
   std::string serialize(const std::map<std::string, Metadata>& metadata) {
     std::stringstream ss;
-    boost::archive::text_oarchive oa(ss);
+    boost::archive::text_oarchive oa{ss};
     oa << metadata;
     return ss.str();
   }
@@ -74,7 +74,7 @@ class MetadataManager {
 
   void del(const chord::uri& directory, const std::set<Metadata> &metadata) {
     std::string value;
-    auto path = directory.path().canonical().string();
+    const auto path = directory.path().canonical().string();
     check_status(db->Get(leveldb::ReadOptions(), path, &value));
 
     //map['path'] = metadata
@@ -89,7 +89,7 @@ class MetadataManager {
 
   std::set<Metadata> dir(const chord::uri& directory) {
     std::string value;
-    auto status = db->Get(leveldb::ReadOptions(), directory.path().canonical().string(), &value);
+    const auto status = db->Get(leveldb::ReadOptions(), directory.path().canonical().string(), &value);
 
     if(status.ok()) {
       auto current = deserialize(value);
@@ -107,8 +107,8 @@ class MetadataManager {
 
   void add(const chord::uri& directory, const std::set<Metadata>& metadata) {
     std::string value;
-    auto path = directory.path().canonical().string();
-    auto status = db->Get(leveldb::ReadOptions(), path, &value);
+    const auto path = directory.path().canonical().string();
+    const auto status = db->Get(leveldb::ReadOptions(), path, &value);
 
     if(!status.ok() && !status.IsNotFound()){
       check_status(status);
