@@ -187,7 +187,7 @@ Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *
 Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, LeaveResponse *res) {
   (void)serverContext;
   (void)res;
-  logger->trace("leaving node {}@{}", req->header().src().uuid(),
+  logger->trace("received leaving node {}@{}", req->header().src().uuid(),
                 req->header().src().endpoint());
 
   //--- validate
@@ -200,6 +200,8 @@ Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, Lea
   // we trust the sender
   const uuid_t uuid{req->header().src().uuid()};
   const auto endpoint = req->header().src().endpoint();
+  const node from{req->predecessor().uuid(), req->predecessor().endpoint()};
+  const node to{req->header().src().uuid(), req->header().src().endpoint()};
 
   /**
    * TODO
@@ -212,7 +214,7 @@ Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, Lea
     return Status::CANCELLED;
   }
 
-  make_client().take({uuid, endpoint}, context.node(), on_leave_callback);
+  make_client().take(from, to, on_leave_callback);
   return Status::OK;
 }
 

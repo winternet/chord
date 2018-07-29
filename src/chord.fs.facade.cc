@@ -99,6 +99,7 @@ void Facade::put_file(const path& source, const chord::uri& target) {
 void Facade::get_file(const chord::uri& source, const chord::path& target) {
   try {
     // assert target path exists
+    std::cerr << "\n\n*** get_file: source: " << to_string(source) << " target: " << target;
     const auto parent = target.parent_path();
     if(!file::exists(parent)) file::create_directories(parent);
 

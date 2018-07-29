@@ -141,15 +141,24 @@ class MetadataManager {
    */
   std::map<chord::uri, std::set<Metadata> > get(const chord::uuid& from, const chord::uuid& to) {
     std::map<chord::uri, std::set<Metadata> > ret;
-    auto *it = db->NewIterator(leveldb::ReadOptions());
+    std::unique_ptr<leveldb::Iterator> it{db->NewIterator(leveldb::ReadOptions())};
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
       const std::string& _path = it->key().ToString();
-      const chord::uuid hash = chord::crypto::sha256(_path);
+      const chord::uri uri("chord", {_path});
+      const chord::uuid hash = chord::crypto::sha256(uri);
+      logger->trace("\nuri {}\nhash_uri  {}\nfrom      {}\nto        {}", uri, hash, from, to);
+
       if(hash.between(from, to)) {
         const auto map = deserialize(it->value().ToString());
         //TODO refactor this, either always save uri
         //     or save scheme in metadata
-        ret[chord::uri("chord", {_path})] = extract_metadata_set(map);
+        ret[uri] = extract_metadata_set(map);
+      }
+    }
+    for(const auto& o : ret) {
+      logger->trace("data in uri: {}", o.first);
+      for(const auto &m : o.second) {
+        logger->trace("meta: {}", m);
       }
     }
     return ret;

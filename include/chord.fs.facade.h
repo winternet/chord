@@ -41,27 +41,22 @@ class Facade {
       chord::fs::MetaResponse meta_res;
       res.detail().UnpackTo(&meta_res);
       if (meta_res.uri().empty()) {
-        //TODO use logger
+        //TODO use logger and move callbacks to own class
         std::cerr << "received TakeResponse.MetaResponse without uri";
       }
 
-      std::cerr << "\nprocessing MetaResponse: " << meta_res.uri() << "\n";
+      const auto uri = chord::uri{meta_res.uri()};
       const auto data_set = MetadataBuilder::from(meta_res);
+      // TODO integrate the metadata we get
       for (const auto& data : data_set) {
-        std::cerr << "... data    " << data.name << "\n";
-        if (data.file_type == type::regular) {
-          std::cerr << "... trying to get_file " << meta_res.uri() << " to ." << "\n";
-          //this->get_file(uri{meta_res.uri()}, context.data_directory);
-          this->get_file(uri{meta_res.uri()}, context.data_directory / uri{meta_res.uri()}.path());
-        } else {
-          std::cerr << "... skipping " << meta_res.uri() << "\n";
+        // uri might be a directory containing data.name as child
+        // or uri might point to a file with the metadata containing
+        // the file's name, we consider only those leaves
+        if (data.file_type == type::regular
+            && data.name == uri.path().filename()) {
+          get_file(uri, context.data_directory / uri.path());
         }
       }
-
-      //const std::set<Metadata> metadata = MetadataBuilder::from(meta_res);
-      //const auto uri = uri::from(meta_res.uri());
-      //// make_client().
-      //fs_service->metadata_manager()->add(uri, metadata);
     };
   }
   /**

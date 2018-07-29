@@ -56,9 +56,10 @@ Client::Client(const Context &context, Router *router, StubFactory make_stub)
 void Client::leave() {
 
   // get successor
-  const auto n = router->successor();
-  const auto successor = n->uuid;
-  const auto endpoint = n->endpoint;
+  const auto successor_node = router->successor();
+  const auto successor = successor_node->uuid;
+
+  const auto predecessor_node = router->predecessor();
 
   if(successor == context.uuid()) {
     logger->info("[leaving] no successor - shutting down");
@@ -69,10 +70,13 @@ void Client::leave() {
   LeaveRequest req;
   LeaveResponse res;
 
-  logger->trace("leaving chord ring, informing {}@{}", successor, endpoint);
+  logger->trace("leaving chord ring, informing {}", successor_node);
 
   req.mutable_header()->CopyFrom(make_header(context));
-  const auto status = make_stub(endpoint)->leave(&clientContext, req, &res);
+  const auto predecessor = req.mutable_predecessor();
+  predecessor->set_uuid(predecessor_node->uuid);
+  predecessor->set_endpoint(predecessor_node->endpoint);
+  const auto status = make_stub(successor_node->endpoint)->leave(&clientContext, req, &res);
 
   if (!status.ok()) {
     throw__exception("Failed to inform successor about leave");
@@ -112,7 +116,7 @@ void Client::take(const node from, const node to, const take_consumer_t callback
   req.set_to(to.uuid);
 
   // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
-  const auto stub = Chord::NewStub(grpc::CreateChannel(from.endpoint, grpc::InsecureChannelCredentials()));
+  const auto stub = Chord::NewStub(grpc::CreateChannel(to.endpoint, grpc::InsecureChannelCredentials()));
   unique_ptr<ClientReader<TakeResponse> > reader(stub->take(&clientContext, req));
 
   while (reader->Read(&res)) {
