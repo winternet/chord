@@ -46,10 +46,20 @@ class Facade {
       }
 
       const auto uri = chord::uri{meta_res.uri()};
-      const auto data_set = MetadataBuilder::from(meta_res);
-      // TODO integrate the metadata we get
-      for (const auto& data : data_set) {
+      std::set<Metadata> data_set;
+
+      // integrate the metadata
+      {
+        for (auto data : MetadataBuilder::from(meta_res)) {
+          // unset reference id since the node leaves
+          data.ref_id = {};
+          data_set.insert(data);
+        }
         fs_service->metadata_manager()->add(uri, data_set);
+      }
+
+      // get the files
+      for (const auto& data : data_set) {
         // uri might be a directory containing data.name as child
         // or uri might point to a file with the metadata containing
         // the file's name, we consider only those leaves
@@ -60,6 +70,7 @@ class Facade {
       }
     };
   }
+
   /**
    * @note should be called only once - create on demand
    * @todo move to cc
