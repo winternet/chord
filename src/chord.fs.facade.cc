@@ -1,5 +1,6 @@
 #include <fstream>
 
+#include "chord.log.h"
 #include "chord.exception.h"
 #include "chord.fs.facade.h"
 
@@ -11,7 +12,8 @@ namespace fs {
 Facade::Facade(Context& context, ChordFacade* chord)
     : context{context},
       fs_client{make_unique<fs::Client>(context, chord)},
-      fs_service{make_unique<fs::Service>(context, chord)}
+      fs_service{make_unique<fs::Service>(context, chord)},
+      logger{log::get_or_create(logger_name)}
 {}
 
 ::grpc::Service* Facade::grpc_service() {
@@ -40,6 +42,36 @@ void Facade::put(const chord::path &source, const chord::uri &target) {
     const auto new_target = is_directory(target) ? target.path().canonical() / source.filename() : target.path().canonical();
     put_file(source, {target.scheme(), new_target});
   }
+}
+
+void Facade::get_and_integrate(const chord::fs::MetaResponse& meta_res) {
+      if (meta_res.uri().empty()) {
+        throw__exception("failed to get and integrate metaresponse due to missing uri " + meta_res.uri());
+      }
+
+      const auto uri = chord::uri{meta_res.uri()};
+      std::set<Metadata> data_set;
+
+      // integrate the metadata
+      {
+        for (auto data : MetadataBuilder::from(meta_res)) {
+          // unset reference id since the node leaves
+          data.ref_id = {};
+          data_set.insert(data);
+        }
+        fs_service->metadata_manager()->add(uri, data_set);
+      }
+
+      // get the files
+      for (const auto& data : data_set) {
+        // uri might be a directory containing data.name as child
+        // or uri might point to a file with the metadata containing
+        // the file's name, we consider only those leaves
+        if (data.file_type == type::regular
+            && data.name == uri.path().filename()) {
+          get_file(uri, context.data_directory / uri.path());
+        }
+      }
 }
 
 void Facade::get(const chord::uri &source, const chord::path& target) {
@@ -99,7 +131,6 @@ void Facade::put_file(const path& source, const chord::uri& target) {
 void Facade::get_file(const chord::uri& source, const chord::path& target) {
   try {
     // assert target path exists
-    std::cerr << "\n\n*** get_file: source: " << to_string(source) << " target: " << target;
     const auto parent = target.parent_path();
     if(!file::exists(parent)) file::create_directories(parent);
 

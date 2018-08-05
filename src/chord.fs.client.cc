@@ -13,16 +13,11 @@
 #include "chord.peer.h"
 #include "chord.router.h"
 
-using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 using grpc::ClientWriter;
 using grpc::ClientReader;
 
-using chord::common::Header;
-using chord::common::RouterEntry;
-
-using chord::fs::PutResponse;
 using chord::fs::PutRequest;
 using chord::fs::GetResponse;
 using chord::fs::GetRequest;

@@ -1,3 +1,4 @@
 -I./include
 -I./build/gen
-#-I/usr/include/boost
+-I/usr/include/boost
+-I/usr/include/c++/8.1.1

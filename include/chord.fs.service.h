@@ -24,7 +24,7 @@ class Service final : public chord::fs::Filesystem::Service {
   static constexpr auto logger_name = "chord.fs.service";
 
  public:
-  explicit Service(Context &context, ChordFacade *chord);
+  explicit Service(Context &context, ChordFacade* chord);
 
   grpc::Status put(grpc::ServerContext *context,
                    grpc::ServerReader<chord::fs::PutRequest> *reader,
@@ -42,16 +42,15 @@ class Service final : public chord::fs::Filesystem::Service {
                     const chord::fs::MetaRequest *request,
                     chord::fs::MetaResponse *response) override;
 
-  MetadataManager* metadata_manager() const {
-    return metadata.get();
+  MetadataManager* metadata_manager() {
+    return metadata_mgr.get();
   }
 
  private:
   Context &context;
   ChordFacade *chord;
-  std::unique_ptr<MetadataManager> metadata;
+  std::unique_ptr<MetadataManager> metadata_mgr;
   ClientFactory make_client;
-
   std::shared_ptr<spdlog::logger> logger;
 };
 

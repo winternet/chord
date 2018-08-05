@@ -18,13 +18,10 @@
 #include "chord.concurrent.queue.h"
 
 using grpc::ServerContext;
-using grpc::ClientContext;
-using grpc::ServerBuilder;
 using grpc::ServerReader;
 using grpc::Status;
 using grpc::StatusCode;
 
-using chord::common::Header;
 using chord::fs::PutResponse;
 using chord::fs::PutRequest;
 using chord::fs::GetResponse;
@@ -38,19 +35,14 @@ using namespace chord::common;
 namespace chord {
 namespace fs {
 
-Service::Service(Context &context, chord::ChordFacade *chord)
+Service::Service(Context &context, ChordFacade* chord)
     : context{context},
       chord{chord},
-      metadata{make_unique<MetadataManager>(context)},
+      metadata_mgr{make_unique<MetadataManager>(context)},
       make_client {[this]{
         return chord::fs::Client(this->context, this->chord);
       }},
-      logger{log::get_or_create(logger_name)} {
-        //consumer = std::thread([&]{
-        //    logger->debug("starting consumer thread for take");
-        //    //chord->
-        //});
-      }
+      logger{log::get_or_create(logger_name)} { }
 
 Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
   (void)serverContext;
@@ -60,16 +52,16 @@ Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaR
   try {
     switch (req->action()) {
       case ADD:
-        metadata->add(uri, MetadataBuilder::from(req));
+        metadata_mgr->add(uri, MetadataBuilder::from(req));
         break;
       case DEL:
-        metadata->del(uri, MetadataBuilder::from(req));
+        metadata_mgr->del(uri, MetadataBuilder::from(req));
         break;
       case MOD:
         return Status::CANCELLED;
         break;
       case DIR:
-        set<Metadata> meta = metadata->get(uri);
+        set<Metadata> meta = metadata_mgr->get(uri);
         MetadataBuilder::addMetadata(meta, *res);
         break;
     }
@@ -163,7 +155,7 @@ Status Service::del(grpc::ServerContext *serverContext, const chord::fs::DelRequ
   }
 
   // local
-  metadata->del(uri);
+  metadata_mgr->del(uri);
   // remote
   const auto status = make_client().meta(uri, Client::Action::DEL);
   if (!status.ok()) {

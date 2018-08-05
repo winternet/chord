@@ -10,15 +10,19 @@ namespace chord {
 namespace fs {
 
 class Facade {
+  static constexpr auto logger_name = "chord.fs.facade";
+
  private:
   const Context& context;
   std::unique_ptr<Client> fs_client;
   std::unique_ptr<Service> fs_service;
+  std::shared_ptr<spdlog::logger> logger;
 
  private:
   void put_file(const chord::path& source, const chord::uri& target);
   void get_file(const chord::uri& source, const chord::path& target);
   bool is_directory(const chord::uri& target);
+  void get_and_integrate(const chord::fs::MetaResponse& metadata);
 
  public:
   Facade(Context& context, ChordFacade* chord);
@@ -40,34 +44,11 @@ class Facade {
 
       chord::fs::MetaResponse meta_res;
       res.detail().UnpackTo(&meta_res);
-      if (meta_res.uri().empty()) {
-        //TODO use logger and move callbacks to own class
-        std::cerr << "received TakeResponse.MetaResponse without uri";
-      }
 
-      const auto uri = chord::uri{meta_res.uri()};
-      std::set<Metadata> data_set;
-
-      // integrate the metadata
-      {
-        for (auto data : MetadataBuilder::from(meta_res)) {
-          // unset reference id since the node leaves
-          data.ref_id = {};
-          data_set.insert(data);
-        }
-        fs_service->metadata_manager()->add(uri, data_set);
-      }
-
-      // get the files
-      for (const auto& data : data_set) {
-        // uri might be a directory containing data.name as child
-        // or uri might point to a file with the metadata containing
-        // the file's name, we consider only those leaves
-        if (data.file_type == type::regular
-            && data.name == uri.path().filename()) {
-          get_file(uri, context.data_directory / uri.path());
-        }
-      }
+      //--- download the files and integrate the metadata
+      try {
+        get_and_integrate(meta_res);
+      }catch(...){}
     };
   }
 
