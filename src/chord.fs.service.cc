@@ -210,7 +210,7 @@ Status Service::get(ServerContext *serverContext, const GetRequest *req, grpc::S
   //try to lookup reference node if found in metadata
   if (!file::exists(data)) {
     logger->debug("file does not exist, trying to restore from metadata...");
-    const auto status = restore_from_metadata(uri);
+    const auto status = get_from_reference(uri);
     if(!status.ok()) return status;
   } else if (!file::is_regular_file(data)) {
     logger->error("requested file is not a regular file - aborting.");

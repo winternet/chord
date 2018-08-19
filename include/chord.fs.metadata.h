@@ -98,14 +98,16 @@ namespace serialization {
 template<class Archive>
 void serialize(Archive & ar, chord::uuid &uuid, const unsigned int version)
 {
-    ar & uuid.value();
+  (void)version;
+  ar & uuid.value();
 }
 
 template<class Archive>
 void serialize(Archive & ar, chord::node &node, const unsigned int version)
 {
-    ar & node.uuid;
-    ar & node.endpoint;
+  (void)version;
+  ar & node.uuid;
+  ar & node.endpoint;
 }
 }  // namespace serialization
 }  // namespace boost
