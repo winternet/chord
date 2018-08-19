@@ -98,17 +98,13 @@ void Client::join(const endpoint_t &addr) {
     throw__exception("Failed to join " + addr);
   }
 
-  const auto succ = res.successor();
-  const auto succ_id = succ.uuid();
-  const auto succ_endpoint = succ.endpoint();
+  const auto succ = chord::common::make_node(res.successor());
 
-  const auto pred = res.predecessor();
-  const auto pred_id = pred.uuid();
-  const auto pred_endpoint = pred.endpoint();
+  const auto pred = chord::common::make_node(res.predecessor());
 
   logger->trace("join successful");
-  router->set_predecessor(0, uuid_t{pred_id}, pred_endpoint);
-  router->set_successor(0, uuid_t{succ_id}, succ_endpoint);
+  router->set_predecessor(0, pred);
+  router->set_successor(0, succ);
 }
 
 Status Client::join(const JoinRequest *req, JoinResponse *res) {
@@ -187,14 +183,13 @@ void Client::stabilize() {
   }
 
   if (res.has_predecessor()) {
-    logger->trace("received stabilize response with predecessor {}@{}", res.predecessor().uuid(), res.predecessor().endpoint());
-    const RouterEntry &entry = res.predecessor();
+    const auto pred = chord::common::make_node(res.predecessor());
+    logger->trace("received stabilize response with predecessor {}", pred);
 
     const uuid_t self(context.uuid());
-    const uuid_t pred(entry.uuid());
     const uuid_t succ(router->successor()->uuid);
-    if(pred.between(self, succ)) {
-      router->set_successor(0, pred, entry.endpoint());
+    if(pred.uuid.between(self, succ)) {
+      router->set_successor(0, pred);
     }
   } else {
     logger->trace("received empty routing entry");

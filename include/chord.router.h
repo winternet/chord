@@ -69,25 +69,25 @@ struct Router {
     return {};
   }
 
-  void set_successor(const size_t index, const uuid_t &uuid, const endpoint_t &endpoint) {
+  void set_successor(const size_t index, const chord::node& node) {
     std::lock_guard<mutex_t> lock(mtx);
-    logger->info("set_successor[{}][{}] = {}", index, uuid, endpoint);
+    logger->info("set_successor[{}][{}] = {}", index, node.uuid, node.endpoint);
     const auto succ = successors[index];
 
-    routes[uuid] = endpoint;
+    routes[node.uuid] = node.endpoint;
     // fill unset preceding nodes
     for (int i = index; i >= 0; --i) {
       if(!successors[i] || *successors[i] == *succ)
-        successors[i] = {uuid};
+        successors[i] = {node.uuid};
       else break;
     }
   }
 
-  void set_predecessor(const size_t index, const uuid_t &uuid, const endpoint_t &endpoint) {
+  void set_predecessor(const size_t index, const chord::node& node) {
     std::lock_guard<mutex_t> lock(mtx);
-    logger->info("set_predecessor[{}][{}] = {}", index, uuid, endpoint);
-    routes[uuid] = endpoint;
-    predecessors[index] = {uuid};
+    logger->info("set_predecessor[{}][{}] = {}", index, node.uuid, node.endpoint);
+    routes[node.uuid] = node.endpoint;
+    predecessors[index] = {node.uuid};
   }
 
   void reset(const uuid_t& uuid) {

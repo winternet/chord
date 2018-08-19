@@ -42,7 +42,7 @@ TEST(RouterTest, closest_preceding_node) {
   Router router(context);
 
   for (int i = 0; i <= 100; i++) {
-    router.set_successor(i, i, to_string(i));
+    router.set_successor(i, {i, to_string(i)});
   }
 
   auto predecessor = router.closest_preceding_node(200)->uuid;
@@ -56,7 +56,7 @@ TEST(RouterTest, closest_preceding_node_less_1) {
   context.set_uuid(1);
   Router router(context);
 
-  router.set_successor(7, 100, to_string(100));
+  router.set_successor(7, {100, to_string(100)});
 
   // predecessor of 1 is 100
   uuid_t predecessor = router.closest_preceding_node(1)->uuid;
@@ -72,7 +72,7 @@ TEST(RouterTest, closest_preceding_node_mod) {
 
   // direct successor of 999 is 0
   for (int i = 0; i <= 100; i++) {
-    router.set_successor(i, i, to_string(i));
+    router.set_successor(i, {i, to_string(i)});
   }
 
   uuid_t predecessor = router.closest_preceding_node(50)->uuid;
@@ -87,8 +87,8 @@ TEST(RouterTest, closest_preceding_node_mod_2) {
   Router router(context);
 
   // 5 -> [0]
-  router.set_successor(0, 0, "0.0.0.0:50050");
-  router.set_predecessor(0, 0, "0.0.0.0:50050");
+  router.set_successor(0, {0, "0.0.0.0:50050"});
+  router.set_predecessor(0, {0, "0.0.0.0:50050"});
 
   uuid_t predecessor = router.closest_preceding_node(5)->uuid;
 
@@ -126,8 +126,8 @@ TEST(RouterTest, closest_preceding_node_mod_3) {
   Router router(context);
 
   //  4<-8-[1]->4
-  router.set_successor(0, 4, "0.0.0.0:50050");
-  router.set_predecessor(0, 4, "0.0.0.0:50050");
+  router.set_successor(0, {4, "0.0.0.0:50050"});
+  router.set_predecessor(0, {4, "0.0.0.0:50050"});
 
   uuid_t predecessor = router.closest_preceding_node(1)->uuid;
 
@@ -141,10 +141,10 @@ TEST(RouterTest, closest_preceding_node_3) {
   Router router(context);
 
   // direct successor of 4<-8->10-[1]->4->...
-  router.set_successor(0, 10, "0.0.0.0:50050");
-  router.set_successor(1,  4, "0.0.0.0:50050");
+  router.set_successor(0, {10, "0.0.0.0:50050"});
+  router.set_successor(1, { 4, "0.0.0.0:50050"});
 
-  router.set_predecessor(0, 4, "0.0.0.0:50050");
+  router.set_predecessor(0, {4, "0.0.0.0:50050"});
 
   uuid_t predecessor = router.closest_preceding_node(1)->uuid;
 
@@ -163,7 +163,7 @@ TEST(RouterTest, set_successor_sets_preceding_nodes) {
   ASSERT_EQ(1, router.size());
 
   for (size_t i = 5; i < 10; i++) {
-    router.set_successor(i, {1}, "1");
+    router.set_successor(i, {1, "1"});
   }
 
   // --> 0: {1}, 1: {1}, 2: {1}, ..., 9:{1}, 10: {}
@@ -182,9 +182,9 @@ TEST(RouterTest, set_successor_rewrites_same_preceding_nodes) {
   EXPECT_EQ(router.successor()->uuid, context.uuid());
 
   // [0..5] -> uuid_t{5}
-  router.set_successor(5, {5}, "5");
+  router.set_successor(5, {5, "5"});
   // [6..10] -> uuid_t{5}
-  router.set_successor(10, {10}, "10");
+  router.set_successor(10, {10, "10"});
 
   for (size_t i = 0; i < 10; i++) {
     const auto succ = router.successor(i);
@@ -197,7 +197,7 @@ TEST(RouterTest, set_successor_rewrites_same_preceding_nodes) {
   }
 
   // insert new node
-  router.set_successor(2, {2}, "2");
+  router.set_successor(2, {2, "2"});
 
   for (size_t i = 0; i < 10; i++) {
     const auto succ = router.successor(i);

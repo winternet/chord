@@ -111,8 +111,8 @@ TEST(ServiceTest, successor_two_nodes) {
   Context context = make_context(0);
   Router router(context);
 
-  router.set_successor(0, 5, "0.0.0.0:50055");
-  router.set_predecessor(0, 5, "0.0.0.0:50055");
+  router.set_successor(0, {5, "0.0.0.0:50055"});
+  router.set_predecessor(0, {5, "0.0.0.0:50055"});
 
   chord::Service service(context, &router);
 
@@ -139,8 +139,8 @@ TEST(ServiceTest, successor_two_nodes_mod) {
   Context context = make_context(5);
   Router router(context);
 
-  router.set_successor(0, 0, "0.0.0.0:50050");
-  router.set_predecessor(0, 0, "0.0.0.0:50050");
+  router.set_successor(0, {0, "0.0.0.0:50050"});
+  router.set_predecessor(0, {0, "0.0.0.0:50050"});
 
   chord::Service service(context, &router);
 
@@ -314,8 +314,8 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   Context context = make_context(5);
   Router router(context);
 
-  router.set_successor(0, 0, "0.0.0.0:50050");
-  router.set_predecessor(0, 0, "0.0.0.0:50050");
+  router.set_successor(0, {0, "0.0.0.0:50050"});
+  router.set_predecessor(0, {0, "0.0.0.0:50050"});
 
   std::unique_ptr<MockStub> stub(new MockStub);
 

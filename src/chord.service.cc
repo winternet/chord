@@ -57,14 +57,15 @@ Service::Service(Context &context, Router *router, ClientFactory make_client)
 
 Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
   (void)serverContext;
-  const auto id = req->header().src().uuid();
-  const auto endpoint = req->header().src().endpoint();
+  const auto node = chord::common::make_node(req->header().src());
+  //const auto id = req->header().src().uuid();
+  //const auto endpoint = req->header().src().endpoint();
 
-  logger->trace("join request from {}@{}", id, endpoint);
+  logger->trace("join request from {}", node);
   /**
    * find successor
    */
-  const auto src = uuid_t{id};
+  const auto& src = node.uuid; //uuid_t{id};
 
   const auto pred = router->predecessor();
   const auto succ = router->successor();
@@ -94,8 +95,8 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
    */
   if (!pred && (!succ || succ->uuid == context.uuid())) {
     logger->info("first node joining, setting the node as successor");
-    router->set_successor(0, src, endpoint);
-    router->set_predecessor(0, src, endpoint);
+    router->set_successor(0, node);
+    router->set_predecessor(0, node);
   }
 
   return Status::OK;
@@ -256,17 +257,18 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
   }
 
   const uuid_t self{context.uuid()};
-  const uuid_t uuid{req->header().src().uuid()};
-  const auto endpoint = req->header().src().endpoint();
+  const auto node = chord::common::make_node(req->header().src());
+  //const uuid_t uuid{req->header().src().uuid()};
+  //const auto endpoint = req->header().src().endpoint();
 
   if (!predecessor
-      || uuid.between(predecessor->uuid, self)) {
-    router->set_predecessor(0, uuid, endpoint);
+      || node.uuid.between(predecessor->uuid, self)) {
+    router->set_predecessor(0, node);
   } else {
     if (!predecessor)
       logger->info("predecessor is null");
     else {
-      logger->info("n' = {}\npredecessor = {}\nself={}", uuid, predecessor, self);
+      logger->info("n' = {}\npredecessor = {}\nself={}", node.uuid, predecessor, self);
     }
   }
 
@@ -292,15 +294,14 @@ void Service::fix_fingers(size_t index) {
   logger->trace("fixing finger for {}.", fix);
 
   try {
-    const auto entry = successor(fix);
-    logger->trace("fixing finger for {}. received successor {}@{}", fix,
-                  entry.uuid(), entry.endpoint());
-    if( uuid_t{entry.uuid()} == context.uuid() ) {
+    const auto succ = chord::common::make_node(successor(fix));
+    logger->trace("fixing finger for {}. received successor {}", fix, succ);
+    if( succ.uuid == context.uuid() ) {
       router->reset(fix);
       return;
     } 
 
-    router->set_successor(index, uuid_t{entry.uuid()}, entry.endpoint());
+    router->set_successor(index, succ);
   } catch (const chord::exception &e) {
     logger->warn("failed to fix fingers for {}", fix);
   }
