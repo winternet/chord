@@ -50,7 +50,11 @@ void add_metadata(chord::fs::MetaRequest& req, const chord::path& path);
 
   grpc::Status get(const chord::uri &uri, std::ostream &ostream);
 
+  grpc::Status get(const chord::uri &uri, const chord::node& node, std::ostream &ostream);
+
   grpc::Status del(const chord::uri &uri);
+
+  grpc::Status del(const chord::uri &uri, const chord::node& node);
 
   grpc::Status dir(const chord::uri &uri, std::set<Metadata>& metadata);
 

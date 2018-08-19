@@ -42,9 +42,11 @@ class Client {
   void leave();
 
   void join(const endpoint_t &addr);
+  grpc::Status join(const JoinRequest *req, JoinResponse *res);
+  grpc::Status join(grpc::ClientContext *clientContext, const JoinRequest *req, JoinResponse *res);
 
   void take();
-  void take(const node from, const node to, take_consumer_t callback);
+  void take(const uuid from, const uuid to, const node responsible, const take_consumer_t callback);
 
   void stabilize();
 

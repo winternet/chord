@@ -98,47 +98,66 @@ void Client::join(const endpoint_t &addr) {
     throw__exception("Failed to join " + addr);
   }
 
-  const auto entry = res.successor();
-  const auto id = entry.uuid();
-  const auto endpoint = entry.endpoint();
+  const auto succ = res.successor();
+  const auto succ_id = succ.uuid();
+  const auto succ_endpoint = succ.endpoint();
 
-  logger->trace("successful, received successor {}@{}", id, endpoint);
-  router->set_successor(0, uuid_t{id}, endpoint);
+  const auto pred = res.predecessor();
+  const auto pred_id = pred.uuid();
+  const auto pred_endpoint = pred.endpoint();
+
+  logger->trace("join successful");
+  router->set_predecessor(0, uuid_t{pred_id}, pred_endpoint);
+  router->set_successor(0, uuid_t{succ_id}, succ_endpoint);
 }
 
-void Client::take(const node from, const node to, const take_consumer_t callback ) {
+Status Client::join(const JoinRequest *req, JoinResponse *res) {
+  ClientContext clientContext;
+  return join(&clientContext, req, res);
+}
+
+Status Client::join(ClientContext *clientContext, const JoinRequest *req, JoinResponse *res) {
+
+  logger->trace("forwarding join of {}", req->header().src().uuid());
+  JoinRequest copy(*req);
+  copy.mutable_header()->CopyFrom(make_header(context));
+
+  const auto predecessor = router->closest_preceding_node(uuid_t(req->header().src().uuid()));
+  logger->trace("forwarding request to {}", predecessor);
+
+  return predecessor ? make_stub(predecessor->endpoint)->join(clientContext, copy, res) : Status::CANCELLED;
+}
+
+void Client::take(const uuid from, const uuid to, const node responsible, const take_consumer_t callback) {
   ClientContext clientContext;
   TakeResponse res;
   TakeRequest req;
 
   req.mutable_header()->CopyFrom(make_header(context));
-  req.set_from(from.uuid);
-  req.set_to(to.uuid);
+  req.set_from(from);
+  req.set_to(to);
 
   // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
-  const auto stub = Chord::NewStub(grpc::CreateChannel(to.endpoint, grpc::InsecureChannelCredentials()));
+  const auto stub = Chord::NewStub(grpc::CreateChannel(responsible.endpoint, grpc::InsecureChannelCredentials()));
   unique_ptr<ClientReader<TakeResponse> > reader(stub->take(&clientContext, req));
 
-  while (reader->Read(&res)) {
-    std::cout << "gonna take: " << res.id();
-    //TODO move check upwards, dont do request
-    if(callback) {
-      callback(res);
-    }
+  while (callback && reader->Read(&res)) {
+    callback(res);
   }
 
   reader->Finish();
 }
 
 void Client::take() {
+  const auto predecessor = router->predecessor();
   const auto successor = router->successor();
 
-  if(!successor) {
-    logger->warn("[take] failed - no successor");
+  if(!predecessor) {
+    logger->warn("[take] failed - no predecessor");
     return;
   }
 
-  take(context.node(), *successor, take_consumer_callback);
+  take(predecessor->uuid, context.uuid(), *successor ,take_consumer_callback);
 }
 
 void Client::stabilize() {

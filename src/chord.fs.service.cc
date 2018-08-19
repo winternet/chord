@@ -90,7 +90,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     data /= uri.path().parent_path();
 
     if (!file::exists(data)) {
-      logger->trace("creating directories for {}", data);
+      logger->trace("[put] creating directories for {}", data);
       file::create_directories(data);
     }
 
@@ -165,24 +165,59 @@ Status Service::del(grpc::ServerContext *serverContext, const chord::fs::DelRequ
   return Status::OK;
 }
 
+Status Service::get_from_reference(const chord::uri& uri) {
+  const path data = context.data_directory / uri.path();
+  const auto metadata_set = metadata_mgr->get(uri);
+
+  for(Metadata m:metadata_set) {
+    if(m.name != uri.path().filename().string() || !m.node_ref) 
+      continue;
+
+    if (!file::is_directory(data)) {
+      logger->trace("[get] creating directories for {}", data);
+      file::create_directories(data.parent_path());
+    }
+
+    try {
+      ofstream ofile;
+      ofile.exceptions(ofstream::failbit | ofstream::badbit);
+      ofile.open(data, fstream::binary);
+      const auto status = make_client().get(uri, m.node_ref.value(), ofile);
+      if(!status.ok()) return status;
+      return make_client().del(uri, m.node_ref.value());
+    } catch (const ios_base::failure &error) {
+      logger->error("failed to open file {}, reason: {}", data, error.what());
+      return Status::CANCELLED;
+    }
+  }
+  return Status::CANCELLED;
+}
+
 Status Service::get(ServerContext *serverContext, const GetRequest *req, grpc::ServerWriter<GetResponse> *writer) {
   (void)serverContext;
   ifstream file;
+  file.exceptions(ifstream::failbit | ifstream::badbit);
 
   path data = context.data_directory;
   if (!file::is_directory(data)) {
-    return Status::CANCELLED;
+    logger->trace("[get] creating directories for {}", data);
+    file::create_directories(data);
   }
 
   const auto uri = chord::uri::from(req->uri());
 
   data /= uri.path();
-  if (!file::is_regular_file(data)) {
+  //try to lookup reference node if found in metadata
+  if (!file::exists(data)) {
+    logger->debug("file does not exist, trying to restore from metadata...");
+    const auto status = restore_from_metadata(uri);
+    if(!status.ok()) return status;
+  } else if (!file::is_regular_file(data)) {
+    logger->error("requested file is not a regular file - aborting.");
     return Status::CANCELLED;
   }
 
   logger->trace("trying to get {}", data);
-  file.exceptions(ifstream::failbit | ifstream::badbit);
   try {
     file.open(data, fstream::binary);
   } catch (const ios_base::failure &error) {

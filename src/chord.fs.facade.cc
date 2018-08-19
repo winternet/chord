@@ -56,7 +56,7 @@ void Facade::get_and_integrate(const chord::fs::MetaResponse& meta_res) {
       {
         for (auto data : MetadataBuilder::from(meta_res)) {
           // unset reference id since the node leaves
-          data.ref_id = {};
+          data.node_ref = {};
           data_set.insert(data);
         }
         fs_service->metadata_manager()->add(uri, data_set);

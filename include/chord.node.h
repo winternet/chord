@@ -8,8 +8,10 @@
 
 namespace chord {
 struct node {
-  const uuid_t uuid;
-  const endpoint_t endpoint;
+  // can not be const since type must be 
+  // moveable for optional<node>
+  uuid_t uuid;
+  endpoint_t endpoint;
 
   friend std::ostream& operator<<(std::ostream& os, const node& n) {
     return os << n.uuid << "@" << n.endpoint;

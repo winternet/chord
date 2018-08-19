@@ -12,8 +12,8 @@
 namespace chord {
 class exception : public std::runtime_error {
   private:
-    std::experimental::optional<std::string> file;
-    std::experimental::optional<size_t> line;
+    chord::optional<std::string> file;
+    chord::optional<size_t> line;
     std::string msg;
   public:
     // inherit ctors

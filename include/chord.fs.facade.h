@@ -89,7 +89,11 @@ class Facade {
         chord::fs::MetaResponse meta;
 
         meta.set_uri(m.first);
-        meta.set_ref_id(context.uuid());
+
+        auto* node_ref = meta.mutable_node_ref();
+        node_ref->set_uuid(context.uuid());
+        node_ref->set_endpoint(context.bind_addr);
+
         MetadataBuilder::addMetadata(m.second, meta);
         res.set_id(m.first);
         res.mutable_detail()->PackFrom(meta);

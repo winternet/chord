@@ -175,7 +175,7 @@ struct Router {
     return node{context.uuid(), routes[context.uuid()]};
   }
 
-  optional<node> predecessor() const {
+  const optional<node> predecessor() const {
     //cppcheck-suppress CastIntegerToAddressAtReturn
     auto pre = predecessors[0];
     if(pre) return node{*predecessors[0], routes.at(*predecessors[0])};

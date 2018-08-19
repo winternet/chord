@@ -150,9 +150,9 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
   return meta(uri, action, m);
 }
 
-Status Client::del(const chord::uri &uri) {
+Status Client::del(const chord::uri &uri, const chord::node& node) {
   const auto hash = chord::crypto::sha256(uri);
-  const auto endpoint = chord->successor(hash).endpoint();
+  const auto endpoint = node.endpoint;
 
   logger->trace("del {} ({})", uri, hash);
 
@@ -166,6 +166,14 @@ Status Client::del(const chord::uri &uri) {
   const auto status = make_stub(endpoint)->del(&clientContext, req, &res);
 
   return status;
+}
+
+Status Client::del(const chord::uri &uri) {
+  const auto hash = chord::crypto::sha256(uri);
+  const auto succ = chord->successor(hash);
+  const auto succ_endpoint = succ.endpoint();
+  const uuid_t succ_uuid{succ.uuid()};
+  return del(uri, {succ_uuid, succ_endpoint});
 }
 
 grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata) {
@@ -194,9 +202,8 @@ grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata) {
   return status;
 }
 
-Status Client::get(const chord::uri &uri, ostream &ostream) {
+Status Client::get(const chord::uri &uri, const chord::node& node, std::ostream &ostream) {
   const auto hash = chord::crypto::sha256(uri);
-  const auto endpoint = chord->successor(hash).endpoint();
 
   logger->trace("get {} ({})", uri, hash);
 
@@ -208,7 +215,7 @@ Status Client::get(const chord::uri &uri, ostream &ostream) {
   req.set_uri(uri);
 
   // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
-  const auto stub = Filesystem::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
+  const auto stub = Filesystem::NewStub(grpc::CreateChannel(node.endpoint, grpc::InsecureChannelCredentials()));
   unique_ptr<ClientReader<GetResponse> > reader(stub->get(&clientContext, req));
 
   while (reader->Read(&res)) {
@@ -216,6 +223,13 @@ Status Client::get(const chord::uri &uri, ostream &ostream) {
   }
 
   return reader->Finish();
+}
+
+Status Client::get(const chord::uri &uri, ostream &ostream) {
+  const auto hash = chord::crypto::sha256(uri);
+  const auto uuid = chord->successor(hash).uuid();
+  const auto endpoint = chord->successor(hash).endpoint();
+  return get(uri, {uuid, endpoint}, ostream);
 }
 
 } // namespace fs

@@ -23,6 +23,7 @@ using ClientFactory = std::function<chord::fs::Client()>;
 class Service final : public chord::fs::Filesystem::Service {
   static constexpr auto logger_name = "chord.fs.service";
 
+  grpc::Status get_from_reference(const chord::uri& uri);
  public:
   explicit Service(Context &context, ChordFacade* chord);
 

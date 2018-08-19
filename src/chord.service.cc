@@ -65,15 +65,34 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
    * find successor
    */
   const auto src = uuid_t{id};
-  const auto entry = successor(src);
 
-  res->mutable_successor()->CopyFrom(entry);
-  res->mutable_header()->mutable_src()->CopyFrom(entry);
+  const auto pred = router->predecessor();
+  const auto succ = router->successor();
+  //const auto entry = successor(src);
+
+  /**
+   * forward request to successor
+   */
+  if(pred && succ && !src.between(pred->uuid, context.uuid())) {
+    return make_client().join(req, res);
+  }
+
+  const auto succ_or_self = succ.value_or(context.node());
+  auto* res_succ = res->mutable_successor();
+  res_succ->set_uuid(succ_or_self.uuid);
+  res_succ->set_endpoint(succ_or_self.endpoint);
+
+  const auto pred_or_self = pred.value_or(context.node());
+  auto* res_pred = res->mutable_predecessor();
+  res_pred->set_uuid(pred_or_self.uuid);
+  res_pred->set_endpoint(pred_or_self.endpoint);
+
+  res->mutable_header()->CopyFrom(make_header(context));
 
   /**
    * initialize the ring
    */
-  if (!router->successor(0)) {
+  if (!pred && (!succ || succ->uuid == context.uuid())) {
     logger->info("first node joining, setting the node as successor");
     router->set_successor(0, src, endpoint);
     router->set_predecessor(0, src, endpoint);
@@ -200,8 +219,12 @@ Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, Lea
   // we trust the sender
   const uuid_t uuid{req->header().src().uuid()};
   const auto endpoint = req->header().src().endpoint();
-  const node from{req->predecessor().uuid(), req->predecessor().endpoint()};
+
+  const uuid_t from_uuid{req->predecessor().uuid()};
   const node to{req->header().src().uuid(), req->header().src().endpoint()};
+
+  //const uuid to_uuid = {req->header().src().uuid()};
+  //const node from{req->predecessor().uuid(), req->predecessor().endpoint()};
 
   /**
    * TODO
@@ -214,7 +237,7 @@ Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, Lea
     return Status::CANCELLED;
   }
 
-  make_client().take(from, to, on_leave_callback);
+  make_client().take(from_uuid, to.uuid, to, on_leave_callback);
   return Status::OK;
 }
 

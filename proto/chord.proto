@@ -47,6 +47,7 @@ message JoinRequest {
 message JoinResponse { 
   chord.common.Header header = 1;
   chord.common.RouterEntry successor = 2;
+  chord.common.RouterEntry predecessor = 3;
 }
 
 /**

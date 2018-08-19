@@ -10,6 +10,9 @@
 
 #include "chord.fs.perms.h"
 #include "chord.fs.type.h"
+#include "chord.node.h"
+#include "chord.optional.h"
+#include "chord.optional.serialization.h"
 
 namespace chord {
 namespace fs {
@@ -24,18 +27,18 @@ struct Metadata {
   type file_type;
 
   // reference node
-  std::string ref_id;
+  chord::optional<chord::node> node_ref;
 
-  Metadata() {
-    /** needed for (de-) serialization **/
-  }
-  Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, std::string ref_id = std::string())
+  /** needed for (de-) serialization **/
+  Metadata() = default;
+  Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, chord::optional<chord::node> node_ref={})
   : name{name},
     owner{owner},
     group{group},
     permissions{permissions},
     file_type{file_type},
-    ref_id{ref_id}{}
+    node_ref{node_ref}
+    {}
 
   bool operator<(const Metadata &other) const { return name < other.name; }
   bool operator==(const Metadata &other) const { return name==other.name && file_type==other.file_type; }
@@ -44,7 +47,7 @@ struct Metadata {
   void serialize(Archive & ar, const unsigned int version)
   {
     (void)version;
-    ar & name & file_type & owner & group & permissions;
+    ar & name & file_type & owner & group & permissions & node_ref;
   }
 
   friend std::ostream &operator<<(std::ostream &os, const Metadata &metadata) {
@@ -89,3 +92,20 @@ struct Metadata {
 }  // namespace fs
 }  // namespace chord
 
+namespace boost {
+namespace serialization {
+
+template<class Archive>
+void serialize(Archive & ar, chord::uuid &uuid, const unsigned int version)
+{
+    ar & uuid.value();
+}
+
+template<class Archive>
+void serialize(Archive & ar, chord::node &node, const unsigned int version)
+{
+    ar & node.uuid;
+    ar & node.endpoint;
+}
+}  // namespace serialization
+}  // namespace boost

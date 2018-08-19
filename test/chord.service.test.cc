@@ -71,6 +71,8 @@ TEST(ServiceTest, join) {
   //--- response
   ASSERT_EQ(res.header().src().uuid(), "50");
   ASSERT_EQ(res.header().src().endpoint(), "0.0.0.0:50050");
+  ASSERT_EQ(res.predecessor().uuid(), "50");
+  ASSERT_EQ(res.predecessor().endpoint(), "0.0.0.0:50050");
   ASSERT_EQ(res.successor().uuid(), "50");
   ASSERT_EQ(res.successor().endpoint(), "0.0.0.0:50050");
 }

@@ -64,21 +64,20 @@ struct MetadataBuilder {
   /**
    * @todo implement owner / group
    */
-  static Metadata from(const chord::fs::Data& item, std::string ref_id = std::string()) {
+  static Metadata from(const chord::fs::Data& item, chord::optional<chord::node> node_ref = {}) {
     Metadata meta{item.filename(),
                   "",  // owner
                   "",  // group
                   static_cast<perms>(item.permissions()),
                   static_cast<type>(item.type()), 
-                  ref_id};
+                  node_ref};
 
     return meta;
   }
 
   static std::set<Metadata> from(const chord::fs::MetaRequest* req) {
     if (req->metadata_size() <= 0)
-      throw__exception(
-          "Failed to convert MetaRequest since metadata is missing");
+      throw__exception("Failed to convert MetaRequest since metadata is missing");
 
     std::set<Metadata> returnValue;
     for( const auto &data : req->metadata()) {
@@ -89,10 +88,16 @@ struct MetadataBuilder {
     return returnValue;
   }
 
+  static chord::optional<chord::node> make_node(const chord::fs::MetaResponse& res) {
+    if(res.has_node_ref())
+      return {{res.node_ref().uuid(), res.node_ref().endpoint()}};
+    return {};
+  }
+
   static std::set<Metadata> from(const chord::fs::MetaResponse& res) {
     std::set<Metadata> ret;
     for (const auto& m : res.metadata()) {
-      ret.insert(MetadataBuilder::from(m, res.ref_id()));
+      ret.insert(MetadataBuilder::from(m, make_node(res)));
     }
     return ret;
   }
