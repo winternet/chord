@@ -17,6 +17,10 @@ bool file::exists(const std::string &path) {
   return fs::exists({path});
 }
 
+bool file::is_empty(const std::string& path) {
+  return fs::is_empty({path});
+}
+
 bool file::is_regular_file(const std::string &path) {
   return fs::is_regular_file({path});
 }

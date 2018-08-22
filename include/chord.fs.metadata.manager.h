@@ -92,7 +92,7 @@ class MetadataManager {
     const auto status = db->Get(leveldb::ReadOptions(), directory.path().canonical().string(), &value);
 
     if(status.ok()) {
-      auto current = deserialize(value);
+      const auto current = deserialize(value);
       std::set<Metadata> ret;
       for(const auto &m:current) {
         ret.insert(m.second);

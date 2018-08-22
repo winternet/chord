@@ -63,6 +63,41 @@ TEST(chord_path, path_minus_operator) {
   ASSERT_EQ("/subsub/bar.ext", path{"/folder/sub/subsub/bar.ext"} - path{"folder/sub"});
 }
 
+TEST(chord_path, path_less_operator) {
+  ASSERT_FALSE(path{"/folder/sub/subsub/subsubsub/bar.ext"} < path{"/folder/sub/subsub/bar.ext"});
+  ASSERT_FALSE(path{"/folder/sub/subsub/bar.ext"} < path{"/folder/sub/subsub/bar.ext"});
+  ASSERT_TRUE(path{"/folder/sub/subsub"} < path{"/folder/sub/subsub/bar.ext"});
+  ASSERT_TRUE(path{"/"} < path{"/folder/sub/subsub/bar.ext"});
+}
+
+TEST(chord_path, path_less_equal_operator) {
+  ASSERT_FALSE(path{"/folder/sub/subsub/subsubsub/bar.ext"} <= path{"/folder/sub/subsub/bar.ext"});
+  ASSERT_TRUE(path{"/folder/sub/subsub/bar.ext"} <= path{"/folder/sub/subsub/bar.ext"});
+  ASSERT_TRUE(path{"/folder/sub/subsub"} <= path{"/folder/sub/subsub/bar.ext"});
+  ASSERT_TRUE(path{"/"} <= path{"/folder/sub/subsub/bar.ext"});
+}
+
+TEST(chord_path, equal_operator) {
+  ASSERT_FALSE(path{"/folder/sub/subsub/subsubsub/bar.ext"} == path{"/folder/sub/subsub/bar.ext"});
+  ASSERT_TRUE(path{"/folder/sub/subsub/bar.ext"} == path{"/folder/sub/subsub/bar.ext"});
+  ASSERT_FALSE(path{"/folder/sub/subsub"} == path{"/folder/sub/subsub/bar.ext"});
+  ASSERT_FALSE(path{"/"} == path{"/folder/sub/subsub/bar.ext"});
+}
+
+TEST(chord_path, greater_operator) {
+  ASSERT_TRUE(path{"/folder/sub/subsub/subsubsub/bar.ext"} > path{"/folder/sub/subsub/bar.ext"});
+  ASSERT_FALSE(path{"/folder/sub/subsub/bar.ext"} > path{"/folder/sub/subsub/bar.ext"});
+  ASSERT_FALSE(path{"/folder/sub/subsub"} > path{"/folder/sub/subsub/bar.ext"});
+  ASSERT_FALSE(path{"/"} > path{"/folder/sub/subsub/bar.ext"});
+}
+
+TEST(chord_path, greater_equal_operator) {
+  ASSERT_TRUE(path{"/folder/sub/subsub/subsubsub/bar.ext"} >= path{"/folder/sub/subsub/bar.ext"});
+  ASSERT_TRUE(path{"/folder/sub/subsub/bar.ext"} >= path{"/folder/sub/subsub/bar.ext"});
+  ASSERT_FALSE(path{"/folder/sub/subsub"} >= path{"/folder/sub/subsub/bar.ext"});
+  ASSERT_FALSE(path{"/"} >= path{"/folder/sub/subsub/bar.ext"});
+}
+
 TEST(chord_path, path_append_slash_operator) {
   ASSERT_EQ("/folder/sub//subsub/bar.ext", path{"/folder/sub/"} / path{"/subsub/bar.ext"});
   ASSERT_EQ("/folder/sub/subsub/bar.ext", (path{"/folder/sub/"} / path{"/subsub/bar.ext"}).canonical());

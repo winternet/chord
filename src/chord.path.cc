@@ -95,8 +95,16 @@ bool path::operator<(const path &p) const {
   return _path < p._path;
 }
 
+bool path::operator<=(const path &p) const {
+  return _path <= p._path;
+}
+
 bool path::operator>(const path &p) const {
   return _path > p._path;
+}
+
+bool path::operator>=(const path &p) const {
+  return _path >= p._path;
 }
 
 bool path::operator==(const std::string &s) const { return s==string(); }

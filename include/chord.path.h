@@ -48,8 +48,10 @@ class path {
   bool operator==(const path &p) const;
 
   bool operator<(const path &p) const;
+  bool operator<=(const path &p) const;
 
   bool operator>(const path &p) const;
+  bool operator>=(const path &p) const;
 
   bool operator==(const std::string &s) const;
 

@@ -15,6 +15,8 @@ namespace file {
 
   bool create_file(const std::string &path);
 
+  bool is_empty(const std::string& path);
+
   bool is_regular_file(const std::string &path);
 
   bool is_directory(const std::string &path);
