@@ -131,35 +131,59 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   return Status::OK;
 }
 
-Status Service::del(grpc::ServerContext *serverContext, const chord::fs::DelRequest *req,
-           chord::fs::DelResponse *res) {
-  (void)res;
-  (void)serverContext;
+Status Service::del(const chord::uri& uri) {
+  const auto data = context.data_directory / uri.path();
 
-  path data = context.data_directory;
-  //TODO support directories
-  if (!file::is_directory(data)) {
-    return Status::CANCELLED;
-  }
-
-  const auto uri = chord::uri::from(req->uri());
-
-  data /= uri.path();
-
-  if(file::exists(data)) {
-    file::remove_all(data);
-  } else {
+  if(!file::exists(data) 
+      || (file::is_directory(data) && !file::is_empty(data))) {
+    //TODO support directories
     return Status::CANCELLED;
     //TODO look on some other node (e.g. the successor that this node initially joined)
     //     maybe some other node is responsible for that file recently
   }
 
-  // local
+  // remove file
+  file::remove(data);
+  // remove local metadata
+  auto metadata_set = metadata_mgr->get(uri);
   metadata_mgr->del(uri);
-  // remote
-  const auto status = make_client().meta(uri, Client::Action::DEL);
-  if (!status.ok()) {
+
+  // update parent - if exists
+  if(uri.path().parent_path().empty()) return Status::OK;
+  const chord::uri parent_uri{uri.scheme(), uri.path().parent_path()};
+  return make_client().meta(parent_uri, Client::Action::DEL, metadata_set);
+}
+
+Status Service::del(grpc::ServerContext *serverContext, const chord::fs::DelRequest *req,
+           chord::fs::DelResponse *res) {
+  (void)res;
+  (void)serverContext;
+
+  const auto uri = chord::uri::from(req->uri());
+  auto data = context.data_directory / uri.path();
+
+  if (!del(uri).ok()) {
     //TODO handle error
+    return Status::CANCELLED;
+  }
+
+  //remove empty parent directories
+  //TODO check if root
+  auto parent = uri.path();
+  while(!parent.empty()) {
+    // directory up
+    parent=parent.parent_path();
+    const auto data = context.data_directory / parent;
+
+    if(!file::is_empty(data)) break;
+    if(data.canonical() < context.data_directory.canonical()) break;
+
+    const chord::uri parent_uri{uri.scheme(), parent};
+    const auto status = del(parent_uri);
+    if(!status.ok()) {
+      logger->error("failed to delete empty folder {}", parent_uri);
+    }
+
   }
 
   return Status::OK;

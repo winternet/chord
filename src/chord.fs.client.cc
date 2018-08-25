@@ -101,7 +101,7 @@ void Client::add_metadata(MetaRequest& req, const chord::path& parent_path) {
 }
 
 grpc::Status Client::meta(const chord::uri &uri, const Action &action, set<Metadata>& metadata) {
-  //--- find responsible node for uri.parent_path()
+  //--- find responsible node for uri.path()
   const auto path = uri.path().canonical();
   const auto meta_uri = uri::builder{uri.scheme(), path}.build();
   const auto hash = chord::crypto::sha256(meta_uri);
@@ -112,8 +112,6 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action, set<Metad
   ClientContext clientContext;
   MetaResponse res;
   MetaRequest req;
-
-  const auto local_path = context.data_directory / path;
 
   req.set_id(hash);
   req.set_uri(meta_uri);
@@ -128,6 +126,7 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action, set<Metad
     }
   }
 
+  const auto local_path = context.data_directory / path;
   switch (action) {
     case Action::ADD:
       req.set_action(ADD); 
@@ -170,10 +169,8 @@ Status Client::del(const chord::uri &uri, const chord::node& node) {
 
 Status Client::del(const chord::uri &uri) {
   const auto hash = chord::crypto::sha256(uri);
-  const auto succ = chord->successor(hash);
-  const auto succ_endpoint = succ.endpoint();
-  const uuid_t succ_uuid{succ.uuid()};
-  return del(uri, {succ_uuid, succ_endpoint});
+  const auto succ = chord::common::make_node(chord->successor(hash));
+  return del(uri, succ);
 }
 
 grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata) {
