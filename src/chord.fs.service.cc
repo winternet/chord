@@ -142,10 +142,12 @@ Status Service::del(const chord::uri& uri) {
     //     maybe some other node is responsible for that file recently
   }
 
-  // remove file
+  // generate metadata set to inform parents of deletion
+  std::set<Metadata> metadata_set{MetadataBuilder::from(context, data)};
+
+  // remove local file
   file::remove(data);
   // remove local metadata
-  auto metadata_set = metadata_mgr->get(uri);
   metadata_mgr->del(uri);
 
   // update parent - if exists

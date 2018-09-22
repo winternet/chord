@@ -25,7 +25,7 @@ struct MetadataBuilder {
       throw__exception("not found: " + local_path.string());
     }
 
-    std::set<Metadata> ret = {};
+    std::set<Metadata> ret;
     auto root = MetadataBuilder::from(context, local_path);
     if(root.file_type == type::directory) root.name = ".";
     ret.insert(root);
