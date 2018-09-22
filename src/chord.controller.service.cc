@@ -42,7 +42,7 @@ Status Service::parse_command(const ControlRequest* req, ControlResponse* res) {
   boost::char_separator<char> separator{" "};
   boost::tokenizer<boost::char_separator<char> > tokenizer{command, separator};
 
-  vector<string> token{distance(begin(tokenizer), end(tokenizer))};
+  vector<string> token{std::distance(begin(tokenizer), end(tokenizer))};
   copy(begin(tokenizer), end(tokenizer), begin(token));
 
   logger->trace("received following token");
