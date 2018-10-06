@@ -23,4 +23,8 @@ class MockControllerStub : public chord::controller::Control::StubInterface {
       const chord::controller::ControlRequest&,
       grpc::CompletionQueue*));
 
+  MOCK_METHOD3(PrepareAsynccontrolRaw, grpc::ClientAsyncResponseReaderInterface<chord::controller::ControlResponse>*(
+      grpc::ClientContext*, 
+      const chord::controller::ControlRequest&,
+      grpc::CompletionQueue*));
 };
