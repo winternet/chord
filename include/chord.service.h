@@ -23,15 +23,6 @@ namespace spdlog {
 
 namespace chord {
 using ClientFactory = std::function<chord::Client()>;
-///*
-// * @brief produces a set of chord::uuids
-// * @todo  let the callback return an iterator, however, the metadata might
-// *        change during the runtime of the call...
-// */
-//using TakeProducerCallback = std::function< std::vector<chord::TakeResponse>(const chord::uuid&, const chord::uuid&) >;
-//using take_producer_t = TakeProducerCallback;
-//
-//using TakeConsumerCallback
 
 class Service final : public chord::Chord::Service, AbstractService {
   static constexpr auto logger_name = "chord.service";

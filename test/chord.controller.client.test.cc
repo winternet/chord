@@ -21,6 +21,8 @@ using ::testing::SaveArgPointee;
 using ::testing::SetArgPointee;
 using ::testing::DoAll;
 
+using chord::MockControllerStub;
+
 TEST(chord_controller_client, default_constructor) {
   Client client;
 }

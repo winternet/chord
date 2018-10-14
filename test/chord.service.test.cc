@@ -88,17 +88,10 @@ TEST(ServiceTest, successor_single_node) {
 
   chord::Service service(context, &router);
 
-  ServerContext serverContext;
-  SuccessorRequest req;
-  SuccessorResponse res;
+  const auto router_entry = service.successor({10});
 
-  req.mutable_header()->CopyFrom(make_header(0, "0.0.0.0:50050"));
-  req.set_id(uuid_t{"10"});
-
-  service.successor(&serverContext, &req, &res);
-
-  ASSERT_EQ(uuid_t{res.successor().uuid()}, uuid_t{0});
-  ASSERT_EQ(res.successor().endpoint(), "0.0.0.0:50050");
+  ASSERT_EQ(router_entry.uuid(), "0");
+  ASSERT_EQ(router_entry.endpoint(), "0.0.0.0:50050");
 }
 
 /**
@@ -116,17 +109,10 @@ TEST(ServiceTest, successor_two_nodes) {
 
   chord::Service service(context, &router);
 
-  ServerContext serverContext;
-  SuccessorRequest req;
-  SuccessorResponse res;
+  const auto entry = service.successor({2});
 
-  req.mutable_header()->CopyFrom(make_header(0, "0.0.0.0:50050"));
-  req.set_id("2");
-
-  service.successor(&serverContext, &req, &res);
-
-  ASSERT_EQ(uuid_t(res.successor().uuid()), 5);
-  ASSERT_EQ(res.successor().endpoint(), "0.0.0.0:50055");
+  ASSERT_EQ(entry.uuid(), "5");
+  ASSERT_EQ(entry.endpoint(), "0.0.0.0:50055");
 }
 
 /**
@@ -144,17 +130,10 @@ TEST(ServiceTest, successor_two_nodes_mod) {
 
   chord::Service service(context, &router);
 
-  ServerContext serverContext;
-  SuccessorRequest req;
-  SuccessorResponse res;
+  const auto entry = service.successor({10});
 
-  req.mutable_header()->CopyFrom(make_header(5, "0.0.0.0:50055"));
-  req.set_id("10");
-
-  service.successor(&serverContext, &req, &res);
-
-  ASSERT_EQ(res.successor().uuid(), "0");
-  ASSERT_EQ(res.successor().endpoint(), "0.0.0.0:50050");
+  ASSERT_EQ(entry.uuid(), "0");
+  ASSERT_EQ(entry.endpoint(), "0.0.0.0:50050");
 }
 
 
@@ -287,18 +266,6 @@ class MockStub : public chord::Chord::StubInterface {
       grpc::ClientContext*,
       const chord::CheckRequest&,
       grpc::CompletionQueue*));
-
-  //MOCK_METHOD4(AsyncputRaw, grpc::ClientAsyncWriterInterface<chord::PutRequest>*(
-  //      grpc::ClientContext* context, 
-  //      chord::PutResponse* response,
-  //      grpc::CompletionQueue* cq,
-  //      void* tag));
-
-  //MOCK_METHOD4(AsyncgetRaw, grpc::ClientAsyncReaderInterface<chord::GetResponse>*(
-  //      grpc::ClientContext* context,
-  //      const ::chord::GetRequest& request,
-  //      grpc::CompletionQueue* cq,
-  //      void* tag));
 };
 
 /**
@@ -357,5 +324,51 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   ASSERT_EQ(res.successor().uuid(), "5");
   ASSERT_EQ(res.successor().endpoint(), "0.0.0.0:50055");
 
+}
+
+TEST(ServiceTest, take_without_producer) {
+  Context context = make_context(5);
+  Router router(context);
+  std::unique_ptr<MockStub> stub(new MockStub);
+  auto stub_factory = [&](const endpoint_t &endpoint) { (void)endpoint; return std::move(stub); };
+
+  chord::Client client(context, &router, stub_factory);
+  auto client_factory = [&]() { return client; };
+  chord::Service service(context, &router, client_factory);
+
+  const auto status = service.take(nullptr, nullptr, nullptr);
+
+  //--- assert take has not been called
+  ASSERT_FALSE(status.ok());
+}
+
+TEST(ServiceTest, take) {
+  Context context = make_context(5);
+  Router router(context);
+
+  std::unique_ptr<MockStub> stub(new MockStub);
+
+  auto stub_factory = [&](const endpoint_t &endpoint) { (void)endpoint; return std::move(stub); };
+  chord::Client client(context, &router, stub_factory);
+
+  auto client_factory = [&]() { return client; };
+  chord::Service service(context, &router, client_factory);
+  take_producer_t take_producer_cbk = [&](const auto& from, const auto& to) {
+    //ASSERT_ cannot be used in non-void returning functions
+    EXPECT_EQ(from, uuid_t{"0"});
+    EXPECT_EQ(to, uuid_t{"5"});
+    return std::vector<chord::TakeResponse>{};
+  };
+  service.set_take_callback(take_producer_cbk);
+
+  ServerContext serverContext;
+  TakeRequest req;
+  TakeResponse res;
+  grpc::ServerWriter<TakeResponse> writer(nullptr, &serverContext);
+
+  req.set_from("0");
+  req.set_to("5");
+
+  service.take(&serverContext, &req, &writer);
 }
 

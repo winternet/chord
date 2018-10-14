@@ -1,5 +1,6 @@
 #include "chord_controller.grpc.pb.h"
 
+namespace chord {
 class MockControllerStub : public chord::controller::Control::StubInterface {
  public:
   MockControllerStub() {}
@@ -28,3 +29,4 @@ class MockControllerStub : public chord::controller::Control::StubInterface {
       const chord::controller::ControlRequest&,
       grpc::CompletionQueue*));
 };
+} // namespace chord

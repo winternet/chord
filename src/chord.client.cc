@@ -153,7 +153,7 @@ void Client::take() {
     return;
   }
 
-  take(predecessor->uuid, context.uuid(), *successor ,take_consumer_callback);
+  take(predecessor->uuid, context.uuid(), *successor , take_consumer_callback);
 }
 
 void Client::stabilize() {
