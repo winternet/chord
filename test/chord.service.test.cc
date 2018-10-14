@@ -372,3 +372,24 @@ TEST(ServiceTest, take) {
   service.take(&serverContext, &req, &writer);
 }
 
+TEST(ServiceTest, stabilize) {
+  Context context = make_context(5);
+  Router router(context);
+
+  std::unique_ptr<MockStub> stub(new MockStub);
+
+  auto stub_factory = [&](const endpoint_t &endpoint) { (void)endpoint; return std::move(stub); };
+  chord::Client client(context, &router, stub_factory);
+
+  auto client_factory = [&]() { return client; };
+  chord::Service service(context, &router, client_factory);
+
+  ServerContext serverContext;
+  StabilizeRequest req;
+  StabilizeResponse res;
+
+  const auto status = service.stabilize(&serverContext, &req, &res);
+
+  //--- no predecessor returned from router
+  ASSERT_TRUE(status.ok());
+}
