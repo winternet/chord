@@ -364,7 +364,8 @@ TEST(ServiceTest, take) {
   ServerContext serverContext;
   TakeRequest req;
   TakeResponse res;
-  grpc::ServerWriter<TakeResponse> writer(nullptr, &serverContext);
+
+  grpc::ServerWriter<TakeResponse> writer{nullptr, &serverContext};
 
   req.set_from("0");
   req.set_to("5");

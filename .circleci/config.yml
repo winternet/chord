@@ -75,7 +75,7 @@ jobs:
           name: Install grpc
           command: |
             cd $DEPS
-            git clone -b v1.8.5 https://github.com/grpc/grpc
+            git clone -b v1.15.1 https://github.com/grpc/grpc
             cd grpc
             git submodule update --init
             make -j4 CFLAGS='-Wno-error -Wno-expansion-to-defined' && make install CFLAGS='-Wno-error -Wno-expansion-to-defined'
@@ -85,7 +85,7 @@ jobs:
           name: Install protobuf
           command: |
             cd $DEPS
-            git clone -b v3.0.2 https://github.com/google/protobuf.git protobuf
+            git clone -b v3.6.1 https://github.com/google/protobuf.git protobuf
             cd protobuf
             ./autogen.sh
             ./configure
