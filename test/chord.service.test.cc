@@ -365,12 +365,10 @@ TEST(ServiceTest, take) {
   TakeRequest req;
   TakeResponse res;
 
-  grpc::ServerWriter<TakeResponse> writer{nullptr, &serverContext};
-
   req.set_from("0");
   req.set_to("5");
 
-  service.take(&serverContext, &req, &writer);
+  service.take(&serverContext, &req, nullptr);
 }
 
 TEST(ServiceTest, stabilize) {
