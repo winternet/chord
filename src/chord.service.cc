@@ -149,16 +149,10 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
   uuid_t self{context.uuid()};
 
   const auto successor = router->successor();
-  // only node on the ring
+
   if(!successor) {
-    logger->trace("[successor] im the only node in the ring, returning myself {}", self);
-
-    RouterEntry entry;
-    entry.set_uuid(self);
-    entry.set_endpoint(context.bind_addr);
-
-    res->mutable_successor()->CopyFrom(entry);
-    return Status::OK;
+    logger->error("failed to query successor from this->router");
+    return Status::CANCELLED;
   }
 
   if(id == self || id.between(self, successor->uuid)) {
