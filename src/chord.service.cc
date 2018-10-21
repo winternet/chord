@@ -194,6 +194,7 @@ Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *
 
     res->mutable_predecessor()->CopyFrom(entry);
   }
+  res->mutable_header()->CopyFrom(make_header(context));
 
   return Status::OK;
 }

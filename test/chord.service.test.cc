@@ -371,7 +371,7 @@ TEST(ServiceTest, take) {
   service.take(&serverContext, &req, nullptr);
 }
 
-TEST(ServiceTest, stabilize) {
+TEST(ServiceTest, stabilize__without_predecessor) {
   Context context = make_context(5);
   Router router(context);
 
@@ -391,4 +391,33 @@ TEST(ServiceTest, stabilize) {
 
   //--- no predecessor returned from router
   ASSERT_TRUE(status.ok());
+  ASSERT_TRUE(res.has_header());
+  ASSERT_FALSE(res.has_predecessor());
+}
+
+TEST(ServiceTest, stabilize) {
+  Context context = make_context(5);
+  Router router(context);
+  router.set_predecessor(0, {"1", "1.1.1.1:8888"});
+
+  std::unique_ptr<MockStub> stub(new MockStub);
+
+  auto stub_factory = [&](const endpoint_t &endpoint) { (void)endpoint; return std::move(stub); };
+  chord::Client client(context, &router, stub_factory);
+
+  auto client_factory = [&]() { return client; };
+  chord::Service service(context, &router, client_factory);
+
+  ServerContext serverContext;
+  StabilizeRequest req;
+  StabilizeResponse res;
+
+  const auto status = service.stabilize(&serverContext, &req, &res);
+
+  //--- no predecessor returned from router
+  ASSERT_TRUE(status.ok());
+  ASSERT_TRUE(res.has_header());
+  ASSERT_TRUE(res.has_predecessor());
+  ASSERT_EQ(res.predecessor().uuid(), "1");
+  ASSERT_EQ(res.predecessor().endpoint(), "1.1.1.1:8888");
 }
