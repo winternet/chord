@@ -1,6 +1,12 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
+#include "chord.node.h"
+#include "chord.pb.h"
+#include "chord_common.pb.h"
+#include "chord.client.mock.h"
+#include "chord.client.h"
+
 #include "chord.router.h"
 #include "chord.service.h"
 
@@ -15,7 +21,16 @@ using chord::JoinResponse;
 using chord::SuccessorRequest;
 using chord::SuccessorResponse;
 
+using ::testing::Eq;
+
 using namespace chord;
+
+template<typename T>
+void nop(T* val) {}
+template<typename T>
+std::unique_ptr<T, void(*)(T*)> unique_of(T& val) {
+  return std::unique_ptr<T, void(*)(T*) >(&val, nop);
+}
 
 Context make_context(const uuid_t &self) {
   Context context = Context();
@@ -51,7 +66,8 @@ TEST(ServiceTest, join) {
   Context context = Context();
   context.set_uuid(50);
   Router router(context);
-  chord::Service service(context, &router);
+	MockClient client;
+  Service service(context, &router, &client);
 
   // assert we're the only one
   ASSERT_EQ(router.size(), 1);
@@ -85,8 +101,8 @@ TEST(ServiceTest, join) {
 TEST(ServiceTest, successor_single_node) {
   Context context = make_context(0);
   Router router(context);
-
-  chord::Service service(context, &router);
+	MockClient client;
+  Service service(context, &router, &client);
 
   const auto router_entry = service.successor({10});
 
@@ -103,11 +119,12 @@ TEST(ServiceTest, successor_single_node) {
 TEST(ServiceTest, successor_two_nodes) {
   Context context = make_context(0);
   Router router(context);
+	MockClient client;
 
   router.set_successor(0, {5, "0.0.0.0:50055"});
   router.set_predecessor(0, {5, "0.0.0.0:50055"});
 
-  chord::Service service(context, &router);
+  Service service(context, &router, &client);
 
   const auto entry = service.successor({2});
 
@@ -124,11 +141,12 @@ TEST(ServiceTest, successor_two_nodes) {
 TEST(ServiceTest, successor_two_nodes_mod) {
   Context context = make_context(5);
   Router router(context);
+	MockClient client;
 
   router.set_successor(0, {0, "0.0.0.0:50050"});
   router.set_predecessor(0, {0, "0.0.0.0:50050"});
 
-  chord::Service service(context, &router);
+  chord::Service service(context, &router, &client);
 
   const auto entry = service.successor({10});
 
@@ -285,12 +303,10 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   router.set_predecessor(0, {0, "0.0.0.0:50050"});
 
   std::unique_ptr<MockStub> stub(new MockStub);
-
   auto stub_factory = [&](const endpoint_t &endpoint) { (void)endpoint; return std::move(stub); };
-  chord::Client client(context, &router, stub_factory);
 
-  auto client_factory = [&]() { return client; };
-  chord::Service service(context, &router, client_factory);
+  Client client{context, &router, stub_factory};
+  Service service(context, &router, &client);
 
   ServerContext serverContext;
   SuccessorRequest req;
@@ -330,11 +346,9 @@ TEST(ServiceTest, take_without_producer) {
   Context context = make_context(5);
   Router router(context);
   std::unique_ptr<MockStub> stub(new MockStub);
-  auto stub_factory = [&](const endpoint_t &endpoint) { (void)endpoint; return std::move(stub); };
 
-  chord::Client client(context, &router, stub_factory);
-  auto client_factory = [&]() { return client; };
-  chord::Service service(context, &router, client_factory);
+  MockClient client;
+  chord::Service service(context, &router, &client);
 
   const auto status = service.take(nullptr, nullptr, nullptr);
 
@@ -348,11 +362,8 @@ TEST(ServiceTest, take) {
 
   std::unique_ptr<MockStub> stub(new MockStub);
 
-  auto stub_factory = [&](const endpoint_t &endpoint) { (void)endpoint; return std::move(stub); };
-  chord::Client client(context, &router, stub_factory);
-
-  auto client_factory = [&]() { return client; };
-  chord::Service service(context, &router, client_factory);
+  MockClient client;
+  chord::Service service(context, &router, &client);
   take_producer_t take_producer_cbk = [&](const auto& from, const auto& to) {
     //ASSERT_ cannot be used in non-void returning functions
     EXPECT_EQ(from, uuid_t{"0"});
@@ -377,11 +388,8 @@ TEST(ServiceTest, stabilize__without_predecessor) {
 
   std::unique_ptr<MockStub> stub(new MockStub);
 
-  auto stub_factory = [&](const endpoint_t &endpoint) { (void)endpoint; return std::move(stub); };
-  chord::Client client(context, &router, stub_factory);
-
-  auto client_factory = [&]() { return client; };
-  chord::Service service(context, &router, client_factory);
+  MockClient client;
+  chord::Service service(context, &router, &client);
 
   ServerContext serverContext;
   StabilizeRequest req;
@@ -402,11 +410,8 @@ TEST(ServiceTest, stabilize) {
 
   std::unique_ptr<MockStub> stub(new MockStub);
 
-  auto stub_factory = [&](const endpoint_t &endpoint) { (void)endpoint; return std::move(stub); };
-  chord::Client client(context, &router, stub_factory);
-
-  auto client_factory = [&]() { return client; };
-  chord::Service service(context, &router, client_factory);
+  MockClient client;
+  chord::Service service(context, &router, &client);
 
   ServerContext serverContext;
   StabilizeRequest req;
@@ -420,4 +425,81 @@ TEST(ServiceTest, stabilize) {
   ASSERT_TRUE(res.has_predecessor());
   ASSERT_EQ(res.predecessor().uuid(), "1");
   ASSERT_EQ(res.predecessor().endpoint(), "1.1.1.1:8888");
+}
+
+TEST(ServiceTest, leave__without_header) {
+  Context context = make_context(5);
+  Router router(context);
+
+  std::unique_ptr<MockStub> stub(new MockStub);
+
+  MockClient client;
+  chord::Service service(context, &router, &client);
+
+  ServerContext serverContext;
+  LeaveRequest req;
+  LeaveResponse res;
+
+  const auto status = service.leave(&serverContext, &req, &res);
+
+  ASSERT_FALSE(status.ok());
+}
+
+TEST(ServiceTest, leave__without_callback) {
+  Context context = make_context(5);
+  Router router(context);
+
+  std::unique_ptr<MockStub> stub(new MockStub);
+
+  MockClient client;
+  Service service(context, &router, &client);
+
+  ServerContext serverContext;
+  LeaveRequest req;
+  LeaveResponse res;
+
+  const node to_node{"2", "2.2.2.2:8888"};
+  const node from_node{"8", "8.8.8.8:8888"};
+  auto src = req.mutable_header()->mutable_src();
+  src->set_uuid(to_node.uuid.string());
+  src->set_endpoint(to_node.endpoint);
+
+  auto pred = req.mutable_predecessor();
+  pred->set_uuid(from_node.uuid.string());
+  pred->set_endpoint(from_node.endpoint);
+
+  const auto status = service.leave(&serverContext, &req, &res);
+
+  ASSERT_FALSE(status.ok());
+}
+
+TEST(ServiceTest, leave) {
+  Context context = make_context(5);
+  Router router(context);
+
+  MockClient client;
+  chord::Service service{context, &router, &client};
+  const auto callback = [](const TakeResponse& tres) {
+    (void)tres;
+  };
+  service.set_on_leave_callback(callback);
+
+  ServerContext serverContext;
+  LeaveRequest req;
+  LeaveResponse res;
+
+  const node to_node{"2", "2.2.2.2:8888"};
+  const node from_node{"8", "8.8.8.8:8888"};
+  auto src = req.mutable_header()->mutable_src();
+  src->set_uuid(to_node.uuid.string());
+  src->set_endpoint(to_node.endpoint);
+
+  auto pred = req.mutable_predecessor();
+  pred->set_uuid(from_node.uuid.string());
+  pred->set_endpoint(from_node.endpoint);
+
+  EXPECT_CALL(client, take(Eq(uuid_t{"8"}), Eq(uuid_t{"2"}), Eq(to_node), _));
+  const auto status = service.leave(&serverContext, &req, &res);
+
+  ASSERT_TRUE(status.ok());
 }

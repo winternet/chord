@@ -13,6 +13,10 @@ struct node {
   uuid_t uuid;
   endpoint_t endpoint;
 
+  bool operator==(const node& other) const {
+    return uuid == other.uuid 
+           && endpoint == other.endpoint;
+  }
   friend std::ostream& operator<<(std::ostream& os, const node& n) {
     return os << n.uuid << "@" << n.endpoint;
   }

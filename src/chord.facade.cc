@@ -24,7 +24,7 @@ ChordFacade::ChordFacade(Context& ctx)
       scheduler{make_unique<Scheduler>()},
       router{make_unique<Router>(context)},
       client{make_unique<Client>(context, router.get())},
-      service{make_unique<Service>(context, router.get())},
+      service{make_unique<Service>(context, router.get(), client.get())},
       logger{log::get_or_create(logger_name)}
       {}
 

@@ -5,16 +5,17 @@
 #include <functional>
 #include <vector>
 
-#include "chord.client.h"
 #include "chord.exception.h"
 #include "chord.grpc.pb.h"
 #include "chord.i.callback.h"
 #include "chord.i.service.h"
+#include "chord.i.client.h"
 #include "chord.pb.h"
 
 namespace chord {
 struct Context;
 struct Router;
+class IClient;
 }  // namespace chord
 
 namespace spdlog {
@@ -22,15 +23,13 @@ namespace spdlog {
 }
 
 namespace chord {
-using ClientFactory = std::function<chord::Client()>;
+using ClientFactory = std::function<chord::IClient*()>;
 
 class Service final : public chord::Chord::Service, AbstractService {
   static constexpr auto logger_name = "chord.service";
 
  public:
-  Service(Context &context, Router *router);
-
-  Service(Context &context, Router *router, ClientFactory make_client);
+  Service(Context &context, Router *router, IClient* client);
 
   grpc::Status join(grpc::ServerContext *context, const chord::JoinRequest *req,
                     chord::JoinResponse *res) override;
@@ -77,7 +76,7 @@ class Service final : public chord::Chord::Service, AbstractService {
  private:
   Context &context;
   Router *router;
-  ClientFactory make_client;
+  IClient *client;
   std::shared_ptr<spdlog::logger> logger;
   // callbacks
   take_producer_t take_producer_callback;

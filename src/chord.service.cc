@@ -42,17 +42,10 @@ using namespace chord::common;
 
 namespace chord {
 
-Service::Service(Context &context, Router *router)
+Service::Service(Context &context, Router *router, IClient* client)
     : context{context},
       router{router},
-      make_client{
-          [this] { return chord::Client(this->context, this->router); }},
-      logger{log::get_or_create(logger_name)} {}
-
-Service::Service(Context &context, Router *router, ClientFactory make_client)
-    : context{context},
-      router{router},
-      make_client{make_client},
+      client{client},
       logger{log::get_or_create(logger_name)} {}
 
 Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
@@ -75,7 +68,7 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
    * forward request to successor
    */
   if(pred && succ && !src.between(pred->uuid, context.uuid())) {
-    return make_client().join(req, res);
+    return client->join(req, res);
   }
 
   const auto succ_or_self = succ.value_or(context.node());
@@ -166,7 +159,7 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
     res->mutable_successor()->CopyFrom(entry);
   } else {
     logger->trace("[successor] trying to spawn client to forward request.");
-    const auto status = make_client().successor(req, res);
+    const auto status = client->successor(req, res);
     if (!status.ok()) {
       logger->warn("[successor] failed to query successor from client!");
     } else {
@@ -227,13 +220,13 @@ Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, Lea
    * 1) send TakeRequest to source
    * 2) consumer needs to issue getRequests for each metadata
    */
-  //const auto status = make_client().take(req, res);
+  //const auto status = client->take(req, res);
   if(!on_leave_callback) {
     logger->warn("on leave callback not set - aborting.");
     return Status::CANCELLED;
   }
 
-  make_client().take(from_uuid, to.uuid, to, on_leave_callback);
+  client->take(from_uuid, to.uuid, to, on_leave_callback);
   return Status::OK;
 }
 
