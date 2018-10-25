@@ -129,6 +129,7 @@ enable_testing()
 set(TEST_TARGET "${PROJECT_NAME}_test")
 
 include_directories(include)
+include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}/gen")
 add_executable(${TEST_TARGET} ${TEST_SOURCES})
 target_link_libraries(${TEST_TARGET} 
   debug asan
