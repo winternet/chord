@@ -233,10 +233,6 @@ Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, Lea
 Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, NotifyResponse *res) {
   (void)serverContext;
   (void)res;
-  logger->trace("notify from {}@{}", req->header().src().uuid(),
-                req->header().src().endpoint());
-
-  const auto predecessor = router->predecessor();
 
   //--- validate
   if (!req->has_header() && !req->header().has_src()) {
@@ -244,10 +240,12 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
     return Status::CANCELLED;
   }
 
+  logger->trace("notify from {}@{}", req->header().src().uuid(),
+                req->header().src().endpoint());
+
+  const auto predecessor = router->predecessor();
   const uuid_t self{context.uuid()};
   const auto node = chord::common::make_node(req->header().src());
-  //const uuid_t uuid{req->header().src().uuid()};
-  //const auto endpoint = req->header().src().endpoint();
 
   if (!predecessor
       || node.uuid.between(predecessor->uuid, self)) {

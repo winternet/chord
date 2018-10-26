@@ -503,3 +503,87 @@ TEST(ServiceTest, leave) {
 
   ASSERT_TRUE(status.ok());
 }
+
+TEST(ServiceTest, notify__validate) {
+  Context context = make_context(5);
+  Service service(context, nullptr, nullptr);
+
+  ServerContext serverContext;
+  NotifyRequest req;
+  NotifyResponse res;
+
+  // header not set -> validation should fail
+  const auto status = service.notify(&serverContext, &req, &res);
+
+  ASSERT_FALSE(status.ok());
+}
+
+TEST(ServiceTest, notify__initial_predecessor) {
+  Context context = make_context(20);
+  Router router(context);
+
+  Service service{context, &router, nullptr};
+
+  ServerContext serverContext;
+  NotifyRequest req;
+  NotifyResponse res;
+
+  const node from_node{"10", "10.10.10.10:8888"};
+  auto src = req.mutable_header()->mutable_src();
+  src->set_uuid(from_node.uuid.string());
+  src->set_endpoint(from_node.endpoint);
+
+  const auto status = service.notify(&serverContext, &req, &res);
+
+  ASSERT_TRUE(status.ok());
+  ASSERT_EQ(router.predecessor(), from_node);
+}
+
+TEST(ServiceTest, notify__update_predecessor) {
+  Context context = make_context(20);
+
+  Router router(context);
+  router.set_predecessor(0, {"0", "0.0.0.0:8888"});
+
+  Service service{context, &router, nullptr};
+
+  ServerContext serverContext;
+  NotifyRequest req;
+  NotifyResponse res;
+
+  const node from_node{"10", "10.10.10.10:8888"};
+  auto src = req.mutable_header()->mutable_src();
+  src->set_uuid(from_node.uuid.string());
+  src->set_endpoint(from_node.endpoint);
+
+  const auto status = service.notify(&serverContext, &req, &res);
+
+  ASSERT_TRUE(status.ok());
+  ASSERT_EQ(router.predecessor(), from_node);
+}
+
+TEST(ServiceTest, notify__no_update) {
+  Context context = make_context(20);
+
+  Router router(context);
+
+  const node pred{"10", "10.10.10.10:8888"};
+  router.set_predecessor(0, pred);
+
+  Service service{context, &router, nullptr};
+
+  ServerContext serverContext;
+  NotifyRequest req;
+  NotifyResponse res;
+
+  const node from_node{"1", "1.1.1.1:8888"};
+  auto src = req.mutable_header()->mutable_src();
+  src->set_uuid(from_node.uuid.string());
+  src->set_endpoint(from_node.endpoint);
+
+  const auto status = service.notify(&serverContext, &req, &res);
+
+  ASSERT_TRUE(status.ok());
+  // no update
+  ASSERT_EQ(router.predecessor(), pred);
+}
