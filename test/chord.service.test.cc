@@ -607,7 +607,6 @@ TEST(ServiceTest, check) {
   const auto status = service.check(&serverContext, &req, &res);
 
   ASSERT_TRUE(status.ok());
-  // asdf
   ASSERT_TRUE(res.has_header());
   ASSERT_EQ(res.header().src().uuid(), context.uuid().string());
   ASSERT_EQ(res.header().src().endpoint(), context.bind_addr);
