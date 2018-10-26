@@ -83,7 +83,7 @@ void Client::leave() {
   }
 }
 
-void Client::join(const endpoint_t &addr) {
+bool Client::join(const endpoint_t &addr) {
   logger->debug("joining {}", addr);
 
   ClientContext clientContext;
@@ -95,16 +95,18 @@ void Client::join(const endpoint_t &addr) {
   const auto status = make_stub(addr)->join(&clientContext, req, &res);
 
   if (!status.ok() || !res.has_successor()) {
-    throw__exception("Failed to join " + addr);
+    logger->info("Failed to join {}", addr);
+    return false;
   }
 
   const auto succ = chord::common::make_node(res.successor());
 
   const auto pred = chord::common::make_node(res.predecessor());
 
-  logger->trace("join successful");
+  logger->info("Successfully joined {}", addr);
   router->set_predecessor(0, pred);
   router->set_successor(0, succ);
+  return true;
 }
 
 Status Client::join(const JoinRequest *req, JoinResponse *res) {

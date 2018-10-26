@@ -42,7 +42,7 @@ class Client : public IClient {
 
   void leave() override;
 
-  void join(const endpoint_t &addr) override;
+  bool join(const endpoint_t &addr) override;
   grpc::Status join(const JoinRequest *req, JoinResponse *res) override;
   grpc::Status join(grpc::ClientContext *clientContext, const JoinRequest *req, JoinResponse *res) override;
 

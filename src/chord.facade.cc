@@ -104,6 +104,10 @@ RouterEntry ChordFacade::successor(const uuid_t &uuid) {
  */
 void ChordFacade::stabilize() {
   client->stabilize();
+  // lost connection and we know where to join -> re-join
+  if(!router->has_successor() && !context.join_addr.empty()) {
+    join();
+  }
 }
 
 /**

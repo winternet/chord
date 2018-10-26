@@ -42,15 +42,22 @@ struct Router {
   }
 
   void reset() {
+    std::lock_guard<mutex_t> lock(mtx);
     cleanup();
     routes[context.uuid()] = context.bind_addr;
+  }
+
+  bool has_successor() const {
+    std::lock_guard<mutex_t> lock(mtx);
+    return std::any_of(std::begin(successors), std::end(successors), [](const optional<uuid>& succ) {return succ;});
   }
 
   /**
    * get the amount of known routes.
    *
-   * note that this does _not_ return the size of the
-   * chord ring.
+   * note that this does _neither_ return the size of the
+   * chord ring nor the currently known routes, it just returns
+   * all routes it once knew.
    */
   size_t size() const {
     std::lock_guard<mutex_t> lock(mtx);
@@ -119,7 +126,6 @@ struct Router {
         } else {
           successors[i] = replacement;
         }
-        //successors[i] = replacement != nullptr ? new uuid_t{*replacement} : nullptr;
       }
     }
 

@@ -21,7 +21,7 @@ class IClient {
   virtual ~IClient() {}
   virtual void leave() =0;
 
-  virtual void join(const endpoint_t &addr) =0;
+  virtual bool join(const endpoint_t &addr) =0;
   virtual grpc::Status join(const JoinRequest *req, JoinResponse *res) =0;
   virtual grpc::Status join(grpc::ClientContext *clientContext, const JoinRequest *req, JoinResponse *res) =0;
 
