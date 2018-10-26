@@ -14,12 +14,14 @@ namespace chord {
 class ShutdownHandler: public AbstractShutdownHandler {
   static constexpr auto logger_name = "chord.shutdown.handler";
 
+  static std::atomic<int> invocation_cnt;
+
   private:
     std::shared_ptr<Peer> peer;
-    std::atomic<int> counter{0};
     std::shared_ptr<spdlog::logger> logger{log::get_or_create(logger_name)};
 
   public:
+   ShutdownHandler();
    ShutdownHandler(std::shared_ptr<Peer>);
 
   private:
