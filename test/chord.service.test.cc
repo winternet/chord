@@ -587,3 +587,28 @@ TEST(ServiceTest, notify__no_update) {
   // no update
   ASSERT_EQ(router.predecessor(), pred);
 }
+
+TEST(ServiceTest, check) {
+  Context context = make_context(20);
+
+  Router router(context);
+
+  Service service{context, &router, nullptr};
+
+  ServerContext serverContext;
+  CheckRequest req;
+  CheckResponse res;
+
+  const node from_node{"1", "1.1.1.1:8888"};
+  auto src = req.mutable_header()->mutable_src();
+  src->set_uuid(from_node.uuid.string());
+  src->set_endpoint(from_node.endpoint);
+
+  const auto status = service.check(&serverContext, &req, &res);
+
+  ASSERT_TRUE(status.ok());
+  // asdf
+  ASSERT_TRUE(res.has_header());
+  ASSERT_EQ(res.header().src().uuid(), context.uuid().string());
+  ASSERT_EQ(res.header().src().endpoint(), context.bind_addr);
+}
