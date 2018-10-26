@@ -611,3 +611,18 @@ TEST(ServiceTest, check) {
   ASSERT_EQ(res.header().src().uuid(), context.uuid().string());
   ASSERT_EQ(res.header().src().endpoint(), context.bind_addr);
 }
+
+TEST(ServiceTest, fix_fingers) {
+  Context context = make_context(20);
+
+  Router router(context);
+
+  const node succ{"50", "5.5.5.5:8888"};
+  router.set_successor(0, succ);
+
+  Service service{context, &router, nullptr};
+
+  service.fix_fingers(2);
+  ASSERT_EQ(router.successor(1), succ); // no holes in successors
+  ASSERT_EQ(router.successor(2), succ);
+}
