@@ -47,11 +47,7 @@ Client::Client(Context &context, ChordFacade *chord, StubFactory make_stub)
       make_stub{make_stub},
       logger{log::get_or_create(logger_name)} {}
 
-Status Client::put(const chord::uri &uri, istream &istream) {
-  const auto hash = chord::crypto::sha256(uri);
-  const auto endpoint = chord->successor(hash).endpoint();
-
-  logger->trace("put {} ({})", uri, hash);
+Status Client::put(const chord::node& node, const chord::uuid& hash, const chord::uri &uri, istream &istream, const size_t repl_cnt) {
 
   //TODO make configurable
   constexpr size_t len = 512*1024; // 512k
@@ -62,7 +58,7 @@ Status Client::put(const chord::uri &uri, istream &istream) {
   ClientContext clientContext;
   PutResponse res;
   // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
-  auto stub = Filesystem::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
+  auto stub = Filesystem::NewStub(grpc::CreateChannel(node.endpoint, grpc::InsecureChannelCredentials()));
   unique_ptr<ClientWriter<PutRequest> > writer(stub->put(&clientContext, &res));
 
   do {
@@ -75,6 +71,7 @@ Status Client::put(const chord::uri &uri, istream &istream) {
     req.set_offset(offset);
     req.set_size(read);
     req.set_uri(uri);
+    req.set_replication_cnt(repl_cnt > 0 ? repl_cnt-1 : 0);
     offset += read;
 
     if (!writer->Write(req)) {
@@ -86,6 +83,13 @@ Status Client::put(const chord::uri &uri, istream &istream) {
   writer->WritesDone();
 
   return writer->Finish();
+}
+
+Status Client::put(const chord::uri &uri, istream &istream, const size_t repl_cnt) {
+  const auto hash = chord::crypto::sha256(uri);
+  const auto node = make_node(chord->successor(hash));
+  logger->trace("put {} ({})", uri, hash);
+  return put(node, hash, uri, istream, repl_cnt);
 }
 
 void Client::add_metadata(MetaRequest& req, const chord::path& parent_path) {

@@ -46,7 +46,10 @@ void add_metadata(chord::fs::MetaRequest& req, const chord::path& path);
 
   Client(Context &context, chord::ChordFacade* chord, StubFactory factory);
 
-  grpc::Status put(const chord::uri &uri, std::istream &istream);
+  // called internally by the chord.fs.service
+  grpc::Status put(const chord::node& target, const chord::uuid& hash, const chord::uri &uri, std::istream &istream, const size_t repl_cnt);
+
+  grpc::Status put(const chord::uri &uri, std::istream &istream, const size_t repl_cnt = 1);
 
   grpc::Status get(const chord::uri &uri, std::ostream &ostream);
 

@@ -40,7 +40,7 @@ Peer::Peer(Context ctx)
     : context{ctx},
       chord{make_unique<chord::ChordFacade>(context)},
       filesystem{make_unique<chord::fs::Facade>(context, chord.get())},
-      controller{make_unique<controller::Service>(filesystem.get())},
+      controller{make_unique<controller::Service>(context, filesystem.get())},
       logger{log::get_or_create(logger_name)}
 {
   chord->set_take_callback(filesystem->take_consumer_callback());

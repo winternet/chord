@@ -14,6 +14,9 @@ no-controller: Yes
 stabilize_ms: 10000
 check_ms: 10000
 
+## replication / striping
+replication-count: 3
+
 #uuid: "4444444444"
 #2^256 / 2
 uuid: "57896044620000006678280936031721331295010511669633703118152976382517355479040"

@@ -14,5 +14,8 @@ no-controller: No
 stabilize_ms: 10000
 check_ms: 10000
 
+## replication / striping
+replication-count: 3
+
 #uuid: "0"
 uuid: "0"

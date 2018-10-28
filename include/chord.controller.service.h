@@ -22,7 +22,7 @@ class Service final : public chord::controller::Control::Service {
   static constexpr auto logger_name = "chord.controller.service";
 
  public:
-  explicit Service(chord::fs::Facade *filesystem);
+  explicit Service(Context& context, chord::fs::Facade *filesystem);
 
   grpc::Status control(grpc::ServerContext *context,
                        const chord::controller::ControlRequest *req,
@@ -38,9 +38,11 @@ class Service final : public chord::controller::Control::Service {
 
   grpc::Status send_file(const path, const chord::uri);
 
+  const Context& context;
   chord::fs::Facade *filesystem;
 
   std::shared_ptr<spdlog::logger> logger;
 };
 }  // namespace controller
 }  // namespace chord
+

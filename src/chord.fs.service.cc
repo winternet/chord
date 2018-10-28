@@ -128,6 +128,31 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     file::remove(data);
     throw;
   }
+
+  // replication
+  // TODO change to if(<init>; <cond>) c++20
+  const auto repl_cnt = req.replication_cnt();
+  if(repl_cnt > 0) {
+
+    const chord::uuid uuid{req.id()};
+    // next
+    const auto next = make_node(chord->successor(context.uuid()));
+    if(uuid.between(context.uuid(), next.uuid)) {
+      const auto msg = "failed to store replication #"+to_string(repl_cnt)+ " : detected cycle.";
+      logger->warn(msg);
+      return {StatusCode::ABORTED, msg};
+    }
+
+    const auto uri = uri::from(req.uri());
+    path data = context.data_directory;
+    data /= uri.path().parent_path();
+    data /= uri.path().filename();
+
+    std::ifstream file;
+    file.exceptions(ifstream::failbit | ifstream::badbit);
+    file.open(data, std::fstream::binary);
+    make_client().put(next, uuid, uri, file, repl_cnt > 0 ? repl_cnt-1:0);
+  }
   return Status::OK;
 }
 

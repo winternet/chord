@@ -5,6 +5,7 @@
 #include <grpc++/server_context.h>
 
 #include <boost/tokenizer.hpp>
+#include <boost/program_options.hpp>
 
 #include "chord.context.h"
 #include "chord.file.h"
@@ -26,10 +27,14 @@ using chord::controller::ControlResponse;
 using grpc::ServerBuilder;
 using namespace std;
 
+namespace po = boost::program_options;
+
 namespace chord {
 namespace controller {
-Service::Service(chord::fs::Facade* filesystem)
-    : filesystem{filesystem}, logger{log::get_or_create(logger_name)} {}
+Service::Service(Context& context, chord::fs::Facade* filesystem)
+    : context{context}
+    , filesystem{filesystem}
+    , logger{log::get_or_create(logger_name)} {}
 
 Status Service::control(ServerContext* serverContext __attribute__((unused)),
                         const ControlRequest* req, ControlResponse* res) {
@@ -87,20 +92,39 @@ Status Service::handle_del(const vector<string>& token, ControlResponse* res) {
 
 
 Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
-  //TODO support multiple sources
-  if (token.size() < 3) {
+
+  // BEG: parse (~>method)
+  po::variables_map vm;
+  po::positional_options_description pos;
+  pos.add("input", -1);
+  po::options_description flags("[put flags]");
+  flags.add_options()
+      ("repl",  po::value<size_t>()->default_value(context.replication_cnt), "replication count.")
+      ("input", po::value<vector<string> >()->default_value({}, ""), "input to process");
+  po::parsed_options parsed_flags = po::command_line_parser(token)
+    .options(flags)
+    .positional(pos)
+    .allow_unregistered()
+    .run();
+  po::store(parsed_flags, vm);
+  po::notify(vm);
+
+  const auto tokens = vm["input"].as<std::vector<std::string> >();
+  const auto repl = vm["repl"].as<size_t>();
+  if(tokens.size() < 3) {
     res->set_result("invalid arguments.");
     return Status::CANCELLED;
   }
+  // END: parse
 
   try {
-    const auto target_it = prev(token.end());
-    for (auto it = next(token.begin()); it != target_it; ++it) {
+    const auto target_it = prev(tokens.end());
+    for (auto it = next(tokens.begin()); it != target_it; ++it) {
       const path& source = {*it};
       const uri& target = {*target_it};
       // TODO if taget is no directory rename the file
       //      and put it under that name
-      filesystem->put(source, target);
+      filesystem->put(source, target, repl);
     }
   } catch (const chord::exception& exception) {
     logger->error("failed to issue put request: {}", exception.what());

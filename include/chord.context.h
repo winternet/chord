@@ -34,6 +34,9 @@ struct Context {
   size_t stabilize_period_ms{10000};
   size_t check_period_ms{10000};
 
+  //--- replication / striping
+  size_t replication_cnt{1}; //default replication factor if not overriden
+
   inline const uuid_t &uuid() const { return _uuid; }
   inline const chord::node node() const { return {_uuid, bind_addr}; }
 

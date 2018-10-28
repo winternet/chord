@@ -28,7 +28,7 @@ bool Facade::is_directory(const chord::uri& target) {
   return !metadata.empty();
 }
 
-void Facade::put(const chord::path &source, const chord::uri &target) {
+void Facade::put(const chord::path &source, const chord::uri &target, const size_t repl_cnt) {
   if (chord::file::is_directory(source)) {
     for(const auto &child : source.recursive_contents()) {
       // dont put empty folders for now
@@ -36,11 +36,11 @@ void Facade::put(const chord::path &source, const chord::uri &target) {
 
       const auto relative_path = child - source.parent_path();
       const auto new_target = target.path().canonical() / relative_path;
-      put_file(child, {target.scheme(), new_target});
+      put_file(child, {target.scheme(), new_target}, repl_cnt);
     }
   } else {
     const auto new_target = is_directory(target) ? target.path().canonical() / source.filename() : target.path().canonical();
-    put_file(source, {target.scheme(), new_target});
+    put_file(source, {target.scheme(), new_target}, repl_cnt);
   }
 }
 
@@ -115,13 +115,16 @@ void Facade::del(const chord::uri &uri) {
 }
 
 
-void Facade::put_file(const path& source, const chord::uri& target) {
+void Facade::put_file(const path& source, const chord::uri& target, const size_t repl_cnt) {
+  // validate input...
+  if(repl_cnt > MAX_REPL_CNT) throw__exception("replication count above "+to_string(MAX_REPL_CNT)+" is not allowed");
+
   try {
     std::ifstream file;
     file.exceptions(ifstream::failbit | ifstream::badbit);
     file.open(source, std::fstream::binary);
 
-    const auto status = fs_client->put(target, file);
+    const auto status = fs_client->put(target, file, repl_cnt);
     if (!status.ok()) throw__grpc_exception("failed to put " + to_string(target), status);
   } catch (const std::ios_base::failure& exception) {
     throw__exception("failed to issue put_file " + std::string{exception.what()});
