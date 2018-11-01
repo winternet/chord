@@ -4,6 +4,7 @@
 
 #include "chord.fs.client.h"
 #include "chord.fs.service.h"
+#include "chord.log.h"
 #include "chord.uri.h"
 
 namespace chord {

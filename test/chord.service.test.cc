@@ -6,6 +6,7 @@
 #include "chord_common.pb.h"
 #include "chord.client.mock.h"
 #include "chord.client.h"
+#include "chord.log.h"
 
 #include "chord.router.h"
 #include "chord.service.h"

@@ -8,6 +8,7 @@
 
 #include "chord.facade.h"
 
+#include "chord.log.h"
 #include "chord.i.scheduler.h"
 #include "chord.scheduler.h"
 #include "chord.router.h"
