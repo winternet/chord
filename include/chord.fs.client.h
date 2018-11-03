@@ -62,9 +62,11 @@ void add_metadata(chord::fs::MetaRequest& req, const chord::path& path);
   grpc::Status dir(const chord::uri &uri, std::set<Metadata>& metadata);
 
   //TODO remove metadata for DEL / DIR
-  grpc::Status meta(const chord::uri &uri, const Action &action);
+  grpc::Status meta(const chord::uri &uri, const Action &action, std::set<Metadata>& metadata, const size_t repl_cnt = 1);
+  grpc::Status meta(const chord::uri &uri, const Action &action, const size_t repl_cnt = 1);
 
-  grpc::Status meta(const chord::uri &uri, const Action &action, std::set<Metadata>& metadata);
+  // called internally by the chord.fs.service
+  grpc::Status meta(const chord::node& target, const chord::uri &uri, const Action &action, std::set<Metadata>& metadata, const size_t repl_cnt = 1);
 
 };
 

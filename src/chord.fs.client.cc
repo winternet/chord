@@ -104,12 +104,12 @@ void Client::add_metadata(MetaRequest& req, const chord::path& parent_path) {
   }
 }
 
-grpc::Status Client::meta(const chord::uri &uri, const Action &action, set<Metadata>& metadata) {
+grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, const Action &action, set<Metadata>& metadata, const size_t repl_cnt) {
   //--- find responsible node for uri.path()
   const auto path = uri.path().canonical();
   const auto meta_uri = uri::builder{uri.scheme(), path}.build();
   const auto hash = chord::crypto::sha256(meta_uri);
-  const auto endpoint = chord->successor(hash).endpoint();
+  //const auto endpoint = chord->successor(hash).endpoint();
 
   logger->trace("meta {} ({})", meta_uri, hash);
 
@@ -143,14 +143,21 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action, set<Metad
       return dir(uri, metadata);
   }
 
-  const auto status = make_stub(endpoint)->meta(&clientContext, req, &res);
+  const auto status = make_stub(target.endpoint)->meta(&clientContext, req, &res);
 
   return status;
 }
 
-grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
+grpc::Status Client::meta(const chord::uri &uri, const Action &action, std::set<Metadata>& m, const size_t repl_cnt) {
+  const auto hash = chord::crypto::sha256(uri);
+  const auto node = chord::common::make_node(chord->successor(hash));
+  return meta(node, uri, action, m, repl_cnt);
+}
+grpc::Status Client::meta(const chord::uri &uri, const Action &action, const size_t repl_cnt) {
   std::set<Metadata> m;
-  return meta(uri, action, m);
+  const auto hash = chord::crypto::sha256(uri);
+  const auto node = chord::common::make_node(chord->successor(hash));//.endpoint();
+  return meta(node, uri, action, m, repl_cnt);
 }
 
 Status Client::del(const chord::uri &uri, const chord::node& node) {

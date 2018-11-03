@@ -113,6 +113,8 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     }
   }
 
+  const auto repl_cnt = req.replication_cnt();
+
   // metadata
   try {
     const auto uri = uri::from(req.uri());
@@ -121,7 +123,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     for (const path &path : uri.path().all_paths()) {
       const auto sub_uri = uri::builder{uri.scheme(), path}.build();
       auto meta = MetadataBuilder::for_path(context, path);
-      make_client().meta(sub_uri, Client::Action::ADD, meta);
+      make_client().meta(sub_uri, Client::Action::ADD, meta, repl_cnt);
     }
   } catch(const chord::exception &e) {
     logger->error("failed to add metadata: {}", e.what());
@@ -131,7 +133,6 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 
   // replication
   // TODO change to if(<init>; <cond>) c++20
-  const auto repl_cnt = req.replication_cnt();
   if(repl_cnt > 0) {
 
     const chord::uuid uuid{req.id()};

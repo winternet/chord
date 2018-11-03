@@ -36,15 +36,8 @@ std::unique_ptr<T, void(*)(T*)> unique_of(T& val) {
 Context make_context(const uuid_t &self) {
   Context context = Context();
   context.set_uuid(self);
-  //std::shared_ptr<Context> context = std::shared_ptr<Context>(new Context);
-  //context->set_uuid(self);
-
   return context;
 }
-
-//Router make_router(Context context) {
-//  return Router(context);
-//}
 
 RouterEntry make_entry(const uuid_t &id, const endpoint_t &addr) {
   RouterEntry entry;
