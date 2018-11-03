@@ -8,6 +8,7 @@
 #include "chord.crypto.h"
 #include "chord.file.h"
 #include "chord.fs.client.h"
+#include "chord.fs.replication.h"
 #include "chord.fs.metadata.builder.h"
 #include "chord.log.h"
 #include "chord.peer.h"
@@ -47,7 +48,7 @@ Client::Client(Context &context, ChordFacade *chord, StubFactory make_stub)
       make_stub{make_stub},
       logger{log::get_or_create(logger_name)} {}
 
-Status Client::put(const chord::node& node, const chord::uuid& hash, const chord::uri &uri, istream &istream, const size_t repl_cnt) {
+Status Client::put(const chord::node& node, const chord::uuid& hash, const chord::uri &uri, istream &istream, Replication repl) {
 
   //TODO make configurable
   constexpr size_t len = 512*1024; // 512k
@@ -71,7 +72,11 @@ Status Client::put(const chord::node& node, const chord::uuid& hash, const chord
     req.set_offset(offset);
     req.set_size(read);
     req.set_uri(uri);
-    req.set_replication_cnt(repl_cnt > 0 ? repl_cnt-1 : 0);
+
+    ++repl;
+    req.set_replication_idx(repl.index);
+    req.set_replication_cnt(repl.count);
+
     offset += read;
 
     if (!writer->Write(req)) {
@@ -85,11 +90,11 @@ Status Client::put(const chord::node& node, const chord::uuid& hash, const chord
   return writer->Finish();
 }
 
-Status Client::put(const chord::uri &uri, istream &istream, const size_t repl_cnt) {
+Status Client::put(const chord::uri &uri, istream &istream, Replication repl) {
   const auto hash = chord::crypto::sha256(uri);
   const auto node = make_node(chord->successor(hash));
   logger->trace("put {} ({})", uri, hash);
-  return put(node, hash, uri, istream, repl_cnt);
+  return put(node, hash, uri, istream, repl);
 }
 
 void Client::add_metadata(MetaRequest& req, const chord::path& parent_path) {
@@ -104,7 +109,7 @@ void Client::add_metadata(MetaRequest& req, const chord::path& parent_path) {
   }
 }
 
-grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, const Action &action, set<Metadata>& metadata, const size_t repl_cnt) {
+grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, const Action &action, set<Metadata>& metadata, Replication repl) {
   //--- find responsible node for uri.path()
   const auto path = uri.path().canonical();
   const auto meta_uri = uri::builder{uri.scheme(), path}.build();
@@ -148,16 +153,16 @@ grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, cons
   return status;
 }
 
-grpc::Status Client::meta(const chord::uri &uri, const Action &action, std::set<Metadata>& m, const size_t repl_cnt) {
+grpc::Status Client::meta(const chord::uri &uri, const Action &action, std::set<Metadata>& m, Replication repl) {
   const auto hash = chord::crypto::sha256(uri);
   const auto node = chord::common::make_node(chord->successor(hash));
-  return meta(node, uri, action, m, repl_cnt);
+  return meta(node, uri, action, m, repl);
 }
-grpc::Status Client::meta(const chord::uri &uri, const Action &action, const size_t repl_cnt) {
+grpc::Status Client::meta(const chord::uri &uri, const Action &action, Replication repl) {
   std::set<Metadata> m;
   const auto hash = chord::crypto::sha256(uri);
   const auto node = chord::common::make_node(chord->successor(hash));//.endpoint();
-  return meta(node, uri, action, m, repl_cnt);
+  return meta(node, uri, action, m, repl);
 }
 
 Status Client::del(const chord::uri &uri, const chord::node& node) {

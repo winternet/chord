@@ -12,7 +12,6 @@ namespace fs {
 
 class Facade {
   static constexpr auto logger_name = "chord.fs.facade";
-  static constexpr auto MAX_REPL_CNT = 10;
 
  private:
   const Context& context;
@@ -21,7 +20,7 @@ class Facade {
   std::shared_ptr<spdlog::logger> logger;
 
  private:
-  void put_file(const chord::path& source, const chord::uri& target, const size_t repl_cnt = 1);
+  void put_file(const chord::path& source, const chord::uri& target, Replication repl = Replication());
   void get_file(const chord::uri& source, const chord::path& target);
   bool is_directory(const chord::uri& target);
   void get_and_integrate(const chord::fs::MetaResponse& metadata);
@@ -31,7 +30,7 @@ class Facade {
 
   ::grpc::Service* grpc_service();
 
-  void put(const chord::path& source, const chord::uri& target, const size_t repl_cnt = 1);
+  void put(const chord::path& source, const chord::uri& target, Replication repl = Replication());
 
   void get(const chord::uri& source, const chord::path& target);
 

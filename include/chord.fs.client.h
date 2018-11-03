@@ -6,6 +6,7 @@
 
 #include "chord.facade.h"
 #include "chord.fs.metadata.h"
+#include "chord.fs.replication.h"
 #include "chord.types.h"
 #include "chord.uri.h"
 #include "chord_fs.grpc.pb.h"
@@ -47,9 +48,9 @@ void add_metadata(chord::fs::MetaRequest& req, const chord::path& path);
   Client(Context &context, chord::ChordFacade* chord, StubFactory factory);
 
   // called internally by the chord.fs.service
-  grpc::Status put(const chord::node& target, const chord::uuid& hash, const chord::uri &uri, std::istream &istream, const size_t repl_cnt);
+  grpc::Status put(const chord::node& target, const chord::uuid& hash, const chord::uri &uri, std::istream &istream, Replication repl);
 
-  grpc::Status put(const chord::uri &uri, std::istream &istream, const size_t repl_cnt = 1);
+  grpc::Status put(const chord::uri &uri, std::istream &istream, Replication repl = Replication() );
 
   grpc::Status get(const chord::uri &uri, std::ostream &ostream);
 
@@ -62,11 +63,11 @@ void add_metadata(chord::fs::MetaRequest& req, const chord::path& path);
   grpc::Status dir(const chord::uri &uri, std::set<Metadata>& metadata);
 
   //TODO remove metadata for DEL / DIR
-  grpc::Status meta(const chord::uri &uri, const Action &action, std::set<Metadata>& metadata, const size_t repl_cnt = 1);
-  grpc::Status meta(const chord::uri &uri, const Action &action, const size_t repl_cnt = 1);
+  grpc::Status meta(const chord::uri &uri, const Action &action, std::set<Metadata>& metadata, Replication repl = Replication());
+  grpc::Status meta(const chord::uri &uri, const Action &action, Replication repl = Replication());
 
   // called internally by the chord.fs.service
-  grpc::Status meta(const chord::node& target, const chord::uri &uri, const Action &action, std::set<Metadata>& metadata, const size_t repl_cnt = 1);
+  grpc::Status meta(const chord::node& target, const chord::uri &uri, const Action &action, std::set<Metadata>& metadata, Replication repl = Replication());
 
 };
 

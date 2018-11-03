@@ -113,17 +113,16 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     }
   }
 
-  const auto repl_cnt = req.replication_cnt();
+  const auto uri = uri::from(req.uri());
+  Replication repl{req.replication_idx(), req.replication_cnt()};
 
   // metadata
   try {
-    const auto uri = uri::from(req.uri());
-
     // remote / local(last)
     for (const path &path : uri.path().all_paths()) {
       const auto sub_uri = uri::builder{uri.scheme(), path}.build();
       auto meta = MetadataBuilder::for_path(context, path);
-      make_client().meta(sub_uri, Client::Action::ADD, meta, repl_cnt);
+      make_client().meta(sub_uri, Client::Action::ADD, meta, repl);
     }
   } catch(const chord::exception &e) {
     logger->error("failed to add metadata: {}", e.what());
@@ -133,18 +132,17 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 
   // replication
   // TODO change to if(<init>; <cond>) c++20
-  if(repl_cnt > 0) {
+  if(repl.index < repl.count) {
 
     const chord::uuid uuid{req.id()};
     // next
     const auto next = make_node(chord->successor(context.uuid()));
     if(uuid.between(context.uuid(), next.uuid)) {
-      const auto msg = "failed to store replication #"+to_string(repl_cnt)+ " : detected cycle.";
+      const auto msg = "failed to store replication "+repl.string()+ " : detected cycle.";
       logger->warn(msg);
       return {StatusCode::ABORTED, msg};
     }
 
-    const auto uri = uri::from(req.uri());
     path data = context.data_directory;
     data /= uri.path().parent_path();
     data /= uri.path().filename();
@@ -152,7 +150,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     std::ifstream file;
     file.exceptions(ifstream::failbit | ifstream::badbit);
     file.open(data, std::fstream::binary);
-    make_client().put(next, uuid, uri, file, repl_cnt > 0 ? repl_cnt-1:0);
+    make_client().put(next, uuid, uri, file, ++repl);
   }
   return Status::OK;
 }
