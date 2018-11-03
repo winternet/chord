@@ -11,6 +11,7 @@
 #include "chord.fs.perms.h"
 #include "chord.fs.type.h"
 #include "chord.node.h"
+#include "chord.fs.replication.h"
 #include "chord.optional.h"
 #include "chord.optional.serialization.h"
 
@@ -29,15 +30,19 @@ struct Metadata {
   // reference node
   chord::optional<chord::node> node_ref;
 
+  // replication
+  chord::optional<chord::fs::Replication> replication;
+
   /** needed for (de-) serialization **/
   Metadata() = default;
-  Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, chord::optional<chord::node> node_ref={})
+  Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, chord::optional<chord::node> node_ref={}, chord::optional<chord::fs::Replication> replication={})
   : name{name},
     owner{owner},
     group{group},
     permissions{permissions},
     file_type{file_type},
-    node_ref{node_ref}
+    node_ref{node_ref},
+    replication{replication}
     {}
 
   bool operator<(const Metadata &other) const { return name < other.name; }
@@ -108,6 +113,14 @@ void serialize(Archive & ar, chord::node &node, const unsigned int version)
   (void)version;
   ar & node.uuid;
   ar & node.endpoint;
+}
+
+template<class Archive>
+void serialize(Archive & ar, chord::fs::Replication &replication, const unsigned int version)
+{
+  (void)version;
+  ar & replication.index;
+  ar & replication.count;
 }
 }  // namespace serialization
 }  // namespace boost

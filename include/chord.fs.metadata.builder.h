@@ -65,12 +65,19 @@ struct MetadataBuilder {
    * @todo implement owner / group
    */
   static Metadata from(const chord::fs::Data& item, chord::optional<chord::node> node_ref = {}) {
+    // replication
+    chord::optional<Replication> repl;
+    if(item.replication_cnt() > 1) {
+      repl = Replication{item.replication_idx(), item.replication_cnt()};
+    }
+
     Metadata meta{item.filename(),
                   "",  // owner
                   "",  // group
                   static_cast<perms>(item.permissions()),
                   static_cast<type>(item.type()), 
-                  node_ref};
+                  node_ref,
+                  repl};
 
     return meta;
   }

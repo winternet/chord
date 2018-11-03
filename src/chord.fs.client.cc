@@ -132,6 +132,8 @@ grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, cons
       data->set_permissions(value_of(m.permissions));
       data->set_owner(m.owner);
       data->set_group(m.group);
+      data->set_replication_idx(repl.index);
+      data->set_replication_cnt(repl.count);
     }
   }
 
