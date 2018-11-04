@@ -73,7 +73,6 @@ Status Client::put(const chord::node& node, const chord::uuid& hash, const chord
     req.set_size(read);
     req.set_uri(uri);
 
-    ++repl;
     req.set_replication_idx(repl.index);
     req.set_replication_cnt(repl.count);
 

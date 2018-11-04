@@ -225,6 +225,14 @@ Status Client::successor(ClientContext *clientContext, const SuccessorRequest *r
   copy.mutable_header()->CopyFrom(make_header(context));
 
   const auto predecessor = router->closest_preceding_node(uuid_t(req->id()));
+  // this node is the closest preceding node -> successor is node's direct successor
+  if(predecessor && *predecessor == context.node()) {
+    logger->trace("this node seems to be the closest preceding node");
+    auto succ = res->mutable_successor();
+    succ->set_uuid(context.uuid());
+    succ->set_endpoint(context.bind_addr);
+    return Status::OK;
+  }
   //const auto endpoint = router->get(predecessor);
   logger->trace("forwarding request to {}", predecessor);
 

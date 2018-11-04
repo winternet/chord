@@ -101,6 +101,17 @@ RouterEntry ChordFacade::successor(const uuid_t &uuid) {
 }
 
 /**
+ * nth direct successor
+ */
+RouterEntry ChordFacade::nth_successor(const uuid_t &uuid, const unsigned int n) {
+  auto succ = successor(uuid);
+  for(unsigned int i=0; i<n; ++i) {
+    succ = successor(succ.uuid());
+  }
+  return succ;
+}
+
+/**
  * stabilize the ring
  */
 void ChordFacade::stabilize() {

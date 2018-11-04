@@ -121,8 +121,9 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     // remote / local(last)
     for (const path &path : uri.path().all_paths()) {
       const auto sub_uri = uri::builder{uri.scheme(), path}.build();
+      const auto node = make_node(chord->nth_successor(chord::crypto::sha256(sub_uri), repl.index));
       auto meta = MetadataBuilder::for_path(context, path);
-      make_client().meta(sub_uri, Client::Action::ADD, meta, repl);
+      make_client().meta(node, sub_uri, Client::Action::ADD, meta, repl);
     }
   } catch(const chord::exception &e) {
     logger->error("failed to add metadata: {}", e.what());
@@ -130,14 +131,15 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     throw;
   }
 
-  // replication
-  // TODO change to if(<init>; <cond>) c++20
+  // handle replication
+  ++repl;
   if(repl.index < repl.count) {
 
     const chord::uuid uuid{req.id()};
     // next
     const auto next = make_node(chord->successor(context.uuid()));
     if(uuid.between(context.uuid(), next.uuid)) {
+      // TODO rollback all puts?
       const auto msg = "failed to store replication "+repl.string()+ " : detected cycle.";
       logger->warn(msg);
       return {StatusCode::ABORTED, msg};
@@ -150,7 +152,8 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     std::ifstream file;
     file.exceptions(ifstream::failbit | ifstream::badbit);
     file.open(data, std::fstream::binary);
-    make_client().put(next, uuid, uri, file, ++repl);
+    //TODO rollback on status ABORTED?
+    make_client().put(next, uuid, uri, file, repl);
   }
   return Status::OK;
 }

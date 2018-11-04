@@ -58,6 +58,11 @@ class ChordFacade {
   chord::common::RouterEntry successor(const uuid_t &uuid);
 
   /**
+   * nth direct successor
+   */
+  chord::common::RouterEntry nth_successor(const uuid_t &uuid, const unsigned int n);
+
+  /**
    * stabilize the ring
    */
   void stabilize();
