@@ -29,14 +29,14 @@ TEST(CryptoTest, sha256) {
 TEST(CryptoTest, initialize) {
   unsigned char md[32];
   crypto::sha256("foo", 3, md);
-  cout << "HASH: ";
-  for (auto ch : md) printf("%X", ch);
+
+  //for (auto ch : md) printf("%X", ch);
 
   auto uid = uuid{0};
   import_bits(uid.value(), md, md + 32);
 
-  cout << "\nUUID: " << uid;
-  cout << "\nUUID-HASH: " << std::hex << uid;
+  ASSERT_EQ(uid.hex(), "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae");
+  ASSERT_EQ(uid, "19970150736239713706088444570146546354146685096673408908105596072151101138862");
 }
 
 TEST(CryptoTest, hash_file) {
@@ -54,9 +54,7 @@ TEST(CryptoTest, hash_file) {
   uuid_t hash = crypto::sha256(file);
   file.close();
 
-  cout << "\n--UUID: " << hash;
-  cout << "\n--UUID-HASH: " << std::nouppercase << std::hex << hash;
-
+  ASSERT_EQ(hash.string(), "78163808323680042193722866647697615020714063641725196338206602615142164613113");
   ASSERT_EQ(hash.hex(), "accf25d1f41665e077c819907458c7363f30083c223cd3718ec851249ab647f9");
 
 }
