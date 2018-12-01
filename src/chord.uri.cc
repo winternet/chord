@@ -171,7 +171,7 @@ string uri::decode(const string &str) {
   ostringstream decoded;
   for (auto it = begin(str); it!=end(str); it++) {
     if (*it=='%') {
-      decoded << (char) strtol(string(it + 1, it + 3).c_str(), nullptr, 16);
+      decoded << static_cast<char>(strtol(string(it + 1, it + 3).c_str(), nullptr, 16));
       it += 2;
     } else {
       decoded << *it;
@@ -280,6 +280,10 @@ std::string to_string(const uri &uri) {
 
 bool uri::operator<(const uri &uri) const {
     return to_string(*this) < to_string(uri);
+}
+
+bool uri::operator==(const uri &uri) const {
+    return to_string(*this) == to_string(uri);
 }
 
 }

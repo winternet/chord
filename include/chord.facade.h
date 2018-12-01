@@ -10,8 +10,9 @@
 #include "chord.uuid.h"
 
 namespace spdlog {
-  class logger;
+class logger;
 }  // namespace spdlog
+
 namespace chord {
 //--- forward declarations
 class AbstractScheduler;
@@ -30,6 +31,7 @@ class ChordFacade {
   ChordFacade &operator=(const ChordFacade &) = delete;  // disable assignment
 
   explicit ChordFacade(Context& context);
+  explicit ChordFacade(Context& ctx, Router* router, Client* client, Service* service);
 
   void start();
 
@@ -60,7 +62,7 @@ class ChordFacade {
   /**
    * nth direct successor
    */
-  chord::common::RouterEntry nth_successor(const uuid_t &uuid, const unsigned int n);
+  chord::common::RouterEntry nth_successor(const uuid_t &uuid, const size_t n);
 
   /**
    * stabilize the ring
@@ -97,12 +99,13 @@ class ChordFacade {
 
   chord::Context& context;
 
-  std::unique_ptr<AbstractScheduler> scheduler;
   std::unique_ptr<chord::Router> router;
 
   //--- chord
   std::unique_ptr<chord::Client> client;
   std::unique_ptr<chord::Service> service;
+
+  std::unique_ptr<AbstractScheduler> scheduler;
 
   std::shared_ptr<spdlog::logger> logger;
 

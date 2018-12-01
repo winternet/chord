@@ -104,7 +104,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 
       // write
       do {
-        file.write((const char *)req.data().data(), req.size());
+        file.write(req.data().data(), static_cast<std::streamsize>(req.size()));
       } while (reader->Read(&req));
 
     } catch (const ios_base::failure &error) {
@@ -282,9 +282,9 @@ Status Service::get(ServerContext *serverContext, const GetRequest *req, grpc::S
   constexpr size_t len = 512*1024; // 512k
   char buffer[len];
   size_t offset = 0,
-      read = 0;
+         read = 0;
   do {
-    read = file.readsome(buffer, len);
+    read = static_cast<size_t>(file.readsome(buffer, len));
     if (read == 0) break;
 
     GetResponse res;

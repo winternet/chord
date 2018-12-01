@@ -65,8 +65,8 @@ struct Metadata {
   friend std::ostream &print(std::ostream& os, const Metadata& metadata, size_t max_owner_len, size_t max_group_len) {
     os<< (metadata.file_type == type::directory ? "d" : "-")
       << metadata.permissions << " "
-      << std::left << std::setw(max_owner_len+1) << metadata.owner
-      << std::left << std::setw(max_group_len+1) << metadata.group
+      << std::left << std::setw(static_cast<int>(max_owner_len+1)) << metadata.owner
+      << std::left << std::setw(static_cast<int>(max_group_len+1)) << metadata.group
       << metadata.name;
       //<< "\n";
     return os;
@@ -87,8 +87,8 @@ struct Metadata {
       }
     } cmp;
 
-    int max_owner_len = std::max_element(std::begin(owners), std::end(owners), cmp)->size();
-    int max_group_len = std::max_element(std::begin(groups), std::end(groups), cmp)->size();
+    const auto max_owner_len = std::max_element(std::begin(owners), std::end(owners), cmp)->size();
+    const auto max_group_len = std::max_element(std::begin(groups), std::end(groups), cmp)->size();
     for(const auto& m:metadata) print(os, m, max_owner_len, max_group_len) << '\n';
     return os;
   }

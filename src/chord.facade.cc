@@ -22,10 +22,22 @@ namespace chord {
 
 ChordFacade::ChordFacade(Context& ctx)
     : context{ctx},
-      scheduler{make_unique<Scheduler>()},
       router{make_unique<Router>(context)},
       client{make_unique<Client>(context, router.get())},
       service{make_unique<Service>(context, router.get(), client.get())},
+      scheduler{make_unique<Scheduler>()},
+      logger{log::get_or_create(logger_name)}
+      {}
+
+/**
+ * Used for testing purposes.
+ */
+ChordFacade::ChordFacade(Context& ctx, Router* router, Client* client, Service* service)
+    : context{ctx},
+      router{router},
+      client{client},
+      service{service},
+      scheduler{make_unique<Scheduler>()},
       logger{log::get_or_create(logger_name)}
       {}
 
@@ -103,9 +115,9 @@ RouterEntry ChordFacade::successor(const uuid_t &uuid) {
 /**
  * nth direct successor
  */
-RouterEntry ChordFacade::nth_successor(const uuid_t &uuid, const unsigned int n) {
+RouterEntry ChordFacade::nth_successor(const uuid_t &uuid, const size_t n) {
   auto succ = successor(uuid);
-  for(unsigned int i=0; i<n; ++i) {
+  for(size_t i=0; i<n; ++i) {
     succ = successor(succ.uuid());
   }
   return succ;

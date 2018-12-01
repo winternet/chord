@@ -2,6 +2,7 @@
 
 #include <grpc++/server_context.h>
 
+#include "chord.i.fs.facade.h"
 #include "chord.path.h"
 #include "chord_controller.grpc.pb.h"
 
@@ -22,7 +23,7 @@ class Service final : public chord::controller::Control::Service {
   static constexpr auto logger_name = "chord.controller.service";
 
  public:
-  explicit Service(Context& context, chord::fs::Facade *filesystem);
+  explicit Service(Context& context, chord::fs::IFacade *filesystem);
 
   grpc::Status control(grpc::ServerContext *context,
                        const chord::controller::ControlRequest *req,
@@ -39,10 +40,9 @@ class Service final : public chord::controller::Control::Service {
   grpc::Status send_file(const path, const chord::uri);
 
   const Context& context;
-  chord::fs::Facade *filesystem;
+  chord::fs::IFacade *filesystem;
 
   std::shared_ptr<spdlog::logger> logger;
 };
 }  // namespace controller
 }  // namespace chord
-

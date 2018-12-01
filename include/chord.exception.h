@@ -18,8 +18,8 @@ class exception : public std::runtime_error {
   public:
     // inherit ctors
     using std::runtime_error::runtime_error;
-    explicit exception(const std::string& message, std::string file, size_t line)
-        : runtime_error(message), file{file}, line{line}, msg{this->message()} {
+    explicit exception(const std::string& message, std::string t_file, size_t t_line)
+        : runtime_error(message), file{t_file}, line{t_line}, msg{this->message()} {
         }
 
     virtual std::string message() const {
@@ -39,8 +39,8 @@ class grpc_exception : public exception {
   explicit grpc_exception(const std::string& message, grpc::Status status)
       : exception(message), status(std::move(status)) {}
 
-  explicit grpc_exception(const std::string& message, grpc::Status status, std::string file, size_t line)
-      : exception(message, std::move(file), line), status(std::move(status)) {}
+  explicit grpc_exception(const std::string& t_message, grpc::Status t_status, std::string t_file, size_t t_line)
+      : exception{t_message, std::move(t_file), t_line}, status{std::move(t_status)} {}
 
 };
 }  // namespace chord

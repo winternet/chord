@@ -31,7 +31,7 @@ namespace po = boost::program_options;
 
 namespace chord {
 namespace controller {
-Service::Service(Context& context, chord::fs::Facade* filesystem)
+Service::Service(Context& context, chord::fs::IFacade* filesystem)
     : context{context}
     , filesystem{filesystem}
     , logger{log::get_or_create(logger_name)} {}
@@ -47,7 +47,7 @@ Status Service::parse_command(const ControlRequest* req, ControlResponse* res) {
   boost::char_separator<char> separator{" "};
   boost::tokenizer<boost::char_separator<char> > tokenizer{command, separator};
 
-  vector<string> token{std::distance(begin(tokenizer), end(tokenizer))};
+  vector<string> token{static_cast<size_t>(std::distance(begin(tokenizer), end(tokenizer)))};
   copy(begin(tokenizer), end(tokenizer), begin(token));
 
   logger->trace("received following token");
@@ -99,7 +99,7 @@ Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
   pos.add("input", -1);
   po::options_description flags("[put flags]");
   flags.add_options()
-      ("repl",  po::value<size_t>()->default_value(context.replication_cnt), "replication count.")
+      ("repl",  po::value<std::uint32_t>()->default_value(context.replication_cnt), "replication count.")
       ("input", po::value<vector<string> >()->default_value({}, ""), "input to process");
   po::parsed_options parsed_flags = po::command_line_parser(token)
     .options(flags)
@@ -110,7 +110,7 @@ Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
   po::notify(vm);
 
   const auto tokens = vm["input"].as<std::vector<std::string> >();
-  const auto repl = vm["repl"].as<size_t>();
+  const auto repl = vm["repl"].as<std::uint32_t>();
   if(tokens.size() < 3) {
     res->set_result("invalid arguments.");
     return Status::CANCELLED;

@@ -36,7 +36,7 @@ void save(
             || boost::is_pointer<T>::value
         );
     #endif
-    const bool tflag = (bool)t;
+    const bool tflag = static_cast<bool>(t);
     ar << boost::serialization::make_nvp("initialized", tflag);
     if (tflag){
         ar << boost::serialization::make_nvp("value", *t);

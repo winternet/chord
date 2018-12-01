@@ -25,7 +25,7 @@ namespace spdlog {
 namespace chord {
 using ClientFactory = std::function<chord::IClient*()>;
 
-class Service final : public chord::Chord::Service, AbstractService {
+class Service final : public chord::Chord::Service, IService {
   static constexpr auto logger_name = "chord.service";
 
  public:
@@ -34,8 +34,7 @@ class Service final : public chord::Chord::Service, AbstractService {
   grpc::Status join(grpc::ServerContext *context, const chord::JoinRequest *req,
                     chord::JoinResponse *res) override;
 
-  chord::common::RouterEntry successor(const uuid_t &uuid) noexcept(
-      false) override;
+  chord::common::RouterEntry successor(const uuid_t &uuid) override;
 
   grpc::Status take(grpc::ServerContext *context, 
                     const chord::TakeRequest *req,
@@ -58,7 +57,7 @@ class Service final : public chord::Chord::Service, AbstractService {
                      chord::CheckResponse *res) override;
 
   grpc::Status leave(grpc::ServerContext *context, 
-                     const LeaveRequest *req,
+                     const chord::LeaveRequest *req,
                      chord::LeaveResponse *res) override;
 
   void fix_fingers(size_t index);

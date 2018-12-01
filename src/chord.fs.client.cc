@@ -53,7 +53,7 @@ Status Client::put(const chord::node& node, const chord::uuid& hash, const chord
   //TODO make configurable
   constexpr size_t len = 512*1024; // 512k
   array<char, len> buffer;
-  size_t offset = 0,
+  size_t offset = 0, 
          read = 0;
 
   ClientContext clientContext;
@@ -63,7 +63,7 @@ Status Client::put(const chord::node& node, const chord::uuid& hash, const chord
   unique_ptr<ClientWriter<PutRequest> > writer(stub->put(&clientContext, &res));
 
   do {
-    read = istream.readsome(buffer.data(), len);
+    read = static_cast<size_t>(istream.readsome(buffer.data(), len));
     if (read == 0) break;
 
     PutRequest req;
@@ -233,7 +233,7 @@ Status Client::get(const chord::uri &uri, const chord::node& node, std::ostream 
   unique_ptr<ClientReader<GetResponse> > reader(stub->get(&clientContext, req));
 
   while (reader->Read(&res)) {
-    ostream.write(res.data().data(), res.size());
+    ostream.write(res.data().data(), static_cast<std::streamsize>(res.size()));
   }
 
   return reader->Finish();

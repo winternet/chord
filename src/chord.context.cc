@@ -1,5 +1,6 @@
 #include "chord.context.h"
 #include "chord.router.h"
+#include "chord.uuid.h"
 
 using namespace std;
 
@@ -12,8 +13,8 @@ void Context::set_uuid(const uuid_t &uuid) {
   }
 }
 
-Context Context::set_router(Router *router) {
-  this->router = router;
+Context Context::set_router(Router *t_router) {
+  router = t_router;
   return *this;
 }
 } //namespace chord

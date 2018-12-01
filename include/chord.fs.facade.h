@@ -4,13 +4,14 @@
 
 #include "chord.fs.client.h"
 #include "chord.fs.service.h"
+#include "chord.i.fs.facade.h"
 #include "chord.log.h"
 #include "chord.uri.h"
 
 namespace chord {
 namespace fs {
 
-class Facade {
+class Facade : public IFacade {
   static constexpr auto logger_name = "chord.fs.facade";
 
  private:

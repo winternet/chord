@@ -51,8 +51,8 @@ bool file::create_directories(const std::string &path) {
 }
 
 bool file::has_attr(const std::string &path, const std::string &name) {
-  size_t read = ::getxattr(path.c_str(), name.c_str(), nullptr, 0);
-  if (read==static_cast<size_t>(-1)) return false;
+  const auto read = ::getxattr(path.c_str(), name.c_str(), nullptr, 0);
+  if (read == static_cast<decltype(read)>(-1)) return false;
 
   return true;
 }
@@ -60,8 +60,8 @@ bool file::has_attr(const std::string &path, const std::string &name) {
 /// xattr get
 std::experimental::optional<std::string> file::attr(const std::string &path, const std::string &name) {
   using namespace std::string_literals;
-  size_t read = ::getxattr(path.c_str(), name.c_str(), nullptr, 0);
-  if (read==static_cast<size_t>(-1)) return {};
+  auto read = ::getxattr(path.c_str(), name.c_str(), nullptr, 0);
+  if (read==static_cast<decltype(read)>(-1)) return {};
 
 #if __cplusplus >= 201703L
   std::string value; value.resize(read);
@@ -72,7 +72,8 @@ std::experimental::optional<std::string> file::attr(const std::string &path, con
   std::string value(buffer, read);
   delete[] buffer;
 #endif
-  if (read==static_cast<size_t>(-1)) throw__exception("failed to get xattr"s + strerror(errno));
+  if (read == static_cast<decltype(read)>(-1))
+    throw__exception("failed to get xattr"s + strerror(errno));
 
   return value;
 }
@@ -80,16 +81,17 @@ std::experimental::optional<std::string> file::attr(const std::string &path, con
 /// xattr set
 bool file::attr(const std::string &path, const std::string &name, const std::string &value) {
   using namespace std::string_literals;
-  const size_t err = ::setxattr(path.c_str(), name.c_str(), value.data(), value.size(), 0);
-  if (err==static_cast<size_t>(-1)) throw__exception("failed to set xattr"s + strerror(errno));
+  const auto err = ::setxattr(path.c_str(), name.c_str(), value.data(), value.size(), 0);
+  if (err == static_cast<decltype(err)>(-1))
+    throw__exception("failed to set xattr"s + strerror(errno));
 
   return true;
 }
 
 bool file::attr_remove(const std::string &path, const std::string &name) {
   using namespace std::string_literals;
-  const size_t err = ::removexattr(path.c_str(), name.c_str());
-  if (err==static_cast<size_t>(-1)) return false;
+  const auto err = ::removexattr(path.c_str(), name.c_str());
+  if (err==static_cast<decltype(err)>(-1)) return false;
 
   return true;
 }

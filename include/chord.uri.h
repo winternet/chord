@@ -130,6 +130,8 @@ class uri {
 
   bool operator<(const uri &uri) const;
 
+  bool operator==(const uri &uri) const;
+
   friend std::ostream &operator<<(std::ostream &os, const uri &uri);
 
   friend std::string to_string(const uri &uri);

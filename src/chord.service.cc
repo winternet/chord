@@ -273,7 +273,7 @@ Status Service::check(ServerContext *serverContext, const CheckRequest *req, Che
 void Service::fix_fingers(size_t index) {
   auto fix = context.uuid();
   if (!router->successor(0)) {
-    fix += uuid_t{pow(2., (double) index - 1)};
+    fix += uuid_t{pow(2., static_cast<double>(index - 1))};
     logger->trace("fix_fingers router successor is not null, increasing uuid");
   }
 

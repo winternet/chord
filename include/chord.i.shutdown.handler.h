@@ -41,7 +41,7 @@ class AbstractShutdownHandler {
     initialize();
   }
 
-  ~AbstractShutdownHandler() {
+  virtual ~AbstractShutdownHandler() {
     signals.cancel();
     io_service.stop();
     signal_thread.join();

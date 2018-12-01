@@ -3,13 +3,13 @@
 #include <memory>
 #include <string>
 
-#include "chord.router.h"
-#include "chord.node.h"
 #include "chord.context.h"
 #include "chord.log.h"
+#include "chord.node.h"
+#include "chord.optional.h"
+#include "chord.router.h"
 #include "chord.types.h"
 #include "chord.uuid.h"
-#include "chord.optional.h"
 
 namespace chord {
 
@@ -47,13 +47,13 @@ size_t Router::size() const {
 
 optional<node> Router::successor(size_t idx) const {
   auto succ = successors[idx];
-  if(succ) return node{*succ, routes.at(*succ)};
+  if (succ) return node{*succ, routes.at(*succ)};
   return {};
 }
 
 optional<node> Router::predecessor(size_t idx) const {
   auto pred = predecessors[idx];
-  if(pred) return node{*pred, routes.at(*pred)};
+  if (pred) return node{*pred, routes.at(*pred)};
   return {};
 }
 
@@ -64,10 +64,11 @@ void Router::set_successor(const size_t index, const chord::node& node) {
 
   routes[node.uuid] = node.endpoint;
   // fill unset preceding nodes
-  for (int i = index; i >= 0; --i) {
-    if(!successors[i] || *successors[i] == *succ)
+  for (ssize_t i = index; i >= 0; --i) {
+    if (!successors[i] || *successors[i] == *succ)
       successors[i] = {node.uuid};
-    else break;
+    else
+      break;
   }
 }
 
@@ -83,26 +84,26 @@ void Router::reset(const uuid_t& uuid) {
 
   logger->info("reset {}@...", uuid);
 
-  //replacement to fill holes in successors
+  // replacement to fill holes in successors
   optional<uuid_t> replacement;
-  for(int i=successors.size()-1; i>=0; --i) {
+  for (ssize_t i = successors.size() - 1; i >= 0; --i) {
     auto succ = successors[i];
-    if(succ) {
-      if(*succ == uuid) break;
+    if (succ) {
+      if (*succ == uuid) break;
       replacement = succ;
     }
   }
 
-  if(!replacement) {
+  if (!replacement) {
     logger->debug("could not find a replacement for {}", uuid);
   } else {
     logger->debug("replacement for {} is {}", uuid, *replacement);
   }
-  for(size_t i=0; i < successors.size(); i++) {
+  for (size_t i = 0; i < successors.size(); i++) {
     auto succ = successors[i];
-    if(!succ) continue;
-    if(*succ == uuid) {
-      if(!replacement) {
+    if (!succ) continue;
+    if (*succ == uuid) {
+      if (!replacement) {
         successors[i] = {};
       } else {
         successors[i] = replacement;
@@ -110,12 +111,12 @@ void Router::reset(const uuid_t& uuid) {
     }
   }
 
-  //TODO replacement to fill holes in predecessors
+  // TODO replacement to fill holes in predecessors
   replacement = {};
-  if(predecessors[0] && *predecessors[0] == uuid) {
+  if (predecessors[0] && *predecessors[0] == uuid) {
     predecessors[0] = {};
   }
-  //for(int i=predecessors.size()-1; i>=0; --i) {
+  // for(int i=predecessors.size()-1; i>=0; --i) {
   //  auto* pred = predecessors[i];
   //  if(pred != nullptr) {
   //    if(*pred == uuid) break;
@@ -123,14 +124,14 @@ void Router::reset(const uuid_t& uuid) {
   //  }
   //}
 
-  //for(size_t i=0; i < predecessors.size(); i++) {
+  // for(size_t i=0; i < predecessors.size(); i++) {
   //  auto* pred = predecessors[i];
   //  if(pred == nullptr) continue;
   //  if(*pred == uuid) pred = replacement;
   //}
 
   // TODO refactor
-  //for (size_t i = 0; i < BITS; i++) {
+  // for (size_t i = 0; i < BITS; i++) {
   //  uuid_t* succ = successors[i];
   //  if (succ!=nullptr && *succ==uuid) {
   //    //logger->info("succ={:p}, uuid={:p}, val={}", succ, uuid, uuid);
@@ -138,7 +139,7 @@ void Router::reset(const uuid_t& uuid) {
   //    successors[i] = nullptr;
   //  }
   //}
-  //for (size_t i = 0; i < BITS; i++) {
+  // for (size_t i = 0; i < BITS; i++) {
   //  uuid_t* pred = predecessors[i];
   //  if (pred!=nullptr && *pred==uuid) {
   //    delete pred;
@@ -153,11 +154,11 @@ void Router::reset(const node& n) {
 
 optional<node> Router::successor() {
   for (auto succ : successors) {
-    //cppcheck-suppress CastIntegerToAddressAtReturn
+    // cppcheck-suppress CastIntegerToAddressAtReturn
     if (succ) return node{*succ, routes[*succ]};
   }
   for (auto pred : predecessors) {
-    //cppcheck-suppress CastIntegerToAddressAtReturn
+    // cppcheck-suppress CastIntegerToAddressAtReturn
     if (pred) return node{*pred, routes[*pred]};
   }
   return node{context.uuid(), routes[context.uuid()]};

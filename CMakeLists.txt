@@ -1,7 +1,11 @@
 #set(CMAKE_CXX_COMPILER      "/usr/bin/clang++")
 
-project(chord)
 cmake_minimum_required(VERSION 2.8)
+cmake_policy(SET CMP0048 NEW)
+
+set(PROJECT "chord")
+project(${PROJECT} VERSION "0.0.1")
+configure_file(${CMAKE_SOURCE_DIR}/cmake/project.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/project.h)
 
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
@@ -21,13 +25,30 @@ if(CMAKE_COMPILER_IS_GNUCC)
   endif()
 endif()
 
+#-Wshadow
+#-Wuseless-cast
 add_compile_options(
   -fPIC
   -Wall
   -Wextra
+  -Wnon-virtual-dtor
+  -Wold-style-cast
+  -Wunused
+  -Woverloaded-virtual
   -Wpedantic
+  -Wconversion
+  -Wmisleading-indentation
+  -Wduplicated-cond
+  -Wduplicated-branches
+  -Wlogical-op
+  -Wnull-dereference
+  -Wdouble-promotion
+  -Wformat=2
   -std=c++14
 )
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wlifetime)
+endif()
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

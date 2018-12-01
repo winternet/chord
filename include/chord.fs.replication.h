@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <utility>
 
@@ -11,13 +12,13 @@ struct Replication {
   static constexpr auto MAX_REPL_CNT = 10;
 
   // if case == 1, index == 0
-  unsigned int index;
-  unsigned int count;  
+  std::uint32_t index;
+  std::uint32_t count;  
   
   Replication() : index{0}, count{1} {}
   Replication(const Replication& repl) : index{repl.index}, count{repl.count} {}
-  Replication(unsigned int count) : index{0}, count{count} {}
-  Replication(unsigned int index, unsigned int count) : index{index}, count{count} {}
+  Replication(std::uint32_t count) : index{0}, count{count} {}
+  Replication(std::uint32_t index, unsigned int count) : index{index}, count{count} {}
 
   Replication& operator=(Replication rhs) {
     std::swap(rhs.count, count);
@@ -45,6 +46,10 @@ struct Replication {
     Replication tmp{*this};
     --(*this);
     return tmp;
+  }
+
+  bool operator==(const Replication& other) const {
+    return other.index == index && other.count == count;
   }
 
   std::string string() const {

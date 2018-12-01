@@ -40,7 +40,7 @@ class uuid {
    */
   static uuid random() {
     auto array = std::array<char, UUID_BITS_MAX / 8 / sizeof(char)>{};
-    const int seed =
+    const auto seed =
         std::chrono::system_clock::now().time_since_epoch().count();
 
     std::default_random_engine generator(seed);

@@ -102,7 +102,7 @@ struct ContextManager {
     tokens.emplace_back(new Token<size_t>{"stabilize-ms", context.stabilize_period_ms});
     tokens.emplace_back(new Token<size_t>{"check-ms", context.check_period_ms});
     //replication
-    tokens.emplace_back(new Token<size_t>{"replication-count", context.replication_cnt});
+    tokens.emplace_back(new Token<std::uint32_t>{"replication-count", context.replication_cnt});
 
     tokens.emplace_back(new SetterToken<chord::uuid>{"uuid", context, &Context::set_uuid});
 

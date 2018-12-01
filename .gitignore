@@ -13,3 +13,5 @@ build
 .gitconfig
 externals/
 test_data/
+.ccls-cache
+compile_commands.json
