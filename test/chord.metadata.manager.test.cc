@@ -16,7 +16,6 @@ void cleanup(const Context& context) {
 
 TEST(chord_metadata_manager, constructor_initializes_database) {
   Context context;
-
   cleanup(context);
 
   fs::MetadataManager metadata{context};

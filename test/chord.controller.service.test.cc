@@ -39,6 +39,7 @@ using ::testing::SaveArgPointee;
 using ::testing::SetArgPointee;
 using ::testing::DoAll;
 using ::testing::StrictMock;
+using ::testing::NiceMock;
 using ::testing::Eq;
 
 class ControllerServiceTest : public ::testing::Test {
@@ -70,13 +71,63 @@ TEST_F(ControllerServiceTest, empty_request) {
   ASSERT_FALSE(status.ok());
 }
 
-TEST_F(ControllerServiceTest, put_request) {
-  req.set_command("put --repl 2 /tmp/first ~/workspace/chord/test_data/folder/ chord:///");
+TEST_F(ControllerServiceTest, unknown_command_request) {
+  req.set_command("nonmapped /first chord:///");
+  const auto status = ctrl_service->control(nullptr, &req, &res);
+  ASSERT_FALSE(status.ok());
+}
 
-  EXPECT_CALL(fs_facade, put(Eq(path{"/tmp/first"}), Eq(uri{"chord:///"}), Eq(Replication{2})));
-  EXPECT_CALL(fs_facade, put(Eq(path{"~/workspace/chord/test_data/folder/"}), Eq(uri{"chord:///"}), Eq(Replication{2})));
+TEST_F(ControllerServiceTest, put_request) {
+  req.set_command("put --repl 2 /first /second chord:///");
+
+  EXPECT_CALL(fs_facade, put(Eq(path{"/first"}), Eq(uri{"chord:///"}), Eq(Replication{2})));
+  EXPECT_CALL(fs_facade, put(Eq(path{"/second"}), Eq(uri{"chord:///"}), Eq(Replication{2})));
 
   const auto status = ctrl_service->control(nullptr, &req, &res);
   ASSERT_TRUE(status.ok());
 }
 
+TEST_F(ControllerServiceTest, get_empty_request) {
+  req.set_command("get ");
+  const auto status = ctrl_service->control(nullptr, &req, &res);
+  ASSERT_FALSE(status.ok());
+}
+
+TEST_F(ControllerServiceTest, get_request) {
+  req.set_command("get chord:///first /tmp");
+
+  EXPECT_CALL(fs_facade, get(Eq(uri{"chord:///first"}), Eq(path{"/tmp"})));
+
+  const auto status = ctrl_service->control(nullptr, &req, &res);
+  ASSERT_TRUE(status.ok());
+}
+
+TEST_F(ControllerServiceTest, dir_empty_request) {
+  req.set_command("dir ");
+  const auto status = ctrl_service->control(nullptr, &req, &res);
+  ASSERT_FALSE(status.ok());
+}
+
+TEST_F(ControllerServiceTest, dir_request) {
+  req.set_command("dir chord:///first");
+
+  EXPECT_CALL(fs_facade, dir(Eq(uri{"chord:///first"}), _));
+
+  const auto status = ctrl_service->control(nullptr, &req, &res);
+  ASSERT_TRUE(status.ok());
+}
+
+TEST_F(ControllerServiceTest, del_empty_request) {
+  req.set_command("del ");
+  const auto status = ctrl_service->control(nullptr, &req, &res);
+  ASSERT_FALSE(status.ok());
+}
+
+TEST_F(ControllerServiceTest, del_request) {
+  req.set_command("del chord:///first");
+
+  EXPECT_CALL(fs_facade, del(Eq(uri{"chord:///first"})));
+
+  const auto status = ctrl_service->control(nullptr, &req, &res);
+  ASSERT_TRUE(status.ok());
+}
