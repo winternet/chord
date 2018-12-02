@@ -41,45 +41,42 @@ using ::testing::DoAll;
 using ::testing::StrictMock;
 using ::testing::Eq;
 
+class ControllerServiceTest : public ::testing::Test {
+  protected:
+    void SetUp() override {
+      ctxt = make_context(5);
+      router = new chord::Router(ctxt);
+      client = new chord::Client(ctxt, router);
+      service= new chord::Service(ctxt, router, client);
+      chord_facade = std::make_unique<chord::ChordFacade>(ctxt, router, client, service);
+      ctrl_service = std::make_unique<chord::controller::Service>(ctxt, &fs_facade);
+    }
 
-TEST(chord_controller_service, constructor) {
-  auto ctxt = make_context(5);
-  chord::ChordFacade chord_facade{ctxt};
-  chord::fs::Facade fs_facade{ctxt, &chord_facade};
-  chord::controller::Service service{ctxt, &fs_facade};
-}
+    chord::Context ctxt;
+    chord::Router* router;
+    chord::Client* client;
+    chord::Service* service;
+    std::unique_ptr<chord::ChordFacade> chord_facade;
+    std::unique_ptr<chord::controller::Service> ctrl_service;
+    StrictMock<chord::fs::MockFacade> fs_facade;
 
-TEST(chord_controller_service, empty_request) {
-  chord::MockChordStub stub;
-  auto ctxt = make_context(5);
-  auto router = new chord::Router{ctxt};
-  auto client = new chord::Client{ctxt, router};
-  auto service = new chord::Service{ctxt, router, client};
-  chord::ChordFacade chord_facade{ctxt, router, client, service};
-  StrictMock<chord::fs::MockFacade> fs_facade;
-  chord::controller::Service ctrl_service{ctxt, &fs_facade};
+    ControlRequest req;
+    ControlResponse res;
+};
 
-  ControlRequest req;
-  ControlResponse res;
-
+TEST_F(ControllerServiceTest, empty_request) {
   req.set_command("");
-  const auto status = ctrl_service.control(nullptr, &req, &res);
+  const auto status = ctrl_service->control(nullptr, &req, &res);
   ASSERT_FALSE(status.ok());
 }
 
-TEST(chord_controller_service, put_request) {
-  auto ctxt = make_context(5);
-  chord::ChordFacade chord_facade{ctxt};
-  chord::fs::MockFacade fs_facade;
-  chord::controller::Service ctrl_service{ctxt, &fs_facade};
-
-  ControlRequest req;
-  ControlResponse res;
+TEST_F(ControllerServiceTest, put_request) {
+  req.set_command("put --repl 2 /tmp/first ~/workspace/chord/test_data/folder/ chord:///");
 
   EXPECT_CALL(fs_facade, put(Eq(path{"/tmp/first"}), Eq(uri{"chord:///"}), Eq(Replication{2})));
   EXPECT_CALL(fs_facade, put(Eq(path{"~/workspace/chord/test_data/folder/"}), Eq(uri{"chord:///"}), Eq(Replication{2})));
 
-  req.set_command("put --repl 2 /tmp/first ~/workspace/chord/test_data/folder/ chord:///");
-  const auto status = ctrl_service.control(nullptr, &req, &res);
+  const auto status = ctrl_service->control(nullptr, &req, &res);
   ASSERT_TRUE(status.ok());
 }
+
