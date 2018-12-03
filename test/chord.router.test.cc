@@ -19,6 +19,8 @@ TEST(RouterTest, initialize) {
   ASSERT_NOT_NULL(router.successor());
   EXPECT_EQ(router.successor()->uuid, context.uuid());
 
+  ASSERT_FALSE(router.has_successor());
+
   for (size_t i = 1; i < Router::BITS; i++) {
     ASSERT_NULL(router.successor(i));
   }
@@ -239,6 +241,7 @@ TEST(RouterTest, reset_block) {
       }
     }
   }
+  ASSERT_TRUE(router.has_successor());
 }
 
 TEST(RouterTest, reset_fill_empty_blocks) {
@@ -259,7 +262,7 @@ TEST(RouterTest, reset_fill_empty_blocks) {
   }
 
   // reset second group - should fill empty nodes within first group
-  router.reset(uuid{2});
+  router.reset(node{2, "localhost:2"});
 
   for (size_t i = 0; i < 20; i += 5) {
     for (size_t j = i; j < 5; ++j) {
@@ -271,4 +274,6 @@ TEST(RouterTest, reset_fill_empty_blocks) {
       }
     }
   }
+
+  ASSERT_TRUE(router.has_successor());
 }
