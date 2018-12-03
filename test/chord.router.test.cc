@@ -211,3 +211,64 @@ TEST(RouterTest, set_successor_rewrites_same_preceding_nodes) {
     }
   }
 }
+
+TEST(RouterTest, reset_block) {
+  Context context;
+  Router router{context};
+
+  ASSERT_NOT_NULL(router.successor());
+  EXPECT_EQ(router.successor()->uuid, context.uuid());
+
+  // initialize successors in groups(i) of 5
+  for (size_t i = 0; i < 20; i += 5) {
+    for (size_t j = i; j < 5; ++j) {
+      router.set_successor(j, {i, "localhost:" + std::to_string(i)});
+    }
+  }
+
+  // reset first group
+  router.reset(uuid{1});
+
+  for (size_t i = 0; i < 20; i += 5) {
+    for (size_t j = i; j < 5; ++j) {
+      if (i == 1) {
+        // check reset
+        ASSERT_EQ(router.successor(i+j)->uuid, uuid_t{i+1});
+      } else {
+        ASSERT_EQ(router.successor(i+j)->uuid, uuid_t{i});
+      }
+    }
+  }
+}
+
+TEST(RouterTest, reset_fill_empty_blocks) {
+  Context context;
+  Router router{context};
+
+  ASSERT_NOT_NULL(router.successor());
+  EXPECT_EQ(router.successor()->uuid, context.uuid());
+
+  // initialize successors in groups(i) of 5
+  for (size_t i = 0; i < 20; i += 5) {
+    for (size_t j = i; j < 5; ++j) {
+      if(i==1) {
+        router.set_successor(j, {});
+      }
+      router.set_successor(j, {i, "localhost:" + std::to_string(i)});
+    }
+  }
+
+  // reset second group - should fill empty nodes within first group
+  router.reset(uuid{2});
+
+  for (size_t i = 0; i < 20; i += 5) {
+    for (size_t j = i; j < 5; ++j) {
+      if (i == 1) {
+        // check reset
+        ASSERT_EQ(router.successor(i+j)->uuid, uuid_t{i+1});
+      } else {
+        ASSERT_EQ(router.successor(i+j)->uuid, uuid_t{i});
+      }
+    }
+  }
+}

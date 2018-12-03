@@ -99,7 +99,7 @@ void Router::reset(const uuid_t& uuid) {
   } else {
     logger->debug("replacement for {} is {}", uuid, *replacement);
   }
-  for (size_t i = 0; i < successors.size(); i++) {
+  for (size_t i = 0; i < successors.size(); ++i) {
     auto succ = successors[i];
     if (!succ) continue;
     if (*succ == uuid) {
@@ -116,36 +116,6 @@ void Router::reset(const uuid_t& uuid) {
   if (predecessors[0] && *predecessors[0] == uuid) {
     predecessors[0] = {};
   }
-  // for(int i=predecessors.size()-1; i>=0; --i) {
-  //  auto* pred = predecessors[i];
-  //  if(pred != nullptr) {
-  //    if(*pred == uuid) break;
-  //    replacement = pred;
-  //  }
-  //}
-
-  // for(size_t i=0; i < predecessors.size(); i++) {
-  //  auto* pred = predecessors[i];
-  //  if(pred == nullptr) continue;
-  //  if(*pred == uuid) pred = replacement;
-  //}
-
-  // TODO refactor
-  // for (size_t i = 0; i < BITS; i++) {
-  //  uuid_t* succ = successors[i];
-  //  if (succ!=nullptr && *succ==uuid) {
-  //    //logger->info("succ={:p}, uuid={:p}, val={}", succ, uuid, uuid);
-  //    delete succ;
-  //    successors[i] = nullptr;
-  //  }
-  //}
-  // for (size_t i = 0; i < BITS; i++) {
-  //  uuid_t* pred = predecessors[i];
-  //  if (pred!=nullptr && *pred==uuid) {
-  //    delete pred;
-  //    predecessors[i] = nullptr;
-  //  }
-  //}
 }
 
 void Router::reset(const node& n) {
