@@ -48,6 +48,7 @@ add_compile_options(
 )
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wlifetime)
+  add_compile_options(-Weverything)
 endif()
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
