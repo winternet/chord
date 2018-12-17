@@ -3,6 +3,7 @@
 #include <grpc++/server_builder.h>
 #include <memory>
 
+#include "chord.signal.h"
 #include "chord.client.h"
 #include "chord.i.scheduler.h"
 #include "chord.router.h"
@@ -79,19 +80,12 @@ class ChordFacade {
    */
   void fix_fingers(size_t index);
 
-  /**
-   * on-take-callback
-   */
-  //TODO move to cc
-  void set_take_callback(chord::take_producer_t callback) {
-    service->set_take_callback(callback);
+  auto& on_join() {
+    return event_joined;
   }
-  //TODO move to cc
-  void set_take_callback(chord::take_consumer_t callback) {
-    client->set_take_callback(callback);
-  }
-  void set_on_leave_callback(chord::take_consumer_t callback) {
-    service->set_on_leave_callback(callback);
+
+  auto& on_leave() {
+    return service->on_leave();
   }
 
  private:
@@ -108,6 +102,9 @@ class ChordFacade {
   std::unique_ptr<AbstractScheduler> scheduler;
 
   std::shared_ptr<spdlog::logger> logger;
+
+  //--- events
+  signal<void(const node, const node)> event_joined;
 
   void start_scheduler();
   void stop_scheduler();

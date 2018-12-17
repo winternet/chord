@@ -25,9 +25,6 @@ class IClient {
   virtual grpc::Status join(const JoinRequest *req, JoinResponse *res) =0;
   virtual grpc::Status join(grpc::ClientContext *clientContext, const JoinRequest *req, JoinResponse *res) =0;
 
-  virtual void take() =0;
-  virtual void take(const uuid from, const uuid to, const node responsible, const take_consumer_t callback) =0;
-
   virtual void stabilize() =0;
 
   virtual void notify() =0;

@@ -102,7 +102,11 @@ void ChordFacade::leave() {
 void ChordFacade::join() {
   client->join(context.join_addr);
   client->stabilize();
-  client->take();
+  if(router->successor() && router->predecessor()) {
+    event_joined(router->successor().value(), router->predecessor().value());
+  }
+  //FIXME emit joined event! subscribe to event in chord.fs.client
+  //client->take();
 }
 
 /**

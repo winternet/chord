@@ -31,8 +31,6 @@ using chord::NotifyResponse;
 using chord::NotifyRequest;
 using chord::CheckResponse;
 using chord::CheckRequest;
-using chord::TakeResponse;
-using chord::TakeRequest;
 using chord::Chord;
 
 
@@ -92,27 +90,6 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
     router->set_predecessor(0, node);
   }
 
-  return Status::OK;
-}
-
-grpc::Status Service::take(ServerContext *serverContext,
-                           const TakeRequest *req,
-                           ServerWriter<TakeResponse> *writer) {
-  (void)serverContext;
-  if(!take_producer_callback) {
-    logger->error("take callback is not set - aborting");
-    return Status::CANCELLED;
-  }
-  TakeResponse res;
-  const auto from = uuid_t{req->from()};
-  const auto to = uuid_t{req->to()};
-  const auto responses = take_producer_callback(from, to);
-
-  for(const auto& res:responses) {
-    if (!writer->Write(res)) {
-      throw__exception("broken stream.");
-    }
-  }
   return Status::OK;
 }
 
@@ -204,29 +181,12 @@ Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, Lea
     return Status::CANCELLED;
   }
 
-  const uuid_t self{context.uuid()};
   // we trust the sender
-  const uuid_t uuid{req->header().src().uuid()};
-  const auto endpoint = req->header().src().endpoint();
+  const node new_predecessor = make_node(req->predecessor());
+  const node leaving_node = make_node(req->header().src());
 
-  const uuid_t from_uuid{req->predecessor().uuid()};
-  const node to{req->header().src().uuid(), req->header().src().endpoint()};
+  event_leave(leaving_node, new_predecessor);
 
-  //const uuid to_uuid = {req->header().src().uuid()};
-  //const node from{req->predecessor().uuid(), req->predecessor().endpoint()};
-
-  /**
-   * TODO
-   * 1) send TakeRequest to source
-   * 2) consumer needs to issue getRequests for each metadata
-   */
-  //const auto status = client->take(req, res);
-  if(!on_leave_callback) {
-    logger->warn("on leave callback not set - aborting.");
-    return Status::CANCELLED;
-  }
-
-  client->take(from_uuid, to.uuid, to, on_leave_callback);
   return Status::OK;
 }
 

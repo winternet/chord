@@ -1,6 +1,6 @@
 #set(CMAKE_CXX_COMPILER      "/usr/bin/clang++")
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.8)
 cmake_policy(SET CMP0048 NEW)
 
 set(PROJECT "chord")
@@ -44,8 +44,10 @@ add_compile_options(
   -Wnull-dereference
   -Wdouble-promotion
   -Wformat=2
-  -std=c++14
 )
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wlifetime)
   add_compile_options(-Weverything)
@@ -126,19 +128,28 @@ install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 # 
 add_executable(${PROJECT_NAME} src/chord.cc)
 
+#
+# libsignals library (CMakeLists-Externals)
+#
+ExternalProject_Get_Property(signals BINARY_DIR)
+set(signals_LIBRARY "${BINARY_DIR}/libsignals.a")
+set(signals_INCLUDE_DIR "${EXTERNAL_PROJECTS}/signals/include")
+include_directories(${signals_INCLUDE_DIR})
+
+
 
 #
 # add libraries for executable (chord++)
 #
 target_link_libraries(${PROJECT_NAME} 
   debug asan
-  general ${PROJECT_NAME}++)
+  general ${PROJECT_NAME}++ ${signals_LIBRARY})
 
 #
 # add external project dependencies
 #
-add_dependencies(${PROJECT_NAME} spdlog)
 add_dependencies(${PROJECT_NAME}++ spdlog)
+add_dependencies(${PROJECT_NAME}++ signals)
 
 #
 # tests
@@ -155,6 +166,6 @@ include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}/gen")
 add_executable(${TEST_TARGET} ${TEST_SOURCES})
 target_link_libraries(${TEST_TARGET} 
   debug asan
-  general gtest gmock gmock_main ${PROJECT_NAME}++)
+  general gtest gmock gmock_main ${PROJECT_NAME}++ ${signals_LIBRARY})
 target_link_libraries(${TEST_TARGET} --coverage)
 add_test(NAME ${TEST_TARGET} COMMAND chord_test)

@@ -19,7 +19,6 @@ service Chord {
   rpc stabilize (StabilizeRequest)  returns (StabilizeResponse) {}
   rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
   rpc check     (CheckRequest)      returns (CheckResponse) {}
-  rpc take      (TakeRequest)       returns (stream TakeResponse) {}
   rpc leave     (LeaveRequest)      returns (LeaveResponse) {}
 }
 
@@ -95,16 +94,3 @@ message LeaveResponse {
   chord.common.Header header = 1;
 }
 
-/**
- * TAKE
- */
-message TakeRequest {
-  chord.common.Header header = 1;
-  string from = 2;
-  string to = 3;
-}
-
-message TakeResponse { 
-  string  id = 1;
-  google.protobuf.Any detail = 2;
-}

@@ -5,6 +5,7 @@
 #include <functional>
 #include <vector>
 
+#include "chord.signal.h"
 #include "chord.exception.h"
 #include "chord.grpc.pb.h"
 #include "chord.i.callback.h"
@@ -36,10 +37,6 @@ class Service final : public chord::Chord::Service, IService {
 
   chord::common::RouterEntry successor(const uuid_t &uuid) override;
 
-  grpc::Status take(grpc::ServerContext *context, 
-                    const chord::TakeRequest *req,
-                    grpc::ServerWriter<chord::TakeResponse> *writer) override;
-
   grpc::Status successor(grpc::ServerContext *context,
                          const chord::SuccessorRequest *req,
                          chord::SuccessorResponse *res) override;
@@ -62,23 +59,15 @@ class Service final : public chord::Chord::Service, IService {
 
   void fix_fingers(size_t index);
 
-  //TODO move to cc
-  void set_take_callback(const take_producer_t callback) {
-    take_producer_callback = callback;
-  }
-
-  //TODO move to cc
-  void set_on_leave_callback(const take_consumer_t callback) {
-    on_leave_callback = callback;
+  auto& on_leave() {
+    return event_leave;
   }
 
  private:
   Context &context;
   Router *router;
   IClient *client;
+  signal<void(const node, const node)> event_leave;
   std::shared_ptr<spdlog::logger> logger;
-  // callbacks
-  take_producer_t take_producer_callback;
-  take_consumer_t on_leave_callback;
 };
 }  // namespace chord

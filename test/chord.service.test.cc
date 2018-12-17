@@ -184,10 +184,6 @@ class MockStub : public chord::Chord::StubInterface {
       const ::chord::LeaveRequest&,
       chord::LeaveResponse*));
 
-  MOCK_METHOD2(take, std::unique_ptr<grpc::ClientReaderInterface<chord::TakeResponse>>(
-      grpc::ClientContext *, 
-      const chord::TakeRequest &));
-
   MOCK_METHOD3(stabilize, grpc::Status(
       grpc::ClientContext*,
       const chord::StabilizeRequest&,
@@ -202,7 +198,6 @@ class MockStub : public chord::Chord::StubInterface {
       grpc::ClientContext*,
       const chord::CheckRequest&,
       chord::CheckResponse*));
-
 
   MOCK_METHOD3(PrepareAsyncsuccessorRaw, grpc::ClientAsyncResponseReaderInterface<chord::SuccessorResponse>*(
       grpc::ClientContext*,
@@ -229,25 +224,10 @@ class MockStub : public chord::Chord::StubInterface {
       const chord::LeaveRequest&,
       grpc::CompletionQueue*));
 
-  MOCK_METHOD3(PrepareAsynctakeRaw, grpc::ClientAsyncReaderInterface<chord::TakeResponse>*(
-      grpc::ClientContext*, 
-      const ::chord::TakeRequest&, 
-      grpc::CompletionQueue*));
-
-
   MOCK_METHOD3(AsyncjoinRaw, grpc::ClientAsyncResponseReaderInterface<chord::JoinResponse>*(
       grpc::ClientContext*,
       const chord::JoinRequest&,
       grpc::CompletionQueue*));
-
-  MOCK_METHOD4(AsynctakeRaw, grpc::ClientAsyncReaderInterface<chord::TakeResponse>*(
-      grpc::ClientContext*,
-      const chord::TakeRequest&,
-      grpc::CompletionQueue* cq, void* tag));
-
-  MOCK_METHOD2(takeRaw, grpc::ClientReaderInterface<chord::TakeResponse>*(
-      grpc::ClientContext*,
-      const ::chord::TakeRequest&));
 
   MOCK_METHOD3(PrepareAsyncstabilizeRaw, grpc::ClientAsyncResponseReaderInterface<chord::StabilizeResponse>*(
       grpc::ClientContext*,
@@ -336,6 +316,8 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
 
 }
 
+// FIXME move to chord.fs.service
+/*
 TEST(ServiceTest, take_without_producer) {
   Context context = make_context(5);
   Router router(context);
@@ -375,6 +357,7 @@ TEST(ServiceTest, take) {
 
   service.take(&serverContext, &req, nullptr);
 }
+*/
 
 TEST(ServiceTest, stabilize__without_predecessor) {
   Context context = make_context(5);
@@ -439,64 +422,66 @@ TEST(ServiceTest, leave__without_header) {
   ASSERT_FALSE(status.ok());
 }
 
-TEST(ServiceTest, leave__without_callback) {
-  Context context = make_context(5);
-  Router router(context);
+//TEST(ServiceTest, leave__without_callback) {
+//  Context context = make_context(5);
+//  Router router(context);
+//
+//  std::unique_ptr<MockStub> stub(new MockStub);
+//
+//  MockClient client;
+//  Service service(context, &router, &client);
+//
+//  ServerContext serverContext;
+//  LeaveRequest req;
+//  LeaveResponse res;
+//
+//  const node to_node{"2", "2.2.2.2:8888"};
+//  const node from_node{"8", "8.8.8.8:8888"};
+//  auto src = req.mutable_header()->mutable_src();
+//  src->set_uuid(to_node.uuid.string());
+//  src->set_endpoint(to_node.endpoint);
+//
+//  auto pred = req.mutable_predecessor();
+//  pred->set_uuid(from_node.uuid.string());
+//  pred->set_endpoint(from_node.endpoint);
+//
+//  const auto status = service.leave(&serverContext, &req, &res);
+//
+//  ASSERT_FALSE(status.ok());
+//}
 
-  std::unique_ptr<MockStub> stub(new MockStub);
 
-  MockClient client;
-  Service service(context, &router, &client);
-
-  ServerContext serverContext;
-  LeaveRequest req;
-  LeaveResponse res;
-
-  const node to_node{"2", "2.2.2.2:8888"};
-  const node from_node{"8", "8.8.8.8:8888"};
-  auto src = req.mutable_header()->mutable_src();
-  src->set_uuid(to_node.uuid.string());
-  src->set_endpoint(to_node.endpoint);
-
-  auto pred = req.mutable_predecessor();
-  pred->set_uuid(from_node.uuid.string());
-  pred->set_endpoint(from_node.endpoint);
-
-  const auto status = service.leave(&serverContext, &req, &res);
-
-  ASSERT_FALSE(status.ok());
-}
-
-TEST(ServiceTest, leave) {
-  Context context = make_context(5);
-  Router router(context);
-
-  MockClient client;
-  chord::Service service{context, &router, &client};
-  const auto callback = [](const TakeResponse& tres) {
-    (void)tres;
-  };
-  service.set_on_leave_callback(callback);
-
-  ServerContext serverContext;
-  LeaveRequest req;
-  LeaveResponse res;
-
-  const node to_node{"2", "2.2.2.2:8888"};
-  const node from_node{"8", "8.8.8.8:8888"};
-  auto src = req.mutable_header()->mutable_src();
-  src->set_uuid(to_node.uuid.string());
-  src->set_endpoint(to_node.endpoint);
-
-  auto pred = req.mutable_predecessor();
-  pred->set_uuid(from_node.uuid.string());
-  pred->set_endpoint(from_node.endpoint);
-
-  EXPECT_CALL(client, take(Eq(uuid_t{"8"}), Eq(uuid_t{"2"}), Eq(to_node), _));
-  const auto status = service.leave(&serverContext, &req, &res);
-
-  ASSERT_TRUE(status.ok());
-}
+// FIXME move to chord.fs.service.test
+//TEST(ServiceTest, leave) {
+//  Context context = make_context(5);
+//  Router router(context);
+//
+//  MockClient client;
+//  chord::Service service{context, &router, &client};
+//  const auto callback = [](const TakeResponse& tres) {
+//    (void)tres;
+//  };
+//  service.set_on_leave_callback(callback);
+//
+//  ServerContext serverContext;
+//  LeaveRequest req;
+//  LeaveResponse res;
+//
+//  const node to_node{"2", "2.2.2.2:8888"};
+//  const node from_node{"8", "8.8.8.8:8888"};
+//  auto src = req.mutable_header()->mutable_src();
+//  src->set_uuid(to_node.uuid.string());
+//  src->set_endpoint(to_node.endpoint);
+//
+//  auto pred = req.mutable_predecessor();
+//  pred->set_uuid(from_node.uuid.string());
+//  pred->set_endpoint(from_node.endpoint);
+//
+//  EXPECT_CALL(client, take(Eq(uuid_t{"8"}), Eq(uuid_t{"2"}), Eq(to_node), _));
+//  const auto status = service.leave(&serverContext, &req, &res);
+//
+//  ASSERT_TRUE(status.ok());
+//}
 
 TEST(ServiceTest, notify__validate) {
   Context context = make_context(5);

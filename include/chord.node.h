@@ -17,9 +17,17 @@ struct node {
     return uuid == other.uuid 
            && endpoint == other.endpoint;
   }
+
+  std::string string() const {
+    std::stringstream ss;
+    ss << *this;
+    return ss.str();
+  }
+
   friend std::ostream& operator<<(std::ostream& os, const node& n) {
     return os << n.uuid << "@" << n.endpoint;
   }
+
   friend std::ostream& operator<<(std::ostream& os, const optional<node>& n) {
     if(n) return os << n->uuid << "@" << n->endpoint;
     return os << "<unknown>";

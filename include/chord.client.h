@@ -46,9 +46,6 @@ class Client : public IClient {
   grpc::Status join(const JoinRequest *req, JoinResponse *res) override;
   grpc::Status join(grpc::ClientContext *clientContext, const JoinRequest *req, JoinResponse *res) override;
 
-  void take() override;
-  void take(const uuid from, const uuid to, const node responsible, const take_consumer_t callback) override;
-
   void stabilize() override;
 
   void notify() override;

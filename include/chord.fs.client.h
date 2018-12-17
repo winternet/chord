@@ -62,6 +62,9 @@ void add_metadata(chord::fs::MetaRequest& req, const chord::path& path);
 
   grpc::Status dir(const chord::uri &uri, std::set<Metadata>& metadata);
 
+  //void take() ;
+  void take(const uuid from, const uuid to, const node responsible, const take_consumer_t callback);
+
   //TODO remove metadata for DEL / DIR
   grpc::Status meta(const chord::uri &uri, const Action &action, std::set<Metadata>& metadata, Replication repl = Replication());
   grpc::Status meta(const chord::uri &uri, const Action &action, Replication repl = Replication());

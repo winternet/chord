@@ -44,34 +44,54 @@ void Facade::put(const chord::path &source, const chord::uri &target, Replicatio
   }
 }
 
-void Facade::get_and_integrate(const chord::fs::MetaResponse& meta_res) {
-      if (meta_res.uri().empty()) {
-        throw__exception("failed to get and integrate metaresponse due to missing uri " + meta_res.uri());
-      }
+void Facade::get_shallow_copies(const chord::node& leaving_node) {
+  auto shallow_copies = fs_service->metadata_manager()->get(leaving_node);
 
-      const auto uri = chord::uri{meta_res.uri()};
-      std::set<Metadata> data_set;
-
-      // integrate the metadata
-      {
-        for (auto data : MetadataBuilder::from(meta_res)) {
-          // unset reference id since the node leaves
-          data.node_ref = {};
-          data_set.insert(data);
-        }
-        fs_service->metadata_manager()->add(uri, data_set);
-      }
-
-      // get the files
-      for (const auto& data : data_set) {
-        // uri might be a directory containing data.name as child
-        // or uri might point to a file with the metadata containing
-        // the file's name, we consider only those leaves
-        if (data.file_type == type::regular
-            && data.name == uri.path().filename()) {
+  // integrate the metadata
+  {
+    for (const auto& [uri, meta_set] : shallow_copies) {
+      std::set<Metadata> deep_copies;
+      for_each(meta_set.begin(), meta_set.end(), [&](Metadata m) {
+        if (m.file_type == type::regular && m.name == uri.path().filename()) {
           get_file(uri, context.data_directory / uri.path());
         }
-      }
+        m.node_ref = {};
+        deep_copies.insert(m);
+      });
+      fs_service->metadata_manager()->add(uri, deep_copies);
+    }
+  }
+}
+
+void Facade::get_and_integrate(const chord::fs::MetaResponse& meta_res) {
+  if (meta_res.uri().empty()) {
+    throw__exception(
+        "failed to get and integrate metaresponse due to missing uri " +
+        meta_res.uri());
+  }
+
+  const auto uri = chord::uri{meta_res.uri()};
+  std::set<Metadata> data_set;
+
+  // integrate the metadata
+  {
+    for (auto data : MetadataBuilder::from(meta_res)) {
+      // unset reference id since the node leaves
+      data.node_ref = {};
+      data_set.insert(data);
+    }
+    fs_service->metadata_manager()->add(uri, data_set);
+  }
+
+  // get the files
+  for (const auto& data : data_set) {
+    // uri might be a directory containing data.name as child
+    // or uri might point to a file with the metadata containing
+    // the file's name, we consider only those leaves
+    if (data.file_type == type::regular && data.name == uri.path().filename()) {
+      get_file(uri, context.data_directory / uri.path());
+    }
+  }
 }
 
 void Facade::get(const chord::uri &source, const chord::path& target) {

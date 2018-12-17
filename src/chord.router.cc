@@ -164,16 +164,19 @@ optional<node> Router::closest_preceding_node(const uuid_t &uuid) {
 std::ostream& operator<<(std::ostream &os, const Router &router) {
   size_t beg = 0;
   for (size_t i=1; i < Router::BITS; i++) {
-    auto beg_a = (!(router.successors[i-1]) ? std::string{"<unknown>"} : std::string{*router.successors[i-1]});
-    auto beg_o = (!(router.successors[i]) ? std::string{"<unknown>"} : std::string{*router.successors[i]});
-    if(beg_a != beg_o) {
+    const auto succ_a = router.successor(i-1);
+    const auto succ_b = router.successor(i);
+    auto beg_a = (!succ_a ? std::string{"<unknown>"} : succ_a->string());
+    auto beg_b = (!succ_b ? std::string{"<unknown>"} : succ_b->string());
+    if(beg_a != beg_b) {
       os << "\n::router[successor][" << beg << ".." << i-1 << "] " << beg_a;
       beg=i;
     }
   }
   if (beg != Router::BITS) {
-    auto beg_o = (!(router.successors[beg]) ? std::string{"<unknown>"} : std::string{*router.successors[beg]});
-    os << "\n::router[successor][" << beg << ".." << Router::BITS-1 << "] " << beg_o;
+    const auto succ_b = router.successor(beg);
+    auto beg_b = (!succ_b ? std::string{"<unknown>"} : succ_b->string());
+    os << "\n::router[successor][" << beg << ".." << Router::BITS-1 << "] " << beg_b;
   }
   os << "\n::router [predecessor] ";
   if(router.predecessor()) os << *router.predecessor();

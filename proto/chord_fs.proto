@@ -15,6 +15,7 @@ service Filesystem {
   rpc get       (GetRequest)        returns (stream GetResponse) {}
   rpc del       (DelRequest)        returns (DelResponse) {}
   rpc meta      (MetaRequest)       returns (MetaResponse) {}
+  rpc take      (TakeRequest)       returns (stream TakeResponse) {}
 }
 
 /**
@@ -101,4 +102,19 @@ message MetaResponse {
   chord.common.RouterEntry node_ref = 8;
 
   repeated Data metadata = 2;
+}
+
+/**
+ * TAKE
+ */
+message TakeRequest {
+  chord.common.Header header = 1;
+  string from = 2;
+  string to = 3;
+}
+
+message TakeResponse { 
+  string  id = 1;
+  MetaResponse meta = 2;
+  //google.protobuf.Any detail = 2;
 }

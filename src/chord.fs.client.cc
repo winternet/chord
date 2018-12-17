@@ -246,5 +246,38 @@ Status Client::get(const chord::uri &uri, ostream &ostream) {
   return get(uri, {uuid, endpoint}, ostream);
 }
 
+void Client::take(const uuid from, const uuid to, const node responsible, const take_consumer_t callback) {
+  ClientContext clientContext;
+  TakeResponse res;
+  TakeRequest req;
+
+  req.mutable_header()->CopyFrom(make_header(context));
+  req.set_from(from);
+  req.set_to(to);
+
+  // FIXME use StubFactory
+  // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
+  const auto stub = Filesystem::NewStub(grpc::CreateChannel(responsible.endpoint, grpc::InsecureChannelCredentials()));
+  unique_ptr<ClientReader<TakeResponse> > reader(stub->take(&clientContext, req));
+
+  while (callback && reader->Read(&res)) {
+    callback(res);
+  }
+
+  reader->Finish();
+}
+
+//void Client::take() {
+//  const auto predecessor = router->predecessor();
+//  const auto successor = router->successor();
+//
+//  if(!predecessor) {
+//    logger->warn("[take] failed - no predecessor");
+//    return;
+//  }
+//
+//  take(predecessor->uuid, context.uuid(), *successor , take_consumer_callback);
+//}
+
 } // namespace fs
 } // namespace chord

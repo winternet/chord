@@ -29,9 +29,6 @@ class IService {
 
   virtual chord::common::RouterEntry successor(const uuid_t &uuid) = 0;
 
-  virtual grpc::Status take(grpc::ServerContext *context, 
-                            const chord::TakeRequest *req,
-                            grpc::ServerWriter<chord::TakeResponse> *writer) = 0;
 
   virtual grpc::Status successor(grpc::ServerContext *context,
                                  const chord::SuccessorRequest *req,

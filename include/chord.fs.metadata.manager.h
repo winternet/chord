@@ -121,8 +121,8 @@ class MetadataManager {
       current.insert({m.name, m});
     }
 
-    for (const auto& m: current) {
-      logger->trace("{} : {}", m.first, m.second);
+    for (const auto& [path, meta]: current) {
+      logger->trace("{} : {}", path, meta);
     }
 
     value = serialize(current);
@@ -144,6 +144,7 @@ class MetadataManager {
     std::unique_ptr<leveldb::Iterator> it{db->NewIterator(leveldb::ReadOptions())};
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
       const std::string& _path = it->key().ToString();
+
       const chord::uri uri("chord", {_path});
       const chord::uuid hash = chord::crypto::sha256(uri);
       logger->trace("\nuri {}\nhash_uri  {}\nfrom      {}\nto        {}", uri, hash, from, to);
@@ -170,6 +171,25 @@ class MetadataManager {
     return ret;
   }
 
+  //TODO write unit tests
+  //TODO check whether to return only leaf nodes
+  //TODO 
+  std::map<chord::uri, std::set<Metadata>> get(const chord::node& node) {
+    std::map<chord::uri, std::set<Metadata>> ret;
+    std::unique_ptr<leveldb::Iterator> it{db->NewIterator(leveldb::ReadOptions())};
+
+    for(it->SeekToFirst(); it->Valid(); it->Next()) {
+      const std::string& path = it->key().ToString();
+      const auto map = deserialize(it->value().ToString());
+      const chord::uri uri("chord", {path});
+      for(const auto& [name, meta] : map) {
+        if(meta.node_ref && meta.node_ref == node) {
+          ret[uri].insert(meta);
+        }
+      }
+    }
+    return ret;
+  }
   std::set<Metadata> get(const chord::uri& directory) {
     std::string value;
     check_status(db->Get(leveldb::ReadOptions(), directory.path().string(), &value));
