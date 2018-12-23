@@ -29,6 +29,10 @@ Header make_header(const uuid &id, const endpoint_t &addr) {
   return header;
 }
 
+Header make_header(const uuid &id, const char* addr) {
+  return make_header(id, endpoint_t{addr});
+}
+
 } //namespace helper
 } //namespace test
 } //namespace chord

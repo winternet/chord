@@ -9,13 +9,14 @@
 #include "chord.crypto.h"
 #include "chord.fs.metadata.builder.h"
 #include "chord.fs.metadata.h"
+#include "chord.i.fs.metadata.manager.h"
 #include "chord.uri.h"
 #include "chord.log.h"
 
 namespace chord {
 namespace fs {
 
-class MetadataManager {
+class MetadataManager : public IMetadataManager {
   static constexpr auto logger_name = "chord.fs.metadata.manager";
 
  private:
@@ -67,12 +68,12 @@ class MetadataManager {
 
   MetadataManager(const MetadataManager&) = delete;
 
-  void del(const chord::uri& directory) {
+  void del(const chord::uri& directory) override {
     //Metadata current{directory.path().canonical().string()};
     check_status(db->Delete(leveldb::WriteOptions(), directory.path().canonical().string()));
   }
 
-  void del(const chord::uri& directory, const std::set<Metadata> &metadata) {
+  void del(const chord::uri& directory, const std::set<Metadata> &metadata) override {
     std::string value;
     const auto path = directory.path().canonical().string();
     check_status(db->Get(leveldb::ReadOptions(), path, &value));
@@ -87,7 +88,7 @@ class MetadataManager {
     check_status(db->Put(leveldb::WriteOptions(), path, value));
   }
 
-  std::set<Metadata> dir(const chord::uri& directory) {
+  std::set<Metadata> dir(const chord::uri& directory) override {
     std::string value;
     const auto status = db->Get(leveldb::ReadOptions(), directory.path().canonical().string(), &value);
 
@@ -100,12 +101,10 @@ class MetadataManager {
       return ret;
     }
 
-    if(status.IsNotFound()) {
-      throw__exception("not found");
-    }
+    throw__exception(std::string{"failed to dir: "} + status.ToString());
   }
 
-  void add(const chord::uri& directory, const std::set<Metadata>& metadata) {
+  void add(const chord::uri& directory, const std::set<Metadata>& metadata) override {
     std::string value;
     const auto path = directory.path().canonical().string();
     const auto status = db->Get(leveldb::ReadOptions(), path, &value);
@@ -139,7 +138,7 @@ class MetadataManager {
    *   1) use an 'index' or
    *   2) save hash to Metadata (deserialization needed)
    */
-  std::map<chord::uri, std::set<Metadata> > get(const chord::uuid& from, const chord::uuid& to) {
+  std::map<chord::uri, std::set<Metadata> > get(const chord::uuid& from, const chord::uuid& to) override {
     std::map<chord::uri, std::set<Metadata> > ret;
     std::unique_ptr<leveldb::Iterator> it{db->NewIterator(leveldb::ReadOptions())};
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
@@ -174,7 +173,7 @@ class MetadataManager {
   //TODO write unit tests
   //TODO check whether to return only leaf nodes
   //TODO 
-  std::map<chord::uri, std::set<Metadata>> get(const chord::node& node) {
+  std::map<chord::uri, std::set<Metadata>> get(const chord::node& node) override {
     std::map<chord::uri, std::set<Metadata>> ret;
     std::unique_ptr<leveldb::Iterator> it{db->NewIterator(leveldb::ReadOptions())};
 
@@ -190,7 +189,7 @@ class MetadataManager {
     }
     return ret;
   }
-  std::set<Metadata> get(const chord::uri& directory) {
+  std::set<Metadata> get(const chord::uri& directory) override {
     std::string value;
     check_status(db->Get(leveldb::ReadOptions(), directory.path().string(), &value));
 

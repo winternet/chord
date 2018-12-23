@@ -1,6 +1,8 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
+#include "chord.types.h"
+#include "chord.test.helper.h"
 #include "chord.node.h"
 #include "chord.pb.h"
 #include "chord_common.pb.h"
@@ -24,6 +26,7 @@ using chord::SuccessorResponse;
 
 using ::testing::Eq;
 
+using namespace chord::test::helper;
 using namespace chord;
 
 template<typename T>
@@ -33,24 +36,6 @@ std::unique_ptr<T, void(*)(T*)> unique_of(T& val) {
   return std::unique_ptr<T, void(*)(T*) >(&val, nop);
 }
 
-Context make_context(const uuid_t &self) {
-  Context context = Context();
-  context.set_uuid(self);
-  return context;
-}
-
-RouterEntry make_entry(const uuid_t &id, const endpoint_t &addr) {
-  RouterEntry entry;
-  entry.set_uuid(id);
-  entry.set_endpoint(addr);
-  return entry;
-}
-
-Header make_header(const uuid_t &id, const endpoint_t &addr) {
-  Header header;
-  header.mutable_src()->CopyFrom(make_entry(id, addr));
-  return header;
-}
 
 TEST(ServiceTest, join) {
   spdlog::set_level(spdlog::level::trace);
@@ -67,7 +52,7 @@ TEST(ServiceTest, join) {
   ASSERT_EQ(router.size(), 1);
 
   // join from 1
-  req.mutable_header()->CopyFrom(make_header({1},"1.1.1.1:1111"));
+  req.mutable_header()->CopyFrom(make_header({1}, "1.1.1.1:1111"));
   service.join(&serverContext, &req, &res);
 
   //--- router
@@ -316,48 +301,6 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
 
 }
 
-// FIXME move to chord.fs.service
-/*
-TEST(ServiceTest, take_without_producer) {
-  Context context = make_context(5);
-  Router router(context);
-  std::unique_ptr<MockStub> stub(new MockStub);
-
-  MockClient client;
-  chord::Service service(context, &router, &client);
-
-  const auto status = service.take(nullptr, nullptr, nullptr);
-
-  //--- assert take has not been called
-  ASSERT_FALSE(status.ok());
-}
-
-TEST(ServiceTest, take) {
-  Context context = make_context(5);
-  Router router(context);
-
-  std::unique_ptr<MockStub> stub(new MockStub);
-
-  MockClient client;
-  chord::Service service(context, &router, &client);
-  take_producer_t take_producer_cbk = [&](const auto& from, const auto& to) {
-    //ASSERT_ cannot be used in non-void returning functions
-    EXPECT_EQ(from, uuid_t{"0"});
-    EXPECT_EQ(to, uuid_t{"5"});
-    return std::vector<chord::TakeResponse>{};
-  };
-  service.set_take_callback(take_producer_cbk);
-
-  ServerContext serverContext;
-  TakeRequest req;
-  TakeResponse res;
-
-  req.set_from("0");
-  req.set_to("5");
-
-  service.take(&serverContext, &req, nullptr);
-}
-*/
 
 TEST(ServiceTest, stabilize__without_predecessor) {
   Context context = make_context(5);

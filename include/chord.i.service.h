@@ -12,6 +12,7 @@
 #include "chord.i.service.h"
 #include "chord.pb.h"
 #include "chord.uuid.h"
+#include "chord.signal.h"
 
 namespace chord {
 struct Context;
@@ -19,6 +20,7 @@ struct Router;
 class IClient;
 }  // namespace chord
 
+namespace chord {
 class IService {
  public:
   virtual ~IService() = default;
@@ -49,4 +51,12 @@ class IService {
   virtual grpc::Status leave(grpc::ServerContext *context,
                              const chord::LeaveRequest *req,
                              chord::LeaveResponse *res) = 0;
+
+  virtual void fix_fingers(size_t index) = 0;
+
+  virtual signal<void(const node, const node)>& on_leave() = 0;
+
+  virtual ::grpc::Service* grpc_service() = 0;
+
 };
+} // namespace chord

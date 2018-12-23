@@ -1,3 +1,5 @@
+#pragma once
+
 #include "chord.i.client.h"
 
 namespace chord {

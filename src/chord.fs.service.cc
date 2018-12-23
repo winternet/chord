@@ -48,6 +48,15 @@ Service::Service(Context &context, ChordFacade* chord)
       }},
       logger{log::get_or_create(logger_name)} { }
 
+Service::Service(Context &context, ChordFacade* chord, IMetadataManager* metadata_mgr)
+    : context{context},
+      chord{chord},
+      metadata_mgr{metadata_mgr},
+      make_client {[this]{
+        return chord::fs::Client(this->context, this->chord);
+      }},
+      logger{log::get_or_create(logger_name)} { }
+
 Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
   (void)serverContext;
 
@@ -60,9 +69,6 @@ Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaR
         break;
       case DEL:
         metadata_mgr->del(uri, MetadataBuilder::from(req));
-        break;
-      case MOD:
-        return Status::CANCELLED;
         break;
       case DIR:
         set<Metadata> meta = metadata_mgr->get(uri);

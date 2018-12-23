@@ -16,6 +16,13 @@ Facade::Facade(Context& context, ChordFacade* chord)
       logger{log::get_or_create(logger_name)}
 {}
 
+Facade::Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service)
+  : context{context},
+    fs_client{fs_client},
+    fs_service{fs_service},
+    logger{log::get_or_create(logger_name)}
+{}
+
 ::grpc::Service* Facade::grpc_service() {
   return fs_service.get();
 }

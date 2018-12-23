@@ -38,4 +38,5 @@ class IClient {
   virtual grpc::Status successor(const chord::SuccessorRequest *req, chord::SuccessorResponse *res) =0;
 
 };
+
 } // namespace chord

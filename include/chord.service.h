@@ -26,7 +26,7 @@ namespace spdlog {
 namespace chord {
 using ClientFactory = std::function<chord::IClient*()>;
 
-class Service final : public chord::Chord::Service, IService {
+class Service final : public chord::Chord::Service, public IService {
   static constexpr auto logger_name = "chord.service";
 
  public:
@@ -57,12 +57,15 @@ class Service final : public chord::Chord::Service, IService {
                      const chord::LeaveRequest *req,
                      chord::LeaveResponse *res) override;
 
-  void fix_fingers(size_t index);
+  void fix_fingers(size_t index) override;
 
-  auto& on_leave() {
+  signal<void(const node, const node)>& on_leave() override {
     return event_leave;
   }
 
+  ::grpc::Service* grpc_service() override {
+    return this;
+  }
  private:
   Context &context;
   Router *router;

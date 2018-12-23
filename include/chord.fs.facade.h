@@ -30,6 +30,8 @@ class Facade : public IFacade {
  public:
   Facade(Context& context, ChordFacade* chord);
 
+  Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service);
+
   ::grpc::Service* grpc_service();
 
   void put(const chord::path& source, const chord::uri& target, Replication repl = Replication());

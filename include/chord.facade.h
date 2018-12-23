@@ -20,6 +20,8 @@ class AbstractScheduler;
 
 class Client;
 class Service;
+class IClient;
+class IService;
 
 struct Context;
 struct Router;
@@ -32,7 +34,7 @@ class ChordFacade {
   ChordFacade &operator=(const ChordFacade &) = delete;  // disable assignment
 
   explicit ChordFacade(Context& context);
-  explicit ChordFacade(Context& ctx, Router* router, Client* client, Service* service);
+  explicit ChordFacade(Context& ctx, Router* router, IClient* client, IService* service);
 
   void start();
 
@@ -96,8 +98,8 @@ class ChordFacade {
   std::unique_ptr<chord::Router> router;
 
   //--- chord
-  std::unique_ptr<chord::Client> client;
-  std::unique_ptr<chord::Service> service;
+  std::unique_ptr<chord::IClient> client;
+  std::unique_ptr<chord::IService> service;
 
   std::unique_ptr<AbstractScheduler> scheduler;
 

@@ -255,7 +255,6 @@ void Client::take(const uuid from, const uuid to, const node responsible, const 
   req.set_from(from);
   req.set_to(to);
 
-  // FIXME use StubFactory
   // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
   const auto stub = Filesystem::NewStub(grpc::CreateChannel(responsible.endpoint, grpc::InsecureChannelCredentials()));
   unique_ptr<ClientReader<TakeResponse> > reader(stub->take(&clientContext, req));

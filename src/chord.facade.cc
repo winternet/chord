@@ -32,7 +32,7 @@ ChordFacade::ChordFacade(Context& ctx)
 /**
  * Used for testing purposes.
  */
-ChordFacade::ChordFacade(Context& ctx, Router* router, Client* client, Service* service)
+ChordFacade::ChordFacade(Context& ctx, Router* router, IClient* client, IService* service)
     : context{ctx},
       router{router},
       client{client},
@@ -42,7 +42,7 @@ ChordFacade::ChordFacade(Context& ctx, Router* router, Client* client, Service* 
       {}
 
 ::grpc::Service* ChordFacade::grpc_service() {
-  return service.get();
+  return service->grpc_service();
 }
 
 void ChordFacade::stop() {
@@ -105,8 +105,6 @@ void ChordFacade::join() {
   if(router->successor() && router->predecessor()) {
     event_joined(router->successor().value(), router->predecessor().value());
   }
-  //FIXME emit joined event! subscribe to event in chord.fs.client
-  //client->take();
 }
 
 /**
