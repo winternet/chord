@@ -96,6 +96,7 @@ struct ContextManager {
     tokens.emplace_back(new Token<endpoint_t>{"bind-addr", context.bind_addr});
     tokens.emplace_back(new Token<endpoint_t>{"join-addr", context.join_addr});
 
+
     tokens.emplace_back(new Token<bool>{"bootstrap", context.bootstrap});
     tokens.emplace_back(new Token<bool>{"no-controller", context.no_controller});
     // timing
@@ -116,6 +117,7 @@ struct ContextManager {
       std::cerr << "\nnode: " << it->first.as<std::string>() << " is "
                 << it->second.as<std::string>();
     }
+    Context::validate(context);
   }
 
   static Context load(const std::string& yaml) {

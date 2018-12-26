@@ -44,6 +44,11 @@ struct Context {
 
   Context set_router(chord::Router *router);
 
+  /**
+   * Validate the context or throw exceptions for invalid contexts
+   */
+  static void validate(const Context& context);
+
  private:
   Router *router {nullptr};
 };

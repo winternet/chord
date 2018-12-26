@@ -49,8 +49,6 @@ Service::Service(Context &context, Router *router, IClient* client)
 Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
   (void)serverContext;
   const auto node = chord::common::make_node(req->header().src());
-  //const auto id = req->header().src().uuid();
-  //const auto endpoint = req->header().src().endpoint();
 
   logger->trace("join request from {}", node);
   /**
@@ -60,24 +58,39 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
 
   const auto pred = router->predecessor();
   const auto succ = router->successor();
-  //const auto entry = successor(src);
 
   /**
    * forward request to successor
    */
-  if(pred && succ && !src.between(pred->uuid, context.uuid())) {
+  if(pred && succ && !src.between(pred->uuid, succ->uuid)) {
     return client->join(req, res);
   }
 
-  const auto succ_or_self = succ.value_or(context.node());
   auto* res_succ = res->mutable_successor();
-  res_succ->set_uuid(succ_or_self.uuid);
-  res_succ->set_endpoint(succ_or_self.endpoint);
-
-  const auto pred_or_self = pred.value_or(context.node());
   auto* res_pred = res->mutable_predecessor();
-  res_pred->set_uuid(pred_or_self.uuid);
-  res_pred->set_endpoint(pred_or_self.endpoint);
+  if(src.between(context.uuid(), succ->uuid)) {
+    // successor
+    const auto succ_or_self = succ.value_or(context.node());
+    res_succ->set_uuid(succ_or_self.uuid);
+    res_succ->set_endpoint(succ_or_self.endpoint);
+    // predecessor
+    const auto pred_or_self = pred.value_or(context.node());
+    res_pred->set_uuid(pred_or_self.uuid);
+    res_pred->set_endpoint(pred_or_self.endpoint);
+    // update router
+    router->set_successor(0, node);
+  } else if(src.between(pred->uuid, context.uuid())) {
+    // successor
+    const auto successor = context.node();
+    res_succ->set_uuid(successor.uuid);
+    res_succ->set_endpoint(successor.endpoint);
+    // predecessor
+    const auto pred_or_self = pred.value_or(context.node());
+    res_pred->set_uuid(pred_or_self.uuid);
+    res_pred->set_endpoint(pred_or_self.endpoint);
+    // update router
+    router->set_predecessor(0, node);
+  }
 
   res->mutable_header()->CopyFrom(make_header(context));
 

@@ -118,7 +118,7 @@ Status Client::join(ClientContext *clientContext, const JoinRequest *req, JoinRe
 
   logger->trace("forwarding join of {}", req->header().src().uuid());
   JoinRequest copy(*req);
-  copy.mutable_header()->CopyFrom(make_header(context));
+  //copy.mutable_header()->CopyFrom(make_header(context));
 
   const auto predecessor = router->closest_preceding_node(uuid_t(req->header().src().uuid()));
   logger->trace("forwarding request to {}", predecessor);
