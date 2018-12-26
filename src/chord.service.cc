@@ -1,17 +1,13 @@
 #include <iostream>
-#include <experimental/filesystem>
-
 #include <grpc++/server_context.h>
 
 #include "chord.log.h"
 #include "chord.uri.h"
 #include "chord.context.h"
 #include "chord.router.h"
-
 #include "chord.common.h"
 #include "chord.client.h"
 #include "chord.service.h"
-
 
 using grpc::ServerContext;
 using grpc::ClientContext;
@@ -34,7 +30,6 @@ using chord::CheckRequest;
 using chord::Chord;
 
 
-namespace fs = std::experimental::filesystem::v1;
 using namespace std;
 using namespace chord::common;
 
