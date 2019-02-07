@@ -269,17 +269,5 @@ void Client::take(const uuid from, const uuid to, const chord::node responsible,
   reader->Finish();
 }
 
-//void Client::take() {
-//  const auto predecessor = router->predecessor();
-//  const auto successor = router->successor();
-//
-//  if(!predecessor) {
-//    logger->warn("[take] failed - no predecessor");
-//    return;
-//  }
-//
-//  take(predecessor->uuid, context.uuid(), *successor , take_consumer_callback);
-//}
-
 } // namespace fs
 } // namespace chord

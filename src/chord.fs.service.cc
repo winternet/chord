@@ -237,9 +237,6 @@ Status Service::del(const chord::uri& uri) {
     //     maybe some other node became responsible for that file recently
   }
 
-  // generate metadata set to inform parents of deletion
-  // std::set<Metadata> metadata_set{MetadataBuilder::from(context, data)};
-
   // remove local file
   file::remove(data);
   // remove local metadata
@@ -263,30 +260,6 @@ Status Service::del(const chord::uri& uri) {
     }
   }
   return Status::OK;
-  //return make_client().meta(parent_uri, Client::Action::DEL, metadata_set);
-
-  // handle file replication
-  //{
-  //  map<Replication, set<Metadata>> metadata_group_by_repl;
-  //  for (const auto& meta : deleted_uris) {
-  //    if(!meta.replication) continue;
-  //    const auto& repl = *meta.replication;
-  //    if(repl.index >= repl.count) continue;
-
-  //    metadata_group_by_repl[repl].insert(meta);
-  //  }
-
-  //  for (auto &[repl, meta] : metadata_group_by_repl) {
-  //    const auto next = make_node(chord->successor(context.uuid()));
-  //    const auto status = make_client().del(uri, next);
-  //    //TODO add error handling
-  //    if(!status.ok()) {
-  //      logger->warn("Failed to delete replication for uri: {}", uri);
-  //    }
-  //    //TODO update replicated parents
-  //  }
-  //}
-
 }
 
 Status Service::del(grpc::ServerContext *serverContext, const chord::fs::DelRequest *req,
@@ -318,7 +291,6 @@ Status Service::del(grpc::ServerContext *serverContext, const chord::fs::DelRequ
     if(!status.ok()) {
       logger->error("failed to delete empty folder {}", parent_uri);
     }
-
   }
 
   return Status::OK;
