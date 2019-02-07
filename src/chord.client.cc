@@ -150,6 +150,7 @@ void Client::stabilize() {
   if (!status.ok()) {
     logger->warn("[stabilize] failed - removing endpoint {}@{}?", *successor, endpoint);
     router->reset(*successor);
+    event_successor_fail(*successor);
     return;
   }
 
@@ -255,6 +256,7 @@ void Client::check() {
   if (!status.ok()) {
     logger->warn("[check] predecessor failed.");
     router->reset(*predecessor);
+    event_predecessor_fail(*predecessor);
   } else if(!res.has_header()) {
     logger->error("[check] returned without header, should remove endpoint {}@{}?", *predecessor, endpoint);
   }

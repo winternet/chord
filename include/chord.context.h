@@ -28,7 +28,7 @@ struct Context {
   chord::path config{"./config.yml"};
   //--- promoted endpoint
   endpoint_t bind_addr{"0.0.0.0:50050"};
-  endpoint_t join_addr{"0.0.0.0:50050"};
+  endpoint_t join_addr; //{"0.0.0.0:50050"};
 
   //--- scheduling
   size_t stabilize_period_ms{10000};

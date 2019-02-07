@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 
+#include "chord.signal.h"
 #include "chord.grpc.pb.h"
 #include "chord.types.h"
 #include "chord.uuid.h"
@@ -33,6 +34,10 @@ class Client : public IClient {
 
   StubFactory make_stub;
   take_consumer_t take_consumer_callback;
+
+  signal<void(const node)> event_predecessor_fail;
+  signal<void(const node)> event_successor_fail;
+
   std::shared_ptr<spdlog::logger> logger;
 
  public:
@@ -41,6 +46,13 @@ class Client : public IClient {
   Client(const Context &context, Router *router, StubFactory factory);
 
   void leave() override;
+
+  signal<void(const node)>& on_predecessor_fail() {
+    return event_predecessor_fail;
+  }
+  signal<void(const node)>& on_successor_fail() {
+    return event_successor_fail;
+  }
 
   bool join(const endpoint_t &addr) override;
   grpc::Status join(const JoinRequest *req, JoinResponse *res) override;

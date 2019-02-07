@@ -27,6 +27,10 @@ class MockClient : public IClient {
   MOCK_METHOD3(successor, grpc::Status(grpc::ClientContext *context, const chord::SuccessorRequest *req, chord::SuccessorResponse *res));
 
   MOCK_METHOD2(successor, grpc::Status(const chord::SuccessorRequest *req, chord::SuccessorResponse *res));
+  
+  MOCK_METHOD0(on_successor_fail, signal<void(const node)>&(void));
+
+  MOCK_METHOD0(on_predecessor_fail, signal<void(const node)>&(void));
 
 };
 }

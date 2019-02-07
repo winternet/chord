@@ -90,6 +90,14 @@ class ChordFacade {
     return service->on_leave();
   }
 
+  auto& on_successor_fail() {
+    return client->on_successor_fail();
+  }
+
+  auto& on_predecessor_fail() {
+    return client->on_predecessor_fail();
+  }
+
  private:
   size_t next{0};
 

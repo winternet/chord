@@ -68,24 +68,37 @@ class MetadataManager : public IMetadataManager {
 
   MetadataManager(const MetadataManager&) = delete;
 
-  void del(const chord::uri& directory) override {
+  std::set<Metadata> del(const chord::uri& directory) override {
     //Metadata current{directory.path().canonical().string()};
+    logger->trace("[DEL] uri", directory);
+    std::set<Metadata> retVal = get(directory);
     check_status(db->Delete(leveldb::WriteOptions(), directory.path().canonical().string()));
+    return retVal;
   }
 
-  void del(const chord::uri& directory, const std::set<Metadata> &metadata) override {
+  std::set<Metadata> del(const chord::uri& directory, const std::set<Metadata> &metadata) override {
     std::string value;
     const auto path = directory.path().canonical().string();
     check_status(db->Get(leveldb::ReadOptions(), path, &value));
 
+    logger->trace("[DEL] from {}", directory);
+    for(const auto& meta:metadata) {
+      logger->trace("[DEL] {}", meta);
+    }
+
+    std::set<Metadata> retVal;
+
     //map['path'] = metadata
     auto current = deserialize(value);
     for(const auto &m:metadata) {
+      retVal.insert(current[m.name]);
       current.erase(m.name);
     }
     
     value = serialize(current);
     check_status(db->Put(leveldb::WriteOptions(), path, value));
+
+    return retVal;
   }
 
   std::set<Metadata> dir(const chord::uri& directory) override {
@@ -93,10 +106,12 @@ class MetadataManager : public IMetadataManager {
     const auto status = db->Get(leveldb::ReadOptions(), directory.path().canonical().string(), &value);
 
     if(status.ok()) {
+      logger->trace("[DIR] {}", directory);
       const auto current = deserialize(value);
       std::set<Metadata> ret;
       for(const auto &m:current) {
         ret.insert(m.second);
+        logger->trace("[DIR] {}", m.second);
       }
       return ret;
     }
@@ -114,14 +129,14 @@ class MetadataManager : public IMetadataManager {
     }
 
     std::map<std::string, Metadata> current = deserialize(value);
-    logger->trace("adding metadata for {}", directory);
 
     for (const auto& m : metadata) {
-      current.insert({m.name, m});
+      const auto status = current.insert_or_assign(m.name, m);
     }
 
+    logger->trace("[ADD] {}", directory);
     for (const auto& [path, meta]: current) {
-      logger->trace("{} : {}", path, meta);
+      logger->trace("[ADD] {}", path, meta);
     }
 
     value = serialize(current);
@@ -146,7 +161,6 @@ class MetadataManager : public IMetadataManager {
 
       const chord::uri uri("chord", {_path});
       const chord::uuid hash = chord::crypto::sha256(uri);
-      logger->trace("\nuri {}\nhash_uri  {}\nfrom      {}\nto        {}", uri, hash, from, to);
 
       if(hash.between(from, to)) {
         const auto map = deserialize(it->value().ToString());
@@ -156,9 +170,9 @@ class MetadataManager : public IMetadataManager {
       }
     }
     for(const auto& o : ret) {
-      logger->trace("data in uri: {}", o.first);
+      logger->trace("[GET] {}", o.first);
       for(const auto &m : o.second) {
-        logger->trace("meta: {}", m);
+        logger->trace("[GET] {}", m);
       }
     }
     return ret;
@@ -189,13 +203,14 @@ class MetadataManager : public IMetadataManager {
     }
     return ret;
   }
+
   std::set<Metadata> get(const chord::uri& directory) override {
     std::string value;
     check_status(db->Get(leveldb::ReadOptions(), directory.path().string(), &value));
 
     const auto map = deserialize(value);
-    for (const auto& m: map) {
-      logger->trace("{} : {}", m.first, m.second);
+    for (const auto& [path, meta]: map) {
+      logger->trace("[GET] {}", meta);
     }
     return extract_metadata_set(map);
   }

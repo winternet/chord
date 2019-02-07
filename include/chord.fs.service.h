@@ -26,6 +26,8 @@ class Service final : public chord::fs::Filesystem::Service {
 
   grpc::Status get_from_reference(const chord::uri& uri);
   grpc::Status del(const chord::uri& uri);
+  grpc::Status handle_meta_add(const MetaRequest*);
+  grpc::Status handle_meta_del(const MetaRequest*);
  public:
   explicit Service(Context &context, ChordFacade* chord);
   explicit Service(Context &context, ChordFacade* chord, IMetadataManager* metadata_mgr);

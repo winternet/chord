@@ -14,9 +14,9 @@ class MockMetadataManager : public IMetadataManager {
  public:
   virtual ~MockMetadataManager() = default;
 
-  MOCK_METHOD1(del, void(const chord::uri&));
+  MOCK_METHOD1(del, std::set<Metadata>(const chord::uri&));
 
-  MOCK_METHOD2(del, void(const chord::uri&, const std::set<Metadata> &));
+  MOCK_METHOD2(del, std::set<Metadata>(const chord::uri&, const std::set<Metadata> &));
 
   MOCK_METHOD1(dir, std::set<Metadata>(const chord::uri&));
 

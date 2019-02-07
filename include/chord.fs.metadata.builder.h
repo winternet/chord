@@ -19,20 +19,20 @@ struct MetadataBuilder {
    * @param context to prepend chord's data directory
    * @param chord_path the path from chord:// e.g. /folder/file
    */
-  static std::set<Metadata> for_path(const Context& context, const path& chord_path) {
+  static std::set<Metadata> for_path(const Context& context, const path& chord_path, const Replication repl = {}) {
     const auto local_path = context.data_directory / chord_path;
     if (!file::exists(local_path)) {
       throw__exception("not found: " + local_path.string());
     }
 
     std::set<Metadata> ret;
-    auto root = MetadataBuilder::from(context, local_path);
+    auto root = MetadataBuilder::from(context, local_path, repl);
     if(root.file_type == type::directory) root.name = ".";
     ret.insert(root);
 
     // add include contents if directory
     for(const auto &content : local_path.contents()) {
-      ret.insert(MetadataBuilder::from(context, content));
+      ret.insert(MetadataBuilder::from(context, content, repl));
     }
 
     return ret;
@@ -43,7 +43,7 @@ struct MetadataBuilder {
    *
    * @todo implement owner / group
    */
-  static Metadata from(const Context& context, const path& local_path) {
+  static Metadata from(const Context& context, const path& local_path, const Replication repl = {}) {
     if (!file::exists(local_path)) {
       throw__exception("not found: " + local_path.string());
     }
@@ -52,10 +52,12 @@ struct MetadataBuilder {
                   "",  // owner
                   "",  // group
                   perms::all,
-                  file::is_directory(local_path) ? type::directory : type::regular};
+                  file::is_directory(local_path) ? type::directory : type::regular,
+                  {},
+                  repl};
 
     for(const auto &content : local_path.contents()) {
-      auto meta = MetadataBuilder::from(context, content);
+      auto meta = MetadataBuilder::from(context, content, repl);
     }
 
     return meta;
@@ -101,6 +103,17 @@ struct MetadataBuilder {
     return {};
   }
 
+  static std::map<Replication, std::set<Metadata>> group_by_replication(const std::set<Metadata>& metadata) {
+    std::map<Replication, std::set<Metadata>> grouped;
+    for(const auto& meta:metadata) {
+      const auto& repl = meta.replication;
+      if(!repl) continue;
+      if(repl->index >= repl->count-1) continue;
+      grouped[*repl].insert(meta);
+    }
+    return grouped;
+  }
+
   static std::set<Metadata> from(const chord::fs::MetaResponse& res) {
     std::set<Metadata> ret;
     for (const auto& m : res.metadata()) {
@@ -119,9 +132,13 @@ struct MetadataBuilder {
       data->set_filename(m.name);
       data->set_type(value_of(m.file_type));
       data->set_permissions(value_of(m.permissions));
+      if(m.replication) {
+        const auto repl = *m.replication;
+        data->set_replication_idx(repl.index);
+        data->set_replication_cnt(repl.count);
+      }
     }
   }
 };
 }  // namespace fs
 }  // namespace chord
-

@@ -57,6 +57,65 @@ Service::Service(Context &context, ChordFacade* chord, IMetadataManager* metadat
       }},
       logger{log::get_or_create(logger_name)} { }
 
+Status Service::handle_meta_del(const MetaRequest *req) {
+  const auto uri = uri::from(req->uri());
+  auto metadata = MetadataBuilder::from(req);
+  metadata_mgr->del(uri, metadata);
+  //forward 
+  auto repl_metadata_map = MetadataBuilder::group_by_replication(metadata);
+  for(auto& [replication, meta] : repl_metadata_map) {
+    Replication repl{replication.index, replication.count};
+    if(!++repl) continue;
+
+    //update replication
+    for(auto it = meta.begin(); it != meta.end(); ++it) {
+      auto node = meta.extract(it);
+      if(!node) continue;
+      node.value().replication = repl;
+      meta.insert(std::move(node));
+    }
+
+    const auto node = make_node(chord->successor(context.uuid()));
+    logger->info("Forwarding meta DEL to node {}\n{}", node, metadata);
+    const auto status = make_client().meta(node, uri, Client::Action::DEL, meta);
+    if(!status.ok()) {
+      logger->warn("Failed to delete {} ({}) from {}", uri, repl, node);
+    }
+  }
+  return Status::OK;
+}
+
+Status Service::handle_meta_add(const MetaRequest *req) {
+  const auto uri = uri::from(req->uri());
+  auto metadata = MetadataBuilder::from(req);
+  metadata_mgr->add(uri, metadata);
+  //forward metadata request
+  //TODO we only consider the first data replication, this should be ok
+  //     since the put control command only supports one replication per 'batch'
+  //     but we should consider streaming the metadata, 
+  //     or at least check in the service whether we want to store the data
+  auto repl_metadata_map = MetadataBuilder::group_by_replication(metadata);
+  for(auto& [replication, meta] : repl_metadata_map) {
+    Replication repl{replication.index, replication.count};
+    if(!++repl) continue;
+
+    //update replication
+    for(auto it = meta.begin(); it != meta.end(); ++it) {
+      auto node = meta.extract(it);
+      if(!node) continue;
+      node.value().replication = repl;
+      meta.insert(std::move(node));
+    }
+
+    const auto node = make_node(chord->successor(context.uuid()));
+    const auto status = make_client().meta(node, uri, Client::Action::ADD, meta);
+    if(!status.ok()) {
+      logger->warn("Failed to add {} ({}) to {}", uri, repl, node);
+    }
+  }
+  return Status::OK;
+}
+
 Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
   (void)serverContext;
 
@@ -65,11 +124,9 @@ Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaR
   try {
     switch (req->action()) {
       case ADD:
-        metadata_mgr->add(uri, MetadataBuilder::from(req));
-        break;
+        return handle_meta_add(req);
       case DEL:
-        metadata_mgr->del(uri, MetadataBuilder::from(req));
-        break;
+        return handle_meta_del(req);
       case DIR:
         set<Metadata> meta = metadata_mgr->get(uri);
         MetadataBuilder::addMetadata(meta, *res);
@@ -126,22 +183,23 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   const auto uri = uri::from(req.uri());
   Replication repl{req.replication_idx(), req.replication_cnt()};
 
-  // metadata
-  try {
-    // remote / local(last)
-    for (const path &path : uri.path().all_paths()) {
-      const auto sub_uri = uri::builder{uri.scheme(), path}.build();
-      const auto node = make_node(chord->nth_successor(chord::crypto::sha256(sub_uri), repl.index));
-      auto meta = MetadataBuilder::for_path(context, path);
-      make_client().meta(node, sub_uri, Client::Action::ADD, meta, repl);
+  // first node triggers recursive metadata (replication)
+  if(repl.index == 0) {
+    try {
+      // remote / local(last)
+      for (const path &path : uri.path().all_paths()) {
+        const auto sub_uri = uri::builder{uri.scheme(), path}.build();
+        auto meta = MetadataBuilder::for_path(context, path, repl);
+        make_client().meta(sub_uri, Client::Action::ADD, meta);
+      }
+    } catch(const chord::exception &e) {
+      logger->error("failed to add metadata: {}", e.what());
+      file::remove(data);
+      throw;
     }
-  } catch(const chord::exception &e) {
-    logger->error("failed to add metadata: {}", e.what());
-    file::remove(data);
-    throw;
   }
 
-  // handle replication
+  // handle (recursive) file-replication
   ++repl;
   if(repl.index < repl.count) {
 
@@ -150,7 +208,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     const auto next = make_node(chord->successor(context.uuid()));
     if(uuid.between(context.uuid(), next.uuid)) {
       // TODO rollback all puts?
-      const auto msg = "failed to store replication "+repl.string()+ " : detected cycle.";
+      const auto msg = "failed to store replication " + repl.string() + " : detected cycle.";
       logger->warn(msg);
       return {StatusCode::ABORTED, msg};
     }
@@ -176,21 +234,59 @@ Status Service::del(const chord::uri& uri) {
     //TODO support directories
     return Status::CANCELLED;
     //TODO look on some other node (e.g. the successor that this node initially joined)
-    //     maybe some other node is responsible for that file recently
+    //     maybe some other node became responsible for that file recently
   }
 
   // generate metadata set to inform parents of deletion
-  std::set<Metadata> metadata_set{MetadataBuilder::from(context, data)};
+  // std::set<Metadata> metadata_set{MetadataBuilder::from(context, data)};
 
   // remove local file
   file::remove(data);
   // remove local metadata
-  metadata_mgr->del(uri);
+  const auto deleted_uris = metadata_mgr->del(uri);
 
-  // update parent - if exists
-  if(uri.path().parent_path().empty()) return Status::OK;
-  const chord::uri parent_uri{uri.scheme(), uri.path().parent_path()};
-  return make_client().meta(parent_uri, Client::Action::DEL, metadata_set);
+  const auto parent_path = uri.path().parent_path();
+  const chord::uri parent_uri{uri.scheme(), parent_path};
+  auto repl_meta_map = MetadataBuilder::group_by_replication(deleted_uris);
+  const auto next = make_node(chord->successor(context.uuid()));
+  for(auto& [repl, metadata_set] : repl_meta_map) {
+    const auto statusDel = make_client().del(uri, next);
+    if(!statusDel.ok()) {
+      logger->warn("Failed to delete replication for uri: {}", uri);
+    }
+    // update parent - if exists
+    if(!parent_path.empty()) {
+      const auto statusMeta = make_client().meta(next, parent_uri, Client::Action::DEL, metadata_set);
+      if(!statusMeta.ok()) {
+        logger->warn("Failed to delete metadata replication for uri: {}", uri);
+      }
+    }
+  }
+  return Status::OK;
+  //return make_client().meta(parent_uri, Client::Action::DEL, metadata_set);
+
+  // handle file replication
+  //{
+  //  map<Replication, set<Metadata>> metadata_group_by_repl;
+  //  for (const auto& meta : deleted_uris) {
+  //    if(!meta.replication) continue;
+  //    const auto& repl = *meta.replication;
+  //    if(repl.index >= repl.count) continue;
+
+  //    metadata_group_by_repl[repl].insert(meta);
+  //  }
+
+  //  for (auto &[repl, meta] : metadata_group_by_repl) {
+  //    const auto next = make_node(chord->successor(context.uuid()));
+  //    const auto status = make_client().del(uri, next);
+  //    //TODO add error handling
+  //    if(!status.ok()) {
+  //      logger->warn("Failed to delete replication for uri: {}", uri);
+  //    }
+  //    //TODO update replicated parents
+  //  }
+  //}
+
 }
 
 Status Service::del(grpc::ServerContext *serverContext, const chord::fs::DelRequest *req,
@@ -211,11 +307,11 @@ Status Service::del(grpc::ServerContext *serverContext, const chord::fs::DelRequ
   auto parent = uri.path();
   while(!parent.empty()) {
     // directory up
-    parent=parent.parent_path();
+    parent = parent.parent_path();
     const auto data = context.data_directory / parent;
 
     if(!file::is_empty(data)) break;
-    if(data.canonical() < context.data_directory.canonical()) break;
+    if(data.canonical() <= context.data_directory.canonical()) break;
 
     const chord::uri parent_uri{uri.scheme(), parent};
     const auto status = del(parent_uri);

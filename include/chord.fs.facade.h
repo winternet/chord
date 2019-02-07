@@ -42,13 +42,25 @@ class Facade : public IFacade {
 
   void del(const chord::uri& uri);
 
-  void on_join(const node successor, const node predecessor) {
+  void on_join(const chord::node successor, const chord::node predecessor) {
     fs_client->take(predecessor.uuid, context.uuid(), successor, take_consumer_callback());
   }
 
-  void on_leave(const node leaving_node, const node new_predecessor) {
+  void on_leave(const chord::node leaving_node, const chord::node new_predecessor) {
     fs_client->take(new_predecessor.uuid, leaving_node.uuid, leaving_node, on_leave_callback());
     get_shallow_copies(leaving_node);
+  }
+
+  void on_predecessor_fail(const chord::node predecessor) {
+    const auto metadata_mgr = fs_service->metadata_manager();
+    //metadata_mgr->get(
+    logger->warn("\n\n************** PREDECESSOR FAIL!");
+    //TODO implement
+  }
+
+  void on_successor_fail(const chord::node successor) {
+    logger->warn("\n\n************** SUCCESSOR FAIL!");
+    //TODO implement
   }
 
   chord::take_consumer_t on_leave_callback() {

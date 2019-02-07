@@ -108,7 +108,7 @@ void Client::add_metadata(MetaRequest& req, const chord::path& parent_path) {
   }
 }
 
-grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, const Action &action, set<Metadata>& metadata, Replication repl) {
+grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, const Action &action, set<Metadata>& metadata) {
   //--- find responsible node for uri.path()
   const auto path = uri.path().canonical();
   const auto meta_uri = uri::builder{uri.scheme(), path}.build();
@@ -131,8 +131,10 @@ grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, cons
       data->set_permissions(value_of(m.permissions));
       data->set_owner(m.owner);
       data->set_group(m.group);
-      data->set_replication_idx(repl.index);
-      data->set_replication_cnt(repl.count);
+      if(m.replication) {
+        data->set_replication_idx(m.replication->index);
+        data->set_replication_cnt(m.replication->count);
+      }
     }
   }
 
@@ -154,16 +156,16 @@ grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, cons
   return status;
 }
 
-grpc::Status Client::meta(const chord::uri &uri, const Action &action, std::set<Metadata>& m, Replication repl) {
+grpc::Status Client::meta(const chord::uri &uri, const Action &action, std::set<Metadata>& m) {
   const auto hash = chord::crypto::sha256(uri);
   const auto node = chord::common::make_node(chord->successor(hash));
-  return meta(node, uri, action, m, repl);
+  return meta(node, uri, action, m);
 }
-grpc::Status Client::meta(const chord::uri &uri, const Action &action, Replication repl) {
+grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
   std::set<Metadata> m;
   const auto hash = chord::crypto::sha256(uri);
-  const auto node = chord::common::make_node(chord->successor(hash));//.endpoint();
-  return meta(node, uri, action, m, repl);
+  const auto node = chord::common::make_node(chord->successor(hash));
+  return meta(node, uri, action, m);
 }
 
 Status Client::del(const chord::uri &uri, const chord::node& node) {
@@ -184,6 +186,7 @@ Status Client::del(const chord::uri &uri, const chord::node& node) {
   return status;
 }
 
+// currently only files are supported
 Status Client::del(const chord::uri &uri) {
   const auto hash = chord::crypto::sha256(uri);
   const auto succ = chord::common::make_node(chord->successor(hash));
@@ -246,7 +249,7 @@ Status Client::get(const chord::uri &uri, ostream &ostream) {
   return get(uri, {uuid, endpoint}, ostream);
 }
 
-void Client::take(const uuid from, const uuid to, const node responsible, const take_consumer_t callback) {
+void Client::take(const uuid from, const uuid to, const chord::node responsible, const take_consumer_t callback) {
   ClientContext clientContext;
   TakeResponse res;
   TakeRequest req;

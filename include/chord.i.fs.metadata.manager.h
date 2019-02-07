@@ -14,8 +14,8 @@ class IMetadataManager {
  public:
   virtual ~IMetadataManager() = default;
 
-  virtual void del(const chord::uri& directory) = 0;
-  virtual void del(const chord::uri& directory, const std::set<Metadata> &metadata) = 0;
+  virtual std::set<Metadata> del(const chord::uri& directory) = 0;
+  virtual std::set<Metadata> del(const chord::uri& directory, const std::set<Metadata> &metadata) = 0;
 
   virtual std::set<Metadata> dir(const chord::uri& directory) = 0;
 

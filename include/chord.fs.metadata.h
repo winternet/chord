@@ -52,7 +52,7 @@ struct Metadata {
   void serialize(Archive & ar, const unsigned int version)
   {
     (void)version;
-    ar & name & file_type & owner & group & permissions & node_ref;
+    ar & name & file_type & owner & group & permissions & node_ref & replication;
   }
 
   friend std::ostream &operator<<(std::ostream &os, const Metadata &metadata) {
@@ -68,6 +68,10 @@ struct Metadata {
       << std::left << std::setw(static_cast<int>(max_owner_len+1)) << metadata.owner
       << std::left << std::setw(static_cast<int>(max_group_len+1)) << metadata.group
       << metadata.name;
+    if(metadata.replication) {
+      const auto repl = *metadata.replication;
+      os << " (" << repl.index+1 << '/' << repl.count << ')';
+    }
       //<< "\n";
     return os;
   }

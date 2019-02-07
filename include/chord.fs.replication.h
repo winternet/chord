@@ -52,6 +52,14 @@ struct Replication {
     return other.index == index && other.count == count;
   }
 
+  bool operator<(const Replication& other) const {
+    return other.count < count;
+  }
+
+  operator bool() const {
+    return index < count;
+  }
+
   std::string string() const {
     return "["+std::to_string(index)+" of "+std::to_string(count)+"]";
   }
