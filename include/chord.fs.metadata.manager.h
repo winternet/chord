@@ -119,7 +119,7 @@ class MetadataManager : public IMetadataManager {
     throw__exception(std::string{"failed to dir: "} + status.ToString());
   }
 
-  void add(const chord::uri& directory, const std::set<Metadata>& metadata) override {
+  bool add(const chord::uri& directory, const std::set<Metadata>& metadata) override {
     std::string value;
     const auto path = directory.path().canonical().string();
     const auto status = db->Get(leveldb::ReadOptions(), path, &value);
@@ -130,8 +130,11 @@ class MetadataManager : public IMetadataManager {
 
     std::map<std::string, Metadata> current = deserialize(value);
 
+    bool added = false;
     for (const auto& m : metadata) {
-      const auto status = current.insert_or_assign(m.name, m);
+      // TODO check whether m already exists && equals 
+      const auto [_, status] = current.insert_or_assign(m.name, m);
+      added |= status;
     }
 
     logger->trace("[ADD] {}", directory);
@@ -142,6 +145,8 @@ class MetadataManager : public IMetadataManager {
     value = serialize(current);
 
     check_status(db->Put(leveldb::WriteOptions(), path, value));
+
+    return added;
   }
 
   /**
@@ -202,6 +207,11 @@ class MetadataManager : public IMetadataManager {
       }
     }
     return ret;
+  }
+
+  bool exists(const chord::uri& uri) override {
+    std::string value;
+    return db->Get(leveldb::ReadOptions(), uri.path().string(), &value).ok();
   }
 
   std::set<Metadata> get(const chord::uri& directory) override {

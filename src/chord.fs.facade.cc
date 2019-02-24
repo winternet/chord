@@ -136,9 +136,6 @@ void Facade::dir(const chord::uri &uri, iostream &iostream) {
 void Facade::del(const chord::uri &uri) {
   const auto status = fs_client->del(uri);
   if(!status.ok()) throw__grpc_exception("failed to del file " + to_string(uri), status);
-
-  //status = fs_client->meta(uri, Client::Action::DEL);
-  //if(!status.ok()) throw__grpc_exception("failed to del metadata " + to_string(uri), status);
 }
 
 

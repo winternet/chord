@@ -88,31 +88,48 @@ Status Service::handle_meta_del(const MetaRequest *req) {
 Status Service::handle_meta_add(const MetaRequest *req) {
   const auto uri = uri::from(req->uri());
   auto metadata = MetadataBuilder::from(req);
-  metadata_mgr->add(uri, metadata);
-  //forward metadata request
-  //TODO we only consider the first data replication, this should be ok
-  //     since the put control command only supports one replication per 'batch'
-  //     but we should consider streaming the metadata, 
-  //     or at least check in the service whether we want to store the data
-  auto repl_metadata_map = MetadataBuilder::group_by_replication(metadata);
-  for(auto& [replication, meta] : repl_metadata_map) {
-    Replication repl{replication.index, replication.count};
-    if(!++repl) continue;
 
+  const auto added = metadata_mgr->add(uri, metadata);
+
+  auto max_repl = std::max_element(metadata.begin(), metadata.end(), [&](const auto& l, const auto &r){ 
+      if( !l.replication || !r.replication) return false;
+      return  l.replication->count < r.replication->count;
+  })->replication;
+
+  // update the parent (first node triggers replication)
+  if(added && max_repl && max_repl->index == 0) {
+    const auto parent = uri::builder{uri.scheme(), uri.path().parent_path()}.build();
+    const Metadata metadata{uri.path().filename(), "", "", perms::none, fs::type::directory, {}, max_repl};
+    std::set<Metadata> m = {metadata};
+    make_client().meta(parent, Client::Action::ADD, m);
+  }
+
+  // handle replication
+  {
+    std::set<Metadata> new_metadata;
+    // remove metadata
+    std::copy_if(metadata.begin(), metadata.end(), std::inserter(new_metadata, new_metadata.begin()), [&](const Metadata& meta) {
+        if(!meta.replication) return false;
+        return (meta.replication->index+1 < meta.replication->count);
+    });
     //update replication
-    for(auto it = meta.begin(); it != meta.end(); ++it) {
-      auto node = meta.extract(it);
+    for(auto it = new_metadata.begin(); it != new_metadata.end(); ++it) {
+      auto node = new_metadata.extract(it);
       if(!node) continue;
-      node.value().replication = repl;
-      meta.insert(std::move(node));
+      node.value().replication.value()++;
+      new_metadata.insert(std::move(node));
     }
 
-    const auto node = make_node(chord->successor(context.uuid()));
-    const auto status = make_client().meta(node, uri, Client::Action::ADD, meta);
-    if(!status.ok()) {
-      logger->warn("Failed to add {} ({}) to {}", uri, repl, node);
+    if(!new_metadata.empty()) {
+      const auto node = make_node(chord->successor(context.uuid()));
+      const auto status = make_client().meta(node, uri, Client::Action::ADD, new_metadata);
+
+      if(!status.ok()) {
+        logger->warn("Failed to add {} ({}) to {}", uri, *max_repl, node);
+      }
     }
   }
+
   return Status::OK;
 }
 
@@ -150,8 +167,12 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     file::create_directories(data);
   }
 
+  Replication repl;
   // open
   if (reader->Read(&req)) {
+
+    repl = {req.replication_idx(), req.replication_cnt()};
+
     const auto uri = uri::from(req.uri());
 
     data /= uri.path().parent_path();
@@ -180,28 +201,21 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     }
   }
 
+  //TODO move this to facade fs_client->meta(..., ADD, ...)
   const auto uri = uri::from(req.uri());
-  Replication repl{req.replication_idx(), req.replication_cnt()};
 
-  // first node triggers recursive metadata (replication)
+  // add local metadata
+  auto meta = MetadataBuilder::for_path(context, uri.path(), repl);
+  metadata_mgr->add(uri, meta);
+
+  // trigger recursive metadata replication for parent
   if(repl.index == 0) {
-    try {
-      // remote / local(last)
-      for (const path &path : uri.path().all_paths()) {
-        const auto sub_uri = uri::builder{uri.scheme(), path}.build();
-        auto meta = MetadataBuilder::for_path(context, path, repl);
-        make_client().meta(sub_uri, Client::Action::ADD, meta);
-      }
-    } catch(const chord::exception &e) {
-      logger->error("failed to add metadata: {}", e.what());
-      file::remove(data);
-      throw;
-    }
+    const auto parent_uri = uri::builder{uri.scheme(), uri.path().parent_path()}.build();
+    make_client().meta(parent_uri, Client::Action::ADD, meta);
   }
 
   // handle (recursive) file-replication
-  ++repl;
-  if(repl.index < repl.count) {
+  if(++repl) {
 
     const chord::uuid uuid{req.id()};
     // next
@@ -229,12 +243,10 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 Status Service::del(const chord::uri& uri) {
   const auto data = context.data_directory / uri.path();
 
-  if(!file::exists(data) 
-      || (file::is_directory(data) && !file::is_empty(data))) {
-    //TODO support directories
-    return Status::CANCELLED;
-    //TODO look on some other node (e.g. the successor that this node initially joined)
-    //     maybe some other node became responsible for that file recently
+  //TODO look on some other node (e.g. the successor that this node initially joined)
+  //     maybe some other node became responsible for that file recently
+  if(!file::exists(data)) {
+    return Status{StatusCode::NOT_FOUND, "not found"};
   }
 
   // remove local file
@@ -246,6 +258,7 @@ Status Service::del(const chord::uri& uri) {
   const chord::uri parent_uri{uri.scheme(), parent_path};
   auto repl_meta_map = MetadataBuilder::group_by_replication(deleted_uris);
   const auto next = make_node(chord->successor(context.uuid()));
+
   for(auto& [repl, metadata_set] : repl_meta_map) {
     const auto statusDel = make_client().del(uri, next);
     if(!statusDel.ok()) {
