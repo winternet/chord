@@ -32,7 +32,7 @@ include_directories(${signals_INCLUDE_DIR})
 ExternalProject_Add(
   spdlog
   GIT_REPOSITORY    https://github.com/gabime/spdlog.git
-  GIT_TAG           v0.17.0
+  GIT_TAG           v1.3.1
   # header-only
   CONFIGURE_COMMAND ""
   BUILD_COMMAND     ""
