@@ -80,6 +80,8 @@ message DelRequest {
   //--- id to del
   string id = 1;
   string uri = 2;
+
+  bool recursive = 3;
 }
 message DelResponse { }
 
