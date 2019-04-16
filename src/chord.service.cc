@@ -111,7 +111,7 @@ RouterEntry Service::successor(const uuid_t &uuid) {
 
   const auto status = successor(&serverContext, &req, &res);
 
-  if (!status.ok()) throw__grpc_exception("failed to query successor", status);
+  if (!status.ok()) throw__grpc_exception(status);
 
   return res.successor();
 }

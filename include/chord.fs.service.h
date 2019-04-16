@@ -25,9 +25,12 @@ class Service final : public chord::fs::Filesystem::Service {
   static constexpr auto logger_name = "chord.fs.service";
 
   grpc::Status get_from_reference(const chord::uri& uri);
-  grpc::Status del(const chord::uri& uri);
   grpc::Status handle_meta_add(const MetaRequest*);
   grpc::Status handle_meta_del(const MetaRequest*);
+  grpc::Status handle_del_file(const DelRequest*);
+  grpc::Status handle_del_dir(const DelRequest*);
+
+  chord::optional<Replication> max_replication(const std::set<Metadata> metadata);
  public:
   explicit Service(Context &context, ChordFacade* chord);
   explicit Service(Context &context, ChordFacade* chord, IMetadataManager* metadata_mgr);

@@ -48,7 +48,7 @@ Client::Client(const Context &context, Router *router)
                   return Chord::NewStub(grpc::CreateChannel(
                       endpoint, grpc::InsecureChannelCredentials()));
                 }},
-      logger{log::get_or_create(logger_name)} {}
+      logger{log::get_or_create(logger_name, log::Category::CHORD)} {}
 
 Client::Client(const Context &context, Router *router, StubFactory make_stub)
     : context{context}, router{router}, make_stub{make_stub}, logger{log::get_or_create(logger_name)} {}
@@ -224,7 +224,7 @@ RouterEntry Client::successor(const uuid_t &uuid) {
 
   const auto status = successor(&clientContext, &req, &res);
 
-  if (!status.ok()) throw__grpc_exception("failed to query succesor", status);
+  if (!status.ok()) throw__grpc_exception(status);
 
   return res.successor();
 }

@@ -21,6 +21,12 @@ using chord::common::RouterEntry;
 
 namespace chord {
 
+//void Peer::setup_root_logger() {
+//  std::vector<spdlog::sink_ptr> sinks;
+//  sinks.push_back(std::make_shared<spdlog::sinks::rotating_file_sink_mt>("logs/chord.log", 1024*1024*20, 3));
+//  auto chord_root_logger = std::make_shared<spdlog::logger>("chord.root", begin(sinks), end(sinks));
+//  spdlog::register_logger(chord_root_logger);
+//}
 void Peer::start_server() {
   const auto bind_addr = context.bind_addr;
   ServerBuilder builder;
@@ -41,8 +47,9 @@ Peer::Peer(Context ctx)
       chord{make_unique<chord::ChordFacade>(context)},
       filesystem{make_unique<chord::fs::Facade>(context, chord.get())},
       controller{make_unique<controller::Service>(context, filesystem.get())},
-      logger{log::get_or_create(logger_name)}
+      logger{log::LoggerFactory::instance().get_or_create(Peer::logger_name, log::Category::CHORD)}
 {
+  //setup_logger();
   const auto fs = filesystem.get();
   chord->on_join().connect(fs, &chord::fs::Facade::on_join);
   chord->on_leave().connect(fs, &chord::fs::Facade::on_leave);

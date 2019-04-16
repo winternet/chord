@@ -8,12 +8,12 @@
 #include "chord.crypto.h"
 #include "chord.file.h"
 #include "chord.fs.client.h"
-#include "chord.fs.replication.h"
 #include "chord.fs.metadata.builder.h"
+#include "chord.fs.replication.h"
 #include "chord.log.h"
 #include "chord.peer.h"
 #include "chord.router.h"
-
+#include "chord.utils.h"
 using grpc::ClientContext;
 using grpc::Status;
 using grpc::ClientWriter;
@@ -40,7 +40,7 @@ Client::Client(Context &context, ChordFacade *chord)
                   return chord::fs::Filesystem::NewStub(grpc::CreateChannel(
                       endpoint, grpc::InsecureChannelCredentials()));
                 }},
-      logger{log::get_or_create(logger_name)} {}
+      logger{log::get_or_create(logger_name, log::Category::FILESYSTEM)} {}
 
 Client::Client(Context &context, ChordFacade *chord, StubFactory make_stub)
     : context{context},
@@ -145,7 +145,6 @@ grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, cons
   switch (action) {
     case Action::ADD:
       req.set_action(ADD); 
-      if(chord::file::is_directory(local_path)) add_metadata(req, local_path);
       break;
     case Action::DEL:
       req.set_action(DEL); 
@@ -171,7 +170,13 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
   return meta(node, uri, action, m);
 }
 
-Status Client::del(const chord::uri &uri, const chord::node& node) {
+Status Client::del(const chord::node& node, const DelRequest* req) {
+  const auto endpoint = node.endpoint;
+  ClientContext clientContext;
+  DelResponse res;
+  return make_stub(endpoint)->del(&clientContext, *req, &res);
+}
+Status Client::del(const chord::node& node, const chord::uri &uri, const bool recursive, const Replication repl) {
   const auto hash = chord::crypto::sha256(uri);
   const auto endpoint = node.endpoint;
 
@@ -183,6 +188,7 @@ Status Client::del(const chord::uri &uri, const chord::node& node) {
 
   req.set_id(hash);
   req.set_uri(uri);
+  req.set_recursive(recursive);
 
   const auto status = make_stub(endpoint)->del(&clientContext, req, &res);
 
@@ -190,10 +196,10 @@ Status Client::del(const chord::uri &uri, const chord::node& node) {
 }
 
 // currently only files are supported
-Status Client::del(const chord::uri &uri) {
+Status Client::del(const chord::uri &uri, const bool recursive, const Replication repl) {
   const auto hash = chord::crypto::sha256(uri);
   const auto succ = chord::common::make_node(chord->successor(hash));
-  return del(uri, succ);
+  return del(succ, uri, recursive, repl);
 }
 
 grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata) {

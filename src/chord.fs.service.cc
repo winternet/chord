@@ -8,6 +8,7 @@
 
 #include "chord.log.h"
 #include "chord.uri.h"
+#include "chord.utils.h"
 #include "chord.file.h"
 #include "chord.context.h"
 #include "chord_fs.grpc.pb.h"
@@ -46,7 +47,7 @@ Service::Service(Context &context, ChordFacade* chord)
       make_client {[this]{
         return chord::fs::Client(this->context, this->chord);
       }},
-      logger{log::get_or_create(logger_name)} { }
+      logger{log::get_or_create(logger_name, log::Category::FILESYSTEM)} { }
 
 Service::Service(Context &context, ChordFacade* chord, IMetadataManager* metadata_mgr)
     : context{context},
@@ -60,28 +61,31 @@ Service::Service(Context &context, ChordFacade* chord, IMetadataManager* metadat
 Status Service::handle_meta_del(const MetaRequest *req) {
   const auto uri = uri::from(req->uri());
   auto metadata = MetadataBuilder::from(req);
-  metadata_mgr->del(uri, metadata);
-  //forward 
-  auto repl_metadata_map = MetadataBuilder::group_by_replication(metadata);
-  for(auto& [replication, meta] : repl_metadata_map) {
-    Replication repl{replication.index, replication.count};
-    if(!++repl) continue;
+  auto deleted_metadata = metadata_mgr->del(uri, metadata);
 
-    //update replication
-    for(auto it = meta.begin(); it != meta.end(); ++it) {
-      auto node = meta.extract(it);
+  /**
+   * increase and check replication
+   * remove metadata or propagate deletion
+   */
+  {
+    for(auto it = deleted_metadata.begin(); it != deleted_metadata.end(); ++it) {
+      auto node = deleted_metadata.extract(it);
       if(!node) continue;
-      node.value().replication = repl;
-      meta.insert(std::move(node));
-    }
-
-    const auto node = make_node(chord->successor(context.uuid()));
-    logger->info("Forwarding meta DEL to node {}\n{}", node, metadata);
-    const auto status = make_client().meta(node, uri, Client::Action::DEL, meta);
-    if(!status.ok()) {
-      logger->warn("Failed to delete {} ({}) from {}", uri, repl, node);
+      auto& repl = node.value().replication;
+      if(repl) {
+        ++(*repl);
+      }
+      deleted_metadata.insert(std::move(node));
+      if(!repl)
+        deleted_metadata.erase(it);
     }
   }
+
+  if(!deleted_metadata.empty()) {
+    const auto node = make_node(chord->successor(context.uuid()));
+    const auto status = make_client().meta(node, uri, Client::Action::DEL, deleted_metadata);
+  }
+
   return Status::OK;
 }
 
@@ -91,17 +95,14 @@ Status Service::handle_meta_add(const MetaRequest *req) {
 
   const auto added = metadata_mgr->add(uri, metadata);
 
-  auto max_repl = std::max_element(metadata.begin(), metadata.end(), [&](const auto& l, const auto &r){ 
-      if( !l.replication || !r.replication) return false;
-      return  l.replication->count < r.replication->count;
-  })->replication;
-
+  auto max_repl = max_replication(metadata);
   // update the parent (first node triggers replication)
   if(added && max_repl && max_repl->index == 0) {
+    const auto next = make_node(chord->successor(context.uuid()));
     const auto parent = uri::builder{uri.scheme(), uri.path().parent_path()}.build();
     const Metadata metadata{uri.path().filename(), "", "", perms::none, fs::type::directory, {}, max_repl};
     std::set<Metadata> m = {metadata};
-    make_client().meta(parent, Client::Action::ADD, m);
+    make_client().meta(next, parent, Client::Action::ADD, m);
   }
 
   // handle replication
@@ -210,7 +211,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 
   // trigger recursive metadata replication for parent
   if(repl.index == 0) {
-    const auto parent_uri = uri::builder{uri.scheme(), uri.path().parent_path()}.build();
+    const auto parent_uri = chord::uri{uri.scheme(), uri.path().parent_path()};
     make_client().meta(parent_uri, Client::Action::ADD, meta);
   }
 
@@ -240,70 +241,123 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   return Status::OK;
 }
 
-Status Service::del(const chord::uri& uri) {
-  const auto data = context.data_directory / uri.path();
+Status Service::handle_del_file(const chord::fs::DelRequest *req) {
+  const auto uri = chord::uri::from(req->uri());
+  auto data = context.data_directory / uri.path();
 
-  //TODO look on some other node (e.g. the successor that this node initially joined)
-  //     maybe some other node became responsible for that file recently
-  if(!file::exists(data)) {
-    return Status{StatusCode::NOT_FOUND, "not found"};
+  auto deleted_metadata = metadata_mgr->del(uri);
+  const auto iter = std::find_if(deleted_metadata.begin(), deleted_metadata.end(), [&](const Metadata& m) { return m.name == uri.path().filename();});
+  // handle shallow copy
+  if(iter->node_ref) {
+    make_client().del(*iter->node_ref, req);
+  }
+  // handle local file
+  if(file::exists(data)) {
+    file::remove(data);
   }
 
-  // remove local file
-  file::remove(data);
-  // remove local metadata
-  const auto deleted_uris = metadata_mgr->del(uri);
+  // beg: handle replica
+  const auto node = make_node(chord->successor(context.uuid()));
+  auto max_repl = max_replication(deleted_metadata);
+  const bool initial_delete = make_node(chord->successor(crypto::sha256(req->uri()))) == context.node();
+  const chord::uri parent_uri{uri.scheme(), uri.path().parent_path()};
 
-  const auto parent_path = uri.path().parent_path();
-  const chord::uri parent_uri{uri.scheme(), parent_path};
-  auto repl_meta_map = MetadataBuilder::group_by_replication(deleted_uris);
-  const auto next = make_node(chord->successor(context.uuid()));
-
-  for(auto& [repl, metadata_set] : repl_meta_map) {
-    const auto statusDel = make_client().del(uri, next);
-    if(!statusDel.ok()) {
-      logger->warn("Failed to delete replication for uri: {}", uri);
+  if(max_repl) {
+    if(max_repl->index+1 < max_repl->count) {
+      //TODO handle status
+      make_client().del(node, req);
     }
-    // update parent - if exists
-    if(!parent_path.empty()) {
-      const auto statusMeta = make_client().meta(next, parent_uri, Client::Action::DEL, metadata_set);
-      if(!statusMeta.ok()) {
-        logger->warn("Failed to delete metadata replication for uri: {}", uri);
-      }
+    if(initial_delete) {
+      make_client().meta(parent_uri, Client::Action::DEL, deleted_metadata);
     }
   }
+  // end: handle replica
+
+  // beg: check whether directory is empty now
+  if(initial_delete) {
+    const auto parent_path = data.parent_path();
+    if(file::is_empty(parent_path)) {
+      make_client().del(parent_uri);
+    }
+  }
+  // end: check whether directory is empty now
+
+  // handle metadata
   return Status::OK;
 }
 
-Status Service::del(grpc::ServerContext *serverContext, const chord::fs::DelRequest *req,
-           chord::fs::DelResponse *res) {
+chord::optional<Replication> Service::max_replication(const std::set<Metadata> metadata) {
+  auto max_repl = std::max_element(metadata.begin(), metadata.end(), [&](const auto& l, const auto &r){ 
+      if( !l.replication || !r.replication) return false;
+      return  l.replication->count < r.replication->count;
+  })->replication;
+  return max_repl;
+}
+
+Status Service::handle_del_dir(const chord::fs::DelRequest *req) {
+  const auto uri = chord::uri::from(req->uri());
+  auto data = context.data_directory / uri.path();
+
+  if(file::exists(data) && file::is_directory(data) && !file::is_empty(data) && !req->recursive()) {
+    return Status{StatusCode::FAILED_PRECONDITION, fmt::format("failed to delete {}: Directory not empty", to_string(uri))};
+  }
+
+  auto metadata = metadata_mgr->get(uri);
+
+  for(const auto m:metadata) {
+    const auto sub_uri = uri::builder{uri.scheme(), uri.path() / path{m.name}}.build();
+    make_client().del(sub_uri);
+  }
+
+  if(file::exists(data) && file::is_empty(data)) {
+
+    const bool initial_delete = make_node(chord->successor(crypto::sha256(req->uri()))) == context.node();
+    {
+      // initial node triggers parent metadata deletion
+      if(initial_delete) {
+        const chord::uri parent_uri{uri.scheme(), uri.path().parent_path()};
+        Metadata deleted_dir = Metadata();
+        deleted_dir.name = uri.path().filename();
+        std::set<Metadata> metadata{deleted_dir};
+        make_client().meta(parent_uri, Client::Action::DEL, metadata);
+      }
+    }
+
+    file::remove(data);
+    metadata_mgr->del(uri);
+
+    const auto node = make_node(chord->successor(context.uuid()));
+    // just forward the request and exit on status == NotFound
+    make_client().del(node, req);
+  }
+
+  return Status::OK;
+}
+
+Status Service::del(grpc::ServerContext *serverContext,
+                    const chord::fs::DelRequest *req,
+                    chord::fs::DelResponse *res) {
   (void)res;
   (void)serverContext;
 
   const auto uri = chord::uri::from(req->uri());
   auto data = context.data_directory / uri.path();
 
-  if (!del(uri).ok()) {
-    //TODO handle error
-    return Status::CANCELLED;
+  //FIXME this wont work for shallow-copied files (metadata-only)
+  //TODO look on some other node (e.g. the successor that this node initially joined)
+  //     maybe some other node became responsible for that file recently
+  const auto metadata_set = metadata_mgr->get(uri);
+  const auto element = std::find_if(metadata_set.begin(), metadata_set.end(), [&](const Metadata& metadata) {return metadata.name == uri.path().filename();});
+
+  if(element == metadata_set.end()) {
+    return Status{StatusCode::NOT_FOUND, "not found"};
   }
 
-  //remove empty parent directories
-  //TODO check if root
-  auto parent = uri.path();
-  while(!parent.empty()) {
-    // directory up
-    parent = parent.parent_path();
-    const auto data = context.data_directory / parent;
-
-    if(!file::is_empty(data)) break;
-    if(data.canonical() <= context.data_directory.canonical()) break;
-
-    const chord::uri parent_uri{uri.scheme(), parent};
-    const auto status = del(parent_uri);
-    if(!status.ok()) {
-      logger->error("failed to delete empty folder {}", parent_uri);
-    }
+  //if(file::is_directory(data)) {
+  if(element->file_type == type::directory) {
+    handle_del_dir(req);
+  } else {
+    handle_del_file(req);
   }
 
   return Status::OK;
@@ -328,7 +382,7 @@ Status Service::get_from_reference(const chord::uri& uri) {
       ofile.open(data, fstream::binary);
       const auto status = make_client().get(uri, m.node_ref.value(), ofile);
       if(!status.ok()) return status;
-      return make_client().del(uri, m.node_ref.value());
+      return make_client().del(*m.node_ref, uri);
     } catch (const ios_base::failure &error) {
       logger->error("failed to open file {}, reason: {}", data, error.what());
       return Status::CANCELLED;

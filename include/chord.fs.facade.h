@@ -21,8 +21,8 @@ class Facade : public IFacade {
   std::shared_ptr<spdlog::logger> logger;
 
  private:
-  void put_file(const chord::path& source, const chord::uri& target, Replication repl = Replication());
-  void get_file(const chord::uri& source, const chord::path& target);
+  grpc::Status put_file(const chord::path& source, const chord::uri& target, Replication repl = Replication());
+  grpc::Status get_file(const chord::uri& source, const chord::path& target);
   bool is_directory(const chord::uri& target);
   void get_and_integrate(const chord::fs::MetaResponse& metadata);
   void get_shallow_copies(const chord::node& leaving_node);
@@ -34,13 +34,13 @@ class Facade : public IFacade {
 
   ::grpc::Service* grpc_service();
 
-  void put(const chord::path& source, const chord::uri& target, Replication repl = Replication());
+  grpc::Status put(const chord::path& source, const chord::uri& target, Replication repl = Replication());
 
-  void get(const chord::uri& source, const chord::path& target);
+  grpc::Status get(const chord::uri& source, const chord::path& target);
 
-  void dir(const chord::uri& uri, std::iostream& iostream);
+  grpc::Status dir(const chord::uri& uri, std::iostream& iostream);
 
-  void del(const chord::uri& uri);
+  grpc::Status del(const chord::uri& uri, const bool recursive=false);
 
   void on_join(const chord::node successor, const chord::node predecessor) {
     fs_client->take(predecessor.uuid, context.uuid(), successor, take_consumer_callback());

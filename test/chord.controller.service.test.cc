@@ -126,7 +126,16 @@ TEST_F(ControllerServiceTest, del_empty_request) {
 TEST_F(ControllerServiceTest, del_request) {
   req.set_command("del chord:///first");
 
-  EXPECT_CALL(fs_facade, del(Eq(uri{"chord:///first"})));
+  EXPECT_CALL(fs_facade, del(Eq(uri{"chord:///first"}), Eq(false)));
+
+  const auto status = ctrl_service->control(nullptr, &req, &res);
+  ASSERT_TRUE(status.ok());
+}
+
+TEST_F(ControllerServiceTest, del_request__recursive) {
+  req.set_command("del -r chord:///first");
+
+  EXPECT_CALL(fs_facade, del(Eq(uri{"chord:///first"}), Eq(true)));
 
   const auto status = ctrl_service->control(nullptr, &req, &res);
   ASSERT_TRUE(status.ok());

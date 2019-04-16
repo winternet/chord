@@ -15,13 +15,13 @@ class IFacade {
  public:
   virtual ~IFacade() = default;
 
-  virtual void put(const chord::path& source, const chord::uri& target, Replication repl = Replication()) = 0;
+  virtual grpc::Status put(const chord::path& source, const chord::uri& target, Replication repl = Replication()) = 0;
 
-  virtual void get(const chord::uri& source, const chord::path& target) =0;
+  virtual grpc::Status get(const chord::uri& source, const chord::path& target) =0;
 
-  virtual void dir(const chord::uri& uri, std::iostream& iostream) =0;
+  virtual grpc::Status dir(const chord::uri& uri, std::iostream& iostream) =0;
 
-  virtual void del(const chord::uri& uri) =0;
+  virtual grpc::Status del(const chord::uri& uri, const bool recursive=false) =0;
 
 };
 

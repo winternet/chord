@@ -18,7 +18,7 @@ class ShutdownHandler: public AbstractShutdownHandler {
 
   private:
     std::shared_ptr<Peer> peer;
-    std::shared_ptr<spdlog::logger> logger{log::get_or_create(logger_name)};
+    std::shared_ptr<spdlog::logger> logger;
 
   public:
    ShutdownHandler();

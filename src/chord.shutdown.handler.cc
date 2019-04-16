@@ -12,9 +12,12 @@ namespace chord {
 
 std::atomic<int> ShutdownHandler::invocation_cnt {0};
 
-ShutdownHandler::ShutdownHandler() : peer{nullptr} {}
+ShutdownHandler::ShutdownHandler() : ShutdownHandler(nullptr) {}
 
-ShutdownHandler::ShutdownHandler(std::shared_ptr<Peer> peer) : peer{peer} {}
+ShutdownHandler::ShutdownHandler(std::shared_ptr<Peer> peer) 
+  : peer{peer}
+  , logger{log::get_or_create(logger_name, log::Category::FILESYSTEM)}
+{}
 
 void ShutdownHandler::handle_stop(const boost::system::error_code& error, int signal_number) {
 

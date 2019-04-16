@@ -74,18 +74,38 @@ Status Service::parse_command(const ControlRequest* req, ControlResponse* res) {
 }
 
 Status Service::handle_del(const vector<string>& token, ControlResponse* res) {
-  if (token.size() != 2) {
+  // BEG: parse (~>method)
+  po::variables_map vm;
+  po::positional_options_description pos;
+  pos.add("input", -1);
+  po::options_description flags("[del flags]");
+  flags.add_options()
+      ("recursive,r", "remove directories and their contents recursively")
+      ("input", po::value<vector<string> >()->default_value({}, ""), "input to process");
+  po::parsed_options parsed_flags = po::command_line_parser(token)
+    .options(flags)
+    .positional(pos)
+    .allow_unregistered()
+    .run();
+  po::store(parsed_flags, vm);
+  po::notify(vm);
+
+  auto tokens = vm["input"].as<std::vector<std::string> >();
+  const bool recursive = vm.count("recursive");
+  if (tokens.size() < 2) {
     res->set_result("invalid arguments.");
     return Status::CANCELLED;
   }
+  // END: parse
+  
 
-  const auto directory = token.at(1);
-
-  try {
-    filesystem->del(uri::from(directory));
-  } catch (const chord::exception& exception) {
-    logger->error("failed to issue del request: {}", exception.what());
-    return Status::CANCELLED;
+  tokens.erase(tokens.begin());
+  for (const auto& target:tokens) {
+    const auto status = filesystem->del(uri::from(target), recursive);
+    //TODO implement force flag
+    if(!status.ok()) {
+      throw__grpc_exception(status);
+    }
   }
   return Status::OK;
 }

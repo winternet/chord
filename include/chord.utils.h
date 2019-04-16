@@ -1,13 +1,15 @@
 #pragma once
 
-#include <string>
+#include "chord.types.h"
 
-#include "chord.router.h"
-
-endpoint_t peer_to_address(const std::string &peer, int server_port) {
-  const char delim = ':';
-  size_t beg = peer.find(delim);
-  size_t end = peer.rfind(delim) + 1;
-
-  return peer.substr(beg, end - beg) + delim + std::to_string(server_port);
+namespace grpc {
+  class Status;
 }
+
+namespace chord {
+namespace utils {
+
+  std::string to_string(const grpc::Status& status);
+
+}  // namespace utils
+}  // namespace chord

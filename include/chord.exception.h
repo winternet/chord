@@ -7,7 +7,8 @@
 #include "chord.grpc.pb.h"
 
 #define throw__exception(message) throw chord::exception{message, __FILE__, __LINE__}
-#define throw__grpc_exception(message, status) throw chord::grpc_exception{message, status, __FILE__, __LINE__}
+#define throw__fs_exception(message) throw chord::fs_exception{message, __FILE__, __LINE__}
+#define throw__grpc_exception(status) throw chord::grpc_exception{status, __FILE__, __LINE__}
 
 namespace chord {
 class exception : public std::runtime_error {
@@ -36,11 +37,18 @@ class grpc_exception : public exception {
  private:
   grpc::Status status;
  public:
-  explicit grpc_exception(const std::string& message, grpc::Status status)
-      : exception(message), status(std::move(status)) {}
+  explicit grpc_exception(const grpc::Status status)
+      : exception(status.error_message()), status(std::move(status)) {}
 
-  explicit grpc_exception(const std::string& t_message, grpc::Status t_status, std::string t_file, size_t t_line)
-      : exception{t_message, std::move(t_file), t_line}, status{std::move(t_status)} {}
+  explicit grpc_exception(const grpc::Status t_status, std::string t_file, size_t t_line)
+      : exception{t_status.error_message(), std::move(t_file), t_line}, status{std::move(t_status)} {}
 
+};
+
+class fs_exception : public exception {
+  public:
+    explicit fs_exception(const std::string& message, std::string t_file, size_t t_line)
+        : chord::exception(message, t_file, t_line) {
+        }
 };
 }  // namespace chord

@@ -63,14 +63,14 @@ class MetadataManager : public IMetadataManager {
  public:
   explicit MetadataManager(Context &context)
     : context{context},
-      logger{log::get_or_create(logger_name)}
+      logger{log::get_or_create(logger_name, log::Category::FILESYSTEM)}
       { initialize(); }
 
   MetadataManager(const MetadataManager&) = delete;
 
   std::set<Metadata> del(const chord::uri& directory) override {
     //Metadata current{directory.path().canonical().string()};
-    logger->trace("[DEL] uri", directory);
+    logger->trace("[DEL] uri {}", directory);
     std::set<Metadata> retVal = get(directory);
     check_status(db->Delete(leveldb::WriteOptions(), directory.path().canonical().string()));
     return retVal;

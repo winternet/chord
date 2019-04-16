@@ -9,11 +9,13 @@ using namespace std;
 namespace chord {
 namespace fs {
 
+using grpc::Status;
+
 Facade::Facade(Context& context, ChordFacade* chord)
     : context{context},
       fs_client{make_unique<fs::Client>(context, chord)},
       fs_service{make_unique<fs::Service>(context, chord)},
-      logger{log::get_or_create(logger_name)}
+      logger{log::get_or_create(logger_name, log::Category::FILESYSTEM)}
 {}
 
 Facade::Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service)
@@ -30,12 +32,12 @@ Facade::Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service)
 bool Facade::is_directory(const chord::uri& target) {
   set<Metadata> metadata;
   const auto status = fs_client->dir(target, metadata);
-  if (!status.ok()) throw__grpc_exception("failed to dir " + to_string(target), status);
+  if (!status.ok()) throw__fs_exception("failed to dir " + to_string(target) + ": "+ status.error_message());
   // check if exists?
   return !metadata.empty();
 }
 
-void Facade::put(const chord::path &source, const chord::uri &target, Replication repl) {
+Status Facade::put(const chord::path &source, const chord::uri &target, Replication repl) {
   if (chord::file::is_directory(source)) {
     for(const auto &child : source.recursive_contents()) {
       // dont put empty folders for now
@@ -43,12 +45,15 @@ void Facade::put(const chord::path &source, const chord::uri &target, Replicatio
 
       const auto relative_path = child - source.parent_path();
       const auto new_target = target.path().canonical() / relative_path;
-      put_file(child, {target.scheme(), new_target}, repl);
+      const auto status = put_file(child, {target.scheme(), new_target}, repl);
+      //TODO error handling - rollback strategy?
+      if(!status.ok()) return status;
     }
   } else {
     const auto new_target = is_directory(target) ? target.path().canonical() / source.filename() : target.path().canonical();
-    put_file(source, {target.scheme(), new_target}, repl);
+    return put_file(source, {target.scheme(), new_target}, repl);
   }
+  return Status::OK;
 }
 
 void Facade::get_shallow_copies(const chord::node& leaving_node) {
@@ -101,10 +106,12 @@ void Facade::get_and_integrate(const chord::fs::MetaResponse& meta_res) {
   }
 }
 
-void Facade::get(const chord::uri &source, const chord::path& target) {
+Status Facade::get(const chord::uri &source, const chord::path& target) {
 
   std::set<Metadata> metadata;
-  fs_client->meta(source, Client::Action::DIR, metadata);
+  const auto status = fs_client->meta(source, Client::Action::DIR, metadata);
+  if(!status.ok()) return status;
+
   for(const auto& meta:metadata) {
     // subtract and append, e.g.
     // 1.1) source.path() == /file.txt
@@ -118,28 +125,28 @@ void Facade::get(const chord::uri &source, const chord::path& target) {
     if(meta.file_type == type::regular) {
       // issue get_file
       const auto new_target = file::exists(target) ? target / path{meta.name} : target;
-      get_file({source.scheme(), new_source}, new_target);
+      return get_file({source.scheme(), new_source}, new_target);
     } else if(meta.file_type == type::directory && meta.name != ".") {
       // issue recursive metadata call
-      get({source.scheme(), new_source}, target / path{meta.name});
+      return get({source.scheme(), new_source}, target / path{meta.name});
     }
   }
+  return Status::OK;
 }
 
-void Facade::dir(const chord::uri &uri, iostream &iostream) {
+Status Facade::dir(const chord::uri &uri, iostream &iostream) {
   std::set<Metadata> metadata;
   const auto status = fs_client->dir(uri, metadata);
-  if(!status.ok()) throw__grpc_exception("failed to dir " + to_string(uri), status);
   iostream << metadata;
+  return status;
 }
 
-void Facade::del(const chord::uri &uri) {
-  const auto status = fs_client->del(uri);
-  if(!status.ok()) throw__grpc_exception("failed to del file " + to_string(uri), status);
+Status Facade::del(const chord::uri &uri, const bool recursive) {
+  return fs_client->del(uri, recursive);
 }
 
 
-void Facade::put_file(const path& source, const chord::uri& target, Replication repl) {
+Status Facade::put_file(const path& source, const chord::uri& target, Replication repl) {
   // validate input...
   if(repl.count > Replication::MAX_REPL_CNT) 
     throw__exception("replication count above "+to_string(Replication::MAX_REPL_CNT)+" is not allowed");
@@ -149,14 +156,13 @@ void Facade::put_file(const path& source, const chord::uri& target, Replication 
     file.exceptions(ifstream::failbit | ifstream::badbit);
     file.open(source, std::fstream::binary);
 
-    const auto status = fs_client->put(target, file, repl);
-    if (!status.ok()) throw__grpc_exception("failed to put " + to_string(target), status);
+    return fs_client->put(target, file, repl);
   } catch (const std::ios_base::failure& exception) {
     throw__exception("failed to issue put_file " + std::string{exception.what()});
   }
 }
 
-void Facade::get_file(const chord::uri& source, const chord::path& target) {
+Status Facade::get_file(const chord::uri& source, const chord::path& target) {
   try {
     // assert target path exists
     const auto parent = target.parent_path();
@@ -167,7 +173,8 @@ void Facade::get_file(const chord::uri& source, const chord::path& target) {
     file.open(target, std::fstream::binary);
 
     const auto status = fs_client->get(source, file);
-    if(!status.ok()) throw__grpc_exception(std::string{"failed to get "} + to_string(source), status);
+    if(!status.ok()) throw__fs_exception(std::string{"failed to get "} + to_string(source) + status.error_message());
+    return status;
   } catch (const std::ios_base::failure& exception) {
     throw__exception("failed to issue get_file " + std::string{exception.what()});
   }
