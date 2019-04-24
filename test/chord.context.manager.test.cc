@@ -19,7 +19,21 @@ TEST(chord_context_manager, parse_valid_config) {
       stabilize-ms: 5000
       check-ms: 5000
       ## uuid
-      logging: "1234567890"
+      logging:
+        formatters:
+          CUSTOMFORMAT:
+            pattern: "*** [%H:%M:%S %z] [thread %t] %v ***"
+        sinks:
+          DEFAULT:
+            type: "file"
+            path: "/tmp/foo"
+            formatter: CUSTOMFORMAT
+          CONS:
+            type: console
+        loggers:
+          MYLOG:
+            sinks: [DEFAULT, CONS]
+            
       uuid: 1234567890
   )");
 
@@ -30,6 +44,20 @@ TEST(chord_context_manager, parse_valid_config) {
   ASSERT_EQ(context.stabilize_period_ms, 5000);
   ASSERT_EQ(context.check_period_ms, 5000);
   ASSERT_EQ(context.uuid(), 1234567890);
+  auto formatters = context.logging.formatters;
+  ASSERT_EQ(formatters.size(), 1);
+  ASSERT_EQ(formatters["CUSTOMFORMAT"].pattern, "*** [%H:%M:%S %z] [thread %t] %v ***");
+
+  auto sinks = context.logging.sinks;
+  ASSERT_EQ(sinks.size(), 2);
+  ASSERT_EQ(sinks["DEFAULT"].type, SinkType::FILE);
+  ASSERT_EQ(sinks["DEFAULT"].path, std::string("/tmp/foo"));
+  ASSERT_EQ(sinks["DEFAULT"].formatter->pattern, formatters["CUSTOMFORMAT"].pattern);
+  ASSERT_EQ(sinks["CONS"].type, SinkType::CONSOLE);
+
+  auto loggers = context.logging.loggers;
+  ASSERT_EQ(loggers.size(), 1);
+  ASSERT_EQ(loggers["MYLOG"].sinks.size(), 2);
 }
 
 TEST(chord_context_manager, parse_invalid_config__equal_bind_join_addresses) {

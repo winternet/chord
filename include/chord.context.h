@@ -6,6 +6,7 @@
 #include "chord.types.h"
 #include "chord.uuid.h"
 #include "chord.node.h"
+#include "chord.context.logging.h"
 
 uuid_t generate_random();
 
@@ -36,6 +37,9 @@ struct Context {
 
   //--- replication / striping
   std::uint32_t replication_cnt{1}; //default replication factor if not overriden
+
+  //--- logging
+  Logging logging;
 
   inline const uuid_t &uuid() const { return _uuid; }
   inline const chord::node node() const { return {_uuid, bind_addr}; }
