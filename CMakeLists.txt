@@ -16,8 +16,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(ProtoPath "${CMAKE_CURRENT_SOURCE_DIR}/proto")
 set(ProtoGenerateTargetPath "./gen")
 
-set(CMAKE_BUILD_TYPE 				Debug)
-
 if(CMAKE_COMPILER_IS_GNUCC)
   option(ENABLE_COVERAGE "enable coverage reporting for gcc/clang" FALSE)
   if(ENABLE_COVERAGE)
@@ -54,7 +52,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+string( TOLOWER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_LOWER)
+if (CMAKE_BUILD_TYPE_LOWER STREQUAL "debug")
   # compile with address sanitizer (2x slowdown)
   add_compile_options(-fsanitize=address)
 endif()

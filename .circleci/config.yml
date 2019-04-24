@@ -98,8 +98,8 @@ jobs:
           command: |
             mkdir build
             cd build
-            CXX=g++-7 CC=gcc-7 cmake .. -DENABLE_COVERAGE:BOOL=TRUE
+            CXX=g++-7 CC=gcc-7 cmake .. -DENABLE_COVERAGE:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=Release
             cmake --build . -- -j4 
-            ctest --V
+            ctest --verbose
             bash <(curl -s https://codecov.io/bash) -t 8811a299-c05a-4c37-8d1d-c5bac9cca1fe
 
