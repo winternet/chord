@@ -48,10 +48,10 @@ Client::Client(const Context &context, Router *router)
                   return Chord::NewStub(grpc::CreateChannel(
                       endpoint, grpc::InsecureChannelCredentials()));
                 }},
-      logger{log::get_or_create(logger_name, log::Category::CHORD)} {}
+      logger{context.logging.factory().get_or_create(logger_name)} {}
 
 Client::Client(const Context &context, Router *router, StubFactory make_stub)
-    : context{context}, router{router}, make_stub{make_stub}, logger{log::get_or_create(logger_name)} {}
+    : context{context}, router{router}, make_stub{make_stub}, logger{context.logging.factory().get_or_create(logger_name)} {}
 
 void Client::leave() {
 

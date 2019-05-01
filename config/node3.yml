@@ -16,3 +16,18 @@ check_ms: 10000
 
 #uuid: "999999999999999999995555555555555555"
 uuid: "20"
+
+logging:
+  sinks:
+    CONSOLE_SINK:
+      type: "console"
+    FILE_SINK:
+      type: "file-rotating"
+      path: "logs/chord0.log"
+  loggers:
+    CHORD_LOG:
+      sinks: [FILE_SINK]
+      filter: "^chord[.](?!fs)"
+    CHORD_FS_LOG:
+      sinks: [CONSOLE_SINK]
+      filter: "^chord[.]fs"

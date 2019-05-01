@@ -1,51 +1,71 @@
 #include "chord.log.h"
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/sinks/rotating_file_sink.h>
+#include "chord.exception.h"
+#include "chord.log.factory.h"
 
 namespace chord {
 namespace log {
 
-void LoggerFactory::setup_chord() {
-      if(!chord::file::exists("logs")) {
-        chord::file::create_directory("logs");
-      }
-      const auto rotating_file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>("logs/chord.log", 1024*1024*20, 3);
-      rotating_file_sink->set_level(spdlog::level::trace);
-
-      sinks_vector_t chord_sinks;
-      chord_sinks.push_back(rotating_file_sink);
-      sinks.insert(make_pair(Category::CHORD, chord_sinks));
+bool Formatter::operator==(const Formatter& other) const {
+  return pattern == other.pattern;
 }
 
-void LoggerFactory::setup_filesystem() {
-      const auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-      stdout_sink->set_level(spdlog::level::trace);
+bool Formatter::operator<(const Formatter& other) const {
+  return pattern < other.pattern;
+}
 
-      sinks_vector_t filesystem_sinks;
-      filesystem_sinks.push_back(stdout_sink);
-      sinks.insert(make_pair(Category::FILESYSTEM, filesystem_sinks));
+SinkType SinkType::CONSOLE("console");
+SinkType SinkType::FILE_ROTATING("file-rotating");
+SinkType SinkType::FILE_DAILY("file-daily");
+SinkType SinkType::FILE("file");
+
+std::set<SinkType>& SinkType::types() {
+  static std::set<SinkType> sinkTypes;
+  return sinkTypes;
+}
+
+SinkType::SinkType(std::string mappedType) 
+  : mappedType{mappedType} {
+  types().insert(*this);
+}
+
+SinkType SinkType::from(std::string str) {
+  for(const auto& val:types()) {
+    if(val.mappedType == str) {
+      return val;
     }
-
-LoggerFactory::LoggerFactory() {
-      setup_chord();
-      setup_filesystem();
+  }
+  throw__exception("unknown type: \'"+str+"\'");
 }
 
-std::shared_ptr<spdlog::logger> LoggerFactory::get_or_create(std::string name, Category category) {
-      auto logger = spdlog::get(name);
-      if (!logger) {
-        const auto sinks = LoggerFactory::instance().sinks[category];
-        logger = std::make_shared<spdlog::logger>(name, begin(sinks), end(sinks));
-        logger->set_level(spdlog::level::trace);
-        spdlog::register_logger(logger);
-      }
-      return logger;
-    }
-
-std::shared_ptr<spdlog::logger> get_or_create(std::string name, chord::log::Category category) {
-  return LoggerFactory::instance().get_or_create(name, category);
+bool SinkType::operator==(const SinkType& other) const {
+  return other.mappedType == mappedType;
 }
 
+bool SinkType::operator!=(const SinkType& other) const {
+  return !(*this == other);
+}
+
+bool SinkType::operator<(const SinkType& other) const {
+  return mappedType < other.mappedType;
+}
+
+
+/** Sink **/
+bool Sink::operator<(const Sink& other) const {
+  return (type < other.type && path < other.path && *formatter < *other.formatter);
+}
+
+std::shared_ptr<spdlog::logger> get_or_create(std::string name) {
+  auto logger = spdlog::get(name);
+  if(!logger) {
+    logger = spdlog::stdout_color_mt(name);
+  }
+  return logger;
+}
+
+Factory Logging::factory() const {
+  return Factory(*this);
+}
 
 }  // namespace log
 }  // namespace chord

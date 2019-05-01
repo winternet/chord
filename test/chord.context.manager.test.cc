@@ -5,6 +5,7 @@
 
 using namespace std;
 using namespace chord;
+using namespace chord::log;
 
 TEST(chord_context_manager, parse_valid_config) {
   Context context = ContextManager::load(R"(
@@ -18,7 +19,6 @@ TEST(chord_context_manager, parse_valid_config) {
       ## details
       stabilize-ms: 5000
       check-ms: 5000
-      ## uuid
       logging:
         formatters:
           CUSTOMFORMAT:
@@ -33,7 +33,7 @@ TEST(chord_context_manager, parse_valid_config) {
         loggers:
           MYLOG:
             sinks: [DEFAULT, CONS]
-            
+      ## uuid
       uuid: 1234567890
   )");
 

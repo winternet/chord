@@ -14,7 +14,7 @@
 namespace chord {
 
 Router::Router(chord::Context &context)
-  : context{context}, logger{log::get_or_create(logger_name)} {
+  : context{context}, logger{context.logging.factory().get_or_create(logger_name)} {
     cleanup();
     routes[context.uuid()] = context.bind_addr;
     context.set_router(this);

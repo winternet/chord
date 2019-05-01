@@ -17,3 +17,18 @@ check_ms: 10000
 #uuid: "20"
 #2^256/4*3
 uuid: "86844066927987146567678238756515930889952488499230423029593188005934847229952"
+
+logging:
+  sinks:
+    CONSOLE_SINK:
+      type: "console"
+    FILE_SINK:
+      type: "file-rotating"
+      path: "logs/chord2.log"
+  loggers:
+    CHORD_LOG:
+      sinks: [FILE_SINK]
+      filter: "^chord[.](?!fs)"
+    CHORD_FS_LOG:
+      sinks: [CONSOLE_SINK]
+      filter: "^chord[.]fs"

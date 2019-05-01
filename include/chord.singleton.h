@@ -1,4 +1,5 @@
 #pragma once
+#include <utility>
 
 namespace chord {
 
@@ -8,8 +9,9 @@ protected:
   Singleton() {}
   ~Singleton() {}
 public:
-  static T& instance() {
-    static T instance;
+  template<class... Args>
+  static T& instance(Args... args) {
+    static T instance(std::forward<Args>(args)...);
     return instance;
   }
 

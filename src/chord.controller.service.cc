@@ -34,7 +34,7 @@ namespace controller {
 Service::Service(Context& context, chord::fs::IFacade* filesystem)
     : context{context}
     , filesystem{filesystem}
-    , logger{log::get_or_create(logger_name)} {}
+    , logger{context.logging.factory().get_or_create(logger_name)} {}
 
 Status Service::control(ServerContext* serverContext __attribute__((unused)),
                         const ControlRequest* req, ControlResponse* res) {

@@ -39,7 +39,7 @@ Service::Service(Context &context, Router *router, IClient* client)
     : context{context},
       router{router},
       client{client},
-      logger{log::get_or_create(logger_name)} {}
+      logger{context.logging.factory().get_or_create(logger_name)} {}
 
 Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
   (void)serverContext;

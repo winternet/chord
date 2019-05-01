@@ -26,7 +26,7 @@ ChordFacade::ChordFacade(Context& ctx)
       client{make_unique<Client>(context, router.get())},
       service{make_unique<Service>(context, router.get(), client.get())},
       scheduler{make_unique<Scheduler>()},
-      logger{log::get_or_create(logger_name)}
+      logger{ctx.logging.factory().get_or_create(logger_name)}
       {}
 
 /**
@@ -38,7 +38,7 @@ ChordFacade::ChordFacade(Context& ctx, Router* router, IClient* client, IService
       client{client},
       service{service},
       scheduler{make_unique<Scheduler>()},
-      logger{log::get_or_create(logger_name)}
+      logger{ctx.logging.factory().get_or_create(logger_name)}
       {}
 
 ::grpc::Service* ChordFacade::grpc_service() {

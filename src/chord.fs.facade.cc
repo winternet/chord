@@ -15,14 +15,14 @@ Facade::Facade(Context& context, ChordFacade* chord)
     : context{context},
       fs_client{make_unique<fs::Client>(context, chord)},
       fs_service{make_unique<fs::Service>(context, chord)},
-      logger{log::get_or_create(logger_name, log::Category::FILESYSTEM)}
+      logger{context.logging.factory().get_or_create(logger_name)}
 {}
 
 Facade::Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service)
   : context{context},
     fs_client{fs_client},
     fs_service{fs_service},
-    logger{log::get_or_create(logger_name)}
+    logger{context.logging.factory().get_or_create(logger_name)}
 {}
 
 ::grpc::Service* Facade::grpc_service() {

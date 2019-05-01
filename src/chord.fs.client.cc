@@ -40,13 +40,13 @@ Client::Client(Context &context, ChordFacade *chord)
                   return chord::fs::Filesystem::NewStub(grpc::CreateChannel(
                       endpoint, grpc::InsecureChannelCredentials()));
                 }},
-      logger{log::get_or_create(logger_name, log::Category::FILESYSTEM)} {}
+      logger{context.logging.factory().get_or_create(logger_name)} {}
 
 Client::Client(Context &context, ChordFacade *chord, StubFactory make_stub)
     : context{context},
       chord{chord},
       make_stub{make_stub},
-      logger{log::get_or_create(logger_name)} {}
+      logger{context.logging.factory().get_or_create(logger_name)} {}
 
 Status Client::put(const chord::node& node, const chord::uuid& hash, const chord::uri &uri, istream &istream, Replication repl) {
 

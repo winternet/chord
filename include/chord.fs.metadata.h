@@ -7,6 +7,7 @@
 #include <boost/serialization/set.hpp>
 #include <iomanip>
 #include <set>
+#include <string>
 
 #include "chord.fs.perms.h"
 #include "chord.fs.type.h"

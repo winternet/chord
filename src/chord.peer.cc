@@ -47,7 +47,7 @@ Peer::Peer(Context ctx)
       chord{make_unique<chord::ChordFacade>(context)},
       filesystem{make_unique<chord::fs::Facade>(context, chord.get())},
       controller{make_unique<controller::Service>(context, filesystem.get())},
-      logger{log::LoggerFactory::instance().get_or_create(Peer::logger_name, log::Category::CHORD)}
+      logger{context.logging.factory().get_or_create(Peer::logger_name)}
 {
   //setup_logger();
   const auto fs = filesystem.get();

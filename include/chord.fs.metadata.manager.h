@@ -63,7 +63,7 @@ class MetadataManager : public IMetadataManager {
  public:
   explicit MetadataManager(Context &context)
     : context{context},
-      logger{log::get_or_create(logger_name, log::Category::FILESYSTEM)}
+      logger{context.logging.factory().get_or_create(logger_name)}
       { initialize(); }
 
   MetadataManager(const MetadataManager&) = delete;

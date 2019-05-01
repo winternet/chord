@@ -16,7 +16,7 @@ ShutdownHandler::ShutdownHandler() : ShutdownHandler(nullptr) {}
 
 ShutdownHandler::ShutdownHandler(std::shared_ptr<Peer> peer) 
   : peer{peer}
-  , logger{log::get_or_create(logger_name, log::Category::FILESYSTEM)}
+  , logger{log::get_or_create(logger_name)}
 {}
 
 void ShutdownHandler::handle_stop(const boost::system::error_code& error, int signal_number) {

@@ -19,3 +19,18 @@ replication-count: 1
 
 #uuid: "0"
 uuid: "0"
+
+logging:
+  sinks:
+    CONSOLE_SINK:
+      type: "console"
+    FILE_SINK:
+      type: "file-rotating"
+      path: "logs/chord0.log"
+  loggers:
+    CHORD_LOG:
+      sinks: [FILE_SINK]
+      filter: "^chord[.](?!fs)"
+    CHORD_FS_LOG:
+      sinks: [CONSOLE_SINK]
+      filter: "^chord[.]fs"

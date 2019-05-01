@@ -1,6 +1,7 @@
 #include <yaml-cpp/yaml.h>
 #include <functional>
 
+#include "chord.log.h"
 #include "chord.context.h"
 #include "chord.context.manager.h"
 
@@ -65,11 +66,11 @@ struct convert<std::set<T>> {
  * specialization for Logging
  */
 template <>
-struct convert<chord::Logging> {
-  static bool decode(const Node& node, chord::Logging& rhs) {
-    read(node, "formatters", rhs.formatters);
+struct convert<chord::log::Logging> {
+  static bool decode(const Node& node, chord::log::Logging& rhs) {
+    chord::read(node, "formatters", rhs.formatters);
 
-    read(node, "sinks", rhs.sinks);
+    chord::read(node, "sinks", rhs.sinks);
     for(const auto& pair: node["sinks"]) {
       const auto& sink_name = pair.first.as<std::string>();
       std::string formatter_name;
@@ -83,7 +84,7 @@ struct convert<chord::Logging> {
       }
     }
 
-    read(node, "loggers", rhs.loggers);
+    chord::read(node, "loggers", rhs.loggers);
     for(const auto& pair: node["loggers"]) {
       const auto& logger_name = pair.first.as<std::string>();
       std::set<std::string> sinks;
@@ -106,8 +107,8 @@ struct convert<chord::Logging> {
  * specialization for Formatter
  */
 template <>
-struct convert<chord::Formatter> {
-  static bool decode(const Node& node, chord::Formatter& rhs) {
+struct convert<chord::log::Formatter> {
+  static bool decode(const Node& node, chord::log::Formatter& rhs) {
     chord::read(node, "pattern", rhs.pattern);
     return true;
   }
@@ -117,10 +118,10 @@ struct convert<chord::Formatter> {
  * specialization for Sinks
  */
 template <>
-struct convert<chord::Sink> {
-  static bool decode(const Node& node, chord::Sink& rhs) {
+struct convert<chord::log::Sink> {
+  static bool decode(const Node& node, chord::log::Sink& rhs) {
     chord::read(node, "path", rhs.path);
-    rhs.type = chord::SinkType::from(node["type"].as<std::string>());
+    rhs.type = chord::log::SinkType::from(node["type"].as<std::string>());
     return true;
   }
 };
@@ -129,8 +130,8 @@ struct convert<chord::Sink> {
  * specialization for Loggers
  */
 template <>
-struct convert<chord::Logger> {
-  static bool decode(const Node& node, chord::Logger& rhs) {
+struct convert<chord::log::Logger> {
+  static bool decode(const Node& node, chord::log::Logger& rhs) {
     chord::read(node, "filter", rhs.filter);
     return true;
   }

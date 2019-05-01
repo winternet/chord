@@ -47,7 +47,7 @@ Service::Service(Context &context, ChordFacade* chord)
       make_client {[this]{
         return chord::fs::Client(this->context, this->chord);
       }},
-      logger{log::get_or_create(logger_name, log::Category::FILESYSTEM)} { }
+      logger{context.logging.factory().get_or_create(logger_name)} { }
 
 Service::Service(Context &context, ChordFacade* chord, IMetadataManager* metadata_mgr)
     : context{context},
@@ -56,7 +56,7 @@ Service::Service(Context &context, ChordFacade* chord, IMetadataManager* metadat
       make_client {[this]{
         return chord::fs::Client(this->context, this->chord);
       }},
-      logger{log::get_or_create(logger_name)} { }
+      logger{context.logging.factory().get_or_create(logger_name)} { }
 
 Status Service::handle_meta_del(const MetaRequest *req) {
   const auto uri = uri::from(req->uri());
