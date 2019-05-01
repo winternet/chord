@@ -5,7 +5,7 @@
 
 using namespace std;
 
-TEST(chord_file, getxattr) {
+TEST(DISABLED_chord_file, getxattr) {
   auto file = "xattr.get";
   auto attr_name = "user.chord.link";
 
