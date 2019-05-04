@@ -51,6 +51,7 @@ struct Sink {
   //optional
   std::string path;
   Formatter* formatter;
+  std::string level;
 
   bool operator<(const Sink& other) const;
 };
@@ -58,9 +59,12 @@ struct Sink {
 struct Logger {
   std::set<Sink*> sinks;
   std::string filter;
+  std::string level;
 };
 
 struct Logging {
+  std::string level;
+
   std::map<std::string, Formatter> formatters;
   std::map<std::string, Sink> sinks;
   std::map<std::string, Logger> loggers;

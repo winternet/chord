@@ -20,6 +20,7 @@ TEST(chord_context_manager, parse_valid_config) {
       stabilize-ms: 5000
       check-ms: 5000
       logging:
+        level: debug
         formatters:
           CUSTOMFORMAT:
             pattern: "*** [%H:%M:%S %z] [thread %t] %v ***"
@@ -28,11 +29,15 @@ TEST(chord_context_manager, parse_valid_config) {
             type: "file"
             path: "/tmp/foo"
             formatter: CUSTOMFORMAT
+            level: debug
           CONS:
             type: console
         loggers:
           MYLOG:
             sinks: [DEFAULT, CONS]
+          OTHER:
+            filter: ^chord[.](?!fs)
+            level: trace
       ## uuid
       uuid: 1234567890
   )");
@@ -48,16 +53,21 @@ TEST(chord_context_manager, parse_valid_config) {
   ASSERT_EQ(formatters.size(), 1);
   ASSERT_EQ(formatters["CUSTOMFORMAT"].pattern, "*** [%H:%M:%S %z] [thread %t] %v ***");
 
+  ASSERT_EQ(context.logging.level, "debug");
+
   auto sinks = context.logging.sinks;
   ASSERT_EQ(sinks.size(), 2);
   ASSERT_EQ(sinks["DEFAULT"].type, SinkType::FILE);
   ASSERT_EQ(sinks["DEFAULT"].path, std::string("/tmp/foo"));
+  ASSERT_EQ(sinks["DEFAULT"].level, std::string("debug"));
   ASSERT_EQ(sinks["DEFAULT"].formatter->pattern, formatters["CUSTOMFORMAT"].pattern);
   ASSERT_EQ(sinks["CONS"].type, SinkType::CONSOLE);
 
   auto loggers = context.logging.loggers;
-  ASSERT_EQ(loggers.size(), 1);
+  ASSERT_EQ(loggers.size(), 2);
   ASSERT_EQ(loggers["MYLOG"].sinks.size(), 2);
+  ASSERT_EQ(loggers["OTHER"].filter, "^chord[.](?!fs)");
+  ASSERT_EQ(loggers["OTHER"].level, "trace");
 }
 
 TEST(chord_context_manager, parse_invalid_config__equal_bind_join_addresses) {

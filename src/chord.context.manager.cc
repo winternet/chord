@@ -99,6 +99,9 @@ struct convert<chord::log::Logging> {
         }
       }
     }
+
+
+    chord::read(node, "level", rhs.level);
     return true;
   }
 };
@@ -122,6 +125,7 @@ struct convert<chord::log::Sink> {
   static bool decode(const Node& node, chord::log::Sink& rhs) {
     chord::read(node, "path", rhs.path);
     rhs.type = chord::log::SinkType::from(node["type"].as<std::string>());
+    chord::read(node, "level", rhs.level);
     return true;
   }
 };
@@ -133,6 +137,7 @@ template <>
 struct convert<chord::log::Logger> {
   static bool decode(const Node& node, chord::log::Logger& rhs) {
     chord::read(node, "filter", rhs.filter);
+    chord::read(node, "level", rhs.level);
     return true;
   }
 };

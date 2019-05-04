@@ -13,30 +13,20 @@
 namespace chord {
 namespace log {
 
-Factory::Factory(const Logging& logging) : logging{logging} {
+bool Factory::valid_level(const std::string level) const {
+  const spdlog::level::level_enum l = spdlog::level::from_str(logging.level);
+  return spdlog::level::to_string_view(l) == level;
 }
 
-
-//void Factory::setup_chord() {
-//      if(!chord::file::exists("logs")) {
-//        chord::file::create_directory("logs");
-//      }
-//      const auto rotating_file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>("logs/chord.log", 1024*1024*20, 3);
-//      rotating_file_sink->set_level(spdlog::level::trace);
-//
-//      sinks_vector_t chord_sinks;
-//      chord_sinks.push_back(rotating_file_sink);
-//      sinks.insert(make_pair(Category::CHORD, chord_sinks));
-//}
-//
-//void Factory::setup_filesystem() {
-//      const auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-//      stdout_sink->set_level(spdlog::level::trace);
-//
-//      sinks_vector_t filesystem_sinks;
-//      filesystem_sinks.push_back(stdout_sink);
-//      sinks.insert(make_pair(Category::FILESYSTEM, filesystem_sinks));
-//    }
+Factory::Factory(const Logging& logging) : logging{logging} {
+  if(!logging.level.empty()) {
+    if(!valid_level(logging.level)) {
+      spdlog::error("Failed to parse root log level: {}", logging.level);
+    } else {
+      spdlog::set_level(spdlog::level::from_str(logging.level));
+    }
+  }
+}
 
 bool Factory::prepare_file_sink(const std::string& file) const {
   const auto dir = chord::path(file).parent_path();
@@ -46,19 +36,27 @@ bool Factory::prepare_file_sink(const std::string& file) const {
   return true;
 }
 
-std::shared_ptr<spdlog::sinks::sink> Factory::create_sink(const Sink* sink) const {
-  const auto type = sink->type;
+template<class T>
+std::shared_ptr<T> Factory::configure_sink(std::shared_ptr<T> sink, const Sink* sink_conf) const {
+  if(!sink_conf->level.empty()) {
+    sink->set_level(spdlog::level::from_str(sink_conf->level));
+  }
+  return sink;
+}
+
+std::shared_ptr<spdlog::sinks::sink> Factory::create_sink(const Sink* sink_conf) const {
+  const auto type = sink_conf->type;
   if(type == SinkType::CONSOLE) {
-    return std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    return configure_sink(std::make_shared<spdlog::sinks::stdout_color_sink_mt>(), sink_conf);
   } else if(type == SinkType::FILE) {
-    prepare_file_sink(sink->path);
-    return std::make_shared<spdlog::sinks::basic_file_sink_mt>(sink->path);
+    prepare_file_sink(sink_conf->path);
+    return configure_sink(std::make_shared<spdlog::sinks::basic_file_sink_mt>(sink_conf->path), sink_conf);
   } else if(type == SinkType::FILE_ROTATING) {
-    prepare_file_sink(sink->path);
-    return std::make_shared<spdlog::sinks::rotating_file_sink_mt>(sink->path, /* max size*/ 1024*1024*50, /* max_files */ 5);
+    prepare_file_sink(sink_conf->path);
+    return configure_sink(std::make_shared<spdlog::sinks::rotating_file_sink_mt>(sink_conf->path, /* max size*/ 1024*1024*50, /* max_files */ 5), sink_conf);
   } else if(type == SinkType::FILE_DAILY) {
-    prepare_file_sink(sink->path);
-    return std::make_shared<spdlog::sinks::daily_file_sink_mt>(sink->path, /* hour */ 0, /* minute */0);
+    prepare_file_sink(sink_conf->path);
+    return configure_sink(std::make_shared<spdlog::sinks::daily_file_sink_mt>(sink_conf->path, /* hour */ 0, /* minute */0), sink_conf);
   }
 
   return std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -80,6 +78,9 @@ std::shared_ptr<spdlog::logger> Factory::get_or_create(std::string name) {
     std::regex filter_regex(log_conf.filter);
     if(std::regex_search(name, filter_regex)) {
       logger = create_logger(name, log_conf);
+      if(!log_conf.level.empty()) {
+        logger->set_level(spdlog::level::from_str(log_conf.level));
+      }
       spdlog::register_logger(logger);
     }
   }
