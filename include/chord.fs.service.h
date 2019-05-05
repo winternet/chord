@@ -30,7 +30,6 @@ class Service final : public chord::fs::Filesystem::Service {
   grpc::Status handle_del_file(const DelRequest*);
   grpc::Status handle_del_dir(const DelRequest*);
 
-  chord::optional<Replication> max_replication(const std::set<Metadata> metadata);
  public:
   explicit Service(Context &context, ChordFacade* chord);
   explicit Service(Context &context, ChordFacade* chord, IMetadataManager* metadata_mgr);

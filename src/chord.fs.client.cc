@@ -102,7 +102,7 @@ Status Client::put(const chord::uri &uri, istream &istream, Replication repl) {
 void Client::add_metadata(MetaRequest& req, const chord::path& parent_path) {
   for (const auto &c : parent_path.contents()) {
     auto *item = req.add_metadata();
-    item->set_type(is_directory(c)
+    item->set_type(chord::file::is_directory(c)
                        ? value_of(type::directory)
                        : is_regular_file(c) ? value_of(type::regular)
                                             : value_of(type::unknown));

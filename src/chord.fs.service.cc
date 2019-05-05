@@ -286,14 +286,6 @@ Status Service::handle_del_file(const chord::fs::DelRequest *req) {
   return Status::OK;
 }
 
-chord::optional<Replication> Service::max_replication(const std::set<Metadata> metadata) {
-  auto max_repl = std::max_element(metadata.begin(), metadata.end(), [&](const auto& l, const auto &r){ 
-      if( !l.replication || !r.replication) return false;
-      return  l.replication->count < r.replication->count;
-  })->replication;
-  return max_repl;
-}
-
 Status Service::handle_del_dir(const chord::fs::DelRequest *req) {
   const auto uri = chord::uri::from(req->uri());
   auto data = context.data_directory / uri.path();

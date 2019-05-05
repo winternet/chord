@@ -35,8 +35,8 @@ TEST(chord_metadata_manager, set_and_get) {
   set<fs::Metadata> meta_get = metadata.get(uri);
 
   fs::Metadata expected{"file1", "owner", "group", perms::all, type::regular};
-  //ASSERT_EQ(meta_get.name, "/folder");
-  ASSERT_THAT(meta_get, ElementsAre(expected));
+  fs::Metadata expected_root{".", "", "", perms::all, type::directory};
+  ASSERT_THAT(meta_get, ElementsAre(expected_root, expected));
   cleanup(context);
 }
 

@@ -44,3 +44,21 @@ TEST(chord_metadata, output_directory) {
 -rwx------ usr  grp foo
 )", ss.str());
 }
+
+TEST(chord_metadata, create_directory_blank) {
+  const auto meta = create_directory();
+  ASSERT_EQ(meta.name, ".");
+  ASSERT_EQ(meta.file_type, type::directory);
+  ASSERT_EQ(meta.replication, chord::optional<Replication>());
+}
+
+TEST(chord_metadata, create_directory) {
+  std::set<Metadata> contents = {
+    Metadata("name1", "", "", perms::all, type::regular, {}, Replication(0,3)),
+    Metadata("name2", "", "", perms::all, type::regular, {}, Replication(2,5))
+  };
+  const auto meta = create_directory(contents);
+  ASSERT_EQ(meta.name, ".");
+  ASSERT_EQ(meta.file_type, type::directory);
+  ASSERT_EQ(meta.replication, Replication(0, 5));
+}

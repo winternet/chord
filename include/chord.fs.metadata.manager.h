@@ -137,6 +137,10 @@ class MetadataManager : public IMetadataManager {
       added |= status;
     }
 
+    // always override "." since replication might have changed
+    // do not allow overrides from clients
+    current.insert_or_assign(".", create_directory(metadata));
+
     logger->trace("[ADD] {}", directory);
     for (const auto& [path, meta]: current) {
       logger->trace("[ADD] {}", path, meta);

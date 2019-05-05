@@ -52,7 +52,7 @@ void Client::control(const string &command) {
     throw__grpc_exception(status);
   }
 
-  logger->debug("issuing command: {} - success", command);
+  logger->debug("succeeded with command: {}", command);
   cout << res.result() << endl;
 
 }
