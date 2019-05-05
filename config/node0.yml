@@ -21,6 +21,7 @@ replication-count: 1
 uuid: "0"
 
 logging:
+  level: trace
   sinks:
     CONSOLE_SINK:
       type: "console"
@@ -34,3 +35,4 @@ logging:
     CHORD_FS_LOG:
       sinks: [CONSOLE_SINK]
       filter: "^chord[.]fs"
+      level: trace

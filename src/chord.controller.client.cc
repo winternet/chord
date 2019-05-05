@@ -40,11 +40,15 @@ void Client::control(const string &command) {
   ControlRequest req;
   ControlResponse res;
 
+  auto logger = chord::log::get_or_create(Client::logger_name);
+  logger->debug("issuing command: {}", command);
+
   req.set_command(command);
   //TODO make configurable (at least port)
   auto status = make_stub("127.0.0.1:50050")->control(&clientContext, req, &res);
 
   if (!status.ok()) {
+  logger->debug("received error: {} - {}", status.error_message(), status.error_details());
     throw__grpc_exception(status);
   }
   cout << res.result() << endl;

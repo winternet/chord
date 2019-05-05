@@ -15,6 +15,7 @@ namespace controller {
 class Client {
  private:
   ControlStubFactory make_stub;
+  static constexpr auto logger_name = "chord.controller.client";
 
  public:
   Client();

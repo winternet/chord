@@ -19,6 +19,7 @@ check_ms: 10000
 uuid: "86844066927987146567678238756515930889952488499230423029593188005934847229952"
 
 logging:
+  level: trace
   sinks:
     CONSOLE_SINK:
       type: "console"
@@ -32,3 +33,4 @@ logging:
     CHORD_FS_LOG:
       sinks: [CONSOLE_SINK]
       filter: "^chord[.]fs"
+      level: trace
