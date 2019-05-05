@@ -104,7 +104,8 @@ Status Service::handle_del(const vector<string>& token, ControlResponse* res) {
     const auto status = filesystem->del(uri::from(target), recursive);
     //TODO implement force flag
     if(!status.ok()) {
-      throw__grpc_exception(status);
+      logger->error("Failed to delete {} (recursive:{}): {} {}", target, recursive, status.error_message(), status.error_details());
+      return status;
     }
   }
   return Status::OK;

@@ -277,7 +277,7 @@ Status Service::handle_del_file(const chord::fs::DelRequest *req) {
   if(initial_delete) {
     const auto parent_path = data.parent_path();
     if(file::is_empty(parent_path)) {
-      make_client().del(parent_uri);
+      return make_client().del(parent_uri);
     }
   }
   // end: check whether directory is empty now
@@ -306,7 +306,11 @@ Status Service::handle_del_dir(const chord::fs::DelRequest *req) {
 
   for(const auto m:metadata) {
     const auto sub_uri = uri::builder{uri.scheme(), uri.path() / path{m.name}}.build();
-    make_client().del(sub_uri);
+    const auto status = make_client().del(sub_uri);
+    if(!status.ok()) {
+      logger->error("Failed to delete directory: {} {}", status.error_message(), status.error_details());
+      return status;
+    }
   }
 
   if(file::exists(data) && file::is_empty(data)) {
@@ -353,11 +357,10 @@ Status Service::del(grpc::ServerContext *serverContext,
     return Status{StatusCode::NOT_FOUND, "not found"};
   }
 
-  //if(file::is_directory(data)) {
   if(element->file_type == type::directory) {
-    handle_del_dir(req);
+    return handle_del_dir(req);
   } else {
-    handle_del_file(req);
+    return handle_del_file(req);
   }
 
   return Status::OK;
