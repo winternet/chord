@@ -48,9 +48,11 @@ void Client::control(const string &command) {
   auto status = make_stub("127.0.0.1:50050")->control(&clientContext, req, &res);
 
   if (!status.ok()) {
-  logger->debug("received error: {} {}", status.error_message(), status.error_details());
+    logger->debug("received error: {} {}", status.error_message(), status.error_details());
     throw__grpc_exception(status);
   }
+
+  logger->debug("issuing command: {} - success", command);
   cout << res.result() << endl;
 
 }
