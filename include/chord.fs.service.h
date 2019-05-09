@@ -27,6 +27,7 @@ class Service final : public chord::fs::Filesystem::Service {
   grpc::Status get_from_reference(const chord::uri& uri);
   grpc::Status handle_meta_add(const MetaRequest*);
   grpc::Status handle_meta_del(const MetaRequest*);
+  grpc::Status handle_meta_dir(const MetaRequest*, MetaResponse*);
   grpc::Status handle_del_file(const DelRequest*);
   grpc::Status handle_del_dir(const DelRequest*);
 

@@ -10,6 +10,7 @@ namespace chord {
 namespace fs {
 
 using grpc::Status;
+using grpc::StatusCode;
 
 Facade::Facade(Context& context, ChordFacade* chord)
     : context{context},
@@ -56,7 +57,7 @@ Status Facade::put(const chord::path &source, const chord::uri &target, Replicat
   return Status::OK;
 }
 
-void Facade::get_shallow_copies(const chord::node& leaving_node) {
+Status Facade::get_shallow_copies(const chord::node& leaving_node) {
   auto shallow_copies = fs_service->metadata_manager()->get(leaving_node);
 
   // integrate the metadata
@@ -65,7 +66,10 @@ void Facade::get_shallow_copies(const chord::node& leaving_node) {
       std::set<Metadata> deep_copies;
       for_each(meta_set.begin(), meta_set.end(), [&](Metadata m) {
         if (m.file_type == type::regular && m.name == uri.path().filename()) {
-          get_file(uri, context.data_directory / uri.path());
+          const auto status = get_file(uri, context.data_directory / uri.path());
+          if(!status.ok()) {
+            return status;
+          }
         }
         m.node_ref = {};
         deep_copies.insert(m);
@@ -75,11 +79,9 @@ void Facade::get_shallow_copies(const chord::node& leaving_node) {
   }
 }
 
-void Facade::get_and_integrate(const chord::fs::MetaResponse& meta_res) {
+Status Facade::get_and_integrate(const chord::fs::MetaResponse& meta_res) {
   if (meta_res.uri().empty()) {
-    throw__exception(
-        "failed to get and integrate metaresponse due to missing uri " +
-        meta_res.uri());
+    return Status(StatusCode::FAILED_PRECONDITION, "failed to get and integrate meta-response due to missing uri", meta_res.uri());
   }
 
   const auto uri = chord::uri{meta_res.uri()};
@@ -101,7 +103,10 @@ void Facade::get_and_integrate(const chord::fs::MetaResponse& meta_res) {
     // or uri might point to a file with the metadata containing
     // the file's name, we consider only those leaves
     if (data.file_type == type::regular && data.name == uri.path().filename()) {
-      get_file(uri, context.data_directory / uri.path());
+      const auto status = get_file(uri, context.data_directory / uri.path());
+      if(!status.ok()) {
+        return status;
+      }
     }
   }
 }
@@ -137,7 +142,9 @@ Status Facade::get(const chord::uri &source, const chord::path& target) {
 Status Facade::dir(const chord::uri &uri, iostream &iostream) {
   std::set<Metadata> metadata;
   const auto status = fs_client->dir(uri, metadata);
-  iostream << metadata;
+  if(status.ok()) {
+    iostream << metadata;
+  }
   return status;
 }
 
@@ -148,8 +155,9 @@ Status Facade::del(const chord::uri &uri, const bool recursive) {
 
 Status Facade::put_file(const path& source, const chord::uri& target, Replication repl) {
   // validate input...
-  if(repl.count > Replication::MAX_REPL_CNT) 
-    throw__exception("replication count above "+to_string(Replication::MAX_REPL_CNT)+" is not allowed");
+  if(repl.count > Replication::MAX_REPL_CNT) {
+    return Status(StatusCode::FAILED_PRECONDITION, "replication count above "+to_string(Replication::MAX_REPL_CNT)+" is not allowed");
+  }
 
   try {
     std::ifstream file;
@@ -172,11 +180,9 @@ Status Facade::get_file(const chord::uri& source, const chord::path& target) {
     file.exceptions(ofstream::failbit | ofstream::badbit);
     file.open(target, std::fstream::binary);
 
-    const auto status = fs_client->get(source, file);
-    if(!status.ok()) throw__fs_exception(std::string{"failed to get "} + to_string(source) + status.error_message());
-    return status;
+    return fs_client->get(source, file);
   } catch (const std::ios_base::failure& exception) {
-    throw__exception("failed to issue get_file " + std::string{exception.what()});
+    return Status(StatusCode::INTERNAL, "failed to issue get_file ", exception.what());
   }
 }
 

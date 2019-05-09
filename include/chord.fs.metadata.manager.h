@@ -139,7 +139,9 @@ class MetadataManager : public IMetadataManager {
 
     // always override "." since replication might have changed
     // do not allow overrides from clients
-    current.insert_or_assign(".", create_directory(metadata));
+    if(current.find(".") != current.end()) {
+      current.insert_or_assign(".", create_directory(metadata));
+    }
 
     logger->trace("[ADD] {}", directory);
     for (const auto& [path, meta]: current) {

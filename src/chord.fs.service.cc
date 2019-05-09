@@ -58,6 +58,16 @@ Service::Service(Context &context, ChordFacade* chord, IMetadataManager* metadat
       }},
       logger{context.logging.factory().get_or_create(logger_name)} { }
 
+Status Service::handle_meta_dir(const MetaRequest *req, MetaResponse *res) {
+  const auto uri = uri::from(req->uri());
+  if(!metadata_mgr->exists(uri)) {
+    return Status{StatusCode::NOT_FOUND, "not found: " + to_string(uri)};
+  }
+  set<Metadata> meta = metadata_mgr->get(uri);
+  MetadataBuilder::addMetadata(meta, *res);
+  return Status::OK;
+}
+
 Status Service::handle_meta_del(const MetaRequest *req) {
   const auto uri = uri::from(req->uri());
   auto metadata = MetadataBuilder::from(req);
@@ -137,8 +147,6 @@ Status Service::handle_meta_add(const MetaRequest *req) {
 Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
   (void)serverContext;
 
-  const auto uri = uri::from(req->uri());
-
   try {
     switch (req->action()) {
       case ADD:
@@ -146,11 +154,10 @@ Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaR
       case DEL:
         return handle_meta_del(req);
       case DIR:
-        set<Metadata> meta = metadata_mgr->get(uri);
-        MetadataBuilder::addMetadata(meta, *res);
-        break;
+        return handle_meta_dir(req, res);
     }
   } catch(const chord::exception& e) {
+    const auto uri = uri::from(req->uri());
     logger->error("failed in meta for uri {}, reason: {}", uri, e.what());
     return Status{StatusCode::NOT_FOUND, e.what()};
   }
@@ -212,6 +219,8 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   // trigger recursive metadata replication for parent
   if(repl.index == 0) {
     const auto parent_uri = chord::uri{uri.scheme(), uri.path().parent_path()};
+    // add directory "." to metadata
+    meta.insert(create_directory(meta));
     make_client().meta(parent_uri, Client::Action::ADD, meta);
   }
 
@@ -297,6 +306,7 @@ Status Service::handle_del_dir(const chord::fs::DelRequest *req) {
   auto metadata = metadata_mgr->get(uri);
 
   for(const auto m:metadata) {
+    if(m.name == ".") continue;
     const auto sub_uri = uri::builder{uri.scheme(), uri.path() / path{m.name}}.build();
     const auto status = make_client().del(sub_uri);
     if(!status.ok()) {
@@ -343,7 +353,9 @@ Status Service::del(grpc::ServerContext *serverContext,
   //TODO look on some other node (e.g. the successor that this node initially joined)
   //     maybe some other node became responsible for that file recently
   const auto metadata_set = metadata_mgr->get(uri);
-  const auto element = std::find_if(metadata_set.begin(), metadata_set.end(), [&](const Metadata& metadata) {return metadata.name == uri.path().filename();});
+  const auto element = std::find_if(metadata_set.begin(), metadata_set.end(), [&](const Metadata& metadata) {
+      return metadata.name == uri.path().filename() || (metadata.name == "." && metadata.file_type == type::directory);
+  });
 
   if(element == metadata_set.end()) {
     return Status{StatusCode::NOT_FOUND, "not found"};

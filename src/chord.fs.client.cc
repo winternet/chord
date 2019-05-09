@@ -116,7 +116,6 @@ grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, cons
   const auto path = uri.path().canonical();
   const auto meta_uri = uri::builder{uri.scheme(), path}.build();
   const auto hash = chord::crypto::sha256(meta_uri);
-  //const auto endpoint = chord->successor(hash).endpoint();
 
   logger->trace("meta {} ({})", meta_uri, hash);
 

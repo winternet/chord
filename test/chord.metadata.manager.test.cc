@@ -28,15 +28,43 @@ TEST(chord_metadata_manager, set_and_get) {
   cleanup(context);
 
   fs::MetadataManager metadata{context};
-  auto uri = uri::from("chord:/folder");
+  auto uri = uri::from("chord:/folder/file1");
   fs::Metadata meta_set{"file1", "owner", "group", perms::all, type::regular};
 
   metadata.add(uri, {meta_set});
   set<fs::Metadata> meta_get = metadata.get(uri);
 
   fs::Metadata expected{"file1", "owner", "group", perms::all, type::regular};
-  fs::Metadata expected_root{".", "", "", perms::all, type::directory};
-  ASSERT_THAT(meta_get, ElementsAre(expected_root, expected));
+  ASSERT_THAT(meta_get, ElementsAre(expected));
+  cleanup(context);
+}
+
+TEST(chord_metadata_manager, set_and_get_updates_replication) {
+  Context context;
+  cleanup(context);
+
+  fs::MetadataManager metadata{context};
+  auto uri = uri::from("chord:/folder");
+  fs::Metadata meta_set{"file1", "owner", "group", perms::all, type::regular, {}, Replication(0, 4)};
+  fs::Metadata meta_root{".", "owner", "group", perms::all, type::directory, {}, Replication(0,4)};
+
+  metadata.add(uri, {meta_root, meta_set});
+  set<fs::Metadata> meta_get = metadata.get(uri);
+
+  ASSERT_THAT(meta_get, ElementsAre(meta_root, meta_set));
+
+  // update replication
+  meta_set.replication = Replication(0,6);
+  metadata.add(uri, {meta_set});
+  meta_get = metadata.get(uri);
+
+  // only names are compared for equality...
+  ASSERT_THAT(meta_get, ElementsAre(meta_root, meta_set));
+
+  // check update of replication explicitly
+  const auto repl = std::find_if(meta_get.begin(), meta_get.end(), [](const fs::Metadata& m) { return m.name == "."; })->replication;
+  ASSERT_EQ(repl, Replication(0,6));
+
   cleanup(context);
 }
 

@@ -24,8 +24,8 @@ class Facade : public IFacade {
   grpc::Status put_file(const chord::path& source, const chord::uri& target, Replication repl = Replication());
   grpc::Status get_file(const chord::uri& source, const chord::path& target);
   bool is_directory(const chord::uri& target);
-  void get_and_integrate(const chord::fs::MetaResponse& metadata);
-  void get_shallow_copies(const chord::node& leaving_node);
+  grpc::Status get_and_integrate(const chord::fs::MetaResponse& metadata);
+  grpc::Status get_shallow_copies(const chord::node& leaving_node);
 
  public:
   Facade(Context& context, ChordFacade* chord);

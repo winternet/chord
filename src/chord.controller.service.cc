@@ -186,15 +186,10 @@ Status Service::handle_dir(const vector<string>& token, ControlResponse* res) {
 
   const auto directory = token.at(1);
 
-  try {
-    stringstream sstream;
-    filesystem->dir(uri::from(directory), sstream);
-    res->set_result(sstream.str());
-  } catch (const chord::exception& exception) {
-    logger->error("failed to issue dir request: {}", exception.what());
-    return Status(grpc::StatusCode::CANCELLED, "failed to handle dir, response", exception.what());
-  }
-  return Status::OK;
+  stringstream sstream;
+  const auto status = filesystem->dir(uri::from(directory), sstream);
+  res->set_result(sstream.str());
+  return status;
 }
 }  // namespace controller
 }  // namespace chord
