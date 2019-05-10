@@ -31,7 +31,7 @@ jobs:
           command: |
             apt-get -y install  gcc-8 g++-8
             g++ --version
-            g++-8
+            g++-8 --version
 
       - run:
           name: Install cmake
