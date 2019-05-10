@@ -23,7 +23,7 @@ jobs:
       - run:
           name: Install clang
           command: |
-            apt-get -y install clang-8.0 
+            apt-get -y install clang-8
             clang++-8.0 --version
 
       - run:
