@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: ubuntu:17.10
+      - image: ubuntu:18.04
     steps:
       - checkout
       - run:
@@ -10,9 +10,9 @@ jobs:
           command: |
             apt-get update
             apt-get -y install build-essential autoconf libtool git curl cmake unzip software-properties-common wget
-            add-apt-repository -y ppa:ubuntu-toolchain-r/test
-            add-apt-repository "deb http://apt.llvm.org/artful/ llvm-toolchain-artful-5.0 main"
             wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+            add-apt-repository -y ppa:ubuntu-toolchain-r/test
+            add-apt-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main"
             apt-get update
             export WORKINGDIR="$(pwd)"
             echo "working dir: $WORKINGDIR"
@@ -23,22 +23,22 @@ jobs:
       - run:
           name: Install clang
           command: |
-            apt-get -y install clang-5.0 
-            clang++-5.0 --version
+            apt-get -y install clang-8.0 
+            clang++-8.0 --version
 
       - run:
-          name: Install gcc-7
+          name: Install gcc-8
           command: |
-            apt-get -y install  gcc-7 g++-7
+            apt-get -y install  gcc-8 g++-8
             g++ --version
 
       - run:
           name: Install cmake
           command: |
             cd $DEPS
-            wget https://cmake.org/files/v3.9/cmake-3.9.6.tar.gz
-            tar xvzf cmake-3.9.6.tar.gz
-            cd cmake-3.9.6
+            wget https://cmake.org/files/v3.14/cmake-3.14.3.tar.gz
+            tar xvzf cmake-3.14.3.tar.gz
+            cd cmake-3.14.3
             ./bootstrap
             make -j4 && make install
             cmake --version
