@@ -107,12 +107,15 @@ Status Service::handle_meta_add(const MetaRequest *req) {
 
   auto max_repl = max_replication(metadata);
   // update the parent (first node triggers replication)
-  if(added && max_repl && max_repl->index == 0) {
+  if(added && max_repl && max_repl->index == 0 && !uri.path().parent_path().empty()) {
     const auto next = make_node(chord->successor(context.uuid()));
     const auto parent = uri::builder{uri.scheme(), uri.path().parent_path()}.build();
-    const Metadata metadata{uri.path().filename(), "", "", perms::none, fs::type::directory, {}, max_repl};
-    std::set<Metadata> m = {metadata};
-    make_client().meta(next, parent, Client::Action::ADD, m);
+    {
+      auto meta_dir = create_directory(metadata);
+      meta_dir.name = uri.path().filename();
+      std::set<Metadata> m = {meta_dir};
+      make_client().meta(next, parent, Client::Action::ADD, m);
+    }
   }
 
   // handle replication

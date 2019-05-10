@@ -9,7 +9,7 @@ namespace fs {
 Metadata create_directory() {
   Metadata meta;
   meta.name = ".";
-  meta.permissions = perms::all;
+  meta.permissions = perms::none;
   meta.file_type = type::directory;
   return meta;
 }
