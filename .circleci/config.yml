@@ -24,13 +24,14 @@ jobs:
           name: Install clang
           command: |
             apt-get -y install clang-8
-            clang++-8.0 --version
+            clang++-8 --version
 
       - run:
           name: Install gcc-8
           command: |
             apt-get -y install  gcc-8 g++-8
             g++ --version
+            g++-8
 
       - run:
           name: Install cmake
