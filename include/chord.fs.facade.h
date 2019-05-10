@@ -42,87 +42,25 @@ class Facade : public IFacade {
 
   grpc::Status del(const chord::uri& uri, const bool recursive=false);
 
-  void on_join(const chord::node successor, const chord::node predecessor) {
-    fs_client->take(predecessor.uuid, context.uuid(), successor, take_consumer_callback());
-  }
+  /**
+   * callbacks
+   */
+  void on_join(const chord::node successor, const chord::node predecessor);
+  void on_leave(const chord::node leaving_node, const chord::node new_predecessor);
+  void on_predecessor_fail(const chord::node predecessor);
+  void on_successor_fail(const chord::node successor);
 
-  void on_leave(const chord::node leaving_node, const chord::node new_predecessor) {
-    fs_client->take(new_predecessor.uuid, leaving_node.uuid, leaving_node, on_leave_callback());
-    get_shallow_copies(leaving_node);
-  }
-
-  void on_predecessor_fail(const chord::node predecessor) {
-    const auto metadata_mgr = fs_service->metadata_manager();
-    //metadata_mgr->get(
-    logger->warn("\n\n************** PREDECESSOR FAIL!");
-    //TODO implement
-  }
-
-  void on_successor_fail(const chord::node successor) {
-    logger->warn("\n\n************** SUCCESSOR FAIL!");
-    //TODO implement
-  }
-
-  chord::take_consumer_t on_leave_callback() {
-    return [&](const chord::fs::TakeResponse& res) {
-      if (!res.has_meta()) return;
-
-      const auto meta = res.meta();
-
-      //--- download the files and integrate the metadata
-      try {
-        get_and_integrate(meta);
-      }catch(...){}
-    };
-  }
+  chord::take_consumer_t on_leave_callback();
 
   /**
    * @note should be called only once - create on demand
-   * @todo move to cc
    */
-  chord::take_consumer_t take_consumer_callback() {
-    return [&](const chord::fs::TakeResponse& res) {
-      if(!res.has_meta()) return;
-
-      const auto meta = res.meta();
-      if(meta.uri().empty()) {
-        logger->error("Received TakeResponse.MetaResponse without uri.");
-        return;
-      }
-
-      const std::set<Metadata> metadata = MetadataBuilder::from(meta);
-      const auto uri = uri::from(meta.uri());
-      fs_service->metadata_manager()->add(uri, metadata);
-    };
-  }
+  chord::take_consumer_t take_consumer_callback();
 
   /**
    * @note should be called only once - create on demand
-   * @todo move to cc
    */
-  chord::take_producer_t take_producer_callback() {
-    return [&](const auto& from, const auto& to) {
-      const auto map = fs_service->metadata_manager()->get(from, to);
-      std::vector<chord::fs::TakeResponse> ret;
-      for (const auto& m : map) {
-        chord::fs::TakeResponse res;
-        chord::fs::MetaResponse meta;
-
-        meta.set_uri(m.first);
-
-        auto* node_ref = meta.mutable_node_ref();
-        node_ref->set_uuid(context.uuid());
-        node_ref->set_endpoint(context.bind_addr);
-
-        MetadataBuilder::addMetadata(m.second, meta);
-        res.set_id(m.first);
-        res.mutable_meta()->CopyFrom(meta);
-        //res.mutable_detail()->PackFrom(meta);
-        ret.push_back(res);
-      }
-      return ret;
-    };
-  }
+  chord::take_producer_t take_producer_callback();
 };
 
 } //namespace fs

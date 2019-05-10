@@ -64,7 +64,8 @@ Status Facade::get_shallow_copies(const chord::node& leaving_node) {
   {
     for (const auto& [uri, meta_set] : shallow_copies) {
       std::set<Metadata> deep_copies;
-      for_each(meta_set.begin(), meta_set.end(), [&](Metadata m) {
+      //copy
+      for(auto m:meta_set) {
         if (m.file_type == type::regular && m.name == uri.path().filename()) {
           const auto status = get_file(uri, context.data_directory / uri.path());
           if(!status.ok()) {
@@ -73,10 +74,11 @@ Status Facade::get_shallow_copies(const chord::node& leaving_node) {
         }
         m.node_ref = {};
         deep_copies.insert(m);
-      });
+      }
       fs_service->metadata_manager()->add(uri, deep_copies);
     }
   }
+  return Status::OK;
 }
 
 Status Facade::get_and_integrate(const chord::fs::MetaResponse& meta_res) {
@@ -109,6 +111,7 @@ Status Facade::get_and_integrate(const chord::fs::MetaResponse& meta_res) {
       }
     }
   }
+  return Status::OK;
 }
 
 Status Facade::get(const chord::uri &source, const chord::path& target) {
@@ -185,6 +188,84 @@ Status Facade::get_file(const chord::uri& source, const chord::path& target) {
     return Status(StatusCode::INTERNAL, "failed to issue get_file ", exception.what());
   }
 }
+/**
+ * CALLBACKS (Handler)
+ */
+chord::take_consumer_t Facade::on_leave_callback() {
+  return [&](const chord::fs::TakeResponse& res) {
+    if (!res.has_meta()) return;
+
+    const auto meta = res.meta();
+
+    //--- download the files and integrate the metadata
+    try {
+      get_and_integrate(meta);
+    }catch(...){}
+  };
+}
+chord::take_consumer_t Facade::take_consumer_callback() {
+  return [&](const chord::fs::TakeResponse& res) {
+    if(!res.has_meta()) return;
+
+    const auto meta = res.meta();
+    if(meta.uri().empty()) {
+      logger->error("Received TakeResponse.MetaResponse without uri.");
+      return;
+    }
+
+    const std::set<Metadata> metadata = MetadataBuilder::from(meta);
+    const auto uri = uri::from(meta.uri());
+    fs_service->metadata_manager()->add(uri, metadata);
+  };
+}
+chord::take_producer_t Facade::take_producer_callback() {
+  return [&](const auto& from, const auto& to) {
+    const auto map = fs_service->metadata_manager()->get(from, to);
+    std::vector<chord::fs::TakeResponse> ret;
+    for (const auto& m : map) {
+      chord::fs::TakeResponse res;
+      chord::fs::MetaResponse meta;
+
+      meta.set_uri(m.first);
+
+      auto* node_ref = meta.mutable_node_ref();
+      node_ref->set_uuid(context.uuid());
+      node_ref->set_endpoint(context.bind_addr);
+
+      MetadataBuilder::addMetadata(m.second, meta);
+      res.set_id(m.first);
+      res.mutable_meta()->CopyFrom(meta);
+      //res.mutable_detail()->PackFrom(meta);
+      ret.push_back(res);
+    }
+    return ret;
+  };
+}
+
+/**
+ * CALLBACKS
+ */
+void Facade::on_join(const chord::node successor, const chord::node predecessor) {
+  fs_client->take(predecessor.uuid, context.uuid(), successor, take_consumer_callback());
+}
+
+void Facade::on_leave(const chord::node leaving_node, const chord::node new_predecessor) {
+  fs_client->take(new_predecessor.uuid, leaving_node.uuid, leaving_node, on_leave_callback());
+  get_shallow_copies(leaving_node);
+}
+
+void Facade::on_predecessor_fail(const chord::node predecessor) {
+  const auto metadata_mgr = fs_service->metadata_manager();
+  //metadata_mgr->get(
+  logger->warn("\n\n************** PREDECESSOR FAIL!");
+  //TODO implement
+}
+
+void Facade::on_successor_fail(const chord::node successor) {
+  logger->warn("\n\n************** SUCCESSOR FAIL!");
+  //TODO implement
+}
+
 
 }  // namespace fs
 }  // namespace chord
