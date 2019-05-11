@@ -1,7 +1,10 @@
 #set(CMAKE_CXX_COMPILER      "/usr/bin/clang++")
 
 cmake_minimum_required(VERSION 3.8)
-cmake_policy(SET CMP0048 NEW)
+# Clear VERSION variables when no VERSION is given to project()
+if (POLICY CMP0048)
+  cmake_policy(SET CMP0048 NEW)
+endif (POLICY CMP0048)
 
 set(PROJECT "chord")
 project(${PROJECT} VERSION "0.0.1")
@@ -15,6 +18,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(ProtoPath "${CMAKE_CURRENT_SOURCE_DIR}/proto")
 set(ProtoGenerateTargetPath "./gen")
+
+option(chord_BUILD_TESTS "build unit tests" OFF)
 
 if(CMAKE_COMPILER_IS_GNUCC)
   option(ENABLE_COVERAGE "enable coverage reporting for gcc/clang" FALSE)
@@ -52,8 +57,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
-string( TOLOWER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_LOWER)
-if (CMAKE_BUILD_TYPE_LOWER STREQUAL "debug")
+if (CMAKE_BUILD_TYPE_LOWER STREQUAL "Debug")
   # compile with address sanitizer (2x slowdown)
   add_compile_options(-fsanitize=address)
 endif()
@@ -153,18 +157,6 @@ add_dependencies(${PROJECT_NAME}++ signals)
 #
 # tests
 #
-file(GLOB TEST_SOURCES test/*.cc)
-string(REPLACE ";" "\n--   " TEST_SOURCES_OUT "${TEST_SOURCES}")
-message(STATUS "Found tests:\n--   ${TEST_SOURCES_OUT}")
-#
-enable_testing()
-set(TEST_TARGET "${PROJECT_NAME}_test")
-
-include_directories(include)
-include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}/gen")
-add_executable(${TEST_TARGET} ${TEST_SOURCES})
-target_link_libraries(${TEST_TARGET} 
-  debug asan
-  general gtest gmock gmock_main ${PROJECT_NAME}++ ${signals_LIBRARY})
-target_link_libraries(${TEST_TARGET} --coverage)
-add_test(NAME ${TEST_TARGET} COMMAND chord_test)
+if(chord_BUILD_TESTS)
+  include(tests)
+endif()
