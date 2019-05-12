@@ -42,6 +42,7 @@ jobs:
                        git \
                        cmake \
                        autoconf \
+                       libtool \
                        libboost-system-dev \
                        libboost-serialization-dev \
                        libleveldb-dev \
