@@ -38,68 +38,17 @@ jobs:
           name: Setup
           command: |
             apt-get update
-            apt-get -y install build-essential autoconf libtool git curl cmake unzip software-properties-common wget
-            wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-            add-apt-repository -y ppa:ubuntu-toolchain-r/test
-            add-apt-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-8 main"
-            apt-get update
-            export WORKINGDIR="$(pwd)"
-            echo "working dir: $WORKINGDIR"
-            export DEPS="$(pwd)/deps"
-            echo "dependency dir: $DEPS"
-            mkdir -p $DEPS
-
-      - run:
-          name: Install clang
-          command: |
-            apt-get -y install clang-8
-            clang++-8 --version
-
-      - run:
-          name: Install gcc-8
-          command: |
-            apt-get -y install  gcc-8 g++-8
-            g++ --version
-            g++-8 --version
-
-      - run:
-          name: Install cmake
-          command: |
-            cd $DEPS
-            wget https://cmake.org/files/v3.14/cmake-3.14.3.tar.gz
-            tar xvzf cmake-3.14.3.tar.gz
-            cd cmake-3.14.3
-            ./bootstrap
-            make -j4 && make install
-            cmake --version
-
-      - run:
-          name: Install leveldb
-          command: |
-            apt-get -y install libleveldb-dev
-
-      - run:
-          name: Install yaml-cpp
-          command: |
-            apt-get -y install libyaml-cpp-dev
-
-      - run:
-          name: Install xattr
-          command: |
-            apt-get -y install attr-dev
-
-      - run:
-          name: Install openssl
-          command: |
-            apt-get -y install openssl libssl-dev
-
-      - run:
-          name: Install boost
-          command: |
-            cd $DEPS
-            git clone -b boost-1.65.0 --depth 1 --recursive http://github.com/boostorg/boost.git boost || exit 1
-            (cd boost && ./bootstrap.sh --prefix=/usr --with-libraries=log,thread,system,program_options,serialization && ./b2 headers && ./b2 link=shared install) || exit 1
-            ldconfig
+            apt-get -y install build-essential \
+                       git \
+                       cmake \
+                       libboost-system-dev \
+                       libboost-serialization-dev \
+                       libleveldb-dev \
+                       libyaml-cpp-dev \
+                       libgrpc++-dev \
+                       libboost-thread-dev \
+                       libboost-program_options-dev \
+                       libssl-dev
 
       - run:
           name: Install grpc
