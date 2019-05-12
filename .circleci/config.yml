@@ -5,6 +5,29 @@ executors:
       IMAGE_NAME: puffinfs/chord
     docker:
       - image: circleci/buildpack-deps:stretch
+workflows:
+  version: 2
+  build-master:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: master
+      - docker-build:
+          context: docker-context
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+      - docker-publish:
+          context: docker-context
+          requires:
+            - build
+            - docker-build
+          filters:
+            branches:
+              only: master
 jobs:
   build:
     docker:
@@ -142,27 +165,3 @@ jobs:
           command: |
             echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
             docker push $IMAGE_NAME:latest
-
-workflows:
-  version: 2
-  build-master:
-    jobs:
-      - build:
-          filters:
-            branches:
-              only: master
-      - docker-build:
-          context: docker-context
-          requires:
-            - build
-          filters:
-            branches:
-              only: master
-      - docker-publish:
-          context: docker-context
-          requires:
-            - build
-            - docker-build
-          filters:
-            branches:
-              only: master
