@@ -2,7 +2,7 @@ version: 2.1
 executors:
   docker-publisher:
     environment:
-      IMAGE_NAME: puffinfs/chord
+      IMAGE_NAME: winternet1337/chord
     docker:
       - image: circleci/buildpack-deps:stretch
 workflows:
