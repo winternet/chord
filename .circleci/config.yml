@@ -47,7 +47,7 @@ jobs:
                        libyaml-cpp-dev \
                        libgrpc++-dev \
                        libboost-thread-dev \
-                       libboost-program_options-dev \
+                       libboost-program-options-dev \
                        libssl-dev
 
       - run:
