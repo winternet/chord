@@ -125,7 +125,9 @@ jobs:
           name: Publish docker image to docker hub
           command: |
             echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
+            IMAGE_TAG="build-${CIRCLE_BUILD_NUM}"
             docker push $IMAGE_NAME:latest
+            docker push $IMAGE_NAME:$IMAGE_TAG
 
   docker-publish-tag:
     executor: docker-publisher
