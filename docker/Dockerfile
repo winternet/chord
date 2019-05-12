@@ -6,7 +6,7 @@ FROM alpine:latest AS base
 #
 # basic shared dependencies
 #
-RUN apk update 
+RUN apk update \
     && apk add --no-cache \
                      boost-system \
                      boost-program_options \

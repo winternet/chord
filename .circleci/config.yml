@@ -141,7 +141,7 @@ jobs:
       - run:
           name: Build docker image
           command: |
-            docker build -t $IMAGE_NAME:latest .
+            docker build -t $IMAGE_NAME:latest docker/
       - run:
           name: Archive docker image
           command: |
