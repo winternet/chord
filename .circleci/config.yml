@@ -1,4 +1,10 @@
-version: 2
+version: 2.1
+executors:
+  docker-publisher:
+    environment:
+      IMAGE_NAME: puffinfs/chord
+    docker:
+      - image: circleci/buildpack-deps:stretch
 jobs:
   build:
     docker:
@@ -104,3 +110,59 @@ jobs:
             ctest --verbose
             bash <(curl -s https://codecov.io/bash) -t 8811a299-c05a-4c37-8d1d-c5bac9cca1fe
 
+  docker-build:
+    executor: docker-publisher
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build docker image
+          command: |
+            docker build -t $IMAGE_NAME:latest .
+      - run:
+          name: Archive docker image
+          command: |
+            docker save -o image.tar $IMAGE_NAME
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./image.tar
+
+  docker-publish:
+    executor: docker-publisher
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - setup_remote_docker
+      - run:
+          name: Load archived docker image
+          command: docker load -i /tmp/workspace/image.tar
+      - run:
+          name: Publish docker image to docker hub
+          command: |
+            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
+            docker push $IMAGE_NAME:latest
+
+workflows:
+  version: 2
+  build-master:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: master
+      - docker-build:
+          context: docker-context
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+      - docker-publish:
+          context: docker-context
+          requires:
+            - build
+            - docker-build
+          filters:
+            branches:
+              only:master
