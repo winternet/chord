@@ -41,6 +41,7 @@ jobs:
             apt-get -y install build-essential \
                        git \
                        cmake \
+                       autoconf \
                        libboost-system-dev \
                        libboost-serialization-dev \
                        libleveldb-dev \
