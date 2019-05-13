@@ -1,63 +1,144 @@
 # chord
 [![Build Status](https://circleci.com/gh/winternet/chord/tree/master.svg?style=shield&circle-token=06884550effac32786aa01b3638bdd15e8baa03b)](https://circleci.com/gh/winternet/chord) [![codecov](https://codecov.io/gh/winternet/chord/branch/master/graph/badge.svg)](https://codecov.io/gh/winternet/chord)
 
-## pre-requisites
+## Using the docker image
 
-* common
+The easiest way to get started with chord is using a small docker image (~12 MB) provided by the repository `winternet1337/chord`. The images are automatically built and pushed to docker hub after each commit - provided successful test run.
+
+### First steps
+
+To run a node in interactive mode and cleanup automatically afterwards issue `$ docker run -ti --rm winternet1337/chord`. This command will bootstrap the container with random node uuid on default port `50050`. 
+To stop the container issue `Ctrl+C`.
+
+In order to print chord's help just append the `--help` argument (`-h` for short): 
 ```sh
- $ [sudo] apt-get -y install build-essential autoconf libtool git curl cmake unzip software-properties-common wget
+ $ docker run -ti --rm winternet1337/chord --help
+ [program options]:
+  -h [ --help ]           produce help message
+  -c [ --config ] arg     path to the yaml configuration file.
+  -j [ --join ] arg       join to an existing address.
+  -b [ --bootstrap ]      bootstrap peer to create a new chord ring.
+  -n [ --no-controller ]  do not start the controller.
+  -u [ --uuid ] arg       client uuid.
+  --bind arg              bind address that is promoted to clients.
 ```
 
-* boost libraries
-```sh
- $ [sudo] apt-get install libboost-dev
+To configure our node we could pass some of the arguments to the container, however, it is far more convenient and powerful to use a configuration file. For this to work, we create one on our docker host machine and mount the volume within the docker container.
+
+### The node configuration
+
+Sample configurations can be found in the sourcecode repository under the [config](https://github.com/winternet/chord/tree/master/config)-folder. Either use this samples or copy & paste the one below to e.g. /tmp/chord/config/node0.yml:
+
+```yaml
+version: 1
+
+## data
+data-directory: "/data0"
+meta-directory: "/meta0"
+
+## networking
+bind-addr: "0.0.0.0:50050"
+join-addr: "0.0.0.0:50051"
+bootstrap: Yes
+no-controller: No
+
+## details
+stabilize_ms: 10000
+check_ms: 10000
+
+## replication / striping
+replication-count: 1
+
+uuid: "0"
+
+## logging
+logging:
+  level: trace
+  sinks:
+    CONSOLE_SINK:
+      type: "console"
+    FILE_SINK:
+      type: "file-rotating"
+      path: "/logs/chord0.log"
+  loggers:
+    CHORD_LOG:
+      sinks: [FILE_SINK]
+      filter: "^chord[.](?!fs)"
+    CHORD_FS_LOG:
+      sinks: [CONSOLE_SINK]
+      filter: "^chord[.]fs"
+      level: trace
 ```
 
-* leveldb libraries
+The configuration should be quite self-explanatory. A more detailed description of the configuration will be provided in the wiki.
+
+### Starting configured node
+
+To start the node with the yaml configuration file we need to mount it to the container. Since we restricted the console logging to the filesystem part, we are greeted by the metadata manager creating the root of our p2p filesystem - waiting for something to happen.
 ```sh
- $ [sudo] apt-get -y install libleveldb-dev
+ $ docker run -ti --rm \
+        -v /tmp/chord/config:/etc/chord \
+        winternet1337/chord -c /etc/chord/node0.yml
+[<timestamp>] [chord.fs.metadata.manager] [trace] [ADD] chord:///
+[<timestamp>] [chord.fs.metadata.manager] [trace] [ADD] .
 ```
 
-* yaml-cpp libraries
+### Forwarding ports and bind address
+
+TODO
+[ ] port forwarding and promote the correct bind address (simple host network).
+[ ] volume mounts for data, metadata and log files.
+[ ] connect and put a file using a client.
+
+
+## Installing chord manually
+
+If you prefer a manual installation, have a look at the following instructions which are mainly copied from the [cirecleci configuration](https://github.com/winternet/chord/blob/master/.circleci/config.yml).
+
+### Installing all dependencies
+
+* Install common dependencies
 ```sh
- $ [sudo] apt-get -y install libyaml-cpp-dev
+$ apt-get update
+$ apt-get -y install build-essential \
+            git \
+            cmake \
+            autoconf \
+            libtool \
+            libboost-system-dev \
+            libboost-serialization-dev \
+            libleveldb-dev \
+            libyaml-cpp-dev \
+            libgrpc++-dev \
+            libboost-thread-dev \
+            libboost-program-options-dev \
+            libssl-dev
 ```
 
-* xattr libraries
+* Install GRPC
 ```sh
- $ [sudo] apt-get -y install attr-dev
-```
-
-* openssl libraries
-```sh
- $ [sudo] apt-get -y install openssl libssl-dev
-```
-
-* grpc
-```sh
- $ git clone -b $(curl -L https://grpc.io/release) https://github.com/grpc/grpc
- $ cd grpc
+ $ git clone -b v1.15.1 https://github.com/grpc/grpc /opt/grpc && cd /opt/grpc
  $ git submodule update --init
- $ make -j4 CFLAGS='-Wno-implicit-fallthrough' CXXFLAGS='-Wno-implicit-fallthrough'
- $ sudo make install
+ $ make -j4 CFLAGS='-Wno-error -Wno-expansion-to-defined' && make install CFLAGS='-Wno-error -Wno-expansion-to-defined'
  $ ldconfig
 ```
 
-* protobuf
+* Install Protobuf
 ```sh
- $ git clone -b v3.0.2 https://github.com/google/protobuf.git protobuf
- $ cd protobuf
- $ ./autogen.sh && ./configure
+ $ git clone -b v3.6.1 https://github.com/google/protobuf.git /opt/protobuf && cd /opt/protobuf
+ $ ./autogen.sh
+ $ ./configure
  $ make -j4 && make install
  $ ldconfig
+ $ protoc --version
 ```
 
-## installation
+### Install chord
 
 ```sh
- $ mkdir build
- $ cd build
- $ CXX=g++-7 CC=gcc-7 cmake ..
+ $ git clone https://github.com/winternet/chord.git /opt/chord && cd /opt/chord
+ $ mkdir build && cd build
+ $ cmake ..
  $ cmake --build . -- -j4 
 ```
 
