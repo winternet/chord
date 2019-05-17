@@ -81,6 +81,8 @@ path path::operator-(const path &p) const {
   const auto can_rop = p.canonical();
   const auto can_lop = canonical();
 
+  if(can_rop.empty() || can_rop == path{"/"}) return can_lop;
+
   regex pattern(can_rop.string());
   return path{regex_replace(can_lop.string(), pattern, "")}.canonical();
 }
