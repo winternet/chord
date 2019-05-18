@@ -10,8 +10,8 @@ jobs:
     docker:
       - image: ubuntu:18.04
     environment:
-      version.grpc: v1.20.1
-      version.protobuf: v3.6.1
+      version-grpc: v1.20.1
+      version-protobuf: v3.6.1
     steps:
       - checkout
       - run:
@@ -36,7 +36,7 @@ jobs:
           name: Install grpc
           command: |
             cd $DEPS
-            git clone -b ${version.grpc} https://github.com/grpc/grpc
+            git clone -b ${version-grpc} https://github.com/grpc/grpc
             cd grpc
             git submodule update --init
             make -j4 CFLAGS='-Wno-error -Wno-expansion-to-defined' && make install CFLAGS='-Wno-error -Wno-expansion-to-defined'
@@ -46,7 +46,7 @@ jobs:
           name: Install protobuf
           command: |
             cd $DEPS
-            git clone -b ${version.protobuf} https://github.com/google/protobuf.git protobuf
+            git clone -b ${version-protobuf} https://github.com/google/protobuf.git protobuf
             cd protobuf
             ./autogen.sh
             ./configure
