@@ -3,7 +3,9 @@
 
 ## Using the docker image
 
-The easiest way to get started with chord is using a small docker image (~12 MB) provided by the repository `winternet1337/chord`. The images are automatically built and pushed to docker hub after each commit - provided successful test run.
+The easiest way to get started with chord is using a small docker image (~12 MB) provided by the repository `winternet1337/chord`. The images are automatically built and pushed to docker hub after each commit - provided all tests passed successfully.
+
+> **INFO**: There are currently issues concerning grpc on libmusl which cause a) the application to sigsegv because too small default stack size and b) connectivity issues within the grpc streaming api.
 
 ### First steps
 
@@ -33,8 +35,8 @@ Sample configurations can be found in the sourcecode repository under the [confi
 version: 1
 
 ## data
-data-directory: "/data0"
-meta-directory: "/meta0"
+data-directory: "/data"
+meta-directory: "/meta"
 
 ## networking
 bind-addr: "0.0.0.0:50050"
@@ -74,7 +76,8 @@ The configuration should be quite self-explanatory. A more detailed description 
 
 ### Starting configured node
 
-To start the node with the yaml configuration file we need to mount it to the container. Since we restricted the console logging to the filesystem part, we are greeted by the metadata manager creating the root of our p2p filesystem - waiting for something to happen.
+To start the node with the yaml configuration file, we need to mount it to the container. 
+
 ```sh
  $ docker run -ti --rm \
         -v /tmp/chord/config:/etc/chord \
@@ -83,7 +86,36 @@ To start the node with the yaml configuration file we need to mount it to the co
 [<timestamp>] [chord.fs.metadata.manager] [trace] [ADD] .
 ```
 
-### Forwarding ports and bind address
+Since we restricted the console logging to the filesystem part, we are greeted by the metadata manager creating the root of our p2p filesystem - waiting for something to happen.
+
+### Setup chord cluster
+
+The next section describes how to setup a small local cluster consisting of two nodes. The section closes with storing a folder within our cluster.
+
+#### Forwarding ports and bind address
+
+To wire our different nodes locally we will exploit docker's `--net=host` option. Note that this is not the preferred way but its ok for showing the basic concepts. We start by mounting more volumes so that all (meta-)data is written to the docker host filesystem.
+
+```sh
+ $ docker run -ti --rm --net=host \
+        -v /tmp/chord/config:/etc/chord \
+        -v /tmp/chord/data0:/data \
+        -v /tmp/chord/meta0:/meta \
+        winternet1337/chord -c /etc/chord/node0.yml
+```
+
+Copy the `/tmp/chord/config/node0.yml` to `/tmp/chord/config/node1.yml` and change the uuid to a value near `(2^256)/2` so that all files are distributed equally. Also change the bind address to `bind-addr: "0.0.0.0:50051"` and the join address to `join-addr: "0.0.0.0:50050"`. 
+
+On a different shell start another docker instance with our second configuration and different (meta-)data directories.
+
+```sh
+ $ docker run -ti --rm --net=host \
+        -v /tmp/chord/config:/etc/chord \
+        -v /tmp/chord/data1:/data \
+        -v /tmp/chord/meta1:/meta \
+        winternet1337/chord -c /etc/chord/node1.yml
+```
+
 
 TODO
 [ ] port forwarding and promote the correct bind address (simple host network).
