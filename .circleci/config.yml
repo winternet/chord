@@ -5,39 +5,6 @@ executors:
       IMAGE_NAME: winternet1337/chord
     docker:
       - image: circleci/buildpack-deps:stretch
-workflows:
-  version: 2
-  build-master:
-    jobs:
-      - build:
-          filters:
-            branches:
-              only: master
-      - docker-build:
-          context: docker-context
-          requires:
-            - build
-          filters:
-            branches:
-              only: master
-      - docker-publish-latest:
-          context: docker-context
-          requires:
-            - build
-            - docker-build
-          filters:
-            branches:
-              only: master
-      - docker-publish-tag:
-          context: docker-context
-          requires:
-            - build
-            - docker-build
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
 jobs:
   build:
     docker:
@@ -102,7 +69,7 @@ jobs:
       - run:
           name: Build docker image
           command: |
-            docker build -t $IMAGE_NAME:latest docker/
+            docker build -t $IMAGE_NAME:latest -f docker/Dockerfile_scratch .
       - run:
           name: Archive docker image
           command: |
@@ -147,3 +114,37 @@ jobs:
             docker tag $IMAGE_NAME:latest $IMAGE_NAME:$IMAGE_TAG
             docker push $IMAGE_NAME:latest
             docker push $IMAGE_NAME:$IMAGE_TAG
+
+workflows:
+  version: 2
+  build-master:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: master
+      - docker-build:
+          context: docker-context
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+      - docker-publish-latest:
+          context: docker-context
+          requires:
+            - build
+            - docker-build
+          filters:
+            branches:
+              only: master
+      - docker-publish-tag:
+          context: docker-context
+          requires:
+            - build
+            - docker-build
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
