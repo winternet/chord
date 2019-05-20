@@ -13,7 +13,7 @@
 namespace chord {
 struct Router;
 struct Context;
-class node;
+struct node;
 }  // namespace chord
 
 namespace spdlog {
@@ -47,12 +47,8 @@ class Client : public IClient {
 
   void leave() override;
 
-  signal<void(const node)>& on_predecessor_fail() {
-    return event_predecessor_fail;
-  }
-  signal<void(const node)>& on_successor_fail() {
-    return event_successor_fail;
-  }
+  signal<void(const node)>& on_predecessor_fail() override;
+  signal<void(const node)>& on_successor_fail() override;
 
   bool join(const endpoint_t &addr) override;
   grpc::Status join(const JoinRequest *req, JoinResponse *res) override;

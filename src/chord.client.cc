@@ -83,6 +83,13 @@ void Client::leave() {
   }
 }
 
+signal<void(const node)>& Client::on_predecessor_fail() {
+  return event_predecessor_fail;
+}
+signal<void(const node)>& Client::on_successor_fail() {
+  return event_successor_fail;
+}
+
 bool Client::join(const endpoint_t &addr) {
   logger->debug("joining {}", addr);
 

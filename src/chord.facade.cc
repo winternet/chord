@@ -49,7 +49,7 @@ void ChordFacade::stop() {
   logger->trace("shutting down scheduler...");
   stop_scheduler();
   logger->trace("shutting down chord...");
-  leave();
+  //leave();
 }
 
 void ChordFacade::stop_scheduler() {
@@ -150,6 +150,21 @@ void ChordFacade::fix_fingers(size_t index) {
   service->fix_fingers(index);
 }
 
+ChordFacade::event_binary_t& ChordFacade::on_join() {
+  return event_joined;
+}
+
+ChordFacade::event_binary_t& ChordFacade::on_leave() {
+  return service->on_leave();
+}
+
+ChordFacade::event_unary_t& ChordFacade::on_successor_fail() {
+  return client->on_successor_fail();
+}
+
+ChordFacade::event_unary_t& ChordFacade::on_predecessor_fail() {
+  return client->on_predecessor_fail();
+}
 /**
  * create new chord ring
  */

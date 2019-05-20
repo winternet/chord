@@ -40,6 +40,8 @@ TEST(chord_file, create_directory) {
 
   ASSERT_TRUE(chord::file::create_directory(dir));
   ASSERT_TRUE(chord::file::exists(dir));
+  ASSERT_TRUE(chord::file::is_empty(dir));
+  ASSERT_FALSE(chord::file::is_regular_file(dir));
 
   ASSERT_TRUE(chord::file::remove(dir));
   ASSERT_FALSE(chord::file::exists(dir));
