@@ -311,7 +311,7 @@ Status Service::handle_del_dir(const chord::fs::DelRequest *req) {
   for(const auto m:metadata) {
     if(m.name == ".") continue;
     const auto sub_uri = uri::builder{uri.scheme(), uri.path() / path{m.name}}.build();
-    const auto status = make_client().del(sub_uri);
+    const auto status = make_client().del(sub_uri, req->recursive());
     if(!status.ok()) {
       logger->error("Failed to delete directory: {} {}", status.error_message(), status.error_details());
       return status;
