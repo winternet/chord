@@ -60,5 +60,9 @@ TEST(chord_metadata, create_directory) {
   const auto meta = create_directory(contents);
   ASSERT_EQ(meta.name, ".");
   ASSERT_EQ(meta.file_type, type::directory);
-  ASSERT_EQ(meta.replication, Replication(0, 5));
+
+  const auto expected_repl = Replication(0,5);
+  ASSERT_EQ(meta.replication.value(), expected_repl) 
+    << "Expected equality of expected " << expected_repl.string() 
+    << " and actual " << (meta.replication ? meta.replication->string() : "<empty>");
 }

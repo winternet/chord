@@ -53,7 +53,7 @@ struct Replication {
   }
 
   bool operator<(const Replication& other) const {
-    return other.count < count;
+    return count < other.count;
   }
 
   operator bool() const {
