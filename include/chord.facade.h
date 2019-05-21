@@ -28,6 +28,9 @@ struct Router;
 
 class ChordFacade {
   static constexpr auto logger_name = "chord.facade";
+public:
+  using event_binary_t = signal<void(const node, const node)>;
+  using event_unary_t = signal<void(const node)>;
 
  public:
   ChordFacade(const ChordFacade &) = delete;             // disable copying
@@ -82,21 +85,13 @@ class ChordFacade {
    */
   void fix_fingers(size_t index);
 
-  auto& on_join() {
-    return event_joined;
-  }
+  event_binary_t& on_join();
 
-  auto& on_leave() {
-    return service->on_leave();
-  }
+  event_binary_t& on_leave();
 
-  auto& on_successor_fail() {
-    return client->on_successor_fail();
-  }
+  event_unary_t& on_successor_fail();
 
-  auto& on_predecessor_fail() {
-    return client->on_predecessor_fail();
-  }
+  event_unary_t& on_predecessor_fail();
 
  private:
   size_t next{0};
@@ -114,7 +109,7 @@ class ChordFacade {
   std::shared_ptr<spdlog::logger> logger;
 
   //--- events
-  signal<void(const node, const node)> event_joined;
+  event_binary_t  event_joined;
 
   void start_scheduler();
   void stop_scheduler();

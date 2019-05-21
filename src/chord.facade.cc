@@ -49,7 +49,7 @@ void ChordFacade::stop() {
   logger->trace("shutting down scheduler...");
   stop_scheduler();
   logger->trace("shutting down chord...");
-  //leave();
+  leave();
 }
 
 void ChordFacade::stop_scheduler() {
