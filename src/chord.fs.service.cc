@@ -230,7 +230,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   // handle (recursive) file-replication
   if(++repl) {
 
-    const chord::uuid uuid{req.id()};
+    const auto uuid = chord::crypto::sha256(uri);
     // next
     const auto next = make_node(chord->successor(context.uuid()));
     if(uuid.between(context.uuid(), next.uuid)) {
@@ -248,7 +248,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     file.exceptions(ifstream::failbit | ifstream::badbit);
     file.open(data, std::fstream::binary);
     //TODO rollback on status ABORTED?
-    make_client().put(next, uuid, uri, file, repl);
+    make_client().put(next, uri, file, repl);
   }
   return Status::OK;
 }

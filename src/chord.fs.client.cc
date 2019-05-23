@@ -48,7 +48,7 @@ Client::Client(Context &context, ChordFacade *chord, StubFactory make_stub)
       make_stub{make_stub},
       logger{context.logging.factory().get_or_create(logger_name)} {}
 
-Status Client::put(const chord::node& node, const chord::uuid& hash, const chord::uri &uri, istream &istream, Replication repl) {
+Status Client::put(const chord::node& node, const chord::uri &uri, istream &istream, Replication repl) {
 
   //TODO make configurable
   constexpr size_t len = 512*1024; // 512k
@@ -67,7 +67,6 @@ Status Client::put(const chord::node& node, const chord::uuid& hash, const chord
     if (read == 0) break;
 
     PutRequest req;
-    req.set_id(hash);
     req.set_data(buffer.data(), read);
     req.set_offset(offset);
     req.set_size(read);
@@ -96,7 +95,7 @@ Status Client::put(const chord::uri &uri, istream &istream, Replication repl) {
   const auto hash = chord::crypto::sha256(uri);
   const auto node = make_node(chord->successor(hash));
   logger->trace("put {} ({})", uri, hash);
-  return put(node, hash, uri, istream, repl);
+  return put(node, uri, istream, repl);
 }
 
 void Client::add_metadata(MetaRequest& req, const chord::path& parent_path) {

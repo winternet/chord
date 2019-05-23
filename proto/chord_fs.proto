@@ -23,14 +23,13 @@ service Filesystem {
  */
 message PutRequest {
   //--- id to put
-  string  id = 1;
-  bytes   data = 2;
-  uint64  offset = 3;
-  uint64  size = 4;
-  string  uri = 5;
+  bytes   data = 1;
+  uint64  offset = 2;
+  uint64  size = 3;
+  string  uri = 4;
 
-  uint32  replication_idx = 6;
-  uint32  replication_cnt = 7;
+  uint32  replication_idx = 5;
+  uint32  replication_cnt = 6;
 }
 
 message PutResponse { 
