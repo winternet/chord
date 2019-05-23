@@ -162,15 +162,7 @@ Status Facade::put_file(const path& source, const chord::uri& target, Replicatio
     return Status(StatusCode::FAILED_PRECONDITION, "replication count above "+to_string(Replication::MAX_REPL_CNT)+" is not allowed");
   }
 
-  try {
-    std::ifstream file;
-    file.exceptions(ifstream::failbit | ifstream::badbit);
-    file.open(source, std::fstream::binary);
-
-    return fs_client->put(target, file, repl);
-  } catch (const std::ios_base::failure& exception) {
-    throw__exception("failed to issue put_file " + std::string{exception.what()});
-  }
+  return fs_client->put(target, source, repl);
 }
 
 Status Facade::get_file(const chord::uri& source, const chord::path& target) {

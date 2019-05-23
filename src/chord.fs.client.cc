@@ -48,6 +48,24 @@ Client::Client(Context &context, ChordFacade *chord, StubFactory make_stub)
       make_stub{make_stub},
       logger{context.logging.factory().get_or_create(logger_name)} {}
 
+Status Client::put(const chord::uri& uri, const chord::path& source, Replication repl) {
+  const auto hash = chord::crypto::sha256(uri);
+  const auto node = make_node(chord->successor(hash));
+  return put(node, uri, source, repl);
+}
+
+Status Client::put(const chord::node& node, const chord::uri& uri, const chord::path& source, Replication repl) {
+  try {
+    std::ifstream file;
+    file.exceptions(ifstream::failbit | ifstream::badbit);
+    file.open(source, std::fstream::binary);
+
+    return put(node, uri, file, repl);
+  } catch (const std::ios_base::failure& exception) {
+    return Status(grpc::StatusCode::CANCELLED, "failed to put", exception.what());
+  }
+}
+
 Status Client::put(const chord::node& node, const chord::uri &uri, istream &istream, Replication repl) {
 
   //TODO make configurable

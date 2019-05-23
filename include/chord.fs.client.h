@@ -49,8 +49,10 @@ void add_metadata(chord::fs::MetaRequest& req, const chord::path& path);
 
   // called internally by the chord.fs.service
   grpc::Status put(const chord::node&, const chord::uri&, std::istream&, Replication repl);
+  grpc::Status put(const chord::node&, const chord::uri&, const chord::path&, Replication repl);
 
   grpc::Status put(const chord::uri&, std::istream&, Replication repl = Replication() );
+  grpc::Status put(const chord::uri&, const chord::path&, Replication repl);
 
   grpc::Status get(const chord::uri&, std::ostream&);
 
