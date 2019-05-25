@@ -14,6 +14,7 @@
 #include "chord.peer.h"
 #include "chord.router.h"
 #include "chord.utils.h"
+#include "chord.fs.context.metadata.h"
 using grpc::ClientContext;
 using grpc::Status;
 using grpc::ClientWriter;
@@ -75,6 +76,7 @@ Status Client::put(const chord::node& node, const chord::uri &uri, istream &istr
          read = 0;
 
   ClientContext clientContext;
+  ContextMetadata::add(clientContext, repl);
   PutResponse res;
   // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
   auto stub = Filesystem::NewStub(grpc::CreateChannel(node.endpoint, grpc::InsecureChannelCredentials()));
@@ -89,12 +91,6 @@ Status Client::put(const chord::node& node, const chord::uri &uri, istream &istr
     req.set_offset(offset);
     req.set_size(read);
     req.set_uri(uri);
-
-    // send replication once
-    if(offset == 0) {
-      req.set_replication_idx(repl.index);
-      req.set_replication_cnt(repl.count);
-    }
 
     offset += read;
 

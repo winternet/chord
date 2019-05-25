@@ -13,7 +13,7 @@
 #include "chord.context.h"
 #include "chord_fs.grpc.pb.h"
 #include "chord.i.callback.h"
-
+#include "chord.fs.context.metadata.h"
 #include "chord.common.h"
 #include "chord.client.h"
 #include "chord.fs.service.h"
@@ -178,11 +178,9 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     file::create_directories(data);
   }
 
-  Replication repl;
+  Replication repl = ContextMetadata::replication_from(serverContext);
   // open
   if (reader->Read(&req)) {
-
-    repl = {req.replication_idx(), req.replication_cnt()};
 
     const auto uri = uri::from(req.uri());
 

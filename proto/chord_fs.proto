@@ -27,9 +27,6 @@ message PutRequest {
   uint64  offset = 2;
   uint64  size = 3;
   string  uri = 4;
-
-  uint32  replication_idx = 5;
-  uint32  replication_cnt = 6;
 }
 
 message PutResponse { 

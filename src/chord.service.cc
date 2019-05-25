@@ -11,7 +11,6 @@
 
 using grpc::ServerContext;
 using grpc::ClientContext;
-using grpc::ServerBuilder;
 using grpc::ServerReader;
 using grpc::ServerWriter;
 using grpc::Status;

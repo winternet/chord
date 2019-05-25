@@ -18,7 +18,7 @@ struct Replication {
   Replication() : index{0}, count{1} {}
   Replication(const Replication& repl) : index{repl.index}, count{repl.count} {}
   Replication(std::uint32_t count) : index{0}, count{count} {}
-  Replication(std::uint32_t index, unsigned int count) : index{index}, count{count} {}
+  Replication(std::uint32_t index, std::uint32_t count) : index{index}, count{count} {}
 
   Replication& operator=(Replication rhs) {
     std::swap(rhs.count, count);
