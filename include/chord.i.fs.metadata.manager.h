@@ -25,7 +25,8 @@ class IMetadataManager {
 
   virtual bool exists(const chord::uri& uri) = 0;
 
-  virtual std::map<chord::uri, std::set<Metadata>> get(const chord::node& node) = 0;
+  virtual std::map<chord::uri, std::set<Metadata>> get_shallow_copies(const chord::node& node) = 0;
+  virtual std::map<chord::uri, std::set<Metadata>> get_replicable() = 0;
   virtual std::set<Metadata> get(const chord::uri& directory) = 0;
 
 };

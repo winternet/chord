@@ -1,4 +1,7 @@
 #include "chord.fs.metadata.h"
+#include "chord.uri.h"
+#include "chord.path.h"
+#include "chord.context.h"
 
 using std::begin;
 using std::end;
@@ -36,7 +39,7 @@ Metadata create_directory(const std::set<Metadata>& metadata) {
 }
 
 bool is_directory(const std::set<Metadata>& metadata) {
-  return std::any_of(begin(metadata), end(metadata), [](const Metadata& m) { return m.name == "." && m.file_type == type::directory; });
+  return std::any_of(begin(metadata), end(metadata), [&](const Metadata& m) { return m.file_type == type::directory; });
 }
 
 } // namespace fs

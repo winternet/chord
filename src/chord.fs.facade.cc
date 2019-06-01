@@ -3,6 +3,8 @@
 #include "chord.log.h"
 #include "chord.exception.h"
 #include "chord.fs.facade.h"
+#include "chord.common.h"
+#include "chord.fs.metadata.h"
 
 using namespace std;
 
@@ -14,6 +16,7 @@ using grpc::StatusCode;
 
 Facade::Facade(Context& context, ChordFacade* chord)
     : context{context},
+      chord{chord},
       fs_client{make_unique<fs::Client>(context, chord)},
       fs_service{make_unique<fs::Service>(context, chord)},
       logger{context.logging.factory().get_or_create(logger_name)}
@@ -21,6 +24,7 @@ Facade::Facade(Context& context, ChordFacade* chord)
 
 Facade::Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service)
   : context{context},
+    chord{nullptr},
     fs_client{fs_client},
     fs_service{fs_service},
     logger{context.logging.factory().get_or_create(logger_name)}
@@ -58,8 +62,9 @@ Status Facade::put(const chord::path &source, const chord::uri &target, Replicat
 }
 
 Status Facade::get_shallow_copies(const chord::node& leaving_node) {
-  auto shallow_copies = fs_service->metadata_manager()->get(leaving_node);
+  auto metadata_mgr = fs_service->metadata_manager();
 
+  auto shallow_copies = metadata_mgr->get_shallow_copies(leaving_node);
   // integrate the metadata
   {
     for (const auto& [uri, meta_set] : shallow_copies) {
@@ -72,10 +77,10 @@ Status Facade::get_shallow_copies(const chord::node& leaving_node) {
             return status;
           }
         }
-        m.node_ref = {};
+        m.node_ref.reset();
         deep_copies.insert(m);
       }
-      fs_service->metadata_manager()->add(uri, deep_copies);
+      metadata_mgr->add(uri, deep_copies);
     }
   }
   return Status::OK;
@@ -171,11 +176,7 @@ Status Facade::get_file(const chord::uri& source, const chord::path& target) {
     const auto parent = target.parent_path();
     if(!file::exists(parent)) file::create_directories(parent);
 
-    std::ofstream file;
-    file.exceptions(ofstream::failbit | ofstream::badbit);
-    file.open(target, std::fstream::binary);
-
-    return fs_client->get(source, file);
+    return fs_client->get(source, target);
   } catch (const std::ios_base::failure& exception) {
     return Status(StatusCode::INTERNAL, "failed to issue get_file ", exception.what());
   }
@@ -254,8 +255,41 @@ void Facade::on_predecessor_fail(const chord::node predecessor) {
 }
 
 void Facade::on_successor_fail(const chord::node successor) {
-  logger->warn("\n\n************** SUCCESSOR FAIL!");
-  //TODO implement
+  logger->warn("successor {} failed, rebalancing replications", successor.string());
+
+  if(chord == nullptr) {
+    logger->warn("failed to handle on successor fail: chord facade unavailable");
+    return;
+  }
+
+  const auto metadata_mgr = fs_service->metadata_manager();
+  const map<uri, set<Metadata>> replicable_meta = metadata_mgr->get_replicable();
+  const auto node = make_node(chord->successor(context.uuid()));
+  for(const auto& pair : replicable_meta) {
+    const auto& uri = pair.first;
+    for(auto meta:pair.second) {
+
+      const auto local_path = context.data_directory / uri.path();
+      const bool exists = chord::file::exists(local_path) && chord::file::is_regular_file(local_path);
+
+      if(!exists && meta.node_ref) {
+        logger->warn("trying to replicate shallow copy {} referencing node {}.", uri, *meta.node_ref);
+        const auto status = fs_client->get(uri, node, local_path);
+        if(!status.ok()) {
+          logger->error("failed to get shallow copy {} from referencing node {}.", uri, *meta.node_ref);
+          continue;
+        }
+        {
+          // reset node_ref
+          meta.node_ref.reset();
+          metadata_mgr->add(uri, {meta});
+        }
+      }
+
+      auto repl = *meta.replication;
+      fs_client->put(node, uri, local_path, ++repl);
+    }
+  }
 }
 
 

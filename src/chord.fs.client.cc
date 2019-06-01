@@ -240,6 +240,20 @@ grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata) {
   return status;
 }
 
+Status Client::get(const chord::uri& uri, const chord::path& path) {
+  std::ofstream ofile;
+  ofile.exceptions(ofstream::failbit | ofstream::badbit);
+  ofile.open(path, fstream::binary);
+  return get(uri, ofile);
+}
+
+Status Client::get(const chord::uri& uri, const chord::node& node, const chord::path& path) {
+  std::ofstream ofile;
+  ofile.exceptions(ofstream::failbit | ofstream::badbit);
+  ofile.open(path, fstream::binary);
+  return get(uri, node, ofile);
+}
+
 Status Client::get(const chord::uri &uri, const chord::node& node, std::ostream &ostream) {
   const auto hash = chord::crypto::sha256(uri);
 

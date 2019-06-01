@@ -198,7 +198,7 @@ class MetadataManager : public IMetadataManager {
   //TODO write unit tests
   //TODO check whether to return only leaf nodes
   //TODO 
-  std::map<chord::uri, std::set<Metadata>> get(const chord::node& node) override {
+  std::map<chord::uri, std::set<Metadata>> get_shallow_copies(const chord::node& node) override {
     std::map<chord::uri, std::set<Metadata>> ret;
     std::unique_ptr<leveldb::Iterator> it{db->NewIterator(leveldb::ReadOptions())};
 
@@ -208,6 +208,24 @@ class MetadataManager : public IMetadataManager {
       const chord::uri uri("chord", {path});
       for(const auto& [name, meta] : map) {
         if(meta.node_ref && meta.node_ref == node) {
+          ret[uri].insert(meta);
+        }
+      }
+    }
+    return ret;
+  }
+
+  std::map<chord::uri, std::set<Metadata>> get_replicable() override {
+    std::map<chord::uri, std::set<Metadata>> ret;
+    std::unique_ptr<leveldb::Iterator> it{db->NewIterator(leveldb::ReadOptions())};
+
+    for(it->SeekToFirst(); it->Valid(); it->Next()) {
+      const std::string& path = it->key().ToString();
+      const auto map = deserialize(it->value().ToString());
+      for(const auto& pair : map) {
+        const chord::uri uri("chord", chord::path(path) / chord::path(pair.first));
+        const auto& meta = pair.second;
+        if(meta.file_type != type::directory && meta.replication && *meta.replication) {
           ret[uri].insert(meta);
         }
       }

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <experimental/optional>
+#include <optional>
 
 namespace chord {
 
 template <class T>
-using optional = std::experimental::optional<T>;
+using optional = std::optional<T>;
 
 }  // namespace chord
 

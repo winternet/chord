@@ -16,6 +16,7 @@ class Facade : public IFacade {
 
  private:
   const Context& context;
+  chord::ChordFacade* chord;
   std::unique_ptr<Client> fs_client;
   std::unique_ptr<Service> fs_service;
   std::shared_ptr<spdlog::logger> logger;

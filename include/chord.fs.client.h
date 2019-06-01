@@ -55,8 +55,9 @@ void add_metadata(chord::fs::MetaRequest& req, const chord::path& path);
   grpc::Status put(const chord::uri&, const chord::path&, Replication repl);
 
   grpc::Status get(const chord::uri&, std::ostream&);
-
+  grpc::Status get(const chord::uri&, const chord::path&);
   grpc::Status get(const chord::uri&, const chord::node&, std::ostream&);
+  grpc::Status get(const chord::uri&, const chord::node&, const chord::path&);
 
   grpc::Status del(const chord::uri&, const bool recursive=false, const Replication repl = Replication());
   grpc::Status del(const chord::node&, const chord::uri&, const bool recursive=false, const Replication repl = Replication());
