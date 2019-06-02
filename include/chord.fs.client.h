@@ -40,7 +40,7 @@ class Client {
   StubFactory make_stub;
   std::shared_ptr<spdlog::logger> logger;
 
-void add_metadata(chord::fs::MetaRequest& req, const chord::path& path);
+  void add_metadata(chord::fs::MetaRequest& req, const chord::path& path);
 
  public:
   Client(Context &context, chord::ChordFacade* chord);

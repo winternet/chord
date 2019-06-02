@@ -7,7 +7,6 @@
 #include "chord.grpc.pb.h"
 #include "chord.types.h"
 #include "chord.uuid.h"
-#include "chord.i.callback.h"
 #include "chord.i.client.h"
 
 namespace chord {
@@ -33,7 +32,6 @@ class Client : public IClient {
   Router *router;
 
   StubFactory make_stub;
-  take_consumer_t take_consumer_callback;
 
   signal<void(const node)> event_predecessor_fail;
   signal<void(const node)> event_successor_fail;
@@ -62,11 +60,6 @@ class Client : public IClient {
   void notify() override;
 
   void check() override;
-
-  //TODO move to cc
-  void set_take_callback(const take_consumer_t callback) {
-    take_consumer_callback = callback;
-  }
 
   chord::common::RouterEntry successor(const uuid_t &id) override;
 

@@ -51,17 +51,6 @@ class Facade : public IFacade {
   void on_predecessor_fail(const chord::node predecessor);
   void on_successor_fail(const chord::node successor);
 
-  chord::take_consumer_t on_leave_callback();
-
-  /**
-   * @note should be called only once - create on demand
-   */
-  chord::take_consumer_t take_consumer_callback();
-
-  /**
-   * @note should be called only once - create on demand
-   */
-  chord::take_producer_t take_producer_callback();
 };
 
 } //namespace fs

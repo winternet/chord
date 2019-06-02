@@ -12,7 +12,6 @@
 #include "chord.file.h"
 #include "chord.context.h"
 #include "chord_fs.grpc.pb.h"
-#include "chord.i.callback.h"
 #include "chord.fs.context.metadata.h"
 #include "chord.common.h"
 #include "chord.client.h"
@@ -29,8 +28,6 @@ using chord::fs::PutResponse;
 using chord::fs::PutRequest;
 using chord::fs::GetResponse;
 using chord::fs::GetRequest;
-using chord::fs::TakeRequest;
-using chord::fs::TakeResponse;
 
 
 using namespace std;
@@ -455,26 +452,6 @@ Status Service::get(ServerContext *serverContext, const GetRequest *req, grpc::S
 
   } while (read > 0);
 
-  return Status::OK;
-}
-
-
-Status Service::take(ServerContext *serverContext,
-                     const TakeRequest *req,
-                     ServerWriter<TakeResponse> *writer) {
-  (void)serverContext;
-  logger->info("in chord.fs.service - take.......");
-
-  TakeResponse res;
-  const auto from = uuid_t{req->from()};
-  const auto to = uuid_t{req->to()};
-  const auto responses = produce_take_response(from, to);
-
-  for(const auto& res:responses) {
-    if (!writer->Write(res)) {
-      throw__exception("broken stream.");
-    }
-  }
   return Status::OK;
 }
 

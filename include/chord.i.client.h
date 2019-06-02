@@ -7,7 +7,6 @@
 #include "chord.types.h"
 #include "chord.uuid.h"
 #include "chord.node.h"
-#include "chord.i.callback.h"
 #include "chord.signal.h"
 
 namespace chord {

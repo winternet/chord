@@ -13,9 +13,6 @@ class MockClient : public IClient {
   MOCK_METHOD2(join, grpc::Status(const JoinRequest *req, JoinResponse *res));
   MOCK_METHOD3(join, grpc::Status(grpc::ClientContext *clientContext, const JoinRequest *req, JoinResponse *res));
 
-  MOCK_METHOD0(take, void(void));
-  MOCK_METHOD4(take,void(const uuid from, const uuid to, const node responsible, const take_consumer_t callback));
-
   MOCK_METHOD0(stabilize, void(void));
 
   MOCK_METHOD0(notify, void(void));

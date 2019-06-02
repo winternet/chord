@@ -8,7 +8,6 @@
 #include "chord.signal.h"
 #include "chord.exception.h"
 #include "chord.grpc.pb.h"
-#include "chord.i.callback.h"
 #include "chord.i.service.h"
 #include "chord.i.client.h"
 #include "chord.pb.h"
