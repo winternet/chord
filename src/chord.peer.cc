@@ -21,12 +21,6 @@ using chord::common::RouterEntry;
 
 namespace chord {
 
-//void Peer::setup_root_logger() {
-//  std::vector<spdlog::sink_ptr> sinks;
-//  sinks.push_back(std::make_shared<spdlog::sinks::rotating_file_sink_mt>("logs/chord.log", 1024*1024*20, 3));
-//  auto chord_root_logger = std::make_shared<spdlog::logger>("chord.root", begin(sinks), end(sinks));
-//  spdlog::register_logger(chord_root_logger);
-//}
 void Peer::start_server() {
   const auto bind_addr = context.bind_addr;
   ServerBuilder builder;
@@ -39,6 +33,10 @@ void Peer::start_server() {
 
   unique_ptr<grpc::Server> server(builder.BuildAndStart());
   logger->debug("server listening on {}", bind_addr);
+
+  // initialize || join
+  chord->start();
+
   server->Wait();
 }
 
@@ -50,7 +48,7 @@ Peer::Peer(Context ctx)
       logger{context.logging.factory().get_or_create(Peer::logger_name)}
 {
   const auto fs = filesystem.get();
-  chord->on_join().connect(fs, &chord::fs::Facade::on_join);
+  chord->on_joined().connect(fs, &chord::fs::Facade::on_joined);
   chord->on_leave().connect(fs, &chord::fs::Facade::on_leave);
   chord->on_predecessor_fail().connect(fs, &chord::fs::Facade::on_predecessor_fail);
   chord->on_successor_fail().connect(fs, &chord::fs::Facade::on_successor_fail);
@@ -59,8 +57,6 @@ Peer::Peer(Context ctx)
 void Peer::start() {
   shutdown_handler = make_unique<chord::ShutdownHandler>(shared_from_this());
   logger->trace("peer with client-id {}", context.uuid());
-
-  chord->start();
 
   start_server();
   //--- blocks

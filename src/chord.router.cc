@@ -57,6 +57,34 @@ optional<node> Router::predecessor(size_t idx) const {
   return {};
 }
 
+void Router::replace_predecessor(const chord::node& old_node, const chord::node& new_node) {
+  std::lock_guard<mutex_t> lock(mtx);
+  logger->info("replace_predecessor {} with {}", old_node, new_node);
+
+  routes.erase(old_node.uuid);
+  routes[new_node.uuid] = new_node.endpoint;
+
+  std::for_each(predecessors.begin(), predecessors.end(), [&](optional<uuid_t>& n) {
+      if(n && n.value() == old_node.uuid) {
+        n = new_node.uuid;
+      }
+  });
+}
+
+void Router::replace_successor(const chord::node& old_node, const chord::node& new_node) {
+  std::lock_guard<mutex_t> lock(mtx);
+  logger->info("replace_successor {} with {}", old_node, new_node);
+
+  routes.erase(old_node.uuid);
+  routes[new_node.uuid] = new_node.endpoint;
+
+  std::for_each(successors.begin(), successors.end(), [&](optional<uuid_t>& n) {
+      if(n && n.value() == old_node.uuid) {
+        n = new_node.uuid;
+      }
+  });
+}
+
 void Router::set_successor(const size_t index, const chord::node& node) {
   std::lock_guard<mutex_t> lock(mtx);
   logger->info("set_successor[{}][{}] = {}", index, node.uuid, node.endpoint);

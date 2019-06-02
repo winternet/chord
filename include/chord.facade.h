@@ -32,6 +32,27 @@ public:
   using event_binary_t = signal<void(const node, const node)>;
   using event_unary_t = signal<void(const node)>;
 
+ private:
+  size_t next{0};
+
+  chord::Context& context;
+
+  std::unique_ptr<chord::Router> router;
+
+  //--- chord
+  std::unique_ptr<chord::IClient> client;
+  std::unique_ptr<chord::IService> service;
+
+  std::unique_ptr<AbstractScheduler> scheduler;
+
+  std::shared_ptr<spdlog::logger> logger;
+
+  //--- events
+  event_binary_t event_leave;
+
+  void start_scheduler();
+  void stop_scheduler();
+
  public:
   ChordFacade(const ChordFacade &) = delete;             // disable copying
   ChordFacade &operator=(const ChordFacade &) = delete;  // disable assignment
@@ -66,11 +87,6 @@ public:
   chord::common::RouterEntry successor(const uuid_t &uuid);
 
   /**
-   * nth direct successor
-   */
-  chord::common::RouterEntry nth_successor(const uuid_t &uuid, const size_t n);
-
-  /**
    * stabilize the ring
    */
   void stabilize();
@@ -85,7 +101,7 @@ public:
    */
   void fix_fingers(size_t index);
 
-  event_binary_t& on_join();
+  event_binary_t& on_joined();
 
   event_binary_t& on_leave();
 
@@ -93,26 +109,6 @@ public:
 
   event_unary_t& on_predecessor_fail();
 
- private:
-  size_t next{0};
-
-  chord::Context& context;
-
-  std::unique_ptr<chord::Router> router;
-
-  //--- chord
-  std::unique_ptr<chord::IClient> client;
-  std::unique_ptr<chord::IService> service;
-
-  std::unique_ptr<AbstractScheduler> scheduler;
-
-  std::shared_ptr<spdlog::logger> logger;
-
-  //--- events
-  event_binary_t  event_joined;
-
-  void start_scheduler();
-  void stop_scheduler();
 };
 
 }  // namespace chord

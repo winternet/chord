@@ -42,7 +42,7 @@ Service::Service(Context &context, Router *router, IClient* client)
 
 Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
   (void)serverContext;
-  const auto node = chord::common::make_node(req->header().src());
+  const auto node = make_node(req->header().src());
 
   logger->trace("join request from {}", node);
   /**
@@ -54,9 +54,19 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
   const auto succ = router->successor();
 
   /**
+   * initialize the ring
+   */
+  if (!pred && (!succ || succ->uuid == context.uuid())) {
+    logger->info("first node joining, setting the node as successor");
+    router->set_successor(0, node);
+    router->set_predecessor(0, node);
+  }
+
+  /**
    * forward request to successor
    */
-  if(pred && succ && !src.between(pred->uuid, succ->uuid)) {
+  //if(pred && succ && !src.between(pred->uuid, succ->uuid)) {
+  else if(pred && !src.between(pred->uuid, context.uuid())) {
     return client->join(req, res);
   }
 
@@ -88,15 +98,7 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
 
   res->mutable_header()->CopyFrom(make_header(context));
 
-  /**
-   * initialize the ring
-   */
-  if (!pred && (!succ || succ->uuid == context.uuid())) {
-    logger->info("first node joining, setting the node as successor");
-    router->set_successor(0, node);
-    router->set_predecessor(0, node);
-  }
-
+  event_joined(pred.value_or(context.node()), node);
   return Status::OK;
 }
 
@@ -179,8 +181,6 @@ Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *
 Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, LeaveResponse *res) {
   (void)serverContext;
   (void)res;
-  logger->trace("received leaving node {}@{}", req->header().src().uuid(),
-                req->header().src().endpoint());
 
   //--- validate
   if (!req->has_header() && !req->header().has_src()) {
@@ -188,11 +188,28 @@ Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, Lea
     return Status::CANCELLED;
   }
 
-  // we trust the sender
-  const node new_predecessor = make_node(req->predecessor());
-  const node leaving_node = make_node(req->header().src());
+  logger->trace("received leaving node {}", make_node(req->header().src()));
 
-  event_leave(leaving_node, new_predecessor);
+  if(req->has_predecessor() && req->has_successor()) {
+    logger->error("leave request contains predecessor AND successor.");
+    return Status(grpc::StatusCode::INVALID_ARGUMENT, "leave request contains predecessor AND successor.");
+  }
+  // we trust the sender
+  if(req->has_successor()) {
+    const node new_successor = make_node(req->successor());
+    const node leaving_node = make_node(req->header().src());
+
+    router->replace_successor(leaving_node, new_successor);
+    //event_leave(leaving_node, new_predecessor);
+  }
+
+  if(req->has_predecessor()) {
+    const node new_predecessor = make_node(req->predecessor());
+    const node leaving_node = make_node(req->header().src());
+
+    router->replace_predecessor(leaving_node, new_predecessor);
+    //event_leave(leaving_node, new_predecessor);
+  } 
 
   return Status::OK;
 }
@@ -212,7 +229,7 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
 
   const auto predecessor = router->predecessor();
   const uuid_t self{context.uuid()};
-  const auto node = chord::common::make_node(req->header().src());
+  const auto node = make_node(req->header().src());
 
   if (!predecessor
       || node.uuid.between(predecessor->uuid, self)) {
@@ -247,7 +264,7 @@ void Service::fix_fingers(size_t index) {
   logger->trace("fixing finger for {}.", fix);
 
   try {
-    const auto succ = chord::common::make_node(successor(fix));
+    const auto succ = make_node(successor(fix));
     logger->trace("fixing finger for {}. received successor {}", fix, succ);
     if( succ.uuid == context.uuid() ) {
       router->reset(fix);

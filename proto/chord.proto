@@ -86,7 +86,12 @@ message CheckResponse {
  */
 message LeaveRequest {
   chord.common.Header header = 1;
+  /**
+   * either predecessor xor successor is filled depending
+   * on which node is informed
+   */
   chord.common.RouterEntry predecessor = 2;
+  chord.common.RouterEntry successor = 3;
 }
 
 message LeaveResponse { 

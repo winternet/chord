@@ -156,7 +156,7 @@ Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
 
 Status Service::handle_get(const vector<string>& token, ControlResponse* res) {
   //TODO support multiple sources
-  if (token.size() < 2) {
+  if (token.size() < 3) {
     res->set_result("invalid arguments.");
     return Status(grpc::StatusCode::INVALID_ARGUMENT, "failed to handle get", "expecting >= 3 arguments");
   }

@@ -238,13 +238,70 @@ chord::take_producer_t Facade::take_producer_callback() {
 /**
  * CALLBACKS
  */
-void Facade::on_join(const chord::node successor, const chord::node predecessor) {
-  fs_client->take(predecessor.uuid, context.uuid(), successor, take_consumer_callback());
+//called from within the node succeeding the joining node
+void Facade::on_joined(const chord::node old_predecessor, const chord::node new_predecessor) {
+  //fs_client->take(predecessor.uuid, context.uuid(), successor, take_consumer_callback());
+  logger->debug("node joined: old_predecessor {}, new predecessor {}", old_predecessor, new_predecessor);
+  const auto metadata_mgr = fs_service->metadata_manager();
+  const map<uri, set<Metadata>> metadata = metadata_mgr->get(old_predecessor.uuid, new_predecessor.uuid);
+  for(const auto& pair : metadata) {
+    const auto& uri = pair.first;
+    for(auto meta:pair.second) {
+
+      const auto local_path = context.data_directory / uri.path();
+      const bool exists = chord::file::exists(local_path) && chord::file::is_regular_file(local_path);
+
+      if(meta.file_type == type::regular && !meta.node_ref) {
+        meta.node_ref = context.node();
+      }
+
+      set<Metadata> metadata = {meta};
+      const auto status = fs_client->meta(new_predecessor, uri, Client::Action::ADD, metadata);
+
+      if(status.ok()) {
+        metadata_mgr->del(uri, metadata);
+      } else {
+        logger->warn("failed to add shallow copy for {}", uri);
+      }
+
+      // FIXME: do not deep copy -> remove the following line
+      if(exists) fs_client->put(new_predecessor, uri, local_path, meta.replication.value_or(Replication()));
+    }
+  }
 }
 
-void Facade::on_leave(const chord::node leaving_node, const chord::node new_predecessor) {
-  fs_client->take(new_predecessor.uuid, leaving_node.uuid, leaving_node, on_leave_callback());
-  get_shallow_copies(leaving_node);
+/**
+ * called from within leaving node
+ */
+void Facade::on_leave(const chord::node predecessor, const chord::node successor) {
+  //fs_client->take(new_predecessor.uuid, leaving_node.uuid, leaving_node, on_leave_callback());
+  //get_shallow_copies(leaving_node);
+  const auto metadata_mgr = fs_service->metadata_manager();
+  const map<uri, set<Metadata>> metadata = metadata_mgr->get(predecessor.uuid, context.uuid());
+  const auto node = make_node(chord->successor(context.uuid()));
+  for(const auto& pair : metadata) {
+    const auto& uri = pair.first;
+    for(auto meta:pair.second) {
+
+      const auto local_path = context.data_directory / uri.path();
+      const bool exists = chord::file::exists(local_path) && chord::file::is_regular_file(local_path);
+
+      set<Metadata> metadata = {meta};
+      if(meta.file_type != type::regular) {
+        logger->debug("adding metadata");
+        const auto status = fs_client->meta(successor, uri, Client::Action::ADD, metadata);
+      } else if(meta.file_type == type::regular && !exists && meta.node_ref) {
+        logger->warn("trying to replicate shallow copy {} referencing node {}.", uri, *meta.node_ref);
+        const auto status = fs_client->meta(successor, uri, Client::Action::ADD, metadata);
+        if(!status.ok()) {
+          logger->error("failed to add metadata {} from referencing node {}.", uri, *meta.node_ref);
+          continue;
+        }
+      } else {
+        fs_client->put(node, uri, local_path, meta.replication.value_or(Replication()));
+      }
+    }
+  }
 }
 
 void Facade::on_predecessor_fail(const chord::node predecessor) {

@@ -41,7 +41,11 @@ struct Router {
 
   optional<node> predecessor(size_t idx) const;
 
+  void replace_successor(const chord::node& old_node, const chord::node& new_node);
+
   void set_successor(const size_t index, const chord::node& node);
+
+  void replace_predecessor(const chord::node& old_node, const chord::node& new_node);
 
   void set_predecessor(const size_t index, const chord::node& node);
 

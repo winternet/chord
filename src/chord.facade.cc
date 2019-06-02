@@ -94,17 +94,26 @@ void ChordFacade::start_scheduler() {
  * leave chord ring
  */
 void ChordFacade::leave() {
+  // freeze state: do no longer participate on node updates
+  scheduler->shutdown();
+  // inform successor and predecessor about leave
   client->leave();
+
+  const auto successor_node = router->successor().value_or(context.node());
+  const auto predecessor_node = router->predecessor().value_or(context.node());
+  event_leave(predecessor_node, successor_node);
 }
 /**
  * join chord ring containing client-id.
  */
 void ChordFacade::join() {
-  client->join(context.join_addr);
-  client->stabilize();
-  if(router->successor() && router->predecessor()) {
-    event_joined(router->successor().value(), router->predecessor().value());
+  const auto success = client->join(context.join_addr);
+  if(!success) {
+    logger->warn("failed to join {}", context.join_addr);
+    return;
   }
+
+  logger->info("successfully joined {}", context.join_addr);
 }
 
 /**
@@ -112,17 +121,6 @@ void ChordFacade::join() {
  */
 RouterEntry ChordFacade::successor(const uuid_t &uuid) {
   return service->successor(uuid);
-}
-
-/**
- * nth direct successor
- */
-RouterEntry ChordFacade::nth_successor(const uuid_t &uuid, const size_t n) {
-  auto succ = successor(uuid);
-  for(size_t i=0; i<n; ++i) {
-    succ = successor(succ.uuid());
-  }
-  return succ;
 }
 
 /**
@@ -150,12 +148,12 @@ void ChordFacade::fix_fingers(size_t index) {
   service->fix_fingers(index);
 }
 
-ChordFacade::event_binary_t& ChordFacade::on_join() {
-  return event_joined;
+ChordFacade::event_binary_t& ChordFacade::on_joined() {
+  return service->on_joined();
 }
 
 ChordFacade::event_binary_t& ChordFacade::on_leave() {
-  return service->on_leave();
+  return event_leave;
 }
 
 ChordFacade::event_unary_t& ChordFacade::on_successor_fail() {

@@ -54,7 +54,7 @@ class IService {
 
   virtual void fix_fingers(size_t index) = 0;
 
-  virtual signal<void(const node, const node)>& on_leave() = 0;
+  virtual signal<void(const node, const node)>& on_joined() = 0;
 
   virtual ::grpc::Service* grpc_service() = 0;
 

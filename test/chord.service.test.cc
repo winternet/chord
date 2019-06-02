@@ -51,8 +51,17 @@ TEST(ServiceTest, join) {
   // assert we're the only one
   ASSERT_EQ(router.size(), 1);
 
+  bool callback_called = false;
+
   // join from 1
   req.mutable_header()->CopyFrom(make_header({1}, "1.1.1.1:1111"));
+  service.on_joined().connect([&](const chord::node old_predecessor, const chord::node new_predecessor) {
+      callback_called = true;
+      ASSERT_EQ(old_predecessor.endpoint, "0.0.0.0:50050");
+      ASSERT_EQ(old_predecessor.uuid, uuid_t{50});
+      ASSERT_EQ(new_predecessor.endpoint, "1.1.1.1:1111");
+      ASSERT_EQ(new_predecessor.uuid, uuid_t{1});
+  });
   service.join(&serverContext, &req, &res);
 
   //--- router
@@ -70,6 +79,8 @@ TEST(ServiceTest, join) {
   ASSERT_EQ(res.predecessor().endpoint(), "0.0.0.0:50050");
   ASSERT_EQ(res.successor().uuid(), "50");
   ASSERT_EQ(res.successor().endpoint(), "0.0.0.0:50050");
+
+  ASSERT_TRUE(callback_called);
 }
 
 /**
