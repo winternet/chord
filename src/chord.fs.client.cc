@@ -4,7 +4,6 @@
 #include <fstream>
 #include <memory>
 
-#include "chord.common.h"
 #include "chord.crypto.h"
 #include "chord.file.h"
 #include "chord.fs.client.h"
@@ -27,7 +26,6 @@ using chord::fs::MetaResponse;
 using chord::fs::MetaRequest;
 
 using namespace std;
-using namespace chord::common;
 using namespace chord::file;
 
 namespace chord {
@@ -51,7 +49,7 @@ Client::Client(Context &context, ChordFacade *chord, StubFactory make_stub)
 
 Status Client::put(const chord::uri& uri, const chord::path& source, Replication repl) {
   const auto hash = chord::crypto::sha256(uri);
-  const auto node = make_node(chord->successor(hash));
+  const auto node = chord->successor(hash);
   return put(node, uri, source, repl);
 }
 
@@ -107,7 +105,7 @@ Status Client::put(const chord::node& node, const chord::uri &uri, istream &istr
 
 Status Client::put(const chord::uri &uri, istream &istream, Replication repl) {
   const auto hash = chord::crypto::sha256(uri);
-  const auto node = make_node(chord->successor(hash));
+  const auto node = chord->successor(hash);
   logger->trace("put {} ({})", uri, hash);
   return put(node, uri, istream, repl);
 }
@@ -172,13 +170,13 @@ grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, cons
 
 grpc::Status Client::meta(const chord::uri &uri, const Action &action, std::set<Metadata>& m) {
   const auto hash = chord::crypto::sha256(uri);
-  const auto node = chord::common::make_node(chord->successor(hash));
+  const auto node = chord->successor(hash);
   return meta(node, uri, action, m);
 }
 grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
   std::set<Metadata> m;
   const auto hash = chord::crypto::sha256(uri);
-  const auto node = chord::common::make_node(chord->successor(hash));
+  const auto node = chord->successor(hash);
   return meta(node, uri, action, m);
 }
 
@@ -210,7 +208,7 @@ Status Client::del(const chord::node& node, const chord::uri &uri, const bool re
 // currently only files are supported
 Status Client::del(const chord::uri &uri, const bool recursive, const Replication repl) {
   const auto hash = chord::crypto::sha256(uri);
-  const auto succ = chord::common::make_node(chord->successor(hash));
+  const auto succ = chord->successor(hash);
   return del(succ, uri, recursive, repl);
 }
 
@@ -218,7 +216,7 @@ grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata) {
   //--- find responsible node
   const auto meta_uri = uri::builder{uri.scheme(), uri.path().canonical()}.build();
   const auto hash = chord::crypto::sha256(meta_uri);
-  const auto endpoint = chord->successor(hash).endpoint();
+  const auto endpoint = chord->successor(hash).endpoint;
 
   logger->trace("dir {} ({})", meta_uri, hash);
 
@@ -279,9 +277,8 @@ Status Client::get(const chord::uri &uri, const chord::node& node, std::ostream 
 
 Status Client::get(const chord::uri &uri, ostream &ostream) {
   const auto hash = chord::crypto::sha256(uri);
-  const auto uuid = chord->successor(hash).uuid();
-  const auto endpoint = chord->successor(hash).endpoint();
-  return get(uri, {uuid, endpoint}, ostream);
+  const auto node = chord->successor(hash);
+  return get(uri, node, ostream);
 }
 
 } // namespace fs

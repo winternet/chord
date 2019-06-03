@@ -221,7 +221,7 @@ void Facade::on_joined(const chord::node old_predecessor, const chord::node new_
 void Facade::on_leave(const chord::node predecessor, const chord::node successor) {
   const auto metadata_mgr = fs_service->metadata_manager();
   const map<uri, set<Metadata>> metadata = metadata_mgr->get(predecessor.uuid, context.uuid());
-  const auto node = make_node(chord->successor(context.uuid()));
+  const auto node = chord->successor();
   for(const auto& pair : metadata) {
     const auto& uri = pair.first;
     for(auto meta:pair.second) {
@@ -264,7 +264,7 @@ void Facade::on_successor_fail(const chord::node successor) {
 
   const auto metadata_mgr = fs_service->metadata_manager();
   const map<uri, set<Metadata>> replicable_meta = metadata_mgr->get_replicable();
-  const auto node = make_node(chord->successor(context.uuid()));
+  const auto node = chord->successor();
   for(const auto& pair : replicable_meta) {
     const auto& uri = pair.first;
     for(auto meta:pair.second) {

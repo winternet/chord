@@ -13,7 +13,6 @@
 #include "chord.context.h"
 #include "chord_fs.grpc.pb.h"
 #include "chord.fs.context.metadata.h"
-#include "chord.common.h"
 #include "chord.client.h"
 #include "chord.fs.service.h"
 #include "chord.concurrent.queue.h"
@@ -32,7 +31,6 @@ using chord::fs::GetRequest;
 
 using namespace std;
 using namespace chord;
-using namespace chord::common;
 
 namespace chord {
 namespace fs {
@@ -89,7 +87,7 @@ Status Service::handle_meta_del(const MetaRequest *req) {
   }
 
   if(!deleted_metadata.empty()) {
-    const auto node = make_node(chord->successor(context.uuid()));
+    const auto node = chord->successor();
     const auto status = make_client().meta(node, uri, Client::Action::DEL, deleted_metadata);
   }
 
@@ -131,7 +129,7 @@ Status Service::handle_meta_add(const MetaRequest *req) {
     }
 
     if(!new_metadata.empty()) {
-      const auto node = make_node(chord->successor(context.uuid()));
+      const auto node = chord->successor();
       const auto status = make_client().meta(node, uri, Client::Action::ADD, new_metadata);
 
       if(!status.ok()) {
@@ -226,7 +224,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 
     const auto uuid = chord::crypto::sha256(uri);
     // next
-    const auto next = make_node(chord->successor(context.uuid()));
+    const auto next = chord->successor();
     if(uuid.between(context.uuid(), next.uuid)) {
       // TODO rollback all puts?
       const auto msg = "failed to store replication " + repl.string() + " : detected cycle.";
@@ -263,9 +261,9 @@ Status Service::handle_del_file(const chord::fs::DelRequest *req) {
   }
 
   // beg: handle replica
-  const auto node = make_node(chord->successor(context.uuid()));
+  const auto node = chord->successor();
   auto max_repl = max_replication(deleted_metadata);
-  const bool initial_delete = make_node(chord->successor(crypto::sha256(req->uri()))) == context.node();
+  const bool initial_delete = chord->successor(crypto::sha256(req->uri())) == context.node();
   const chord::uri parent_uri{uri.scheme(), uri.path().parent_path()};
 
   if(max_repl) {
@@ -314,7 +312,7 @@ Status Service::handle_del_dir(const chord::fs::DelRequest *req) {
 
   if(file::exists(data) && file::is_empty(data)) {
 
-    const bool initial_delete = make_node(chord->successor(crypto::sha256(req->uri()))) == context.node();
+    const bool initial_delete = chord->successor(crypto::sha256(req->uri())) == context.node();
     {
       // initial node triggers parent metadata deletion
       if(initial_delete) {
@@ -329,7 +327,7 @@ Status Service::handle_del_dir(const chord::fs::DelRequest *req) {
     file::remove(data);
     metadata_mgr->del(uri);
 
-    const auto node = make_node(chord->successor(context.uuid()));
+    const auto node = chord->successor();
     // just forward the request and exit on status == NotFound
     make_client().del(node, req);
   }
@@ -398,8 +396,8 @@ Status Service::get_from_reference_or_replication(const chord::uri& uri) {
     // try to get replication
     if(m.replication && *m.replication) {
       try {
-        const auto successor = chord->successor(context.uuid());
-        status = make_client().get(uri, make_node(successor), data);
+        const auto successor = chord->successor();
+        status = make_client().get(uri, successor, data);
         if(!status.ok()) {
           logger->warn("failed to get from referenced node - trying to get replication.");
         }

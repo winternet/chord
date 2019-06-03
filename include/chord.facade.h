@@ -84,7 +84,8 @@ public:
   /**
    * successor
    */
-  chord::common::RouterEntry successor(const uuid_t &uuid);
+  chord::node successor(const uuid_t &uuid);
+  chord::node successor();
 
   /**
    * stabilize the ring

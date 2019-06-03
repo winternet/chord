@@ -12,11 +12,13 @@
 #include "chord.i.scheduler.h"
 #include "chord.scheduler.h"
 #include "chord.router.h"
+#include "chord.common.h"
 
 using grpc::ServerBuilder;
 using namespace std;
 
 using chord::common::RouterEntry;
+using chord::common::make_node;
 
 namespace chord {
 
@@ -119,8 +121,12 @@ void ChordFacade::join() {
 /**
  * successor
  */
-RouterEntry ChordFacade::successor(const uuid_t &uuid) {
-  return service->successor(uuid);
+chord::node ChordFacade::successor(const uuid_t &uuid) {
+  return make_node(service->successor(uuid));
+}
+
+chord::node ChordFacade::successor() {
+  return *(router->successor());
 }
 
 /**
