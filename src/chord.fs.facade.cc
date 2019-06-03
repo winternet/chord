@@ -187,7 +187,6 @@ Status Facade::get_file(const chord::uri& source, const chord::path& target) {
  */
 //called from within the node succeeding the joining node
 void Facade::on_joined(const chord::node old_predecessor, const chord::node new_predecessor) {
-  //fs_client->take(predecessor.uuid, context.uuid(), successor, take_consumer_callback());
   logger->debug("node joined: old_predecessor {}, new predecessor {}", old_predecessor, new_predecessor);
   const auto metadata_mgr = fs_service->metadata_manager();
   const map<uri, set<Metadata>> metadata = metadata_mgr->get(old_predecessor.uuid, new_predecessor.uuid);
@@ -210,9 +209,8 @@ void Facade::on_joined(const chord::node old_predecessor, const chord::node new_
       } else {
         logger->warn("failed to add shallow copy for {}", uri);
       }
-
       // FIXME: do not deep copy -> remove the following line
-      if(exists) fs_client->put(new_predecessor, uri, local_path, meta.replication.value_or(Replication()));
+      //if(exists) fs_client->put(new_predecessor, uri, local_path, meta.replication.value_or(Replication()));
     }
   }
 }
@@ -221,8 +219,6 @@ void Facade::on_joined(const chord::node old_predecessor, const chord::node new_
  * called from within leaving node
  */
 void Facade::on_leave(const chord::node predecessor, const chord::node successor) {
-  //fs_client->take(new_predecessor.uuid, leaving_node.uuid, leaving_node, on_leave_callback());
-  //get_shallow_copies(leaving_node);
   const auto metadata_mgr = fs_service->metadata_manager();
   const map<uri, set<Metadata>> metadata = metadata_mgr->get(predecessor.uuid, context.uuid());
   const auto node = make_node(chord->successor(context.uuid()));

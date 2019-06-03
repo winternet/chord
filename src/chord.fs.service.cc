@@ -367,7 +367,7 @@ Status Service::del(grpc::ServerContext *serverContext,
   return Status::OK;
 }
 
-Status Service::get_from_reference(const chord::uri& uri) {
+Status Service::get_from_reference_or_replication(const chord::uri& uri) {
   const path data = context.data_directory / uri.path();
   const auto metadata_set = metadata_mgr->get(uri);
 
@@ -380,16 +380,34 @@ Status Service::get_from_reference(const chord::uri& uri) {
       file::create_directories(data.parent_path());
     }
 
-    try {
-      ofstream ofile;
-      ofile.exceptions(ofstream::failbit | ofstream::badbit);
-      ofile.open(data, fstream::binary);
-      const auto status = make_client().get(uri, m.node_ref.value(), ofile);
-      if(!status.ok()) return status;
-      return make_client().del(*m.node_ref, uri);
-    } catch (const ios_base::failure &error) {
-      logger->error("failed to open file {}, reason: {}", data, error.what());
-      return Status::CANCELLED;
+    grpc::Status status = Status::CANCELLED;
+
+    // try to get by node reference
+    if(m.node_ref) {
+      try {
+        status = make_client().get(uri, m.node_ref.value(), data);
+        if(!status.ok()) {
+          logger->warn("failed to get from referenced node - trying to get replication.");
+        }
+        return make_client().del(*m.node_ref, uri);
+      } catch (const ios_base::failure &error) {
+        logger->error("failed to open file {}, reason: {}", data, error.what());
+        return Status::CANCELLED;
+      }
+    }
+    // try to get replication
+    if(m.replication && *m.replication) {
+      try {
+        const auto successor = chord->successor(context.uuid());
+        status = make_client().get(uri, make_node(successor), data);
+        if(!status.ok()) {
+          logger->warn("failed to get from referenced node - trying to get replication.");
+        }
+        return make_client().del(*m.node_ref, uri);
+      } catch (const ios_base::failure &error) {
+        logger->error("failed to open file {}, reason: {}", data, error.what());
+        return Status::CANCELLED;
+      }
     }
   }
   return Status::CANCELLED;
@@ -412,8 +430,10 @@ Status Service::get(ServerContext *serverContext, const GetRequest *req, grpc::S
   //try to lookup reference node if found in metadata
   if (!file::exists(data)) {
     logger->debug("file does not exist, trying to restore from metadata...");
-    const auto status = get_from_reference(uri);
-    if(!status.ok()) return status;
+    const auto status = get_from_reference_or_replication(uri);
+    if(!status.ok()) {
+      return status;
+    }
   } else if (!file::is_regular_file(data)) {
     logger->error("requested file is not a regular file - aborting.");
     return Status::CANCELLED;

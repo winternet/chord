@@ -185,7 +185,7 @@ void Client::stabilize() {
   const auto status = make_stub(endpoint)->stabilize(&clientContext, req, &res);
 
   if (!status.ok()) {
-    logger->warn("[stabilize] failed - removing endpoint {}@{}?", *successor, endpoint);
+    logger->warn("[stabilize] failed - removing endpoint {}?", endpoint);
     router->reset(*successor);
     event_successor_fail(*successor);
     return;
