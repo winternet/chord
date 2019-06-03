@@ -61,13 +61,18 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
     router->set_successor(0, node);
     router->set_predecessor(0, node);
   }
-
   /**
    * forward request to successor
    */
-  //if(pred && succ && !src.between(pred->uuid, succ->uuid)) {
   else if(pred && !src.between(pred->uuid, context.uuid())) {
-    return client->join(req, res);
+    const auto status = client->join(req, res);
+
+    // node joined successfully? stabilize the ring
+    if(status.ok()) {
+      client->stabilize();
+    }
+
+    return status;
   }
 
   auto* res_succ = res->mutable_successor();
