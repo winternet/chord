@@ -252,7 +252,7 @@ Status Service::handle_del_file(const chord::fs::DelRequest *req) {
   auto deleted_metadata = metadata_mgr->del(uri);
   const auto iter = std::find_if(deleted_metadata.begin(), deleted_metadata.end(), [&](const Metadata& m) { return m.name == uri.path().filename();});
   // handle shallow copy
-  if(iter->node_ref) {
+  if(iter != deleted_metadata.end() && iter->node_ref) {
     make_client().del(*iter->node_ref, req);
   }
   // handle local file
@@ -379,7 +379,7 @@ Status Service::get_from_reference_or_replication(const chord::uri& uri) {
       file::create_directories(data.parent_path());
     }
 
-    grpc::Status status = Status::CANCELLED;
+    auto status = Status::CANCELLED;
 
     // try to get by node reference
     if(m.node_ref) {
