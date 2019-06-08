@@ -12,4 +12,4 @@ target_link_libraries(${TEST_TARGET}
   debug asan
   general gtest gmock gmock_main ${PROJECT_NAME}++ ${signals_LIBRARY})
 target_link_libraries(${TEST_TARGET} --coverage)
-add_test(NAME ${TEST_TARGET} COMMAND chord_test)
+add_test(NAME ${TEST_TARGET} COMMAND chord_test --gtest_output=xml:gtest-out/chord_test.xml)

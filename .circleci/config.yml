@@ -62,10 +62,10 @@ jobs:
             cd build
             CXX=g++-7 CC=gcc-7 cmake .. -DENABLE_COVERAGE:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=Release -Dchord_BUILD_TESTS:BOOL=ON
             cmake --build . -- -j4 
-            ./chord_test --gtest_output=xml:gtest-out/chord_test.xml
+            ctest --verbose
             bash <(curl -s https://codecov.io/bash) -t 8811a299-c05a-4c37-8d1d-c5bac9cca1fe
       - store_test_results:
-          path: gtest-out
+          path: build/gtest-out
 
 
   docker-build:
