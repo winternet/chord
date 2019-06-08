@@ -1,6 +1,10 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
+#include <grpc++/server.h>
+#include <grpc++/server_builder.h>
+#include <grpc++/security/server_credentials.h>
+
 #include "chord.types.h"
 #include "chord.test.helper.h"
 #include "util/chord.test.tmp.dir.h"
@@ -63,7 +67,6 @@ class FsServiceTest : public ::testing::Test {
       fs_client = new fs::Client(context, chord_facade.get());
       fs_facade = std::make_unique<chord::fs::Facade>(context, fs_client, fs_service);
 
-      std::cerr << "\n\nbuilding server... 0.0.0.0:50050\n\n";
       ServerBuilder builder;
       builder.AddListeningPort("0.0.0.0:50050", InsecureServerCredentials());
       builder.RegisterService(fs_service);
