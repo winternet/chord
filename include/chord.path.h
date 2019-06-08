@@ -45,6 +45,8 @@ class path {
 
   path operator/(const path& p) const;
 
+  path operator/(const std::string& p) const;
+
   bool operator==(const path &p) const;
 
   bool operator<(const path &p) const;

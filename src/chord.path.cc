@@ -89,6 +89,9 @@ path path::operator-(const path &p) const {
 
 path path::operator/=(const path &p) { return path{_path /= p._path}; }
 
+path path::operator/(const std::string& p) const {
+  return path(_path) / path(p);
+}
 path path::operator/(const path &p) const { return path{_path / p._path}; }
 
 bool path::operator==(const path &p) const { return _path==p._path; }

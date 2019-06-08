@@ -370,8 +370,9 @@ Status Service::get_from_reference_or_replication(const chord::uri& uri) {
   const auto metadata_set = metadata_mgr->get(uri);
 
   for(Metadata m:metadata_set) {
-    if(m.name != uri.path().filename().string() || !m.node_ref) 
-      continue;
+    // this doesnt make sense...?
+    //if(m.name != uri.path().filename().string() || !m.node_ref) 
+    //  continue;
 
     if (!file::is_directory(data)) {
       logger->trace("[get] creating directories for {}", data);
@@ -386,8 +387,9 @@ Status Service::get_from_reference_or_replication(const chord::uri& uri) {
         status = make_client().get(uri, m.node_ref.value(), data);
         if(!status.ok()) {
           logger->warn("failed to get from referenced node - trying to get replication.");
+        } else {
+          return make_client().del(*m.node_ref, uri);
         }
-        return make_client().del(*m.node_ref, uri);
       } catch (const ios_base::failure &error) {
         logger->error("failed to open file {}, reason: {}", data, error.what());
         return Status::CANCELLED;
@@ -400,13 +402,16 @@ Status Service::get_from_reference_or_replication(const chord::uri& uri) {
         status = make_client().get(uri, successor, data);
         if(!status.ok()) {
           logger->warn("failed to get from referenced node - trying to get replication.");
+        } else {
+          return make_client().del(*m.node_ref, uri);
         }
-        return make_client().del(*m.node_ref, uri);
       } catch (const ios_base::failure &error) {
         logger->error("failed to open file {}, reason: {}", data, error.what());
         return Status::CANCELLED;
       }
     }
+
+    return Status::CANCELLED;
   }
   return Status::CANCELLED;
 }

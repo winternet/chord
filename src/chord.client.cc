@@ -45,7 +45,7 @@ Client::Client(const Context &context, Router *router)
     : context{context},
       router{router},
       make_stub{//--- default stub factory
-                [](const endpoint_t &endpoint) {
+                [](const endpoint& endpoint) {
                   return Chord::NewStub(grpc::CreateChannel(
                       endpoint, grpc::InsecureChannelCredentials()));
                 }},
@@ -121,7 +121,7 @@ signal<void(const node)>& Client::on_successor_fail() {
   return event_successor_fail;
 }
 
-bool Client::join(const endpoint_t &addr) {
+bool Client::join(const endpoint& addr) {
   logger->debug("joining {}", addr);
 
   ClientContext clientContext;

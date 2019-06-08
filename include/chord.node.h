@@ -11,7 +11,7 @@ struct node {
   // can not be const since type must be 
   // moveable for optional<node>
   uuid_t uuid;
-  endpoint_t endpoint;
+  chord::endpoint endpoint;
 
   bool operator==(const node& other) const {
     return uuid == other.uuid 

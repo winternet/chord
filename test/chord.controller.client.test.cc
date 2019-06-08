@@ -4,12 +4,15 @@
 #include <grpc++/channel.h>
 #include <grpc++/create_channel.h>
 
+#include "chord.types.h"
 #include "chord.exception.h"
 #include "chord.controller.client.h"
 #include "chord.controller.service.mock.h"
 
 using namespace std;
 using namespace chord::controller;
+
+using chord::endpoint;
 
 using grpc::Status;
 
@@ -28,7 +31,7 @@ TEST(chord_controller_client, default_constructor) {
 }
 
 TEST(chord_controller_client, custom_stub_constructor) {
-  const auto make_stub = [&](const endpoint_t &endpoint) {
+  const auto make_stub = [&](const endpoint& endpoint) {
     return Control::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
   };
   Client client(make_stub);
@@ -36,7 +39,7 @@ TEST(chord_controller_client, custom_stub_constructor) {
 
 TEST(chord_controller_client, control) {
   std::unique_ptr<MockControllerStub> stub(new MockControllerStub);
-  const auto make_stub = [&](const endpoint_t &endpoint) {
+  const auto make_stub = [&](const endpoint& endpoint) {
     (void)endpoint;
     return std::move(stub);
   };
@@ -63,7 +66,7 @@ TEST(chord_controller_client, control) {
 
 TEST(chord_controller_client, control_with_exception) {
   std::unique_ptr<MockControllerStub> stub(new MockControllerStub);
-  const auto make_stub = [&](const endpoint_t &endpoint) {
+  const auto make_stub = [&](const endpoint& endpoint) {
     (void)endpoint;
     return std::move(stub);
   };

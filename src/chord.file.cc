@@ -42,6 +42,30 @@ bool file::create_file(const std::string &path) {
   return true;
 }
 
+bool file::files_equal(const std::string &file1, const std::string &file2) {
+  std::ifstream f1(file1, std::ifstream::binary|std::ifstream::ate);
+  std::ifstream f2(file2, std::ifstream::binary|std::ifstream::ate);
+
+  if (!is_regular_file(file1) || !is_regular_file(file2)) {
+    return false;
+  }
+
+  if (f1.fail() || f2.fail()) {
+    return false; //file problem
+  }
+
+  if (f1.tellg() != f2.tellg()) {
+    return false; //size mismatch
+  }
+
+  //seek back to beginning and use std::equal to compare contents
+  f1.seekg(0, std::ifstream::beg);
+  f2.seekg(0, std::ifstream::beg);
+  return std::equal(std::istreambuf_iterator<char>(f1.rdbuf()),
+                    std::istreambuf_iterator<char>(),
+                    std::istreambuf_iterator<char>(f2.rdbuf()));
+}
+
 bool file::create_directory(const std::string &path) {
   return fs::create_directory({path});
 }

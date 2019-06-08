@@ -2,8 +2,13 @@
 #include <gmock/gmock.h>
 
 #include "chord.file.h"
+#include "util/chord.test.tmp.dir.h"
+#include "util/chord.test.tmp.file.h"
 
 using namespace std;
+using namespace chord::test;
+
+using chord::path;
 
 TEST(DISABLED_chord_file, getxattr) {
   auto file = "xattr.get";
@@ -57,4 +62,24 @@ TEST(chord_file, create_directories) {
 
   ASSERT_TRUE(chord::file::remove_all(dir));
   ASSERT_FALSE(chord::file::exists(dir));
+}
+
+TEST(chord_file, files_equal) {
+  TmpDir tmpDir;
+  {
+    TmpFile tmpFile1(path(tmpDir) / "file1");
+    TmpFile tmpFile2(path(tmpDir) / "file2");
+    ASSERT_FALSE(chord::file::files_equal(path(tmpFile1), path(tmpFile2)));
+  }
+  {
+    TmpFile tmpFile1(path(tmpDir) / "file1");
+    TmpFile tmpFile2(path(tmpDir) / "file2");
+    ofstream file1(tmpFile1.path, std::ofstream::trunc|std::ofstream::binary);
+    ofstream file2(tmpFile2.path, std::ofstream::trunc|std::ofstream::binary);
+    file1 << "abcdefgh";
+    file2 << "abcdefgh";
+    ASSERT_TRUE(chord::file::files_equal(path(tmpFile1), path(tmpFile2)));
+  }
+  ASSERT_FALSE(chord::file::files_equal(path("__not_existant1__"), path("__not_existant2__")));
+  ASSERT_FALSE(chord::file::files_equal(path("."), path(".")));
 }

@@ -26,7 +26,7 @@ namespace chord {
 namespace controller {
 Client::Client() : make_stub{
   //--- default stub factory
-   [&](const endpoint_t &endpoint) {
+   [&](const endpoint& endpoint) {
     return chord::controller::Control::NewStub(grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials()));
   }
 }{}

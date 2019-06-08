@@ -1,3 +1,6 @@
 #pragma once
+#include <string>
 
-using endpoint_t = std::string;
+namespace chord {
+  using endpoint = std::string;
+} // namespace chord

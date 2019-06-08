@@ -27,6 +27,8 @@ namespace file {
 
   bool has_attr(const std::string &path, const std::string &name);
 
+  bool files_equal(const std::string &file1, const std::string &file2);
+
   /// xattr get
   std::experimental::optional<std::string> attr(const std::string &path, const std::string &name);
 

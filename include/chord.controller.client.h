@@ -8,7 +8,7 @@
 
 using ControlStubFactory =
     std::function<std::shared_ptr<chord::controller::Control::StubInterface>(
-        const endpoint_t &endpoint)>;
+        const chord::endpoint& endpoint)>;
 
 namespace chord {
 namespace controller {

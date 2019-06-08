@@ -69,7 +69,7 @@ struct Router {
   std::shared_ptr<spdlog::logger> logger;
 
   mutable std::recursive_mutex mtx;
-  std::map<uuid_t, endpoint_t> routes;
+  std::map<uuid_t, endpoint> routes;
 
   std::array<optional<uuid_t>, BITS> predecessors;
   std::array<optional<uuid_t>, BITS> successors;

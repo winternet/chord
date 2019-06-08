@@ -1,7 +1,6 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-#include "chord.types.h"
 #include "chord.test.helper.h"
 #include "chord.node.h"
 #include "chord.pb.h"
@@ -273,7 +272,7 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   router.set_predecessor(0, {0, "0.0.0.0:50050"});
 
   std::unique_ptr<MockStub> stub(new MockStub);
-  auto stub_factory = [&](const endpoint_t &endpoint) { (void)endpoint; return std::move(stub); };
+  auto stub_factory = [&](const endpoint& endpoint) { (void)endpoint; return std::move(stub); };
 
   Client client{context, &router, stub_factory};
   Service service(context, &router, &client);

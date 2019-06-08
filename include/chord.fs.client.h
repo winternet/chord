@@ -25,7 +25,7 @@ namespace chord {
 namespace fs {
 
 using StubFactory = std::function<std::unique_ptr<chord::fs::Filesystem::StubInterface>(
-    const endpoint_t &endpoint)>;
+    const endpoint& endpoint)>;
 
 class Client {
  public:

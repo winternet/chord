@@ -61,6 +61,7 @@ Status Facade::put(const chord::path &source, const chord::uri &target, Replicat
   return Status::OK;
 }
 
+/*
 Status Facade::get_shallow_copies(const chord::node& leaving_node) {
   auto metadata_mgr = fs_service->metadata_manager();
 
@@ -85,7 +86,9 @@ Status Facade::get_shallow_copies(const chord::node& leaving_node) {
   }
   return Status::OK;
 }
+*/
 
+/*
 Status Facade::get_and_integrate(const chord::fs::MetaResponse& meta_res) {
   if (meta_res.uri().empty()) {
     return Status(StatusCode::FAILED_PRECONDITION, "failed to get and integrate meta-response due to missing uri", meta_res.uri());
@@ -118,6 +121,7 @@ Status Facade::get_and_integrate(const chord::fs::MetaResponse& meta_res) {
   }
   return Status::OK;
 }
+*/
 
 Status Facade::get(const chord::uri &source, const chord::path& target) {
 

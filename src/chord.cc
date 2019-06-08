@@ -34,12 +34,12 @@ Context parse_program_options(int ac, char *av[]) {
 
   global.add_options()("help,h", "produce help message")(
       "config,c", po::value<string>(), "path to the yaml configuration file.")(
-      "join,j", po::value<endpoint_t>(&(context.join_addr)),
+      "join,j", po::value<chord::endpoint>(&(context.join_addr)),
       "join to an existing address.")(
       "bootstrap,b", "bootstrap peer to create a new chord ring.")(
       "no-controller,n", "do not start the controller.")(
       "uuid,u,id", po::value<uuid_t>(), "client uuid.")(
-      "bind", po::value<endpoint_t>(&(context.bind_addr)),
+      "bind", po::value<chord::endpoint>(&(context.bind_addr)),
       "bind address that is promoted to clients.");
 
   po::variables_map vm;

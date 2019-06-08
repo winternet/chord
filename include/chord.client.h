@@ -22,7 +22,7 @@ class logger;
 namespace chord {
 
 using StubFactory = std::function<std::unique_ptr<chord::Chord::StubInterface>(
-    const endpoint_t &)>;
+    const endpoint &)>;
 
 class Client : public IClient {
   static constexpr auto logger_name = "chord.client";
@@ -51,7 +51,7 @@ class Client : public IClient {
   signal<void(const node)>& on_predecessor_fail() override;
   signal<void(const node)>& on_successor_fail() override;
 
-  bool join(const endpoint_t &addr) override;
+  bool join(const endpoint& addr) override;
   grpc::Status join(const JoinRequest *req, JoinResponse *res) override;
   grpc::Status join(grpc::ClientContext *clientContext, const JoinRequest *req, JoinResponse *res) override;
 

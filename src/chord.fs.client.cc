@@ -35,7 +35,7 @@ Client::Client(Context &context, ChordFacade *chord)
     : context{context},
       chord{chord},
       make_stub{//--- default stub factory
-                [](const endpoint_t &endpoint) {
+                [](const endpoint& endpoint) {
                   return chord::fs::Filesystem::NewStub(grpc::CreateChannel(
                       endpoint, grpc::InsecureChannelCredentials()));
                 }},
@@ -186,6 +186,7 @@ Status Client::del(const chord::node& node, const DelRequest* req) {
   DelResponse res;
   return make_stub(endpoint)->del(&clientContext, *req, &res);
 }
+
 Status Client::del(const chord::node& node, const chord::uri &uri, const bool recursive, const Replication repl) {
   const auto hash = chord::crypto::sha256(uri);
   const auto endpoint = node.endpoint;
