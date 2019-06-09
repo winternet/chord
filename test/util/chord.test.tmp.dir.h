@@ -5,6 +5,7 @@
 #include "chord.path.h"
 #include "chord.log.h"
 #include "chord.uuid.h"
+#include "chord.test.tmp.file.h"
 
 namespace chord {
 namespace test {
@@ -18,12 +19,20 @@ struct TmpDir final {
 
   TmpDir() : TmpDir(chord::path{chord::uuid::random().string()}) {}
 
-  TmpDir(const chord::path& p) : path{p}, logger{log::get_or_create(logger_name)} {
+  explicit TmpDir(const chord::path& p) : path{p}, logger{log::get_or_create(logger_name)} {
     if(chord::file::exists(path)) {
       throw std::runtime_error("Path \'" + path.string() + "\' already exists - aborting.");
     }
     logger->info("creating temporary directory {}.", path);
     chord::file::create_directories(path);
+  }
+
+  TmpFile add_file() const {
+    return TmpFile();
+  }
+
+  TmpFile add_file(const std::string& filename) const {
+    return TmpFile(path/filename);
   }
 
   ~TmpDir() {

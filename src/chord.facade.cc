@@ -126,7 +126,7 @@ chord::node ChordFacade::successor(const uuid_t &uuid) {
 }
 
 chord::node ChordFacade::successor() {
-  return *(router->successor());
+  return make_node(service->successor(context.uuid()));
 }
 
 /**

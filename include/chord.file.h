@@ -15,6 +15,8 @@ namespace file {
 
   bool create_file(const std::string &path);
 
+  bool copy_file(const std::string &from, const std::string& to);
+
   bool is_empty(const std::string& path);
 
   bool is_regular_file(const std::string &path);
@@ -28,6 +30,8 @@ namespace file {
   bool has_attr(const std::string &path, const std::string &name);
 
   bool files_equal(const std::string &file1, const std::string &file2);
+
+  uintmax_t file_size(const std::string& path);
 
   /// xattr get
   std::experimental::optional<std::string> attr(const std::string &path, const std::string &name);

@@ -37,9 +37,17 @@ bool file::remove_all(const std::string &path) {
   return fs::remove_all({path});
 }
 
+bool file::copy_file(const std::string &from, const std::string& to) {
+  return fs::copy_file(from, to);
+}
+
 bool file::create_file(const std::string &path) {
   std::ofstream{fs::path(path)};
   return true;
+}
+
+uintmax_t file::file_size(const std::string& path) {
+  return fs::file_size({path});
 }
 
 bool file::files_equal(const std::string &file1, const std::string &file2) {

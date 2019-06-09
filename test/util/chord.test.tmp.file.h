@@ -33,7 +33,8 @@ struct TmpFile final {
 
   ~TmpFile() {
     logger->info("removing temporary file {}.", path);
-    chord::file::remove(path);
+    if(chord::file::exists(path))
+      chord::file::remove(path);
   }
 
   inline operator chord::path() const {
