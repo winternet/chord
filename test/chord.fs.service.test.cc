@@ -162,7 +162,6 @@ TEST_F(FsServiceTest, get_from_node_reference) {
 
   TmpDir target_directory;
   const auto target_file = target_directory.path / "received_file";
-  //TmpFile target_file(tmp.path / "received_file");
   const auto status = self->fs_client->get(source_uri, target_file);
 
   ASSERT_TRUE(status.ok());
@@ -173,54 +172,41 @@ TEST_F(FsServiceTest, get_from_node_reference) {
   ASSERT_FALSE(chord::file::exists(source_file.path));
 }
 
-///**
-// * Called to get the file from replication.
-// *
-// * Since we intentionally did not create the file for the first
-// * run, we need
-// */
-//RouterEntry handle_get_from_replication(const chord::uri& source_uri, const chord::Context& context) {
-//  const auto generated_file = context.data_directory / source_uri.path();
-//
-//  // deleted by TmpDir dtor
-//  std::ofstream file(generated_file);
-//  file << chord::uuid::random().string();
-//  file.close();
-//
-//  return make_entry("0", "0.0.0.0:50050");
-//}
-///**
-// * The first time the get is called the file does not exist but the
-// * metadata is referencing the same node (just for testing reasons).
-// * During the second call to self, the file is created within
-// * handle_get_from_node_reference().
-// */
-//TEST_F(FsServiceTest, get_from_replication) {
-//  GetRequest req;
-//  GetResponse res;
-//  ServerContext serverContext;
-//
-//  const auto source_uri = uri("chord:///file");
-//  auto handler = std::bind(handle_get_from_replication, std::cref(source_uri), std::cref(peer->context));
-//
-//  EXPECT_CALL(*peer->service, successor(_))
-//    .WillOnce(Return(make_entry("0", "0.0.0.0:50050")))  // initial
-//    .WillOnce(InvokeWithoutArgs(handler)); // replication - get create file to 'fake' accessing a different node
-//
-//  // reference ourself
-//  Metadata metadata("file", "", "", perms::all, type::regular, {}, Replication(2));
-//  EXPECT_CALL(*peer->metadata_mgr, get(source_uri))
-//    .WillRepeatedly(Return(std::set<Metadata>{metadata}));
-//
-//  // note without node reference for deletion
-//  metadata = {"file", "", "", perms::all, type::regular, {}, Replication(2)};
-//  //EXPECT_CALL(peer->metadata_mgr, del(source_uri))
-//  //  .WillOnce(Return(std::set<Metadata>{metadata}));
-//
-//  TmpDir tmp;
-//  TmpFile target_file(tmp.path / "received_file");
-//  const auto status = peer->fs_client->get(source_uri, target_file.path);
-//
-//  ASSERT_TRUE(status.ok());
-//  ASSERT_TRUE(chord::file::files_equal(peer->context.data_directory / source_uri.path(), target_file.path));
-//}
+TEST_F(FsServiceTest, get_from_replication) {
+  TmpDir source_data_directory;
+  const endpoint source_endpoint("0.0.0.0:50051");
+  MockPeer source_peer(source_endpoint, source_data_directory);
+
+  const auto source_uri = uri("chord:///file");
+  const auto source_file = source_data_directory.add_file("file");
+
+  // connect the two nodes, first successor call will return self
+  EXPECT_CALL(*self->service, successor(_))
+    .WillOnce(Return(make_entry(self->context.node())))
+    .WillRepeatedly(Return(make_entry(source_peer.context.node())));
+  EXPECT_CALL(*source_peer.service, successor(_))
+    .WillRepeatedly(Return(make_entry(self->context.node())));
+
+  // reference source peer
+  Metadata metadata("file", "", "", perms::all, type::regular, {}, Replication(2));
+  EXPECT_CALL(*self->metadata_mgr, get(source_uri))
+    .WillOnce(Return(std::set<Metadata>{metadata}));
+
+  // after downloading the file will be deleted
+  //metadata = {"file", "", "", perms::all, type::regular, {}, Replication(2)};
+  //EXPECT_CALL(*source_peer.metadata_mgr, get(source_uri))
+  //  .WillOnce(Return(std::set<Metadata>{metadata}));
+  //EXPECT_CALL(*source_peer.metadata_mgr, del(source_uri))
+  //  .WillOnce(Return(std::set<Metadata>{metadata}));
+
+  TmpDir target_directory;
+  const auto target_file = target_directory.path / "received_file";
+  const auto status = self->fs_client->get(source_uri, target_file);
+
+  ASSERT_TRUE(status.ok());
+  ASSERT_TRUE(chord::file::file_size(target_file) > 0);
+  ASSERT_TRUE(chord::file::files_equal(source_file.path, target_file));
+  // copied file to local data_directory
+  ASSERT_TRUE(chord::file::files_equal(source_file.path, self->context.data_directory / "file"));
+}
+
