@@ -427,7 +427,7 @@ Status Service::get(ServerContext *serverContext, const GetRequest *req, grpc::S
   const auto uri = chord::uri::from(req->uri());
 
   data /= uri.path();
-  //try to lookup reference node if found in metadata
+  // try to get file
   if (!file::exists(data)) {
     logger->debug("file does not exist, trying to restore from metadata...");
     const auto status = get_from_reference_or_replication(uri);

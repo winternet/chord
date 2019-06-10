@@ -192,13 +192,6 @@ TEST_F(FsServiceTest, get_from_replication) {
   EXPECT_CALL(*self->metadata_mgr, get(source_uri))
     .WillOnce(Return(std::set<Metadata>{metadata}));
 
-  // after downloading the file will be deleted
-  //metadata = {"file", "", "", perms::all, type::regular, {}, Replication(2)};
-  //EXPECT_CALL(*source_peer.metadata_mgr, get(source_uri))
-  //  .WillOnce(Return(std::set<Metadata>{metadata}));
-  //EXPECT_CALL(*source_peer.metadata_mgr, del(source_uri))
-  //  .WillOnce(Return(std::set<Metadata>{metadata}));
-
   TmpDir target_directory;
   const auto target_file = target_directory.path / "received_file";
   const auto status = self->fs_client->get(source_uri, target_file);
@@ -210,3 +203,46 @@ TEST_F(FsServiceTest, get_from_replication) {
   ASSERT_TRUE(chord::file::files_equal(source_file.path, self->context.data_directory / "file"));
 }
 
+TEST_F(FsServiceTest, get_from_replication_propagates) {
+  // peer holding the last replication
+  TmpDir source_data_directory;
+  const endpoint source_endpoint("0.0.0.0:50052");
+  MockPeer source_peer(source_endpoint, source_data_directory);
+
+  // peer just to hop-over
+  TmpDir middle_data_directory;
+  const endpoint middle_endpoint("0.0.0.0:50051");
+  MockPeer middle_peer(middle_endpoint, middle_data_directory);
+
+  const auto source_uri = uri("chord:///file");
+  const auto source_file = source_data_directory.add_file("file");
+
+  // connect the two nodes, first successor call will return self
+  EXPECT_CALL(*self->service, successor(_))
+    .WillOnce(Return(make_entry(self->context.node())))
+    .WillRepeatedly(Return(make_entry(middle_peer.context.node())));
+  EXPECT_CALL(*middle_peer.service, successor(_))
+    .WillRepeatedly(Return(make_entry(source_peer.context.node())));
+  EXPECT_CALL(*source_peer.service, successor(_))
+    .WillRepeatedly(Return(make_entry(self->context.node())));
+
+  // self peer metadata
+  Metadata metadata("file", "", "", perms::all, type::regular, {}, Replication(0,2));
+  EXPECT_CALL(*self->metadata_mgr, get(source_uri))
+    .WillOnce(Return(std::set<Metadata>{metadata}));
+
+  metadata.replication = {1,2};
+  EXPECT_CALL(*middle_peer.metadata_mgr, get(source_uri))
+    .WillOnce(Return(std::set<Metadata>{metadata}));
+
+  TmpDir target_directory;
+  const auto target_file = target_directory.path / "received_file";
+  const auto status = self->fs_client->get(source_uri, target_file);
+
+  ASSERT_TRUE(status.ok());
+  ASSERT_TRUE(chord::file::file_size(target_file) > 0);
+  ASSERT_TRUE(chord::file::files_equal(source_file.path, target_file));
+  // copied file to local data_directories (middle/self)
+  ASSERT_TRUE(chord::file::files_equal(source_file.path, self->context.data_directory / "file"));
+  ASSERT_TRUE(chord::file::files_equal(source_file.path, middle_peer.context.data_directory / "file"));
+}
