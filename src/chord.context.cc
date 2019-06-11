@@ -1,7 +1,8 @@
 #include "chord.context.h"
+
+#include "chord.exception.h"
 #include "chord.router.h"
 #include "chord.uuid.h"
-#include "chord.exception.h"
 
 using namespace std;
 

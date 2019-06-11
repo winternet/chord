@@ -1,16 +1,18 @@
 #pragma once
 
-#include "chord.file.h"
-#include "chord.log.factory.h"
-
 #include <map>
+#include <memory>
 #include <set>
-#include <vector>
+#include <string>
+
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/bundled/ostream.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 
+#include "chord.log.factory.h"
+
+namespace spdlog { class logger; }
 
 namespace chord {
 

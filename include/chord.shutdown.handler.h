@@ -1,13 +1,13 @@
 #pragma once
 
-#include "chord.i.shutdown.handler.h"
-#include "chord.log.h"
-#include "chord.peer.h"
+#include <atomic>
 #include <memory>
 
-namespace spdlog {
-  class logger;
-}  // namespace spdlog
+#include "chord.i.shutdown.handler.h"
+
+namespace boost { namespace system { class error_code; } }
+namespace chord { class Peer; }
+namespace spdlog { class logger; }
 
 namespace chord {
 

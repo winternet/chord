@@ -1,25 +1,19 @@
 #pragma once
 #include "chord.types.h"
 
+namespace chord { class uuid; }
+namespace chord { struct Context; }
+namespace chord { struct node; }
+namespace chord { namespace common { class RouterEntry; } }
+namespace chord { namespace common { class Header; } }
+namespace chord { namespace test { class TmpDir; } }
+
 namespace chord {
-
-class uuid;
-class node;
-class Context;
-
-namespace common{
-class RouterEntry;
-class Header;
-}
-
 namespace test {
-
-class TmpDir;
-
 namespace helper {
 
-Context make_context(const uuid &self, const TmpDir& data_directory, const TmpDir& meta_directory);
-Context make_context(const uuid &self, const TmpDir& data_directory);
+Context make_context(const uuid &self, const chord::test::TmpDir& data_directory, const chord::test::TmpDir& meta_directory);
+Context make_context(const uuid &self, const chord::test::TmpDir& data_directory);
 Context make_context(const uuid &self);
 
 chord::common::RouterEntry make_entry(const chord::node& n);

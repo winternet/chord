@@ -1,16 +1,28 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-#include "chord.test.helper.h"
+#include <grpcpp/impl/codegen/server_context.h>
+#include <grpcpp/impl/codegen/status.h>
+
+#include <memory>
+#include <utility>
+#include <vector>
+
+#include "chord.client.h"
+#include "chord.client.mock.h"
+#include "chord.context.h"
 #include "chord.node.h"
 #include "chord.pb.h"
-#include "chord_common.pb.h"
-#include "chord.client.mock.h"
-#include "chord.client.h"
-#include "chord.log.h"
-
 #include "chord.router.h"
 #include "chord.service.h"
+#include "chord.test.helper.h"
+#include "chord.types.h"
+#include "chord.uuid.h"
+#include "chord_common.pb.h"
+#include "chord.signal.h"
+#include "chord.log.h"
+
+namespace grpc { class ClientContext; }
 
 using chord::common::Header;
 using chord::common::RouterEntry;

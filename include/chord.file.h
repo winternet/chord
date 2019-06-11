@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <experimental/optional>
 #include <string>
 

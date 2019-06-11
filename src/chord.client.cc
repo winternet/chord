@@ -1,25 +1,28 @@
+#include "chord.client.h"
+
 #include <memory>
 #include <fstream>
+#include <string>
 
-#include <grpc++/channel.h>
-#include <grpc++/create_channel.h>
+#include <grpcpp/channel.h>
+#include <grpcpp/create_channel.h>
+
+#include "chord.grpc.pb.h"
+#include "chord.pb.h"
 
 #include "chord.log.h"
-#include "chord.uuid.h"
-#include "chord.client.h"
-#include "chord.router.h"
-#include "chord.exception.h"
-#include "chord.concurrent.queue.h"
-
+#include "chord.context.h"
 #include "chord.common.h"
-#include "chord.crypto.h"
-
+#include "chord.exception.h"
+#include "chord.log.factory.h"
+#include "chord.log.h"
+#include "chord.node.h"
+#include "chord.router.h"
+#include "chord.uuid.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
-using grpc::ClientWriter;
-using grpc::ClientReader;
 
 using chord::common::Header;
 using chord::common::RouterEntry;

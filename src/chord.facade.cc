@@ -1,23 +1,22 @@
-#include <stdexcept>
-#include <memory>
-#include <thread>
-
-#include <grpc++/server.h>
-#include <grpc++/server_builder.h>
-#include <grpc++/server_context.h>
-
 #include "chord.facade.h"
 
-#include "chord.log.h"
-#include "chord.i.scheduler.h"
-#include "chord.scheduler.h"
-#include "chord.router.h"
-#include "chord.common.h"
+#include <memory>
 
-using grpc::ServerBuilder;
+#include <grpcpp/server_context.h>
+
+#include "chord.client.h"
+#include "chord.common.h"
+#include "chord.context.h"
+#include "chord.i.scheduler.h"
+#include "chord.log.factory.h"
+#include "chord.log.h"
+#include "chord.router.h"
+#include "chord.scheduler.h"
+#include "chord.service.h"
+#include "chord.types.h"
+
 using namespace std;
 
-using chord::common::RouterEntry;
 using chord::common::make_node;
 
 namespace chord {

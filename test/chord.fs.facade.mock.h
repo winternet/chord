@@ -1,11 +1,13 @@
 #pragma once
 
-#include <set>
+#include <iosfwd>
+#include <grpcpp/impl/codegen/status.h>
 
-#include "chord.fs.client.h"
-#include "chord.fs.service.h"
-#include "chord.log.h"
-#include "chord.uri.h"
+#include "chord.fs.replication.h"
+#include "chord.i.fs.facade.h"
+
+namespace chord { class path; }
+namespace chord { class uri; }
 
 namespace chord {
 namespace fs {

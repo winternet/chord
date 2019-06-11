@@ -1,30 +1,22 @@
 #pragma once
 
-#include <grpc++/server_builder.h>
 #include <memory>
 
-#include "chord.signal.h"
-#include "chord.client.h"
 #include "chord.i.scheduler.h"
 #include "chord.router.h"
-#include "chord.service.h"
 #include "chord.uuid.h"
 
-namespace spdlog {
-class logger;
-}  // namespace spdlog
+#include "chord.i.client.h"
+#include "chord.i.service.h"
+#include "chord.node.h"
+#include "chord.signal.h"
+
+namespace chord { struct Context; }
+namespace grpc { class Service; }
+namespace spdlog { class logger; }  // lines 14-14
+
 
 namespace chord {
-//--- forward declarations
-class AbstractScheduler;
-
-class Client;
-class Service;
-class IClient;
-class IService;
-
-struct Context;
-struct Router;
 
 class ChordFacade {
   static constexpr auto logger_name = "chord.facade";

@@ -1,12 +1,21 @@
 #pragma once
+#include <grpcpp/impl/codegen/status.h>
+#include <iosfwd>
+#include <memory>
 
-#include <set>
-
+#include "chord.fs.replication.h"
 #include "chord.fs.client.h"
 #include "chord.fs.service.h"
 #include "chord.i.fs.facade.h"
-#include "chord.log.h"
 #include "chord.uri.h"
+
+namespace chord { class path; }
+namespace chord { class ChordFacade; }
+namespace chord { namespace fs { class MetaResponse; } }
+namespace chord { struct Context; }
+namespace chord { struct node; }
+namespace grpc { class Service; }
+namespace spdlog { class logger; }
 
 namespace chord {
 namespace fs {

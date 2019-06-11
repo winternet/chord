@@ -1,5 +1,7 @@
+#include "chord_common.pb.h"
+
 #include "chord.context.h"
-#include "chord.grpc.pb.h"
+#include "chord.node.h"
 
 using chord::common::Header;
 using chord::common::RouterEntry;

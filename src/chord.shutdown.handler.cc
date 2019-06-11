@@ -1,12 +1,14 @@
-#include "chord.i.shutdown.handler.h"
+#include "chord.shutdown.handler.h"
+
+#include <atomic>
+#include <cstdlib>
+#include <memory>
+
 #include "chord.log.h"
 #include "chord.peer.h"
-#include <memory>
-#include <cstdlib>
 
-namespace spdlog {
-  class logger;
-}  // namespace spdlog
+namespace boost { namespace system { class error_code; } }
+namespace spdlog { class logger; }
 
 namespace chord {
 

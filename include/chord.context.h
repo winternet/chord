@@ -1,18 +1,18 @@
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 
+#include "chord.log.h"
+#include "chord.node.h"
 #include "chord.path.h"
 #include "chord.types.h"
 #include "chord.uuid.h"
-#include "chord.node.h"
-#include "chord.log.h"
 
 uuid_t generate_random();
 
-namespace chord {
-struct Router;
-}  // namespace chord
+namespace chord { struct Router; }
 
 namespace chord {
 struct Context {

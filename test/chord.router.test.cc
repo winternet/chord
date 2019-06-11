@@ -1,7 +1,15 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <cstddef>
+#include <iostream>
+#include <string>
+#include "chord.context.h"
+#include "chord.node.h"
+#include "chord.path.h"
 #include "chord.router.h"
+#include "chord.signal.h"
+#include "chord.uuid.h"
 
 #define ASSERT_NOT_NULL(pointer) ASSERT_TRUE(pointer)
 #define ASSERT_NULL(pointer) ASSERT_FALSE(pointer)

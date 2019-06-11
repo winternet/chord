@@ -1,8 +1,21 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <algorithm>
+#include <iosfwd>
+#include <set>
+#include <string>
+#include "chord.optional.h"
+#include "chord.context.h"
+#include "chord.exception.h"
 #include "chord.file.h"
+#include "chord.fs.metadata.h"
 #include "chord.fs.metadata.manager.h"
+#include "chord.fs.perms.h"
+#include "chord.fs.replication.h"
+#include "chord.fs.type.h"
+#include "chord.path.h"
+#include "chord.uri.h"
 
 using namespace std;
 using namespace chord;

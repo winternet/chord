@@ -68,7 +68,7 @@ class Scheduler : public AbstractScheduler {
     thread->join();
   }
 
-  void shutdown() {
+  void shutdown() override {
     stop = true;
   }
 

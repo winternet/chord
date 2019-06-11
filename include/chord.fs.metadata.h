@@ -1,20 +1,27 @@
 #pragma once
+#include <iosfwd>
+#include <cstddef>
+#include <algorithm>
+#include <vector>
+#include <iomanip>
+#include <set>
+#include <string>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/set.hpp>
-#include <iomanip>
-#include <set>
-#include <string>
 
+#include "chord.uuid.h"
 #include "chord.fs.perms.h"
 #include "chord.fs.type.h"
 #include "chord.node.h"
 #include "chord.fs.replication.h"
 #include "chord.optional.h"
 #include "chord.optional.serialization.h"
+
+namespace boost { namespace serialization { class access; } }
 
 namespace chord {
 namespace fs {

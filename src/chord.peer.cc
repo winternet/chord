@@ -1,23 +1,24 @@
+#include "chord.peer.h"
+
 #include <stdexcept>
 #include <memory>
 #include <thread>
 
+#include <grpcpp/security/server_credentials.h>
 #include <grpc++/server.h>
 #include <grpc++/server_builder.h>
 #include <grpc++/server_context.h>
 
-#include "chord.i.scheduler.h"
-#include "chord.scheduler.h"
-#include "chord.router.h"
-#include "chord.peer.h"
-#include "chord.fs.facade.h"
-
 #include "chord.controller.service.h"
+#include "chord.fs.facade.h"
+#include "chord.log.factory.h"
+#include "chord.log.h"
+#include "chord.node.h"
+#include "chord.shutdown.handler.h"
+#include "chord.uuid.h"
 
 using grpc::ServerBuilder;
 using namespace std;
-
-using chord::common::RouterEntry;
 
 namespace chord {
 

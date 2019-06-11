@@ -1,11 +1,10 @@
 #pragma once
 
-#include <cctype>
+#include <iosfwd>
 #include <map>
 #include <regex>
 #include <string>
 
-#include "chord.exception.h"
 #include "chord.optional.h"
 #include "chord.path.h"
 

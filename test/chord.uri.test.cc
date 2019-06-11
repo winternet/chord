@@ -2,6 +2,7 @@
 #include <gmock/gmock.h>
 
 #include "chord.uri.h"
+#include "chord.exception.h"
 
 using namespace std;
 using namespace chord;

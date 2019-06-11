@@ -1,14 +1,17 @@
-#include <boost/array.hpp>
-#include <map>
+#include "chord.router.h"
+
+#include <algorithm>
+#include <iterator>
+#include <ostream>
 #include <memory>
 #include <string>
 
 #include "chord.context.h"
+#include "chord.log.factory.h"
 #include "chord.log.h"
 #include "chord.node.h"
-#include "chord.optional.h"
-#include "chord.router.h"
 #include "chord.types.h"
+#include "chord.optional.h"
 #include "chord.uuid.h"
 
 namespace chord {

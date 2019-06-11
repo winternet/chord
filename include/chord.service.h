@@ -1,26 +1,35 @@
 #pragma once
+#include "chord_common.pb.h"
 
-#include <grpc++/server_context.h>
-#include <grpc/grpc.h>
-#include <functional>
-#include <vector>
+#include <cstddef>
+#include <functional>                    // for function
+#include <memory>
 
-#include "chord.signal.h"
-#include "chord.exception.h"
+#include <grpcpp/impl/codegen/status.h>
+
 #include "chord.grpc.pb.h"
 #include "chord.i.service.h"
-#include "chord.i.client.h"
-#include "chord.pb.h"
+#include "chord.uuid.h"
+#include "chord.signal.h"
 
-namespace chord {
-struct Context;
-struct Router;
-class IClient;
-}  // namespace chord
-
-namespace spdlog {
-  class logger;
-}
+namespace chord { class CheckRequest; }
+namespace chord { class CheckResponse; }
+namespace chord { class JoinRequest; }
+namespace chord { class JoinResponse; }
+namespace chord { class LeaveRequest; }
+namespace chord { class LeaveResponse; }
+namespace chord { class NotifyRequest; }
+namespace chord { class NotifyResponse; }
+namespace chord { class StabilizeRequest; }
+namespace chord { class StabilizeResponse; }
+namespace chord { class SuccessorRequest; }
+namespace chord { class SuccessorResponse; }
+namespace chord { struct Context; }
+namespace chord { struct Router; }
+namespace chord { struct node; }
+namespace grpc { class ServerContext; }
+namespace grpc { class Service; }
+namespace spdlog { class logger; }
 
 namespace chord {
 using ClientFactory = std::function<chord::IClient*()>;

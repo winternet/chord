@@ -1,7 +1,11 @@
+#include <string>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "chord.context.h"
 #include "chord.context.manager.h"
+#include "chord.exception.h"
+#include "chord.log.h"
 
 using namespace std;
 using namespace chord;

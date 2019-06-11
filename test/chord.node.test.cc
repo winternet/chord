@@ -2,6 +2,8 @@
 #include <gmock/gmock.h>
 
 #include "chord.node.h"
+#include "chord.types.h"
+#include "chord.uuid.h"
 
 using namespace std;
 

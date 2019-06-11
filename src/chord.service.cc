@@ -1,18 +1,24 @@
-#include <iostream>
-#include <grpc++/server_context.h>
-
-#include "chord.log.h"
-#include "chord.uri.h"
-#include "chord.context.h"
-#include "chord.router.h"
-#include "chord.common.h"
-#include "chord.client.h"
 #include "chord.service.h"
 
+#include <grpcpp/impl/codegen/server_context.h>
+#include <grpcpp/impl/codegen/status_code_enum.h>
+#include <cmath>
+#include <iostream>
+#include <string>
+#include <vector>
+
+#include "chord.optional.h"
+#include "chord.pb.h"
+#include "chord.common.h"
+#include "chord.context.h"
+#include "chord.exception.h"
+#include "chord.i.client.h"
+#include "chord.log.factory.h"
+#include "chord.log.h"
+#include "chord.node.h"
+#include "chord.router.h"
+
 using grpc::ServerContext;
-using grpc::ClientContext;
-using grpc::ServerReader;
-using grpc::ServerWriter;
 using grpc::Status;
 
 using chord::common::Header;
@@ -26,8 +32,6 @@ using chord::NotifyResponse;
 using chord::NotifyRequest;
 using chord::CheckResponse;
 using chord::CheckRequest;
-using chord::Chord;
-
 
 using namespace std;
 using namespace chord::common;

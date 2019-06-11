@@ -1,11 +1,13 @@
+#include "chord.file.h"
+
 #include <string>
-#include <fstream>
 #include <sys/xattr.h>
+#include <algorithm>
+#include <iterator>
+#include <fstream>
 #include <experimental/filesystem>
 
 #include "chord.exception.h"
-
-#include "chord.file.h"
 
 namespace chord {
 

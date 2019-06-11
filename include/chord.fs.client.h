@@ -1,22 +1,26 @@
 #pragma once
 
+#include <grpcpp/impl/codegen/status.h>
 #include <functional>
+#include <iosfwd>
 #include <memory>
 #include <set>
 
-#include "chord.facade.h"
-#include "chord.fs.metadata.h"
+//#include "chord.facade.h"
+//
+/////#include "chord.fs.metadata.h"
 #include "chord.fs.replication.h"
 #include "chord.types.h"
 #include "chord.uri.h"
 #include "chord_fs.grpc.pb.h"
-
-namespace chord {
-class Peer;
-
-struct Context;
-struct Router;
-}  // namespace chord
+namespace chord { class path; }
+namespace chord { class ChordFacade; }
+namespace chord { namespace fs { class DelRequest; } }
+namespace chord { namespace fs { class MetaRequest; } }
+namespace chord { namespace fs { struct Metadata; } }
+namespace chord { struct Context; }
+namespace chord { struct node; }
+namespace spdlog { class logger; }
 
 namespace spdlog {
   class logger;

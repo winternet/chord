@@ -1,19 +1,24 @@
 #include <iostream>
-#include <thread>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include <boost/program_options.hpp>
 
 #include "chord.context.h"
 #include "chord.context.manager.h"
 #include "chord.controller.client.h"
-#include "chord.controller.service.h"
-#include "chord.file.h"
 #include "chord.log.h"
 #include "chord.peer.h"
+#include "chord.path.h"
+#include "chord.types.h"
+#include "chord.uuid.h"
 
 using chord::Context;
 using chord::ContextManager;
 using chord::path;
+using chord::endpoint;
+using chord::uuid;
 using std::cerr;
 using std::cout;
 using std::endl;
@@ -34,12 +39,12 @@ Context parse_program_options(int ac, char *av[]) {
 
   global.add_options()("help,h", "produce help message")(
       "config,c", po::value<string>(), "path to the yaml configuration file.")(
-      "join,j", po::value<chord::endpoint>(&(context.join_addr)),
+      "join,j", po::value<endpoint>(&(context.join_addr)),
       "join to an existing address.")(
       "bootstrap,b", "bootstrap peer to create a new chord ring.")(
       "no-controller,n", "do not start the controller.")(
-      "uuid,u,id", po::value<uuid_t>(), "client uuid.")(
-      "bind", po::value<chord::endpoint>(&(context.bind_addr)),
+      "uuid,u,id", po::value<uuid>(), "client uuid.")(
+      "bind", po::value<endpoint>(&(context.bind_addr)),
       "bind address that is promoted to clients.");
 
   po::variables_map vm;
@@ -90,7 +95,7 @@ Context parse_program_options(int ac, char *av[]) {
 
   //--- uuid
   if (vm.count("uuid")) {
-    auto id = vm["uuid"].as<uuid_t>();
+    auto id = vm["uuid"].as<uuid>();
     context.set_uuid(id);
     logger->trace("[uuid] {}", id);
   }
@@ -114,7 +119,7 @@ Context parse_program_options(int ac, char *av[]) {
 
   //--- client-id
   if (vm.count("uuid")) {
-    logger->trace("[option-uuid] {}", vm["uuid"].as<uuid_t>());
+    logger->trace("[option-uuid] {}", vm["uuid"].as<uuid>());
   }
   return context;
 }
@@ -127,15 +132,7 @@ int main(int argc, char *argv[]) {
   //--- start peer
   auto peer = make_shared<chord::Peer>(context);
 
-  //--- start controller
-  // thread controller_thread([&](){
-  //    auto fs_client = make_shared<chord::fs::Client>(context, peer);
-  //    chord::controller::Service controller(fs_client);
-  //});
-
   peer->start();
 
-  //--- join
-  // controller_thread.join();
   return 0;
 }

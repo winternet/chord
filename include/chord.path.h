@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iosfwd>
 #include <experimental/filesystem>
 #include <set>
 #include <string>

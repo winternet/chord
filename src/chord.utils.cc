@@ -1,8 +1,5 @@
 #include <string>
-#include <grpc/status.h>
-
-#include "chord.router.h"
-#include "chord.uri.h"
+#include <grpcpp/impl/codegen/status.h>
 
 namespace chord {
 namespace utils {

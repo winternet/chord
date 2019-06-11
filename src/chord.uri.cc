@@ -1,10 +1,18 @@
-#include <string>
-#include <regex>
-#include <iomanip>
-#include <experimental/filesystem>
-
-#include "chord.path.h"
 #include "chord.uri.h"
+
+#include <cstdlib>
+#include <cctype>
+#include <experimental/filesystem>
+#include <iomanip>
+#include <iterator>
+#include <regex>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "chord.exception.h"
+#include "chord.path.h"
 
 using namespace std;
 namespace fs = std::experimental::filesystem;

@@ -1,6 +1,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <iosfwd>
+#include <string>
+
 #include "chord.log.h"
 #include "chord.exception.h"
 

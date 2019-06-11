@@ -1,20 +1,22 @@
+#include "chord.controller.client.h"
+
+#include <iostream>
 #include <memory>
 
-#include <grpc++/channel.h>
-#include <grpc++/create_channel.h>
+#include <grpcpp/channel.h>
+#include <grpcpp/create_channel.h>
+#include <grpcpp/impl/codegen/client_context.h>
+#include <grpcpp/impl/codegen/status.h>
+#include <grpcpp/security/credentials.h>
 
-#include "chord.utils.h"
-#include "chord.log.h"
-#include "chord.grpc.pb.h"
+#include "chord_controller.grpc.pb.h"
+#include "chord_controller.pb.h"
 #include "chord.exception.h"
-#include "chord.controller.client.h"
+#include "chord.log.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
-
-using chord::common::Header;
-using chord::common::RouterEntry;
 
 using chord::controller::Control;
 using chord::controller::ControlResponse;

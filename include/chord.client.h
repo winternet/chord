@@ -3,21 +3,22 @@
 #include <functional>
 #include <memory>
 
+#include "chord_common.pb.h"
 #include "chord.signal.h"
 #include "chord.grpc.pb.h"
 #include "chord.types.h"
 #include "chord.uuid.h"
 #include "chord.i.client.h"
 
-namespace chord {
-struct Router;
-struct Context;
-struct node;
-}  // namespace chord
-
-namespace spdlog {
-class logger;
-}  // namespace spdlog
+namespace chord { class JoinRequest; }                                                                                                         
+namespace chord { class JoinResponse; }                                                                                                        
+namespace chord { class SuccessorRequest; }                                                                                                    
+namespace chord { class SuccessorResponse; }
+namespace chord { struct Context; }
+namespace chord { struct Router; }
+namespace chord { struct node; }
+namespace grpc { class ClientContext; }
+namespace spdlog { class logger; }
 
 namespace chord {
 

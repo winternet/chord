@@ -1,20 +1,26 @@
 #pragma once
-
-#include <grpc++/server_context.h>
-#include <grpc/grpc.h>
 #include <functional>
+#include <memory>
 
-#include "chord.uuid.h"
-#include "chord.fs.client.h"
-#include "chord.fs.metadata.manager.h"
+#include <grpcpp/impl/codegen/status.h>
+
+#include "chord.i.fs.metadata.manager.h"
+#include "chord.uri.h"
 #include "chord_fs.grpc.pb.h"
 
-namespace chord {
-struct Context;
-}  // namespace chord
-namespace spdlog {
-class logger;
-}  // namespace spdlog
+namespace chord { class ChordFacade; }
+namespace chord { namespace fs { class Client; } }
+namespace chord { namespace fs { class DelRequest; } }
+namespace chord { namespace fs { class DelResponse; } }
+namespace chord { namespace fs { class GetRequest; } }
+namespace chord { namespace fs { class GetResponse; } }
+namespace chord { namespace fs { class MetaRequest; } }
+namespace chord { namespace fs { class MetaResponse; } }
+namespace chord { namespace fs { class PutRequest; } }
+namespace chord { namespace fs { class PutResponse; } }
+namespace chord { struct Context; }
+namespace grpc { class ServerContext; }
+namespace spdlog { class logger; }
 
 namespace chord {
 namespace fs {

@@ -1,21 +1,20 @@
 #pragma once
+#include <memory>
+#include <string>
+#include <vector>
 
-#include <grpc++/server_context.h>
+#include <grpcpp/impl/codegen/status.h>
 
-#include "chord.i.fs.facade.h"
 #include "chord.path.h"
 #include "chord_controller.grpc.pb.h"
 
-namespace chord {
-  class uri;
-namespace fs {
-class Facade;
-}  // namespace fs
-}  // namespace chord
-
-namespace spdlog {
-  class logger;
-}  // namespace spdlog
+namespace chord { class uri; }  // lines 10-10
+namespace chord { namespace controller { class ControlRequest; } }
+namespace chord { namespace controller { class ControlResponse; } }
+namespace chord { namespace fs { class IFacade; } }
+namespace chord { struct Context; }
+namespace grpc { class ServerContext; }
+namespace spdlog { class logger; }
 
 namespace chord {
 namespace controller {

@@ -1,10 +1,23 @@
+#include "chord.fs.facade.h"
+
+#include <map>
+#include <set>
+#include <string>
+#include <utility>
 #include <fstream>
 
-#include "chord.log.h"
+#include <grpcpp/impl/codegen/status_code_enum.h>
+
+#include "chord.context.h"
 #include "chord.exception.h"
-#include "chord.fs.facade.h"
-#include "chord.common.h"
+#include "chord.facade.h"
+#include "chord.file.h"
 #include "chord.fs.metadata.h"
+#include "chord.fs.type.h"
+#include "chord.i.fs.metadata.manager.h"
+#include "chord.log.factory.h"
+#include "chord.log.h"
+#include "chord.node.h"
 
 using namespace std;
 
@@ -199,6 +212,7 @@ void Facade::on_joined(const chord::node old_predecessor, const chord::node new_
     for(auto meta:pair.second) {
 
       const auto local_path = context.data_directory / uri.path();
+      //FIXME: use or remove
       const bool exists = chord::file::exists(local_path) && chord::file::is_regular_file(local_path);
 
       if(meta.file_type == type::regular && !meta.node_ref) {

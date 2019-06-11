@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 
 #include "chord.types.h"
 #include "chord_controller.grpc.pb.h"

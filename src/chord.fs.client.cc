@@ -1,19 +1,33 @@
-#include <grpc++/channel.h>
-#include <grpc++/create_channel.h>
+#include "chord.fs.client.h"
+
+#include <grpcpp/channel.h>
+#include <grpcpp/create_channel.h>
+#include <grpcpp/impl/codegen/status_code_enum.h>
+#include <grpcpp/impl/codegen/sync_stream.h>
+#include <grpcpp/security/credentials.h>
 #include <array>
 #include <fstream>
 #include <memory>
+#include <cstddef>
+#include <string>
 
+#include "chord_fs.grpc.pb.h"
+#include "chord_fs.pb.h"
+
+#include "chord.context.h"
+#include "chord.facade.h"
 #include "chord.crypto.h"
-#include "chord.file.h"
-#include "chord.fs.client.h"
-#include "chord.fs.metadata.builder.h"
-#include "chord.fs.replication.h"
-#include "chord.log.h"
-#include "chord.peer.h"
-#include "chord.router.h"
-#include "chord.utils.h"
+#include "chord.exception.h"
 #include "chord.fs.context.metadata.h"
+#include "chord.fs.metadata.builder.h"
+#include "chord.fs.metadata.h"
+#include "chord.fs.replication.h"
+#include "chord.fs.type.h"
+#include "chord.log.factory.h"
+#include "chord.log.h"
+#include "chord.node.h"
+#include "chord.uuid.h"
+
 using grpc::ClientContext;
 using grpc::Status;
 using grpc::ClientWriter;

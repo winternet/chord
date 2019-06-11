@@ -1,9 +1,17 @@
 #pragma once
+#include <cstddef>
 #include <array>
-#include <mutex>
+#include <iosfwd>
 #include <map>
+#include <memory>
+#include <mutex>
 
-#include "chord.context.h"
+#include "chord.types.h"
+#include "chord.optional.h"
+#include "chord.node.h"
+#include "chord.uuid.h"
+
+namespace chord { struct Context; }
 
 namespace spdlog {
   class logger;

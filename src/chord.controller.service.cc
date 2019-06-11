@@ -1,30 +1,30 @@
+#include "chord.controller.service.h"
+
+#include <grpcpp/server_context.h>
+#include <grpcpp/impl/codegen/status_code_enum.h>
+
+#include <algorithm>
 #include <experimental/filesystem>
 #include <fstream>
 #include <iostream>
 
-#include <grpc++/server_context.h>
-
 #include <boost/tokenizer.hpp>
 #include <boost/program_options.hpp>
 
+#include "chord_controller.pb.h"
 #include "chord.context.h"
-#include "chord.file.h"
+#include "chord.exception.h"
+#include "chord.i.fs.facade.h"
+#include "chord.log.factory.h"
 #include "chord.log.h"
 #include "chord.uri.h"
-#include "chord_controller.grpc.pb.h"
 
-#include "chord.controller.service.h"
-#include "chord.fs.facade.h"
-
-
-using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
 
 using chord::controller::ControlRequest;
 using chord::controller::ControlResponse;
 
-using grpc::ServerBuilder;
 using namespace std;
 
 namespace po = boost::program_options;

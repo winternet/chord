@@ -1,7 +1,4 @@
 #include "chord.fs.metadata.h"
-#include "chord.uri.h"
-#include "chord.path.h"
-#include "chord.context.h"
 
 using std::begin;
 using std::end;

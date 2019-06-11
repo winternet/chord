@@ -1,6 +1,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <set>
+#include <string>
+
 #include "chord.file.h"
 #include "chord.path.h"
 

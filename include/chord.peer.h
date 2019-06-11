@@ -1,29 +1,13 @@
 #pragma once
 
-#include <grpc++/server_builder.h>
 #include <memory>
-
+#include "chord.context.h"
+#include "chord.controller.service.h"
 #include "chord.facade.h"
 #include "chord.fs.facade.h"
-#include "chord.router.h"
-#include "chord.uuid.h"
 #include "chord.shutdown.handler.h"
 
-namespace chord {
-class AbstractScheduler;
-class Client;
-
-class Service;
-
-struct Context;
-struct Router;
-namespace controller {
-class Service;
-}  // namespace controller
-}  // namespace chord
-namespace spdlog {
-  class logger;
-}  // namespace spdlog
+namespace spdlog { class logger; }
 
 namespace chord {
 

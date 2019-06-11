@@ -1,9 +1,18 @@
-#include <yaml-cpp/yaml.h>
-#include <functional>
-
-#include "chord.log.h"
-#include "chord.context.h"
 #include "chord.context.manager.h"
+
+#include <yaml-cpp/yaml.h>
+//#include <yaml-cpp/node/impl.h>          // for Node::as, Node::operator[]
+//#include <yaml-cpp/node/iterator.h>      // for iterator_value
+//#include <yaml-cpp/node/node.h>          // for Node
+//#include <yaml-cpp/node/parse.h>         // for Load, LoadFile
+#include <functional>
+#include <set>
+#include <utility>
+
+#include "chord.context.h"
+#include "chord.exception.h"
+#include "chord.log.h"
+#include "chord.uuid.h"
 
 namespace chord {
 template<class T>

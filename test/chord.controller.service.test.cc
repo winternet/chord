@@ -1,22 +1,22 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <grpc++/channel.h>
-#include <grpc++/create_channel.h>
-
 #include "chord.test.helper.h"
 
+#include "chord.client.h"                // for Client
+#include "chord.router.h"                // for Router
+#include "chord.service.h"               // for Service
 #include "chord.context.h"
 #include "chord.path.h"
 #include "chord.uri.h"
 #include "chord.fs.replication.h"
 #include "chord.controller.service.h"
 #include "chord.facade.h"
-#include "chord.fs.facade.h"
+//#include "chord.fs.facade.h"
 #include "chord.fs.facade.mock.h"
-#include "chord.pb.h"
-#include "chord_fs.pb.h"
-#include "chord_mock.grpc.pb.h"
+//#include "chord.pb.h"
+//#include "chord_fs.pb.h"
+//#include "chord_mock.grpc.pb.h"
 
 using namespace std;
 using namespace chord::controller;

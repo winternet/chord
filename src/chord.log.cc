@@ -1,4 +1,7 @@
 #include "chord.log.h"
+
+#include <vector>
+
 #include "chord.exception.h"
 #include "chord.log.factory.h"
 

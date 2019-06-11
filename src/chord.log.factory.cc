@@ -1,9 +1,14 @@
 #include "chord.log.factory.h"
 
+#include <map>
+#include <set>
+#include <vector>
+#include <regex>
+
+#include "chord.file.h"
 #include "chord.log.h"
 #include "chord.path.h"
 
-#include <regex>
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/daily_file_sink.h>

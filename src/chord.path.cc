@@ -1,6 +1,8 @@
+#include "chord.path.h"
+
+#include <iostream>
 #include <regex>
 
-#include "chord.path.h"
 #include "chord.file.h"
 
 using namespace std;

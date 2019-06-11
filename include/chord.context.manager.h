@@ -1,15 +1,16 @@
 #pragma once
 
-#include <yaml-cpp/yaml.h>
-#include <functional>
+//#include <yaml-cpp/yaml.h>
+//#include <functional>
 #include <string>
-#include <vector>
+//#include <vector>
 
 #include "chord.context.h"
-#include "chord.exception.h"
+//#include "chord.exception.h"
 #include "chord.path.h"
-#include "chord.log.h"
+//#include "chord.log.h"
 
+namespace YAML { class Node; }
 
 namespace chord {
 
