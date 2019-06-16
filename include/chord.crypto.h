@@ -30,11 +30,11 @@ struct sha256_hasher final {
   virtual ~sha256_hasher() {
     SHA256_Final(hash, &context);
   }
-  void operator()(const void* input, const long length) {
+  void operator()(const void* input, const unsigned long length) {
     update(input, length);
   }
 
-  void update(const void* input, const long length) {
+  void update(const void* input, const unsigned long length) {
   if (!SHA256_Update(&context, static_cast<const unsigned char*>(input), length))
     throw__exception("failed to update SHA256");
   }
