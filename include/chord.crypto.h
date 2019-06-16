@@ -9,6 +9,7 @@
 #include <boost/multiprecision/cpp_int.hpp>
 
 #include "chord.uuid.h"
+#include "chord.path.h"
 #include "chord.exception.h"
 
 namespace chord {
@@ -96,6 +97,10 @@ inline uuid_t sha256(std::istream &istream) {
   return uuid;
 }
 
+inline uuid_t sha256(const chord::path& path) {
+  std::ifstream istream(path);
+  return sha256(istream);
+}
 
 }
 }

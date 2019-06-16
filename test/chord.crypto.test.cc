@@ -4,11 +4,27 @@
 #include <fstream>
 
 #include "chord.crypto.h"
+#include "util/chord.test.tmp.file.h"
 
 using namespace std;
 using namespace chord;
 
+using chord::test::TmpFile;
 using boost::multiprecision::import_bits;
+
+class CryptoFileTest : public ::testing::Test {
+  
+  protected:
+    void SetUp() override {
+      std::fstream istream;
+      istream.open(file.path, std::fstream::out | std::fstream::trunc | std::fstream::binary);
+      istream << "SOMECONTENT";
+      istream.flush();
+      istream.close();
+    }
+
+    TmpFile file;
+};
 
 TEST(CryptoTest, sha256) {
   auto data = string{"foobar"};
@@ -39,46 +55,34 @@ TEST(CryptoTest, initialize) {
   ASSERT_EQ(uid, "19970150736239713706088444570146546354146685096673408908105596072151101138862");
 }
 
-TEST(CryptoTest, hash_file) {
-
-  {
-    std::fstream file;
-    file.open("test.txt", std::fstream::out | std::fstream::trunc | std::fstream::binary);
-    file << "SOMECONTENT";
-    file.flush();
-    file.close();
-  }
-
-  std::fstream file;
-  file.open("test.txt", std::fstream::in | std::fstream::app | std::fstream::binary);
-  uuid_t hash = crypto::sha256(file);
-  file.close();
+TEST_F(CryptoFileTest, hash_file) {
+  std::ifstream istream;
+  istream.open(file.path, std::fstream::in | std::fstream::app | std::fstream::binary);
+  uuid_t hash = crypto::sha256(istream);
 
   ASSERT_EQ(hash.string(), "78163808323680042193722866647697615020714063641725196338206602615142164613113");
   ASSERT_EQ(hash.hex(), "accf25d1f41665e077c819907458c7363f30083c223cd3718ec851249ab647f9");
 }
 
-TEST(CryptoTest, sha256_object) {
-  {
-    std::fstream file;
-    file.open("test.txt", std::fstream::out | std::fstream::trunc | std::fstream::binary);
-    file << "SOMECONTENT";
-    file.flush();
-    file.close();
-  }
+TEST_F(CryptoFileTest, hash_file_path) {
+  uuid_t hash = crypto::sha256(file.path);
 
-  std::fstream file;
-  file.open("test.txt", std::fstream::in | std::fstream::app | std::fstream::binary);
+  ASSERT_EQ(hash.string(), "78163808323680042193722866647697615020714063641725196338206602615142164613113");
+  ASSERT_EQ(hash.hex(), "accf25d1f41665e077c819907458c7363f30083c223cd3718ec851249ab647f9");
+}
+
+TEST_F(CryptoFileTest, sha256_object) {
+
+  std::fstream istream;
+  istream.open(file.path, std::fstream::in | std::fstream::app | std::fstream::binary);
 
   crypto::sha256_hasher hasher;
   constexpr const std::size_t buffer_size { 1 << 12 };
   std::array<char, buffer_size> buffer;
 
-  while(const auto read = file.readsome(buffer.data(), buffer_size)) {
+  while(const auto read = istream.readsome(buffer.data(), buffer_size)) {
     hasher(buffer.data(), read);
   }
-
-  file.close();
 
   const auto hash = hasher.get();
 

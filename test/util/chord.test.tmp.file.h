@@ -22,7 +22,7 @@ struct TmpFile final {
     if(chord::file::exists(path)) {
       throw std::runtime_error("Path \'" + path.string() + "\' already exists - aborting.");
     }
-    if(!chord::file::exists(path.parent_path())) {
+    if(!path.parent_path().empty() && !chord::file::exists(path.parent_path())) {
       throw std::runtime_error("Parent path of \'"+path.string()+"\' does not exist - aborting.");
     }
     logger->info("creating temporary file {}.", path);
