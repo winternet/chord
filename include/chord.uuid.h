@@ -28,8 +28,8 @@ class uuid {
   template <typename Iterator>
   inline uuid(const Iterator beg, const Iterator end) {
     boost::multiprecision::import_bits(val,
-                                       reinterpret_cast<unsigned int *>(beg),
-                                       reinterpret_cast<unsigned int *>(end));
+                                       reinterpret_cast<const unsigned int *>(beg),
+                                       reinterpret_cast<const unsigned int *>(end));
   }
 
   inline value_t &value() { return val; }
