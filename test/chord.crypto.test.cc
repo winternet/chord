@@ -56,5 +56,32 @@ TEST(CryptoTest, hash_file) {
 
   ASSERT_EQ(hash.string(), "78163808323680042193722866647697615020714063641725196338206602615142164613113");
   ASSERT_EQ(hash.hex(), "accf25d1f41665e077c819907458c7363f30083c223cd3718ec851249ab647f9");
+}
 
+TEST(CryptoTest, sha256_object) {
+  {
+    std::fstream file;
+    file.open("test.txt", std::fstream::out | std::fstream::trunc | std::fstream::binary);
+    file << "SOMECONTENT";
+    file.flush();
+    file.close();
+  }
+
+  std::fstream file;
+  file.open("test.txt", std::fstream::in | std::fstream::app | std::fstream::binary);
+
+  crypto::sha256_hasher hasher;
+  constexpr const std::size_t buffer_size { 1 << 12 };
+  std::array<char, buffer_size> buffer;
+
+  while(const auto read = file.readsome(buffer.data(), buffer_size)) {
+    hasher(buffer.data(), read);
+  }
+
+  file.close();
+
+  const auto hash = hasher.get();
+
+  ASSERT_EQ(hash.string(), "78163808323680042193722866647697615020714063641725196338206602615142164613113");
+  ASSERT_EQ(hash.hex(), "accf25d1f41665e077c819907458c7363f30083c223cd3718ec851249ab647f9");
 }

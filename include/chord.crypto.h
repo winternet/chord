@@ -16,6 +16,38 @@ namespace crypto {
 
 using boost::multiprecision::import_bits;
 
+struct sha256_hasher final {
+
+  SHA256_CTX context;
+  unsigned char hash[SHA256_DIGEST_LENGTH] = {0};
+
+  sha256_hasher() {
+    if(!SHA256_Init(&context)) {
+      throw__exception("failed to initialize SHA256");
+    }
+  }
+
+  virtual ~sha256_hasher() {
+    SHA256_Final(hash, &context);
+  }
+  void operator()(const void* input, const long length) {
+    update(input, length);
+  }
+
+  void update(const void* input, const long length) {
+  if (!SHA256_Update(&context, static_cast<const unsigned char*>(input), length))
+    throw__exception("failed to update SHA256");
+  }
+
+  chord::uuid get() {
+    if(!SHA256_Final(hash, &context))
+      throw__exception("failed to finalise SHA256");
+    auto uuid = uuid_t{0};
+    import_bits(uuid.value(), hash, hash + SHA256_DIGEST_LENGTH);
+    return uuid;
+  }
+};
+
 inline void sha256(const void *input, unsigned long length, unsigned char *hash) {
   SHA256_CTX context;
   if (!SHA256_Init(&context))
