@@ -38,7 +38,6 @@ class Service final : public chord::fs::Filesystem::Service {
   grpc::Status handle_del_dir(const DelRequest*);
 
  public:
-  explicit Service(Context &context, ChordFacade* chord);
   explicit Service(Context &context, ChordFacade* chord, IMetadataManager* metadata_mgr);
 
   grpc::Status put(grpc::ServerContext *context,
@@ -57,14 +56,10 @@ class Service final : public chord::fs::Filesystem::Service {
                     const chord::fs::MetaRequest *request,
                     chord::fs::MetaResponse *response) override;
 
-  IMetadataManager* metadata_manager() {
-    return metadata_mgr.get();
-  }
-
  private:
   Context &context;
   ChordFacade *chord;
-  std::unique_ptr<IMetadataManager> metadata_mgr;
+  IMetadataManager* metadata_mgr;
   ClientFactory make_client;
   std::shared_ptr<spdlog::logger> logger;
 };

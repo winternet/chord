@@ -66,6 +66,9 @@ message Data {
 
   uint32  replication_idx = 8;
   uint32  replication_cnt = 9;
+
+  string  file_hash = 10;
+  chord.common.RouterEntry node_ref = 11;
 }
 
 /**

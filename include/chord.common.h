@@ -9,8 +9,6 @@ struct node;
 
 namespace common {
 
-struct RouterEntry;
-
 chord::common::Header make_header(const Context *context);
 
 chord::common::Header make_header(const Context &context);

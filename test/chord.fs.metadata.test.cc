@@ -28,7 +28,7 @@ TEST(chord_metadata, output_empty_directory) {
 
   stringstream ss;
   ss << meta;
-  ASSERT_EQ(R"(drwxrwxrwx usr grp /)", ss.str());
+  ASSERT_EQ(R"(drwxrwxrwx usr grp / (1/1))", ss.str());
 }
 
 TEST(chord_metadata, output_directory) {
@@ -39,9 +39,9 @@ TEST(chord_metadata, output_directory) {
 
   stringstream ss;
   ss << contents;
-  ASSERT_EQ(R"(drwxrwxrwx usr  grp /
--rwxr----- usr2 grp bar
--rwx------ usr  grp foo
+  ASSERT_EQ(R"(drwxrwxrwx usr  grp / (1/1)
+-rwxr----- usr2 grp bar (1/1)
+-rwx------ usr  grp foo (1/1)
 )", ss.str());
 }
 
@@ -49,20 +49,20 @@ TEST(chord_metadata, create_directory_blank) {
   const auto meta = create_directory();
   ASSERT_EQ(meta.name, ".");
   ASSERT_EQ(meta.file_type, type::directory);
-  ASSERT_EQ(meta.replication, chord::optional<Replication>());
+  ASSERT_EQ(meta.replication, Replication::NONE);
 }
 
 TEST(chord_metadata, create_directory) {
   std::set<Metadata> contents = {
-    Metadata("name1", "", "", perms::all, type::regular, {}, Replication(0,3)),
-    Metadata("name2", "", "", perms::all, type::regular, {}, Replication(2,5))
+    Metadata("name1", "", "", perms::all, type::regular, {}, {}, Replication(0,3)),
+    Metadata("name2", "", "", perms::all, type::regular, {}, {}, Replication(2,5))
   };
   const auto meta = create_directory(contents);
   ASSERT_EQ(meta.name, ".");
   ASSERT_EQ(meta.file_type, type::directory);
 
   const auto expected_repl = Replication(0,5);
-  ASSERT_EQ(meta.replication.value(), expected_repl) 
+  ASSERT_EQ(meta.replication, expected_repl) 
     << "Expected equality of expected " << expected_repl.string() 
-    << " and actual " << (meta.replication ? meta.replication->string() : "<empty>");
+    << " and actual " << (meta.replication ? meta.replication.string() : "<empty>");
 }

@@ -35,20 +35,24 @@ struct Metadata {
   perms permissions;
   type file_type;
 
+  // file hash
+  chord::optional<chord::uuid> file_hash;
+
   // reference node
   chord::optional<chord::node> node_ref;
 
   // replication
-  chord::optional<chord::fs::Replication> replication;
+  chord::fs::Replication replication;
 
   /** needed for (de-) serialization **/
   Metadata() = default;
-  Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, chord::optional<chord::node> node_ref={}, chord::optional<chord::fs::Replication> replication={})
+  Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, chord::optional<chord::uuid> file_hash={}, chord::optional<chord::node> node_ref={}, chord::fs::Replication replication={})
   : name{name},
     owner{owner},
     group{group},
     permissions{permissions},
     file_type{file_type},
+    file_hash{file_hash},
     node_ref{node_ref},
     replication{replication}
     {}
@@ -60,7 +64,7 @@ struct Metadata {
   void serialize(Archive & ar, const unsigned int version)
   {
     (void)version;
-    ar & name & file_type & owner & group & permissions & node_ref & replication;
+    ar & name & file_type & owner & group & permissions & node_ref & replication & file_hash;
   }
 
   friend std::ostream &operator<<(std::ostream &os, const Metadata &metadata) {
@@ -76,11 +80,11 @@ struct Metadata {
       << std::left << std::setw(static_cast<int>(max_owner_len+1)) << metadata.owner
       << std::left << std::setw(static_cast<int>(max_group_len+1)) << metadata.group
       << metadata.name;
-    if(metadata.replication) {
-      const auto repl = *metadata.replication;
-      os << " (" << repl.index+1 << '/' << repl.count << ')';
+    const auto repl = metadata.replication;
+    os << " (" << repl.index+1 << '/' << repl.count << ')';
+    if(metadata.node_ref) {
+      os << " (node_ref: " << *metadata.node_ref << ")";
     }
-      //<< "\n";
     return os;
   }
 
@@ -106,7 +110,7 @@ struct Metadata {
   }
 };
 
-chord::optional<Replication> max_replication(const std::set<Metadata>&);
+Replication max_replication(const std::set<Metadata>&);
 Metadata create_directory();
 Metadata create_directory(const std::set<Metadata>&);
 bool is_directory(const std::set<Metadata>&);

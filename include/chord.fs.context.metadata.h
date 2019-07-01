@@ -1,5 +1,12 @@
 #pragma once
 
+#include "chord.uuid.h"
+#include "chord.uri.h"
+#include "chord.optional.h"
+#include "chord.fs.replication.h"
+
+namespace chord { namespace fs { class Metadata; } }
+
 namespace grpc {
   struct ClientContext;
   struct ServerContext;
@@ -13,9 +20,20 @@ struct Replication;
 struct ContextMetadata {
   static constexpr auto replication_count = "replication.count";
   static constexpr auto replication_index = "replication.index";
+  static constexpr auto file_hash = "file.hash";
+  static constexpr auto uri = "uri";
+  static constexpr auto file_hash_equal = "file.hash.equal";
 
-  static void add(grpc::ClientContext& context, const chord::fs::Replication& repl);
-  static Replication replication_from(const grpc::ServerContext* context);
+  static void add(grpc::ClientContext&, const chord::fs::Metadata&);
+  static void add(grpc::ClientContext&, const chord::fs::Replication&);
+  static void add(grpc::ClientContext&, const chord::uri&);
+  static void add(grpc::ClientContext&, const chord::optional<chord::uuid>&);
+  static void set_file_hash_equal(grpc::ServerContext* context, const bool=true);
+
+  static chord::fs::Replication replication_from(const grpc::ServerContext*);
+  static chord::optional<chord::uuid> file_hash_from(const grpc::ServerContext*);
+  static chord::uri uri_from(const grpc::ServerContext*);
+  static bool file_hash_equal_from(const grpc::ClientContext&);
 };
 
 }

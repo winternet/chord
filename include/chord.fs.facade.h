@@ -7,6 +7,7 @@
 #include "chord.fs.client.h"
 #include "chord.fs.service.h"
 #include "chord.i.fs.facade.h"
+#include "chord.i.fs.metadata.manager.h"
 #include "chord.uri.h"
 
 namespace chord { class path; }
@@ -26,6 +27,7 @@ class Facade : public IFacade {
  private:
   const Context& context;
   chord::ChordFacade* chord;
+  std::unique_ptr<chord::fs::IMetadataManager> metadata_mgr;
   std::unique_ptr<Client> fs_client;
   std::unique_ptr<Service> fs_service;
   std::shared_ptr<spdlog::logger> logger;
@@ -40,7 +42,7 @@ class Facade : public IFacade {
  public:
   Facade(Context& context, ChordFacade* chord);
 
-  Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service);
+  Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service, fs::IMetadataManager*);
 
   ::grpc::Service* grpc_service();
 

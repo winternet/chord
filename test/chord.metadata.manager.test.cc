@@ -58,8 +58,8 @@ TEST(chord_metadata_manager, set_and_get_updates_replication) {
 
   fs::MetadataManager metadata{context};
   auto uri = uri::from("chord:/folder");
-  fs::Metadata meta_set{"file1", "owner", "group", perms::all, type::regular, {}, Replication(0, 4)};
-  fs::Metadata meta_root{".", "owner", "group", perms::all, type::directory, {}, Replication(0,4)};
+  fs::Metadata meta_set{"file1", "owner", "group", perms::all, type::regular, {}, {}, Replication(0, 4)};
+  fs::Metadata meta_root{".", "owner", "group", perms::all, type::directory, {}, {}, Replication(0,4)};
 
   metadata.add(uri, {meta_root, meta_set});
   set<fs::Metadata> meta_get = metadata.get(uri);

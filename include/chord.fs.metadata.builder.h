@@ -1,12 +1,15 @@
 #pragma once
 
 #include <set>
+#include <fstream>
 #include "chord.exception.h"
 #include "chord.file.h"
 #include "chord.fs.metadata.h"
 #include "chord.path.h"
+#include "chord.crypto.h"
 #include "chord_fs.pb.h"
 #include "chord.context.h"
+#include "chord.common.h"
 
 namespace chord {
 namespace fs {
@@ -48,11 +51,14 @@ struct MetadataBuilder {
       throw__exception("not found: " + local_path.string());
     }
 
+    std::ifstream istream(local_path);
+
     Metadata meta{local_path.filename(),
                   "",  // owner
                   "",  // group
                   perms::all,
                   file::is_directory(local_path) ? type::directory : type::regular,
+                  file::is_regular_file(local_path) ? chord::optional<chord::uuid>{chord::crypto::sha256(istream)} : chord::optional<chord::uuid>{},
                   {},
                   repl};
 
@@ -68,17 +74,16 @@ struct MetadataBuilder {
    */
   static Metadata from(const chord::fs::Data& item, chord::optional<chord::node> node_ref = {}) {
     // replication
-    chord::optional<Replication> repl;
-    if(item.replication_cnt() > 1) {
-      repl = Replication{item.replication_idx(), item.replication_cnt()};
-    }
+    Replication repl(item.replication_idx(), item.replication_cnt());
 
     Metadata meta{item.filename(),
                   "",  // owner
                   "",  // group
                   static_cast<perms>(item.permissions()),
                   static_cast<type>(item.type()), 
-                  node_ref,
+                  !item.file_hash().empty() ? chord::optional<chord::uuid>{item.file_hash()} : chord::optional<chord::uuid>{},
+                  item.has_node_ref() ? chord::common::make_node(item.node_ref()) : chord::optional<chord::node>{},
+                  //node_ref, //!item.node_ref().empty() ? chord::optional<chord::node>{{item.node_ref()}} : chord::optional<chord::node>{},
                   repl};
 
     return meta;
@@ -108,8 +113,8 @@ struct MetadataBuilder {
     for(const auto& meta:metadata) {
       const auto& repl = meta.replication;
       if(!repl) continue;
-      if(repl->index >= repl->count-1) continue;
-      grouped[*repl].insert(meta);
+      if(repl.index >= repl.count-1) continue;
+      grouped[repl].insert(meta);
     }
     return grouped;
   }
@@ -132,8 +137,11 @@ struct MetadataBuilder {
       data->set_filename(m.name);
       data->set_type(value_of(m.file_type));
       data->set_permissions(value_of(m.permissions));
+      if(m.file_hash) {
+        data->set_file_hash(m.file_hash.value().string());
+      }
       if(m.replication) {
-        const auto repl = *m.replication;
+        const auto repl = m.replication;
         data->set_replication_idx(repl.index);
         data->set_replication_cnt(repl.count);
       }

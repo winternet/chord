@@ -45,9 +45,10 @@ using namespace chord::file;
 namespace chord {
 namespace fs {
 
-Client::Client(Context &context, ChordFacade *chord)
+Client::Client(Context &context, ChordFacade *chord, IMetadataManager* metadata_mgr)
     : context{context},
       chord{chord},
+      metadata_mgr{metadata_mgr},
       make_stub{//--- default stub factory
                 [](const endpoint& endpoint) {
                   return chord::fs::Filesystem::NewStub(grpc::CreateChannel(
@@ -84,34 +85,44 @@ Status Client::put(const chord::node& node, const chord::uri &uri, istream &istr
   //TODO make configurable
   constexpr size_t len = 512*1024; // 512k
   array<char, len> buffer;
-  size_t offset = 0, 
-         read = 0;
 
   ClientContext clientContext;
   ContextMetadata::add(clientContext, repl);
+  ContextMetadata::add(clientContext, uri);
+
+  if(metadata_mgr->exists(uri)) {
+    const auto metadata_set = metadata_mgr->get(uri);
+    if(metadata_set.size() == 1) {
+      ContextMetadata::add(clientContext, metadata_set.begin()->file_hash);
+    } else {
+      logger->warn("failed to handle metadata for uri {}: multiple entries ({})", uri, metadata_set.size());
+    }
+  }
+
   PutResponse res;
-  // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
+
   auto stub = Filesystem::NewStub(grpc::CreateChannel(node.endpoint, grpc::InsecureChannelCredentials()));
   unique_ptr<ClientWriter<PutRequest> > writer(stub->put(&clientContext, &res));
 
-  do {
-    read = static_cast<size_t>(istream.readsome(buffer.data(), len));
-    if (read == 0) break;
+  writer->WaitForInitialMetadata();
+  const bool file_hash_equal = ContextMetadata::file_hash_equal_from(clientContext);
 
-    PutRequest req;
-    req.set_data(buffer.data(), read);
-    req.set_offset(offset);
-    req.set_size(read);
-    req.set_uri(uri);
+  if(file_hash_equal) {
+    logger->info("file hash equals - skip upload.");
+  }
 
-    offset += read;
+  for(size_t read=0, offset=0; !file_hash_equal && istream && (read = static_cast<size_t>(istream.readsome(buffer.data(), len))) > 0;) {
+      PutRequest req;
+      req.set_data(buffer.data(), read);
+      req.set_offset(offset);
+      req.set_size(read);
 
-    if (!writer->Write(req)) {
-      throw__exception("broken stream.");
-    }
+      offset += read;
 
-  } while (read > 0);
-
+      if (!writer->Write(req)) {
+        throw__exception("broken stream.");
+      }
+  }
   writer->WritesDone();
 
   return writer->Finish();
@@ -122,18 +133,6 @@ Status Client::put(const chord::uri &uri, istream &istream, Replication repl) {
   const auto node = chord->successor(hash);
   logger->trace("put {} ({})", uri, hash);
   return put(node, uri, istream, repl);
-}
-
-void Client::add_metadata(MetaRequest& req, const chord::path& parent_path) {
-  for (const auto &c : parent_path.contents()) {
-    auto *item = req.add_metadata();
-    item->set_type(chord::file::is_directory(c)
-                       ? value_of(type::directory)
-                       : is_regular_file(c) ? value_of(type::regular)
-                                            : value_of(type::unknown));
-    item->set_filename(c.filename());
-    // TODO set permission
-  }
 }
 
 grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, const Action &action, set<Metadata>& metadata) {
@@ -158,9 +157,14 @@ grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, cons
       data->set_permissions(value_of(m.permissions));
       data->set_owner(m.owner);
       data->set_group(m.group);
+      if(m.node_ref) {
+        auto node_ref = data->mutable_node_ref();
+        node_ref->set_uuid(m.node_ref->uuid.string());
+        node_ref->set_endpoint(m.node_ref->endpoint);
+      }
       if(m.replication) {
-        data->set_replication_idx(m.replication->index);
-        data->set_replication_cnt(m.replication->count);
+        data->set_replication_idx(m.replication.index);
+        data->set_replication_cnt(m.replication.count);
       }
     }
   }
@@ -187,6 +191,7 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action, std::set<
   const auto node = chord->successor(hash);
   return meta(node, uri, action, m);
 }
+
 grpc::Status Client::meta(const chord::uri &uri, const Action &action) {
   std::set<Metadata> m;
   const auto hash = chord::crypto::sha256(uri);
@@ -205,7 +210,7 @@ Status Client::del(const chord::node& node, const chord::uri &uri, const bool re
   const auto hash = chord::crypto::sha256(uri);
   const auto endpoint = node.endpoint;
 
-  logger->trace("del {} ({})", uri, hash);
+  logger->trace("del {} ({}) from {}", uri, hash, endpoint);
 
   ClientContext clientContext;
   DelResponse res;

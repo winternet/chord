@@ -48,21 +48,12 @@ using namespace chord;
 namespace chord {
 namespace fs {
 
-Service::Service(Context &context, ChordFacade* chord)
-    : context{context},
-      chord{chord},
-      metadata_mgr{make_unique<MetadataManager>(context)},
-      make_client {[this]{
-        return chord::fs::Client(this->context, this->chord);
-      }},
-      logger{context.logging.factory().get_or_create(logger_name)} { }
-
 Service::Service(Context &context, ChordFacade* chord, IMetadataManager* metadata_mgr)
     : context{context},
       chord{chord},
       metadata_mgr{metadata_mgr},
       make_client {[this]{
-        return chord::fs::Client(this->context, this->chord);
+        return chord::fs::Client(this->context, this->chord, this->metadata_mgr);
       }},
       logger{context.logging.factory().get_or_create(logger_name)} { }
 
@@ -91,7 +82,7 @@ Status Service::handle_meta_del(const MetaRequest *req) {
       if(!node) continue;
       auto& repl = node.value().replication;
       if(repl) {
-        ++(*repl);
+        ++repl;
       }
       deleted_metadata.insert(std::move(node));
       if(!repl)
@@ -115,7 +106,7 @@ Status Service::handle_meta_add(const MetaRequest *req) {
 
   auto max_repl = max_replication(metadata);
   // update the parent (first node triggers replication)
-  if(added && max_repl && max_repl->index == 0 && !uri.path().parent_path().empty()) {
+  if(added && max_repl.index == 0 && !uri.path().parent_path().empty()) {
     const auto parent = uri::builder{uri.scheme(), uri.path().parent_path()}.build();
     {
       auto meta_dir = create_directory(metadata);
@@ -131,13 +122,13 @@ Status Service::handle_meta_add(const MetaRequest *req) {
     // remove metadata
     std::copy_if(metadata.begin(), metadata.end(), std::inserter(new_metadata, new_metadata.begin()), [&](const Metadata& meta) {
         if(!meta.replication) return false;
-        return (meta.replication->index+1 < meta.replication->count);
+        return (meta.replication.index+1 < meta.replication.count);
     });
     //update replication
     for(auto it = new_metadata.begin(); it != new_metadata.end(); ++it) {
       auto node = new_metadata.extract(it);
       if(!node) continue;
-      node.value().replication.value()++;
+      node.value().replication++;
       new_metadata.insert(std::move(node));
     }
 
@@ -146,7 +137,7 @@ Status Service::handle_meta_add(const MetaRequest *req) {
       const auto status = make_client().meta(node, uri, Client::Action::ADD, new_metadata);
 
       if(!status.ok()) {
-        logger->warn("Failed to add {} ({}) to {}", uri, *max_repl, node);
+        logger->warn("Failed to add {} ({}) to {}", uri, max_repl, node);
       }
     }
   }
@@ -176,7 +167,6 @@ Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaR
 }
 
 Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *reader, PutResponse *response) {
-  (void)serverContext;
   (void)response;
   PutRequest req;
 
@@ -185,11 +175,26 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     file::create_directories(data);
   }
 
-  Replication repl = ContextMetadata::replication_from(serverContext);
+  auto repl = ContextMetadata::replication_from(serverContext);
+  const auto hash = ContextMetadata::file_hash_from(serverContext);
+  const auto uri = ContextMetadata::uri_from(serverContext);
+
+  // TODO: handle receive an update
+  if(hash && metadata_mgr->exists(uri)) {
+    const auto metadata_set = metadata_mgr->get(uri);
+    if(metadata_set.size() == 1) {
+      const auto local_hash = metadata_set.begin()->file_hash;
+      if(local_hash && local_hash == hash) {
+        ContextMetadata::set_file_hash_equal(serverContext, true);
+      }
+    } else {
+      logger->warn("failed to handle metadata for uri {}: multiple entries ({})", uri, metadata_set.size());
+    }
+  }
+  reader->SendInitialMetadata();
+
   // open
   if (reader->Read(&req)) {
-
-    const auto uri = uri::from(req.uri());
 
     data /= uri.path().parent_path();
 
@@ -201,6 +206,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     data /= uri.path().filename();
     logger->trace("trying to put {}", data);
 
+    crypto::sha256_hasher hasher;
     try {
       ofstream file;
       file.exceptions(ifstream::failbit | ifstream::badbit);
@@ -208,7 +214,10 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 
       // write
       do {
-        file.write(req.data().data(), static_cast<std::streamsize>(req.size()));
+        const auto data = req.data().data();
+        const auto len = req.size();
+        hasher(data, len);
+        file.write(data, static_cast<std::streamsize>(len));
       } while (reader->Read(&req));
 
     } catch (const ios_base::failure &error) {
@@ -216,9 +225,6 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
       return Status::CANCELLED;
     }
   }
-
-  //TODO move this to facade fs_client->meta(..., ADD, ...)
-  const auto uri = uri::from(req.uri());
 
   // add local metadata
   auto meta = MetadataBuilder::for_path(context, uri.path(), repl);
@@ -280,7 +286,7 @@ Status Service::handle_del_file(const chord::fs::DelRequest *req) {
   const chord::uri parent_uri{uri.scheme(), uri.path().parent_path()};
 
   if(max_repl) {
-    if(max_repl->index+1 < max_repl->count) {
+    if(max_repl.index+1 < max_repl.count) {
       //TODO handle status
       make_client().del(node, req);
     }
@@ -357,6 +363,13 @@ Status Service::del(grpc::ServerContext *serverContext,
   const auto uri = chord::uri::from(req->uri());
   auto data = context.data_directory / uri.path();
 
+  // we receive a delete from a former-shallow-copy node (no metadata left, but file)
+  if(file::exists(data) && file::is_regular_file(data) && !metadata_mgr->exists(uri)) {
+    logger->trace("handling delete request from shallow-copy node ({}).", uri);
+    const auto success = file::remove(data);
+    return success ? Status::OK : Status::CANCELLED;
+  }
+
   //FIXME this wont work for shallow-copied files (metadata-only)
   //TODO look on some other node (e.g. the successor that this node initially joined)
   //     maybe some other node became responsible for that file recently
@@ -397,11 +410,18 @@ Status Service::get_from_reference_or_replication(const chord::uri& uri) {
     // try to get by node reference
     if(m.node_ref) {
       try {
-        status = make_client().get(uri, m.node_ref.value(), data);
+        const auto node_ref = *m.node_ref;
+        status = make_client().get(uri, node_ref, data);
         if(!status.ok()) {
           logger->warn("failed to get from referenced node - trying to get replication.");
         } else {
-          return make_client().del(*m.node_ref, uri);
+          {
+            logger->trace("successfully received file - reset node ref.");
+            m.node_ref = {};
+            std::set<Metadata> metadata = {m};
+            metadata_mgr->add(uri, metadata);
+          }
+          return make_client().del(node_ref, uri);
         }
       } catch (const ios_base::failure &error) {
         logger->error("failed to open file {}, reason: {}", data, error.what());
@@ -409,7 +429,7 @@ Status Service::get_from_reference_or_replication(const chord::uri& uri) {
       }
     }
     // try to get replication
-    if(m.replication && *m.replication) {
+    if(m.replication) {
       try {
         const auto successor = chord->successor();
         status = make_client().get(uri, successor, data);

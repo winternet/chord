@@ -14,17 +14,16 @@ Metadata create_directory() {
   return meta;
 }
 
-chord::optional<Replication> max_replication(const std::set<Metadata>& metadata) {
-  const auto no_repl = Replication(0);
+Replication max_replication(const std::set<Metadata>& metadata) {
   return std::max_element(begin(metadata), end(metadata), [&](const Metadata& lhs, const Metadata& rhs) {
-      return lhs.replication.value_or(no_repl) < rhs.replication.value_or(no_repl);
-  })->replication.value_or(no_repl);
+      return lhs.replication < rhs.replication;
+  })->replication;
 }
 
-chord::optional<Replication> max_replication_index_zero(const std::set<Metadata>& metadata) {
+Replication max_replication_index_zero(const std::set<Metadata>& metadata) {
   const auto repl = max_replication(metadata);
   if(repl) {
-    return Replication(0, repl->count);
+    return Replication(0, repl.count);
   }
   return repl;
 }

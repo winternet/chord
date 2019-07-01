@@ -14,7 +14,7 @@
 #include "chord.file.h"
 #include "chord.fs.metadata.h"
 #include "chord.fs.type.h"
-#include "chord.i.fs.metadata.manager.h"
+#include "chord.fs.metadata.manager.h"
 #include "chord.log.factory.h"
 #include "chord.log.h"
 #include "chord.node.h"
@@ -30,14 +30,16 @@ using grpc::StatusCode;
 Facade::Facade(Context& context, ChordFacade* chord)
     : context{context},
       chord{chord},
-      fs_client{make_unique<fs::Client>(context, chord)},
-      fs_service{make_unique<fs::Service>(context, chord)},
+      metadata_mgr{make_unique<chord::fs::MetadataManager>(context)},
+      fs_client{make_unique<fs::Client>(context, chord, metadata_mgr.get())},
+      fs_service{make_unique<fs::Service>(context, chord, metadata_mgr.get())},
       logger{context.logging.factory().get_or_create(logger_name)}
 {}
 
-Facade::Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service)
+Facade::Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service, fs::IMetadataManager* metadata_mgr)
   : context{context},
     chord{nullptr},
+    metadata_mgr{metadata_mgr},
     fs_client{fs_client},
     fs_service{fs_service},
     logger{context.logging.factory().get_or_create(logger_name)}
@@ -73,68 +75,6 @@ Status Facade::put(const chord::path &source, const chord::uri &target, Replicat
   }
   return Status::OK;
 }
-
-/*
-Status Facade::get_shallow_copies(const chord::node& leaving_node) {
-  auto metadata_mgr = fs_service->metadata_manager();
-
-  auto shallow_copies = metadata_mgr->get_shallow_copies(leaving_node);
-  // integrate the metadata
-  {
-    for (const auto& [uri, meta_set] : shallow_copies) {
-      std::set<Metadata> deep_copies;
-      //copy
-      for(auto m:meta_set) {
-        if (m.file_type == type::regular && m.name == uri.path().filename()) {
-          const auto status = get_file(uri, context.data_directory / uri.path());
-          if(!status.ok()) {
-            return status;
-          }
-        }
-        m.node_ref.reset();
-        deep_copies.insert(m);
-      }
-      metadata_mgr->add(uri, deep_copies);
-    }
-  }
-  return Status::OK;
-}
-*/
-
-/*
-Status Facade::get_and_integrate(const chord::fs::MetaResponse& meta_res) {
-  if (meta_res.uri().empty()) {
-    return Status(StatusCode::FAILED_PRECONDITION, "failed to get and integrate meta-response due to missing uri", meta_res.uri());
-  }
-
-  const auto uri = chord::uri{meta_res.uri()};
-  std::set<Metadata> data_set;
-
-  // integrate the metadata
-  {
-    for (auto data : MetadataBuilder::from(meta_res)) {
-      // unset reference id since the node leaves
-      data.node_ref = {};
-      data_set.insert(data);
-    }
-    fs_service->metadata_manager()->add(uri, data_set);
-  }
-
-  // get the files
-  for (const auto& data : data_set) {
-    // uri might be a directory containing data.name as child
-    // or uri might point to a file with the metadata containing
-    // the file's name, we consider only those leaves
-    if (data.file_type == type::regular && data.name == uri.path().filename()) {
-      const auto status = get_file(uri, context.data_directory / uri.path());
-      if(!status.ok()) {
-        return status;
-      }
-    }
-  }
-  return Status::OK;
-}
-*/
 
 Status Facade::get(const chord::uri &source, const chord::path& target) {
 
@@ -205,17 +145,16 @@ Status Facade::get_file(const chord::uri& source, const chord::path& target) {
 //called from within the node succeeding the joining node
 void Facade::on_joined(const chord::node old_predecessor, const chord::node new_predecessor) {
   logger->debug("node joined: old_predecessor {}, new predecessor {}", old_predecessor, new_predecessor);
-  const auto metadata_mgr = fs_service->metadata_manager();
   const map<uri, set<Metadata>> metadata = metadata_mgr->get(old_predecessor.uuid, new_predecessor.uuid);
   for(const auto& pair : metadata) {
     const auto& uri = pair.first;
     for(auto meta:pair.second) {
 
       const auto local_path = context.data_directory / uri.path();
-      //FIXME: use or remove
-      const bool exists = chord::file::exists(local_path) && chord::file::is_regular_file(local_path);
 
-      if(meta.file_type == type::regular && !meta.node_ref) {
+      // replications must not have node refs set 
+      // - supporting currently only  shallow copies for non-replicated files
+      if(meta.file_type == type::regular && !meta.node_ref && !meta.replication) {
         meta.node_ref = context.node();
       }
 
@@ -223,12 +162,20 @@ void Facade::on_joined(const chord::node old_predecessor, const chord::node new_
       const auto status = fs_client->meta(new_predecessor, uri, Client::Action::ADD, metadata);
 
       if(status.ok()) {
-        metadata_mgr->del(uri, metadata);
+        //TODO check if removing all metadata but keeping the actual file
+        //     is a good idea...
+        metadata_mgr->del(uri, metadata, true);
       } else {
         logger->warn("failed to add shallow copy for {}", uri);
       }
-      // FIXME: do not deep copy -> remove the following line
-      //if(exists) fs_client->put(new_predecessor, uri, local_path, meta.replication.value_or(Replication()));
+
+      if(meta.replication
+          && chord::file::exists(local_path)
+          && chord::file::is_regular_file(local_path)) {
+        //TODO add hash value to metadata to compare the files and
+        //     if files are equal just update the metadata / replication
+        fs_client->put(new_predecessor, uri, local_path, meta.replication);
+      }
     }
   }
 }
@@ -237,7 +184,6 @@ void Facade::on_joined(const chord::node old_predecessor, const chord::node new_
  * called from within leaving node
  */
 void Facade::on_leave(const chord::node predecessor, const chord::node successor) {
-  const auto metadata_mgr = fs_service->metadata_manager();
   const map<uri, set<Metadata>> metadata = metadata_mgr->get(predecessor.uuid, context.uuid());
   const auto node = chord->successor();
   for(const auto& pair : metadata) {
@@ -259,14 +205,13 @@ void Facade::on_leave(const chord::node predecessor, const chord::node successor
           continue;
         }
       } else {
-        fs_client->put(node, uri, local_path, meta.replication.value_or(Replication()));
+        fs_client->put(node, uri, local_path, meta.replication);
       }
     }
   }
 }
 
 void Facade::on_predecessor_fail(const chord::node predecessor) {
-  const auto metadata_mgr = fs_service->metadata_manager();
   //metadata_mgr->get(
   logger->warn("\n\n************** PREDECESSOR FAIL!");
   //TODO implement
@@ -280,7 +225,6 @@ void Facade::on_successor_fail(const chord::node successor) {
     return;
   }
 
-  const auto metadata_mgr = fs_service->metadata_manager();
   const map<uri, set<Metadata>> replicable_meta = metadata_mgr->get_replicable();
   const auto node = chord->successor();
   for(const auto& pair : replicable_meta) {
@@ -304,7 +248,7 @@ void Facade::on_successor_fail(const chord::node successor) {
         }
       }
 
-      auto repl = *meta.replication;
+      auto repl = meta.replication;
       fs_client->put(node, uri, local_path, ++repl);
     }
   }

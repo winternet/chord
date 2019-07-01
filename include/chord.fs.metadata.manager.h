@@ -60,6 +60,11 @@ class MetadataManager : public IMetadataManager {
     add({"chord:///"}, {{".", "", "", perms::all, type::directory}});
   }
 
+  void __del(const chord::uri& uri) {
+    logger->trace("[DEL] uri {}", uri);
+    check_status(db->Delete(leveldb::WriteOptions(), uri.path().canonical().string()));
+  }
+
  public:
   explicit MetadataManager(Context &context)
     : context{context},
@@ -69,14 +74,12 @@ class MetadataManager : public IMetadataManager {
   MetadataManager(const MetadataManager&) = delete;
 
   std::set<Metadata> del(const chord::uri& directory) override {
-    //Metadata current{directory.path().canonical().string()};
-    logger->trace("[DEL] uri {}", directory);
     std::set<Metadata> retVal = get(directory);
-    check_status(db->Delete(leveldb::WriteOptions(), directory.path().canonical().string()));
+    __del(directory);
     return retVal;
   }
 
-  std::set<Metadata> del(const chord::uri& directory, const std::set<Metadata> &metadata) override {
+  std::set<Metadata> del(const chord::uri& directory, const std::set<Metadata> &metadata, const bool removeIfEmpty) override {
     std::string value;
     const auto path = directory.path().canonical().string();
     check_status(db->Get(leveldb::ReadOptions(), path, &value));
@@ -94,9 +97,13 @@ class MetadataManager : public IMetadataManager {
       retVal.insert(current[m.name]);
       current.erase(m.name);
     }
-    
-    value = serialize(current);
-    check_status(db->Put(leveldb::WriteOptions(), path, value));
+
+    if(current.empty() && removeIfEmpty) {
+      __del(directory);
+    } else {
+      value = serialize(current);
+      check_status(db->Put(leveldb::WriteOptions(), path, value));
+    }
 
     return retVal;
   }
@@ -145,7 +152,7 @@ class MetadataManager : public IMetadataManager {
 
     logger->trace("[ADD] {}", directory);
     for (const auto& [path, meta]: current) {
-      logger->trace("[ADD] {}", path, meta);
+      logger->trace("[ADD] {}", meta);
     }
 
     value = serialize(current);
@@ -225,7 +232,7 @@ class MetadataManager : public IMetadataManager {
       for(const auto& pair : map) {
         const chord::uri uri("chord", chord::path(path) / chord::path(pair.first));
         const auto& meta = pair.second;
-        if(meta.file_type != type::directory && meta.replication && *meta.replication) {
+        if(meta.file_type != type::directory && meta.replication) {
           ret[uri].insert(meta);
         }
       }

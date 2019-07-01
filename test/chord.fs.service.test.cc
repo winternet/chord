@@ -74,8 +74,8 @@ public:
       //--- fs
       metadata_mgr = new chord::fs::MockMetadataManager;
       fs_service = new fs::Service(context, chord_facade.get(), metadata_mgr);
-      fs_client = new fs::Client(context, chord_facade.get());
-      fs_facade = std::make_unique<chord::fs::Facade>(context, fs_client, fs_service);
+      fs_client = new fs::Client(context, chord_facade.get(), metadata_mgr);
+      fs_facade = std::make_unique<chord::fs::Facade>(context, fs_client, fs_service, metadata_mgr);
 
       ServerBuilder builder;
       builder.AddListeningPort(endpoint, InsecureServerCredentials());
@@ -152,16 +152,24 @@ TEST_F(FsServiceTest, get_from_node_reference) {
     .WillRepeatedly(Return(make_entry(self->context.node())));
 
   // reference source peer
-  Metadata metadata("file", "", "", perms::all, type::regular, source_peer.context.node());
+  Metadata metadata("file", "", "", perms::all, type::regular, {}, source_peer.context.node());
   EXPECT_CALL(*self->metadata_mgr, get(source_uri))
     .WillOnce(Return(std::set<Metadata>{metadata}));
 
   // after downloading the file will be deleted
-  metadata = {"file", "", "", perms::all, type::regular};
-  EXPECT_CALL(*source_peer.metadata_mgr, get(source_uri))
-    .WillOnce(Return(std::set<Metadata>{metadata}));
-  EXPECT_CALL(*source_peer.metadata_mgr, del(source_uri))
-    .WillOnce(Return(std::set<Metadata>{metadata}));
+  metadata = {"file", "", "", perms::all, type::regular, {}};
+  //EXPECT_CALL(*source_peer.metadata_mgr, get(source_uri))
+  //  .WillOnce(Return(std::set<Metadata>{metadata}));
+  // update node_ref - file has been downloaded
+  std::set<Metadata> metadata_set{metadata};
+  EXPECT_CALL(*self->metadata_mgr, add(source_uri, metadata_set))
+    .WillOnce(Return(true));
+
+  // subsequent del-file
+  EXPECT_CALL(*source_peer.metadata_mgr, exists(source_uri))
+    .WillOnce(Return(false));
+  //EXPECT_CALL(*source_peer.metadata_mgr, del(source_uri))
+  //  .WillOnce(Return(std::set<Metadata>{metadata}));
 
   TmpDir target_directory;
   const auto target_file = target_directory.path / "received_file";
@@ -191,7 +199,7 @@ TEST_F(FsServiceTest, get_from_replication) {
     .WillRepeatedly(Return(make_entry(self->context.node())));
 
   // reference source peer
-  Metadata metadata("file", "", "", perms::all, type::regular, {}, Replication(2));
+  Metadata metadata("file", "", "", perms::all, type::regular, {}, {}, Replication(2));
   EXPECT_CALL(*self->metadata_mgr, get(source_uri))
     .WillOnce(Return(std::set<Metadata>{metadata}));
 
@@ -230,7 +238,7 @@ TEST_F(FsServiceTest, get_from_replication_propagates) {
     .WillRepeatedly(Return(make_entry(self->context.node())));
 
   // self peer metadata
-  Metadata metadata("file", "", "", perms::all, type::regular, {}, Replication(0,2));
+  Metadata metadata("file", "", "", perms::all, type::regular, {}, {}, Replication(0,2));
   EXPECT_CALL(*self->metadata_mgr, get(source_uri))
     .WillOnce(Return(std::set<Metadata>{metadata}));
 

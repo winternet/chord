@@ -6,13 +6,12 @@
 #include <memory>
 #include <set>
 
-//#include "chord.facade.h"
-//
-/////#include "chord.fs.metadata.h"
 #include "chord.fs.replication.h"
 #include "chord.types.h"
 #include "chord.uri.h"
 #include "chord_fs.grpc.pb.h"
+#include "chord.i.fs.metadata.manager.h"
+
 namespace chord { class path; }
 namespace chord { class ChordFacade; }
 namespace chord { namespace fs { class DelRequest; } }
@@ -40,14 +39,13 @@ class Client {
 
   Context &context;
   chord::ChordFacade* chord;
+  chord::fs::IMetadataManager* metadata_mgr;
 
   StubFactory make_stub;
   std::shared_ptr<spdlog::logger> logger;
 
-  void add_metadata(chord::fs::MetaRequest& req, const chord::path& path);
-
  public:
-  Client(Context &context, chord::ChordFacade* chord);
+  Client(Context &context, chord::ChordFacade* chord, chord::fs::IMetadataManager* metadata_mgr);
 
   Client(Context &context, chord::ChordFacade* chord, StubFactory factory);
 

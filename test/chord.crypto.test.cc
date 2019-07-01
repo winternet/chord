@@ -55,7 +55,7 @@ TEST(CryptoTest, initialize) {
   ASSERT_EQ(uid, "19970150736239713706088444570146546354146685096673408908105596072151101138862");
 }
 
-TEST_F(CryptoFileTest, hash_file) {
+TEST_F(CryptoFileTest, hash_file_input_stream) {
   std::ifstream istream;
   istream.open(file.path, std::fstream::in | std::fstream::app | std::fstream::binary);
   uuid_t hash = crypto::sha256(istream);
@@ -72,7 +72,6 @@ TEST_F(CryptoFileTest, hash_file_path) {
 }
 
 TEST_F(CryptoFileTest, sha256_object) {
-
   std::fstream istream;
   istream.open(file.path, std::fstream::in | std::fstream::app | std::fstream::binary);
 

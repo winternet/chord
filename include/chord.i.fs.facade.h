@@ -15,7 +15,7 @@ class IFacade {
  public:
   virtual ~IFacade() = default;
 
-  virtual grpc::Status put(const chord::path& source, const chord::uri& target, Replication repl = Replication()) = 0;
+  virtual grpc::Status put(const chord::path& source, const chord::uri& target, Replication repl = {}) = 0;
 
   virtual grpc::Status get(const chord::uri& source, const chord::path& target) =0;
 
