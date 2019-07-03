@@ -17,7 +17,7 @@
 #include "chord.fs.client.h"
 #include "chord.fs.facade.h"
 
-#include "chord.test.helper.h"
+#include "util/chord.test.helper.h"
 #include "util/chord.test.tmp.dir.h"
 #include "util/chord.test.tmp.file.h"
 
@@ -26,7 +26,6 @@ using grpc::ServerBuilder;
 using grpc::InsecureServerCredentials;
 
 using namespace chord::test;
-using namespace chord::test::helper;
 
 namespace chord {
 

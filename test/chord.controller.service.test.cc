@@ -1,7 +1,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "chord.test.helper.h"
+#include "util/chord.test.helper.h"
 
 #include "chord.client.h"                // for Client
 #include "chord.router.h"                // for Router
@@ -12,15 +12,11 @@
 #include "chord.fs.replication.h"
 #include "chord.controller.service.h"
 #include "chord.facade.h"
-//#include "chord.fs.facade.h"
 #include "chord.fs.facade.mock.h"
-//#include "chord.pb.h"
-//#include "chord_fs.pb.h"
-//#include "chord_mock.grpc.pb.h"
 
 using namespace std;
 using namespace chord::controller;
-using namespace chord::test::helper;
+using namespace chord::test;
 
 using chord::path;
 using chord::uri;

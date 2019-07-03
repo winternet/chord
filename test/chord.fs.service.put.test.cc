@@ -30,13 +30,13 @@
 #include "chord.path.h"
 #include "chord.router.h"
 #include "chord.service.mock.h"
-#include "chord.test.helper.h"
 #include "chord.types.h"
 #include "chord.uri.h"
 #include "chord.uuid.h"
 #include "chord_common.pb.h"
 #include "util/chord.test.tmp.dir.h"
 #include "util/chord.test.tmp.file.h"
+#include "util/chord.test.helper.h"
 
 using std::make_unique;
 using std::unique_ptr;
@@ -62,7 +62,7 @@ using namespace chord;
 using namespace chord::fs;
 using namespace chord::test;
 using namespace chord::common;
-using namespace chord::test::helper;
+using namespace chord::test;
 
 class FilesystemServicePutTest : public ::testing::Test {
   protected:

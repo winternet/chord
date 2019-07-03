@@ -10,7 +10,6 @@ namespace chord { namespace test { class TmpDir; } }
 
 namespace chord {
 namespace test {
-namespace helper {
 
 Context make_context(const uuid &self, const chord::test::TmpDir& data_directory, const chord::test::TmpDir& meta_directory);
 Context make_context(const uuid &self, const chord::test::TmpDir& data_directory);
@@ -23,6 +22,5 @@ chord::common::Header make_header(const uuid &id, const chord::endpoint &addr);
 
 chord::common::Header make_header(const uuid &id, const char* addr);
 
-} // namespace helper
 } // namespace test
 } // namespace chord

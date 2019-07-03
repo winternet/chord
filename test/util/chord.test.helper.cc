@@ -4,11 +4,10 @@
 #include "chord.node.h"
 #include "chord_common.pb.h"
 #include "chord.types.h"
-#include "util/chord.test.tmp.dir.h"
+#include "chord.test.tmp.dir.h"
 
 namespace chord {
 namespace test {
-namespace helper {
 
 using chord::test::TmpDir;
 using chord::common::Header;
@@ -56,6 +55,5 @@ Header make_header(const uuid &id, const char* addr) {
   return make_header(id, endpoint{addr});
 }
 
-} //namespace helper
 } //namespace test
 } //namespace chord

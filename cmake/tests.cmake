@@ -1,4 +1,4 @@
-file(GLOB TEST_SOURCES test/*.cc)
+file(GLOB_RECURSE TEST_SOURCES test/*.cc)
 string(REPLACE ";" "\n--   " TEST_SOURCES_OUT "${TEST_SOURCES}")
 message(STATUS "Found tests:\n--   ${TEST_SOURCES_OUT}")
 #

@@ -15,12 +15,12 @@
 #include "chord.pb.h"
 #include "chord.router.h"
 #include "chord.service.h"
-#include "chord.test.helper.h"
 #include "chord.types.h"
 #include "chord.uuid.h"
 #include "chord_common.pb.h"
 #include "chord.signal.h"
 #include "chord.log.h"
+#include "util/chord.test.helper.h"
 
 namespace grpc { class ClientContext; }
 
@@ -37,7 +37,7 @@ using chord::SuccessorResponse;
 
 using ::testing::Eq;
 
-using namespace chord::test::helper;
+using namespace chord::test;
 using namespace chord;
 
 template<typename T>
