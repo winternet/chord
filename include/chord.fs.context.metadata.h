@@ -1,4 +1,6 @@
 #pragma once
+#include <grpcpp/server_context.h>
+#include <grpcpp/client_context.h>
 
 #include "chord.uuid.h"
 #include "chord.uri.h"
@@ -6,11 +8,6 @@
 #include "chord.fs.replication.h"
 
 namespace chord { namespace fs { class Metadata; } }
-
-namespace grpc {
-  struct ClientContext;
-  struct ServerContext;
-}
 
 namespace chord {
 namespace fs {

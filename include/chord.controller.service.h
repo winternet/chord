@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <grpcpp/impl/codegen/status.h>
+#include <grpcpp/server_context.h>
 
 #include "chord.path.h"
 #include "chord_controller.grpc.pb.h"
@@ -13,7 +14,6 @@ namespace chord { namespace controller { class ControlRequest; } }
 namespace chord { namespace controller { class ControlResponse; } }
 namespace chord { namespace fs { class IFacade; } }
 namespace chord { struct Context; }
-namespace grpc { class ServerContext; }
 namespace spdlog { class logger; }
 
 namespace chord {

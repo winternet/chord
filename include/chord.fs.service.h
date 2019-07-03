@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <grpcpp/impl/codegen/status.h>
+#include <grpcpp/server_context.h>
 
 #include "chord.i.fs.metadata.manager.h"
 #include "chord.uri.h"
@@ -19,7 +20,6 @@ namespace chord { namespace fs { class MetaResponse; } }
 namespace chord { namespace fs { class PutRequest; } }
 namespace chord { namespace fs { class PutResponse; } }
 namespace chord { struct Context; }
-namespace grpc { class ServerContext; }
 namespace spdlog { class logger; }
 
 namespace chord {

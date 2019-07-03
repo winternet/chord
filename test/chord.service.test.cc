@@ -1,7 +1,9 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-#include <grpcpp/impl/codegen/server_context.h>
+#include <grpcpp/server_context.h>
+#include <grpcpp/client_context.h>
+
 #include <grpcpp/impl/codegen/status.h>
 
 #include <memory>
@@ -21,8 +23,6 @@
 #include "chord.signal.h"
 #include "chord.log.h"
 #include "util/chord.test.helper.h"
-
-namespace grpc { class ClientContext; }
 
 using chord::common::Header;
 using chord::common::RouterEntry;

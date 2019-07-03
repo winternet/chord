@@ -6,6 +6,9 @@
 #include <memory>
 
 #include <grpcpp/impl/codegen/status.h>
+#include <grpcpp/impl/codegen/service_type.h>
+
+#include <grpcpp/server_context.h>
 
 #include "chord.grpc.pb.h"
 #include "chord.i.service.h"
@@ -27,8 +30,6 @@ namespace chord { class SuccessorResponse; }
 namespace chord { struct Context; }
 namespace chord { struct Router; }
 namespace chord { struct node; }
-namespace grpc { class ServerContext; }
-namespace grpc { class Service; }
 namespace spdlog { class logger; }
 
 namespace chord {

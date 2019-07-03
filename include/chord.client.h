@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <memory>
+#include <grpcpp/client_context.h>
 
 #include "chord_common.pb.h"
 #include "chord.signal.h"
@@ -17,7 +18,6 @@ namespace chord { class SuccessorResponse; }
 namespace chord { struct Context; }
 namespace chord { struct Router; }
 namespace chord { struct node; }
-namespace grpc { class ClientContext; }
 namespace spdlog { class logger; }
 
 namespace chord {
