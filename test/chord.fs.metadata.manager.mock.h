@@ -3,6 +3,7 @@
 #include <set>
 #include <map>
 
+#include "chord.i.fs.metadata.manager.h"
 #include "chord.fs.metadata.h"
 #include "chord.uri.h"
 

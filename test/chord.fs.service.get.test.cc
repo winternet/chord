@@ -1,6 +1,8 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
+#include "chord.peer.mock.h"
+
 #include <memory>
 #include <set>
 #include <string>
@@ -62,53 +64,8 @@ using namespace chord::test;
 using namespace chord::common;
 using namespace chord::test::helper;
 
-class MockPeer final {
-public:
-  explicit MockPeer(const endpoint& endpoint, const TmpDir& data_directory)
-    : data_directory(data_directory) {
-      context = make_context(chord::uuid::random(), data_directory);
-      context.bind_addr = endpoint;
-      router = new chord::Router(context);
-      client = new MockClient();
-      service = new MockService();
-      chord_facade = std::make_unique<chord::ChordFacade>(context, router, client, service);
-      //--- fs
-      metadata_mgr = new chord::fs::MockMetadataManager;
-      fs_service = new fs::Service(context, chord_facade.get(), metadata_mgr);
-      fs_client = new fs::Client(context, chord_facade.get(), metadata_mgr);
-      fs_facade = std::make_unique<chord::fs::Facade>(context, fs_client, fs_service, metadata_mgr);
 
-      ServerBuilder builder;
-      builder.AddListeningPort(endpoint, InsecureServerCredentials());
-      builder.RegisterService(fs_service);
-      server = builder.BuildAndStart();
-    }
-
-  ~MockPeer() {
-    server->Shutdown();
-  }
-
-  //--- chord
-  chord::Context context;
-  chord::Router* router;
-  chord::MockClient* client;
-  chord::MockService* service;
-  //--- fs
-  chord::fs::MockMetadataManager* metadata_mgr;
-  std::unique_ptr<chord::ChordFacade> chord_facade;
-
-
-  chord::fs::Service* fs_service;
-  chord::fs::Client* fs_client;
-  std::unique_ptr<chord::fs::Facade> fs_facade;
-  std::unique_ptr<Server> server;
-
-  // directories
-  TmpDir meta_directory;
-  const TmpDir& data_directory;
-};
-
-class FsServiceTest : public ::testing::Test {
+class FilesystemServiceGetTest : public ::testing::Test {
   protected:
     void SetUp() override {
       self = make_unique<MockPeer>("0.0.0.0:50050", data_directory);
@@ -118,7 +75,7 @@ class FsServiceTest : public ::testing::Test {
     unique_ptr<MockPeer> self;
 };
 
-TEST_F(FsServiceTest, get) {
+TEST_F(FilesystemServiceGetTest, get) {
   GetRequest req;
   GetResponse res;
   ServerContext serverContext;
@@ -135,7 +92,7 @@ TEST_F(FsServiceTest, get) {
   ASSERT_TRUE(chord::file::files_equal(source_file.path, target_file.path));
 }
 
-TEST_F(FsServiceTest, get_from_node_reference) {
+TEST_F(FilesystemServiceGetTest, get_from_node_reference) {
   TmpDir source_data_directory;
   const endpoint source_endpoint("0.0.0.0:50051");
   MockPeer source_peer(source_endpoint, source_data_directory);
@@ -180,7 +137,7 @@ TEST_F(FsServiceTest, get_from_node_reference) {
   ASSERT_FALSE(chord::file::exists(source_file.path));
 }
 
-TEST_F(FsServiceTest, get_from_replication) {
+TEST_F(FilesystemServiceGetTest, get_from_replication) {
   TmpDir source_data_directory;
   const endpoint source_endpoint("0.0.0.0:50051");
   MockPeer source_peer(source_endpoint, source_data_directory);
@@ -211,7 +168,7 @@ TEST_F(FsServiceTest, get_from_replication) {
   ASSERT_TRUE(chord::file::files_equal(source_file.path, self->context.data_directory / "file"));
 }
 
-TEST_F(FsServiceTest, get_from_replication_propagates) {
+TEST_F(FilesystemServiceGetTest, get_from_replication_propagates) {
   // peer holding the last replication
   TmpDir source_data_directory;
   const endpoint source_endpoint("0.0.0.0:50052");
@@ -253,36 +210,4 @@ TEST_F(FsServiceTest, get_from_replication_propagates) {
   // copied file to local data_directories (middle/self)
   ASSERT_TRUE(chord::file::files_equal(source_file.path, self->context.data_directory / "file"));
   ASSERT_TRUE(chord::file::files_equal(source_file.path, middle_peer.context.data_directory / "file"));
-}
-
-TEST_F(FsServiceTest, put) {
-  TmpDir source_directory;
-
-  const auto target_uri = uri("chord:///file");
-  const auto source_file = source_directory.add_file("file");
-
-  // connect the two nodes, first successor call will return self
-  EXPECT_CALL(*self->service, successor(_))
-    .WillRepeatedly(Return(make_entry(self->context.node())));
-
-  // self peer metadata
-  EXPECT_CALL(*self->metadata_mgr, exists(target_uri))
-    .WillOnce(Return(false));
-
-  Metadata metadata_file("file", "", "", perms::all, type::regular, crypto::sha256(source_file.path), {}, Replication());
-  std::set<Metadata> metadata_set{metadata_file};
-  EXPECT_CALL(*self->metadata_mgr, add(target_uri, metadata_set))
-    .WillOnce(Return(true));
-
-  Metadata metadata_dir = {".", "", "", perms::none, type::directory, {}, {}, Replication()};
-  std::set<Metadata> metadata_set_dir{metadata_dir, metadata_file};
-  EXPECT_CALL(*self->metadata_mgr, add(uri(target_uri.scheme(), target_uri.path().parent_path()), metadata_set_dir))
-    .WillOnce(Return(true));
-
-  const auto status = self->fs_client->put(target_uri, source_file, Replication());
-
-  const auto target_file = self->data_directory.path / target_uri.path();
-  ASSERT_TRUE(status.ok());
-  ASSERT_TRUE(chord::file::file_size(target_file) > 0);
-  ASSERT_TRUE(chord::file::files_equal(source_file.path, target_file));
 }
