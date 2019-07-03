@@ -241,15 +241,16 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   // handle (recursive) file-replication
   if(++repl) {
 
-    const auto uuid = chord::crypto::sha256(uri);
+    //const auto uuid = chord::crypto::sha256(uri);
     // next
     const auto next = chord->successor();
-    if(uuid.between(context.uuid(), next.uuid)) {
-      // TODO rollback all puts?
-      const auto msg = "failed to store replication " + repl.string() + " : detected cycle.";
-      logger->warn(msg);
-      return {StatusCode::ABORTED, msg};
-    }
+    // TODO use some kind of call-uuid + logging
+    //if(uuid.between(context.uuid(), next.uuid)) {
+    //  // TODO rollback all puts?
+    //  const auto msg = "failed to store replication " + repl.string() + " : detected cycle.";
+    //  logger->warn(msg);
+    //  return {StatusCode::ABORTED, msg};
+    //}
 
     path data = context.data_directory;
     data /= uri.path().parent_path();
@@ -418,6 +419,7 @@ Status Service::get_from_reference_or_replication(const chord::uri& uri) {
           {
             logger->trace("successfully received file - reset node ref.");
             m.node_ref = {};
+            m.file_hash = crypto::sha256(data);
             std::set<Metadata> metadata = {m};
             metadata_mgr->add(uri, metadata);
           }

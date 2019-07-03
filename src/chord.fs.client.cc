@@ -162,10 +162,11 @@ grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, cons
         node_ref->set_uuid(m.node_ref->uuid.string());
         node_ref->set_endpoint(m.node_ref->endpoint);
       }
-      if(m.replication) {
-        data->set_replication_idx(m.replication.index);
-        data->set_replication_cnt(m.replication.count);
+      if(m.file_hash) {
+        data->set_file_hash(*m.file_hash);
       }
+      data->set_replication_idx(m.replication.index);
+      data->set_replication_cnt(m.replication.count);
     }
   }
 

@@ -46,26 +46,13 @@ struct Metadata {
 
   /** needed for (de-) serialization **/
   Metadata() = default;
-  Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, chord::optional<chord::uuid> file_hash={}, chord::optional<chord::node> node_ref={}, chord::fs::Replication replication={})
-  : name{name},
-    owner{owner},
-    group{group},
-    permissions{permissions},
-    file_type{file_type},
-    file_hash{file_hash},
-    node_ref{node_ref},
-    replication{replication}
-    {}
+  Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, chord::optional<chord::uuid> file_hash={}, chord::optional<chord::node> node_ref={}, chord::fs::Replication replication={});
 
-  bool operator<(const Metadata &other) const { return name < other.name; }
-  bool operator==(const Metadata &other) const { return name==other.name && file_type==other.file_type; }
+  bool operator<(const Metadata &other) const;
+  bool operator==(const Metadata &other) const;
 
   template<class Archive>
-  void serialize(Archive & ar, const unsigned int version)
-  {
-    (void)version;
-    ar & name & file_type & owner & group & permissions & node_ref & replication & file_hash;
-  }
+  void serialize(Archive & ar, const unsigned int version);
 
   friend std::ostream &operator<<(std::ostream &os, const Metadata &metadata) {
     return print(os, metadata, metadata.owner.size(), metadata.group.size());
@@ -109,6 +96,13 @@ struct Metadata {
     return os;
   }
 };
+
+template<class Archive>
+void Metadata::serialize(Archive & ar, const unsigned int version)
+{
+  (void)version;
+  ar & name & file_type & owner & group & permissions & node_ref & replication & file_hash;
+}
 
 Replication max_replication(const std::set<Metadata>&);
 Metadata create_directory();

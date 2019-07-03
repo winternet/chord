@@ -156,17 +156,16 @@ void Facade::on_joined(const chord::node old_predecessor, const chord::node new_
       // - supporting currently only  shallow copies for non-replicated files
       if(meta.file_type == type::regular && !meta.node_ref && !meta.replication) {
         meta.node_ref = context.node();
-      }
+        set<Metadata> metadata = {meta};
+        const auto status = fs_client->meta(new_predecessor, uri, Client::Action::ADD, metadata);
 
-      set<Metadata> metadata = {meta};
-      const auto status = fs_client->meta(new_predecessor, uri, Client::Action::ADD, metadata);
-
-      if(status.ok()) {
-        //TODO check if removing all metadata but keeping the actual file
-        //     is a good idea...
-        metadata_mgr->del(uri, metadata, true);
-      } else {
-        logger->warn("failed to add shallow copy for {}", uri);
+        if(status.ok()) {
+          //TODO check if removing all metadata but keeping the actual file
+          //     is a good idea...
+          metadata_mgr->del(uri, metadata, true);
+        } else {
+          logger->warn("failed to add shallow copy for {}", uri);
+        }
       }
 
       if(meta.replication

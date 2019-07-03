@@ -6,6 +6,30 @@ using std::end;
 namespace chord {
 namespace fs {
 
+Metadata::Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, chord::optional<chord::uuid> file_hash, chord::optional<chord::node> node_ref, chord::fs::Replication replication)
+  : name{name},
+    owner{owner},
+    group{group},
+    permissions{permissions},
+    file_type{file_type},
+    file_hash{file_hash},
+    node_ref{node_ref},
+    replication{replication}
+    {}
+
+bool Metadata::operator<(const Metadata &other) const { 
+  return name < other.name; 
+}
+bool Metadata::operator==(const Metadata &other) const { 
+  return name == other.name 
+    && file_type == other.file_type 
+    && owner == other.owner 
+    && group == other.group
+    && node_ref == other.node_ref
+    && replication == other.replication
+    && file_hash == other.file_hash; 
+}
+
 Metadata create_directory() {
   Metadata meta;
   meta.name = ".";
@@ -37,6 +61,7 @@ Metadata create_directory(const std::set<Metadata>& metadata) {
 bool is_directory(const std::set<Metadata>& metadata) {
   return std::any_of(begin(metadata), end(metadata), [&](const Metadata& m) { return m.file_type == type::directory; });
 }
+
 
 } // namespace fs
 } // namespace chord
