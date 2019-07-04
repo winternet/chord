@@ -207,7 +207,7 @@ Status Client::del(const chord::node& node, const DelRequest* req) {
   return make_stub(endpoint)->del(&clientContext, *req, &res);
 }
 
-Status Client::del(const chord::node& node, const chord::uri &uri, const bool recursive, const Replication repl) {
+Status Client::del(const chord::node& node, const chord::uri &uri, const bool recursive) {
   const auto hash = chord::crypto::sha256(uri);
   const auto endpoint = node.endpoint;
 
@@ -227,10 +227,10 @@ Status Client::del(const chord::node& node, const chord::uri &uri, const bool re
 }
 
 // currently only files are supported
-Status Client::del(const chord::uri &uri, const bool recursive, const Replication repl) {
+Status Client::del(const chord::uri &uri, const bool recursive) {
   const auto hash = chord::crypto::sha256(uri);
   const auto succ = chord->successor(hash);
-  return del(succ, uri, recursive, repl);
+  return del(succ, uri, recursive);
 }
 
 grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata) {

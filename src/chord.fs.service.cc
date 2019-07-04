@@ -281,14 +281,14 @@ Status Service::handle_del_file(const chord::fs::DelRequest *req) {
   }
 
   // beg: handle replica
-  const auto node = chord->successor();
-  auto max_repl = max_replication(deleted_metadata);
+  const auto max_repl = max_replication(deleted_metadata);
   const bool initial_delete = chord->successor(crypto::sha256(req->uri())) == context.node();
   const chord::uri parent_uri{uri.scheme(), uri.path().parent_path()};
 
   if(max_repl) {
     if(max_repl.index+1 < max_repl.count) {
       //TODO handle status
+      const auto node = chord->successor();
       make_client().del(node, req);
     }
     if(initial_delete) {
@@ -322,7 +322,7 @@ Status Service::handle_del_dir(const chord::fs::DelRequest *req) {
 
   for(const auto m:metadata) {
     if(m.name == ".") continue;
-    const auto sub_uri = uri::builder{uri.scheme(), uri.path() / path{m.name}}.build();
+    const auto sub_uri = uri::builder{uri.scheme(), uri.path() / m.name}.build();
     const auto status = make_client().del(sub_uri, req->recursive());
     if(!status.ok()) {
       logger->error("Failed to delete directory: {} {}", status.error_message(), status.error_details());
@@ -335,7 +335,7 @@ Status Service::handle_del_dir(const chord::fs::DelRequest *req) {
     const bool initial_delete = chord->successor(crypto::sha256(req->uri())) == context.node();
     {
       // initial node triggers parent metadata deletion
-      if(initial_delete) {
+      if(initial_delete && !uri.path().parent_path().empty()) {
         const chord::uri parent_uri{uri.scheme(), uri.path().parent_path()};
         Metadata deleted_dir = Metadata();
         deleted_dir.name = uri.path().filename();

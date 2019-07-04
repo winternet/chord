@@ -61,8 +61,8 @@ class Client {
   grpc::Status get(const chord::uri&, const chord::node&, std::ostream&);
   grpc::Status get(const chord::uri&, const chord::node&, const chord::path&);
 
-  grpc::Status del(const chord::uri&, const bool recursive=false, const Replication repl = Replication());
-  grpc::Status del(const chord::node&, const chord::uri&, const bool recursive=false, const Replication repl = Replication());
+  grpc::Status del(const chord::uri&, const bool recursive=false);
+  grpc::Status del(const chord::node&, const chord::uri&, const bool recursive=false);
   grpc::Status del(const chord::node&, const DelRequest*);
 
   grpc::Status dir(const chord::uri&, std::set<Metadata>&);

@@ -51,12 +51,8 @@ using grpc::ServerWriter;
 using grpc::Status;
 using grpc::InsecureServerCredentials;
 
-using ::testing::StrictMock;
-using ::testing::Eq;
 using ::testing::_;
 using ::testing::Return;
-using ::testing::Invoke;
-using ::testing::InvokeWithoutArgs;
 
 using namespace chord;
 using namespace chord::fs;
