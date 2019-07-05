@@ -84,11 +84,11 @@ TEST_F(FilesystemServiceDelTest, del_file) {
   const auto target_uri = uri("chord:///file");
 
   EXPECT_CALL(*self->service, successor(_))
-    .WillOnce(Return(make_entry(self->context.node())))  // client
+    .WillOnce(Return(make_entry(self->context.node())))  // client - remove file
     .WillOnce(Return(make_entry(self->context.node())))  // initial delete - flag (handle_del_file)
-    .WillOnce(Return(make_entry(self->context.node())))  // remove empty folder
-    .WillOnce(Return(make_entry(self->context.node())))  // initial delete - flag (handle_del_dir)
-    .WillOnce(Return(make_entry(self->context.node()))); // forward delete until not_found
+    .WillOnce(Return(make_entry(self->context.node())))  // client - remove empty folder
+    .WillOnce(Return(make_entry(self->context.node()))); // initial delete - flag (handle_del_dir)
+    //.WillOnce(Return(make_entry(self->context.node()))); // forward delete until not_found
 
   //--- delete file
   EXPECT_CALL(*self->metadata_mgr, exists(target_uri))
@@ -104,9 +104,9 @@ TEST_F(FilesystemServiceDelTest, del_file) {
   //--- delete folder
   Metadata metadata_dir(".", "", "", perms::none, type::directory, {}, {}, {});
   EXPECT_CALL(*self->metadata_mgr, get(root_uri))
-    .WillOnce(Return(std::set<Metadata>{metadata_dir}))  // within del
-    .WillOnce(Return(std::set<Metadata>{metadata_dir}))  // within handle_del_dir
-    .WillOnce(Return(std::set<Metadata>()));             // forwarded delete -> not_found
+    .WillOnce(Return(std::set<Metadata>{metadata_dir}));  // within del
+    //.WillOnce(Return(std::set<Metadata>{metadata_dir}))  // within handle_del_dir
+    //.WillOnce(Return(std::set<Metadata>()));             // forwarded delete -> not_found
   EXPECT_CALL(*self->metadata_mgr, del(root_uri))
     .WillOnce(Return(std::set<Metadata>{metadata}));
 

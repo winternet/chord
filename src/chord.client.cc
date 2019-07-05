@@ -108,11 +108,11 @@ void Client::leave() {
 
   const auto status_succ = inform_successour_about_leave();
   if (!status_succ.ok()) {
-    logger->warn("Failed to inform successor about leave");
+    logger->warn("failed to inform successor about leave");
   }
   const auto status_pred = inform_predecessor_about_leave();
   if (!status_pred.ok()) {
-    logger->warn("Failed to inform predecessor about leave");
+    logger->warn("failed to inform predecessor about leave");
   }
 
 }

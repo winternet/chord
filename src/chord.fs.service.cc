@@ -314,43 +314,64 @@ Status Service::handle_del_dir(const chord::fs::DelRequest *req) {
   const auto uri = chord::uri::from(req->uri());
   auto data = context.data_directory / uri.path();
 
-  if(file::exists(data) && file::is_directory(data) && !file::is_empty(data) && !req->recursive()) {
-    return Status{StatusCode::FAILED_PRECONDITION, fmt::format("failed to delete {}: Directory not empty", to_string(uri))};
+  if(!file::exists(data)) {
+    return Status(StatusCode::NOT_FOUND, fmt::format("failed to delete {}: directory not found.", to_string(uri)));
   }
 
-  auto metadata = metadata_mgr->get(uri);
+  const auto is_empty = file::is_empty(data);
 
-  for(const auto m:metadata) {
-    if(m.name == ".") continue;
-    const auto sub_uri = uri::builder{uri.scheme(), uri.path() / m.name}.build();
-    const auto status = make_client().del(sub_uri, req->recursive());
-    if(!status.ok()) {
-      logger->error("Failed to delete directory: {} {}", status.error_message(), status.error_details());
-      return status;
-    }
+  if(file::is_directory(data) && !is_empty && !req->recursive()) {
+    return Status{StatusCode::FAILED_PRECONDITION, fmt::format("failed to delete {}: directory not empty - missing recursive flag?", to_string(uri))};
   }
 
-  if(file::exists(data) && file::is_empty(data)) {
+  // handle recursive delete
+  if(!is_empty && req->recursive()) {
+    // remove local metadata of directory
+    const auto metadata = metadata_mgr->get(uri);
 
-    const bool initial_delete = chord->successor(crypto::sha256(req->uri())) == context.node();
-    {
-      // initial node triggers parent metadata deletion
-      if(initial_delete && !uri.path().parent_path().empty()) {
-        const chord::uri parent_uri{uri.scheme(), uri.path().parent_path()};
-        Metadata deleted_dir = Metadata();
-        deleted_dir.name = uri.path().filename();
-        std::set<Metadata> metadata{deleted_dir};
-        make_client().meta(parent_uri, Client::Action::DEL, metadata);
+    // handle possibly remote metadata of sub-uris
+    for(const auto m:metadata) {
+      if(m.name == ".") continue;
+      const auto sub_uri = chord::uri(uri.scheme(), uri.path() / m.name);
+      const auto status = make_client().del(sub_uri, req->recursive());
+      if(!status.ok()) {
+        logger->error("failed to delete directory: {} {}", status.error_message(), status.error_details());
+        return status;
       }
     }
+  }
 
-    file::remove(data);
-    metadata_mgr->del(uri);
+  // after all contents have been deleted - check emptyness again
+  if(!file::is_empty(data)) {
+    return Status(StatusCode::ABORTED, fmt::format("failed to delete {}: directory not empty", to_string(uri)));
+  }
 
+  // beg: handle local
+  file::remove(data);
+  const auto deleted_metadata = metadata_mgr->del(uri);
+  // end: handle local
+
+  // beg: handle parent
+  const bool initial_delete = chord->successor(crypto::sha256(req->uri())) == context.node();
+  {
+    const auto parent_path = uri.path().parent_path();
+    // initial node triggers parent metadata deletion
+    if(initial_delete && !parent_path.empty()) {
+      Metadata deleted_dir = Metadata();
+      deleted_dir.name = uri.path().filename();
+      std::set<Metadata> metadata{deleted_dir};
+      make_client().meta(chord::uri(uri.scheme(), parent_path), Client::Action::DEL, metadata);
+    }
+  }
+  // end: handle parent
+
+  // beg: handle replica
+  auto max_repl = max_replication(deleted_metadata);
+  if(++max_repl) {
     const auto node = chord->successor();
-    // just forward the request and exit on status == NotFound
     make_client().del(node, req);
   }
+  // end: handle replica
 
   return Status::OK;
 }

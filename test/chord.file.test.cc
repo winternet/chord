@@ -39,12 +39,14 @@ TEST(DISABLED_chord_file, getxattr) {
 }
 
 TEST(chord_file, create_directory) {
-  auto dir = "testdir";
+  auto dir = "testdir"s;
 
   if (chord::file::exists(dir)) chord::file::remove(dir);
 
   ASSERT_TRUE(chord::file::create_directory(dir));
   ASSERT_TRUE(chord::file::exists(dir));
+  ASSERT_TRUE(chord::file::exists(dir+"/."));
+  ASSERT_TRUE(chord::file::exists(path(dir) / "."));
   ASSERT_TRUE(chord::file::is_empty(dir));
   ASSERT_FALSE(chord::file::is_regular_file(dir));
 
