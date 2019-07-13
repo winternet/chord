@@ -1,3 +1,5 @@
+#include "chord.common.h"
+
 #include "chord_common.pb.h"
 
 #include "chord.context.h"
@@ -8,6 +10,15 @@ using chord::common::RouterEntry;
 
 namespace chord {
 namespace common {
+
+chord::common::Header make_header(const chord::node &node) {
+  Header header;
+  RouterEntry src;
+  src.set_uuid(node.uuid);
+  src.set_endpoint(node.endpoint);
+  header.mutable_src()->CopyFrom(src);
+  return header;
+}
 
 chord::common::Header make_header(const Context &context) {
   Header header;

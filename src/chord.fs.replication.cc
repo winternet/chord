@@ -48,6 +48,10 @@ Replication& Replication::operator=(Replication rhs) {
     return count < other.count;
   }
 
+  bool Replication::has_next() const {
+    return index+1 < count;
+  }
+
   Replication::operator bool() const {
     return index < count && count > 1;
   }

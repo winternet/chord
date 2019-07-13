@@ -122,7 +122,7 @@ Status Service::handle_meta_add(const MetaRequest *req) {
     // remove metadata
     std::copy_if(metadata.begin(), metadata.end(), std::inserter(new_metadata, new_metadata.begin()), [&](const Metadata& meta) {
         if(!meta.replication) return false;
-        return (meta.replication.index+1 < meta.replication.count);
+        return meta.replication.has_next();
     });
     //update replication
     for(auto it = new_metadata.begin(); it != new_metadata.end(); ++it) {
@@ -178,15 +178,22 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   auto repl = ContextMetadata::replication_from(serverContext);
   const auto hash = ContextMetadata::file_hash_from(serverContext);
   const auto uri = ContextMetadata::uri_from(serverContext);
+  // deletion is needed if 
+  // 1) update received
+  // 2) local replication index is less than updated replication index
+  //    e.g. 3/4 && updated replication is 4/4
+  bool del_needed = false;
 
   // TODO: handle receive an update
   if(hash && metadata_mgr->exists(uri)) {
     const auto metadata_set = metadata_mgr->get(uri);
-    if(metadata_set.size() == 1) {
-      const auto local_hash = metadata_set.begin()->file_hash;
-      if(local_hash && local_hash == hash) {
-        ContextMetadata::set_file_hash_equal(serverContext, true);
-      }
+
+    if(fs::is_regular_file(metadata_set)) {
+      const auto metadata = *metadata_set.begin();
+      const auto local_hash = metadata.file_hash;
+
+      ContextMetadata::set_file_hash_equal(serverContext, local_hash && local_hash == hash);
+      del_needed = !repl.has_next() && metadata.replication.has_next();
     } else {
       logger->warn("failed to handle metadata for uri {}: multiple entries ({})", uri, metadata_set.size());
     }
@@ -262,6 +269,10 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     //TODO rollback on status ABORTED?
     make_client().put(next, uri, file, repl);
   }
+  if(del_needed) {
+    const auto next = chord->successor();
+    make_client().del(next, uri);
+  }
   return Status::OK;
 }
 
@@ -286,7 +297,7 @@ Status Service::handle_del_file(const chord::fs::DelRequest *req) {
   const chord::uri parent_uri{uri.scheme(), uri.path().parent_path()};
 
   if(max_repl) {
-    if(max_repl.index+1 < max_repl.count) {
+    if(max_repl.has_next()) {
       //TODO handle status
       const auto node = chord->successor();
       make_client().del(node, req);
@@ -297,12 +308,14 @@ Status Service::handle_del_file(const chord::fs::DelRequest *req) {
   }
   // end: handle replica
 
-  // beg: check whether directory is empty now
-  if(initial_delete) {
-    const auto parent_path = data.parent_path();
-    if(file::is_empty(parent_path)) {
-      return make_client().del(parent_uri);
-    }
+  // beg: check whether directory is empty now -> delete metadata
+  const auto parent_path = data.parent_path();
+  const auto dir_empty = file::is_empty(parent_path);
+  if(initial_delete && dir_empty) {
+    return make_client().del(parent_uri);
+  } else if(dir_empty) {
+    // node joined and the files were shifted to the other node
+    file::remove(parent_path);
   }
   // end: check whether directory is empty now
 
@@ -392,7 +405,6 @@ Status Service::del(grpc::ServerContext *serverContext,
     return success ? Status::OK : Status::CANCELLED;
   }
 
-  //FIXME this wont work for shallow-copied files (metadata-only)
   //TODO look on some other node (e.g. the successor that this node initially joined)
   //     maybe some other node became responsible for that file recently
   const auto metadata_set = metadata_mgr->get(uri);

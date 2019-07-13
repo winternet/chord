@@ -52,7 +52,7 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
   /**
    * find successor
    */
-  const auto& src = node.uuid; //uuid_t{id};
+  const auto& src = node.uuid;
 
   const auto pred = router->predecessor();
   const auto succ = router->successor();
@@ -63,7 +63,6 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
   if (!pred && (!succ || succ->uuid == context.uuid())) {
     logger->info("first node joining, setting the node as successor");
     router->set_successor(0, node);
-    router->set_predecessor(0, node);
   }
   /**
    * forward request to successor
@@ -101,13 +100,10 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
     const auto pred_or_self = pred.value_or(context.node());
     res_pred->set_uuid(pred_or_self.uuid);
     res_pred->set_endpoint(pred_or_self.endpoint);
-    // update router
-    router->set_predecessor(0, node);
   }
 
   res->mutable_header()->CopyFrom(make_header(context));
 
-  event_joined(pred.value_or(context.node()), node);
   return Status::OK;
 }
 
@@ -240,9 +236,16 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
   const uuid_t self{context.uuid()};
   const auto node = make_node(req->header().src());
 
+  // note that we detect newly joined nodes by their 
+  // notification, thus we must not set the predecessor
+  // beforehand - even though we know the predecessor
+  // within chord::Service::join we have to wait for
+  // the joining node to notfiy its successor when it
+  // is ready to handle requests
   if (!predecessor
       || node.uuid.between(predecessor->uuid, self)) {
     router->set_predecessor(0, node);
+    event_joined(predecessor.value_or(context.node()), node);
   } else {
     if (!predecessor)
       logger->info("predecessor is null");

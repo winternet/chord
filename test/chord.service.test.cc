@@ -80,8 +80,10 @@ TEST(ServiceTest, join) {
   auto successor = router.successor(0);
   auto predecessor = router.predecessor(0);
   ASSERT_EQ(successor->uuid, uuid_t{1});
-  ASSERT_EQ(predecessor->uuid, uuid_t{1});
   ASSERT_EQ(successor->endpoint, "1.1.1.1:1111");
+  //predecessor is filled using notify later
+  ASSERT_FALSE(predecessor);
+  //ASSERT_EQ(predecessor->uuid, uuid_t{1});
 
   //--- response
   ASSERT_EQ(res.header().src().uuid(), "50");
@@ -90,8 +92,6 @@ TEST(ServiceTest, join) {
   ASSERT_EQ(res.predecessor().endpoint(), "0.0.0.0:50050");
   ASSERT_EQ(res.successor().uuid(), "50");
   ASSERT_EQ(res.successor().endpoint(), "0.0.0.0:50050");
-
-  ASSERT_TRUE(callback_called);
 }
 
 /**

@@ -84,9 +84,9 @@ class MetadataManager : public IMetadataManager {
     const auto path = directory.path().canonical().string();
     check_status(db->Get(leveldb::ReadOptions(), path, &value));
 
-    logger->trace("[DEL] from {}", directory);
+    logger->trace("[DEL] {}", directory);
     for(const auto& meta:metadata) {
-      logger->trace("[DEL] {}", meta);
+      logger->trace("[DEL] `-  {}", meta);
     }
 
     std::set<Metadata> retVal;
@@ -118,7 +118,7 @@ class MetadataManager : public IMetadataManager {
       std::set<Metadata> ret;
       for(const auto &m:current) {
         ret.insert(m.second);
-        logger->trace("[DIR] {}", m.second);
+        logger->trace("[DIR] `-  {}", m.second);
       }
       return ret;
     }
@@ -152,7 +152,7 @@ class MetadataManager : public IMetadataManager {
 
     logger->trace("[ADD] {}", directory);
     for (const auto& [path, meta]: current) {
-      logger->trace("[ADD] {}", meta);
+      logger->trace("[ADD] `-  {}", meta);
     }
 
     value = serialize(current);
@@ -190,7 +190,7 @@ class MetadataManager : public IMetadataManager {
     for(const auto& o : ret) {
       logger->trace("[GET] {}", o.first);
       for(const auto &m : o.second) {
-        logger->trace("[GET] {}", m);
+        logger->trace("[GET] `-  {}", m);
       }
     }
     return ret;
@@ -251,7 +251,7 @@ class MetadataManager : public IMetadataManager {
 
     const auto map = deserialize(value);
     for (const auto& [path, meta]: map) {
-      logger->trace("[GET] {}", meta);
+      logger->trace("[GET] `-  {}", meta);
     }
     return extract_metadata_set(map);
   }

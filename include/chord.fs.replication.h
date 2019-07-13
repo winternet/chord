@@ -31,6 +31,8 @@ struct Replication {
 
   bool operator<(const Replication& other) const;
 
+  bool has_next() const;
+
   operator bool() const;
 
   std::string string() const;

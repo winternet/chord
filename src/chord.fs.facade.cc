@@ -146,35 +146,56 @@ Status Facade::get_file(const chord::uri& source, const chord::path& target) {
 void Facade::on_joined(const chord::node old_predecessor, const chord::node new_predecessor) {
   logger->debug("node joined: old_predecessor {}, new predecessor {}", old_predecessor, new_predecessor);
   const map<uri, set<Metadata>> metadata = metadata_mgr->get(old_predecessor.uuid, new_predecessor.uuid);
+
+  // TODO cleanup! split in several private methods
   for(const auto& pair : metadata) {
     const auto& uri = pair.first;
-    for(auto meta:pair.second) {
+    auto metadata_set = pair.second;
+
+    // handle metadata only
+    if(fs::is_directory(metadata_set)) {
+
+      const auto metadata_deleted = metadata_mgr->del(uri);
+      const auto status = fs_client->meta(uri, Client::Action::ADD, metadata_set);
+      if(!status.ok()) {
+        //logger->warn("failed to add metadata for {} for node {} - restoring local metadata.", uri, new_predecessor);
+        metadata_mgr->add(uri, metadata_deleted);
+        //TODO abort? error is likely to be persistent...
+      }
+    } else if(fs::is_regular_file(metadata_set)) {
+
+      // assert the metadata does no contain hashes,
+      // otherwise nodes might think that they're just 
+      // updating a file that actually does not exist
+      metadata_set = fs::clear_hashes(metadata_set);
 
       const auto local_path = context.data_directory / uri.path();
+      if(file::exists(local_path) && file::is_regular_file(local_path)) {
+        auto metadata = *metadata_set.begin();
 
-      // replications must not have node refs set 
-      // - supporting currently only  shallow copies for non-replicated files
-      if(meta.file_type == type::regular && !meta.node_ref && !meta.replication) {
-        meta.node_ref = context.node();
-        set<Metadata> metadata = {meta};
-        const auto status = fs_client->meta(new_predecessor, uri, Client::Action::ADD, metadata);
+        // handle not replicated data (shallow copy)
+        if(metadata.replication == Replication::NONE) {
+          metadata.node_ref = context.node();
+          set<Metadata> metadata_copy = {metadata};
+          const auto status = fs_client->meta(new_predecessor, uri, Client::Action::ADD, metadata_copy);
+          if(status.ok()) {
+            //TODO check if removing all metadata but keeping the actual file
+            //     is a good idea...
+            metadata_mgr->del(uri, metadata_copy, true);
+          } else {
+            logger->warn("failed to add shallow copy for {}", uri);
+          }
 
-        if(status.ok()) {
-          //TODO check if removing all metadata but keeping the actual file
-          //     is a good idea...
-          metadata_mgr->del(uri, metadata, true);
+        // handle replications (deep copy)
         } else {
-          logger->warn("failed to add shallow copy for {}", uri);
+          // note that we put the file from the beginning node to refresh all replications
+          fs_client->put(uri, local_path, metadata.replication);
         }
+      } else {
+        logger->warn("failed to handle on_joined for metadata {} - not found.", uri);
       }
-
-      if(meta.replication
-          && chord::file::exists(local_path)
-          && chord::file::is_regular_file(local_path)) {
-        //TODO add hash value to metadata to compare the files and
-        //     if files are equal just update the metadata / replication
-        fs_client->put(new_predecessor, uri, local_path, meta.replication);
-      }
+    } else {
+      logger->warn("failed to handle on_joined for metadata {}", uri);
     }
   }
 }

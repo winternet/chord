@@ -108,6 +108,8 @@ Replication max_replication(const std::set<Metadata>&);
 Metadata create_directory();
 Metadata create_directory(const std::set<Metadata>&);
 bool is_directory(const std::set<Metadata>&);
+bool is_regular_file(const std::set<Metadata>&);
+std::set<Metadata> clear_hashes(std::set<Metadata>);
 
 }  // namespace fs
 }  // namespace chord

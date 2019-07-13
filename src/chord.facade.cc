@@ -113,8 +113,8 @@ void ChordFacade::join() {
     logger->warn("failed to join {}", context.join_addr);
     return;
   }
-
-  logger->info("successfully joined {}", context.join_addr);
+  logger->info("successfully joined ring via {} - notifying successor.", context.join_addr);
+  client->notify();
 }
 
 /**

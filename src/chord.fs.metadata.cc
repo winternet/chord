@@ -59,7 +59,20 @@ Metadata create_directory(const std::set<Metadata>& metadata) {
 }
 
 bool is_directory(const std::set<Metadata>& metadata) {
-  return std::any_of(begin(metadata), end(metadata), [&](const Metadata& m) { return m.file_type == type::directory; });
+  return std::any_of(begin(metadata), end(metadata), [&](const Metadata& m) { return m.name == "." && m.file_type == type::directory; });
+}
+
+bool is_regular_file(const std::set<Metadata>& metadata) {
+  return metadata.size() == 1 && metadata.begin()->file_type == type::regular;
+}
+
+std::set<Metadata> clear_hashes(std::set<Metadata> metadata) {
+  std::set<Metadata> retVal;
+  std::transform(begin(metadata), end(metadata), std::inserter(retVal, begin(retVal)), [](auto m) {
+      m.file_hash.reset();
+      return m;
+  });
+  return retVal;
 }
 
 

@@ -72,7 +72,7 @@ struct MetadataBuilder {
   /**
    * @todo implement owner / group
    */
-  static Metadata from(const chord::fs::Data& item, chord::optional<chord::node> node_ref = {}) {
+  static Metadata from(const chord::fs::Data& item) {
     // replication
     Replication repl(item.replication_idx(), item.replication_cnt());
 
@@ -83,7 +83,6 @@ struct MetadataBuilder {
                   static_cast<type>(item.type()), 
                   !item.file_hash().empty() ? chord::optional<chord::uuid>{item.file_hash()} : chord::optional<chord::uuid>{},
                   item.has_node_ref() ? chord::common::make_node(item.node_ref()) : chord::optional<chord::node>{},
-                  //node_ref, //!item.node_ref().empty() ? chord::optional<chord::node>{{item.node_ref()}} : chord::optional<chord::node>{},
                   repl};
 
     return meta;
@@ -122,7 +121,7 @@ struct MetadataBuilder {
   static std::set<Metadata> from(const chord::fs::MetaResponse& res) {
     std::set<Metadata> ret;
     for (const auto& m : res.metadata()) {
-      ret.insert(MetadataBuilder::from(m, make_node(res)));
+      ret.insert(MetadataBuilder::from(m));
     }
     return ret;
   }

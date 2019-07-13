@@ -9,6 +9,8 @@ struct node;
 
 namespace common {
 
+chord::common::Header make_header(const chord::node &node);
+
 chord::common::Header make_header(const Context *context);
 
 chord::common::Header make_header(const Context &context);
