@@ -18,6 +18,7 @@
 #include "chord.log.factory.h"
 #include "chord.log.h"
 #include "chord.node.h"
+#include "chord.utils.h"
 
 using namespace std;
 
@@ -154,11 +155,10 @@ void Facade::on_joined(const chord::node old_predecessor, const chord::node new_
 
     // handle metadata only
     if(fs::is_directory(metadata_set)) {
-
       const auto metadata_deleted = metadata_mgr->del(uri);
       const auto status = fs_client->meta(uri, Client::Action::ADD, metadata_set);
       if(!status.ok()) {
-        //logger->warn("failed to add metadata for {} for node {} - restoring local metadata.", uri, new_predecessor);
+        logger->warn("failed to add metadata for {} for node {} - restoring local metadata.", uri, new_predecessor);
         metadata_mgr->add(uri, metadata_deleted);
         //TODO abort? error is likely to be persistent...
       }
@@ -170,7 +170,8 @@ void Facade::on_joined(const chord::node old_predecessor, const chord::node new_
       metadata_set = fs::clear_hashes(metadata_set);
 
       const auto local_path = context.data_directory / uri.path();
-      if(file::exists(local_path) && file::is_regular_file(local_path)) {
+      const bool exists = chord::file::exists(local_path) && chord::file::is_regular_file(local_path);
+      if(exists) {
         auto metadata = *metadata_set.begin();
 
         // handle not replicated data (shallow copy)
@@ -179,9 +180,8 @@ void Facade::on_joined(const chord::node old_predecessor, const chord::node new_
           set<Metadata> metadata_copy = {metadata};
           const auto status = fs_client->meta(new_predecessor, uri, Client::Action::ADD, metadata_copy);
           if(status.ok()) {
-            //TODO check if removing all metadata but keeping the actual file
-            //     is a good idea...
-            metadata_mgr->del(uri, metadata_copy, true);
+            // set node_ref to self to tag the metadata as referenced.
+            metadata_mgr->add(uri, metadata_copy);
           } else {
             logger->warn("failed to add shallow copy for {}", uri);
           }
@@ -204,28 +204,50 @@ void Facade::on_joined(const chord::node old_predecessor, const chord::node new_
  * called from within leaving node
  */
 void Facade::on_leave(const chord::node predecessor, const chord::node successor) {
-  const map<uri, set<Metadata>> metadata = metadata_mgr->get(predecessor.uuid, context.uuid());
-  const auto node = chord->successor();
+  const map<uri, set<Metadata>> metadata_uuids = metadata_mgr->get(predecessor.uuid, context.uuid());
+  const map<uri, set<Metadata>> managed_shallow_copies = metadata_mgr->get_shallow_copies(context.node());
+
+  const auto metadata = utils::merge<uri, set<Metadata>>(metadata_uuids, managed_shallow_copies, [](const set<Metadata> a_value, const set<Metadata> b_value) { 
+      auto ret = a_value;
+      ret.insert(b_value.begin(), b_value.end());
+      return ret;
+  });
+
   for(const auto& pair : metadata) {
     const auto& uri = pair.first;
-    for(auto meta:pair.second) {
+    const auto& metadata_set = pair.second;
 
+    if(fs::is_directory(metadata_set)) {
+      auto metadata_deleted = metadata_mgr->del(uri);
+      const auto status = fs_client->meta(successor, uri, Client::Action::ADD, metadata_deleted);
+      if(!status.ok()) {
+        logger->warn("failed to add metadata for {} for node {} - restoring local metadata. error: {}", uri, successor, utils::to_string(status));
+        //TODO: check whether this makes sense in any way...
+        metadata_mgr->add(uri, metadata_deleted);
+      }
+    } else if(fs::is_regular_file(metadata_set)) {
       const auto local_path = context.data_directory / uri.path();
       const bool exists = chord::file::exists(local_path) && chord::file::is_regular_file(local_path);
 
-      set<Metadata> metadata = {meta};
-      if(meta.file_type != type::regular) {
-        logger->debug("adding metadata");
-        const auto status = fs_client->meta(successor, uri, Client::Action::ADD, metadata);
-      } else if(meta.file_type == type::regular && !exists && meta.node_ref) {
-        logger->warn("trying to replicate shallow copy {} referencing node {}.", uri, *meta.node_ref);
-        const auto status = fs_client->meta(successor, uri, Client::Action::ADD, metadata);
+      if(exists) {
+        auto metadata = *metadata_set.begin();
+        const auto status = fs_client->put(successor, uri, local_path, metadata.replication);
         if(!status.ok()) {
-          logger->error("failed to add metadata {} from referencing node {}.", uri, *meta.node_ref);
-          continue;
+          logger->warn("failed to put file {} on successor {}. error: {}", uri, successor, utils::to_string(status));
+        } else {
+          // set node_ref to self to tag the metadata as referenced.
+          metadata.node_ref = context.node();
+          metadata_mgr->add(uri, {metadata});
         }
       } else {
-        fs_client->put(node, uri, local_path, meta.replication);
+        // handle metadata only
+        auto metadata_deleted = metadata_mgr->del(uri);
+        const auto status = fs_client->meta(successor, uri, Client::Action::ADD, metadata_deleted);
+        if(!status.ok()) {
+          logger->warn("failed to add metadata for {} for node {} - restoring local metadata. error: {}", uri, successor, utils::to_string(status));
+          //TODO: check whether this makes sense in any way...
+          metadata_mgr->add(uri, metadata_deleted);
+        }
       }
     }
   }

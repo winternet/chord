@@ -213,7 +213,7 @@ class MetadataManager : public IMetadataManager {
       const std::string& path = it->key().ToString();
       const auto map = deserialize(it->value().ToString());
       const chord::uri uri("chord", {path});
-      for(const auto& [name, meta] : map) {
+      for(const auto& [_, meta] : map) {
         if(meta.node_ref && meta.node_ref == node) {
           ret[uri].insert(meta);
         }
