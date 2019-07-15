@@ -41,6 +41,7 @@ public:
 
   //--- events
   event_binary_t event_leave;
+  event_unary_t event_join;
 
   void start_scheduler();
   void stop_scheduler();
@@ -93,6 +94,8 @@ public:
    * fix finger table
    */
   void fix_fingers(size_t index);
+
+  event_unary_t& on_join();
 
   event_binary_t& on_joined();
 

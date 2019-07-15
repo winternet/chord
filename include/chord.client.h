@@ -52,13 +52,13 @@ class Client : public IClient {
   signal<void(const node)>& on_predecessor_fail() override;
   signal<void(const node)>& on_successor_fail() override;
 
-  bool join(const endpoint& addr) override;
+  grpc::Status join(const endpoint& addr) override;
   grpc::Status join(const JoinRequest *req, JoinResponse *res) override;
   grpc::Status join(grpc::ClientContext *clientContext, const JoinRequest *req, JoinResponse *res) override;
 
   void stabilize() override;
 
-  void notify() override;
+  grpc::Status notify() override;
 
   void check() override;
 

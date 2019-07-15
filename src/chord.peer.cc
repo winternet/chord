@@ -49,6 +49,7 @@ Peer::Peer(Context ctx)
       logger{context.logging.factory().get_or_create(Peer::logger_name)}
 {
   const auto fs = filesystem.get();
+  chord->on_join().connect(fs, &chord::fs::Facade::on_join);
   chord->on_joined().connect(fs, &chord::fs::Facade::on_joined);
   chord->on_leave().connect(fs, &chord::fs::Facade::on_leave);
   chord->on_predecessor_fail().connect(fs, &chord::fs::Facade::on_predecessor_fail);

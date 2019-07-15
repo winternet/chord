@@ -8,14 +8,14 @@ class MockClient : public IClient {
 
   MOCK_METHOD0(leave, void(void));
 
-  MOCK_METHOD1(join, bool(const endpoint&));
+  MOCK_METHOD1(join, grpc::Status(const endpoint&));
 
   MOCK_METHOD2(join, grpc::Status(const JoinRequest *req, JoinResponse *res));
   MOCK_METHOD3(join, grpc::Status(grpc::ClientContext *clientContext, const JoinRequest *req, JoinResponse *res));
 
   MOCK_METHOD0(stabilize, void(void));
 
-  MOCK_METHOD0(notify, void(void));
+  MOCK_METHOD0(notify, grpc::Status(void));
 
   MOCK_METHOD0(check, void(void));
 

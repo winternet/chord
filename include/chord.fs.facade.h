@@ -57,6 +57,7 @@ class Facade : public IFacade {
   /**
    * callbacks
    */
+  void on_join(const chord::node new_successor);
   void on_joined(const chord::node old_predecessor, const chord::node new_predecessor);
   void on_leave(const chord::node leaving_node, const chord::node new_predecessor);
   void on_predecessor_fail(const chord::node predecessor);

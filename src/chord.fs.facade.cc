@@ -143,6 +143,13 @@ Status Facade::get_file(const chord::uri& source, const chord::path& target) {
 /**
  * CALLBACKS
  */
+// called form within the node that joined the ring
+void Facade::on_join(const chord::node new_successor) {
+  logger->debug("joined chord ring: new_successor {}", new_successor);
+  const map<uri, set<Metadata>> metadata = metadata_mgr->get(context.uuid(), new_successor.uuid);
+}
+
+
 //called from within the node succeeding the joining node
 void Facade::on_joined(const chord::node old_predecessor, const chord::node new_predecessor) {
   logger->debug("node joined: old_predecessor {}, new predecessor {}", old_predecessor, new_predecessor);
@@ -178,7 +185,7 @@ void Facade::on_joined(const chord::node old_predecessor, const chord::node new_
         if(metadata.replication == Replication::NONE) {
           metadata.node_ref = context.node();
           set<Metadata> metadata_copy = {metadata};
-          const auto status = fs_client->meta(new_predecessor, uri, Client::Action::ADD, metadata_copy);
+          const auto status = fs_client->meta(uri, Client::Action::ADD, metadata_copy);
           if(status.ok()) {
             // set node_ref to self to tag the metadata as referenced.
             metadata_mgr->add(uri, metadata_copy);

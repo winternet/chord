@@ -14,6 +14,7 @@
 #include "chord.scheduler.h"
 #include "chord.service.h"
 #include "chord.types.h"
+#include "chord.utils.h"
 
 using namespace std;
 
@@ -108,13 +109,20 @@ void ChordFacade::leave() {
  * join chord ring containing client-id.
  */
 void ChordFacade::join() {
-  const auto success = client->join(context.join_addr);
-  if(!success) {
-    logger->warn("failed to join {}", context.join_addr);
+  auto status = client->join(context.join_addr);
+  if(!status.ok()) {
+    logger->warn("failed to join {}; error: {}", context.join_addr, utils::to_string(status));
     return;
   }
   logger->info("successfully joined ring via {} - notifying successor.", context.join_addr);
-  client->notify();
+  status = client->notify();
+  if(!status.ok()) {
+    logger->warn("failed to notify {}; error: {}", context.join_addr, utils::to_string(status));
+    router->reset();
+    return;
+  }
+
+  event_join(*router->successor());
 }
 
 /**
@@ -151,6 +159,10 @@ void ChordFacade::check_predecessor() {
  */
 void ChordFacade::fix_fingers(size_t index) {
   service->fix_fingers(index);
+}
+
+ChordFacade::event_unary_t& ChordFacade::on_join() {
+  return event_join;
 }
 
 ChordFacade::event_binary_t& ChordFacade::on_joined() {

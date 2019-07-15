@@ -21,13 +21,13 @@ class IClient {
   virtual ~IClient() {}
   virtual void leave() =0;
 
-  virtual bool join(const endpoint& addr) =0;
+  virtual grpc::Status join(const endpoint& addr) =0;
   virtual grpc::Status join(const JoinRequest *req, JoinResponse *res) =0;
   virtual grpc::Status join(grpc::ClientContext *clientContext, const JoinRequest *req, JoinResponse *res) =0;
 
   virtual void stabilize() =0;
 
-  virtual void notify() =0;
+  virtual grpc::Status notify() =0;
 
   virtual void check() =0;
 

@@ -124,7 +124,7 @@ signal<void(const node)>& Client::on_successor_fail() {
   return event_successor_fail;
 }
 
-bool Client::join(const endpoint& addr) {
+Status Client::join(const endpoint& addr) {
   logger->debug("joining {}", addr);
 
   ClientContext clientContext;
@@ -137,7 +137,7 @@ bool Client::join(const endpoint& addr) {
 
   if (!status.ok() || !res.has_successor()) {
     logger->info("Failed to join {}", addr);
-    return false;
+    return status;
   }
 
   const auto succ = make_node(res.successor());
@@ -146,7 +146,7 @@ bool Client::join(const endpoint& addr) {
   logger->info("Successfully joined {}", addr);
   router->set_predecessor(0, pred);
   router->set_successor(0, succ);
-  return true;
+  return status;
 }
 
 Status Client::join(const JoinRequest *req, JoinResponse *res) {
@@ -210,7 +210,7 @@ void Client::stabilize() {
   notify();
 }
 
-void Client::notify() {
+Status Client::notify() {
 
   // get successor
   const auto n = router->successor();
@@ -224,8 +224,7 @@ void Client::notify() {
   logger->trace("calling notify on address {}@{}", successor, endpoint);
 
   req.mutable_header()->CopyFrom(make_header(context));
-  make_stub(endpoint)->notify(&clientContext, req, &res);
-
+  return make_stub(endpoint)->notify(&clientContext, req, &res);
 }
 
 Status Client::successor(ClientContext *clientContext, const SuccessorRequest *req, SuccessorResponse *res) {
