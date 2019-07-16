@@ -283,7 +283,7 @@ Status Service::handle_del_file(const chord::fs::DelRequest *req) {
   auto deleted_metadata = metadata_mgr->del(uri);
   const auto iter = std::find_if(deleted_metadata.begin(), deleted_metadata.end(), [&](const Metadata& m) { return m.name == uri.path().filename();});
   // handle shallow copy
-  if(iter != deleted_metadata.end() && iter->node_ref) {
+  if(iter != deleted_metadata.end() && iter->node_ref && *iter->node_ref != context.node()) {
     make_client().del(*iter->node_ref, req);
   }
   // handle local file
@@ -296,28 +296,33 @@ Status Service::handle_del_file(const chord::fs::DelRequest *req) {
   const bool initial_delete = chord->successor(crypto::sha256(req->uri())) == context.node();
   const chord::uri parent_uri{uri.scheme(), uri.path().parent_path()};
 
-  if(max_repl) {
-    if(max_repl.has_next()) {
-      //TODO handle status
-      const auto node = chord->successor();
-      make_client().del(node, req);
-    }
-    if(initial_delete) {
-      make_client().meta(parent_uri, Client::Action::DEL, deleted_metadata);
-    }
+  if(max_repl && max_repl.has_next()) {
+    //TODO handle status
+    const auto node = chord->successor();
+    make_client().del(node, req);
   }
   // end: handle replica
+ 
 
   // beg: check whether directory is empty now -> delete metadata
   const auto parent_path = data.parent_path();
-  const auto dir_empty = file::is_empty(parent_path);
+  const auto dir_empty = file::exists(parent_path) && file::is_empty(parent_path);
   if(initial_delete && dir_empty) {
     return make_client().del(parent_uri);
-  } else if(dir_empty) {
+  } else if(initial_delete && !parent_uri.path().empty()) {
+    // beg: update parent path
+    make_client().meta(parent_uri, Client::Action::DEL, deleted_metadata);
+    //TODO handle return status
+    // end: update parent path
+  } 
+  // end: check whether directory is empty now
+  
+  // beg: handle empty directories
+  if(dir_empty) {
     // node joined and the files were shifted to the other node
     file::remove(parent_path);
   }
-  // end: check whether directory is empty now
+  // end: handle empty directories
 
   // handle metadata
   return Status::OK;
@@ -398,12 +403,12 @@ Status Service::del(grpc::ServerContext *serverContext,
   const auto uri = chord::uri::from(req->uri());
   auto data = context.data_directory / uri.path();
 
-  // we receive a delete from a former-shallow-copy node (no metadata left, but file)
-  if(file::exists(data) && file::is_regular_file(data) && !metadata_mgr->exists(uri)) {
-    logger->trace("handling delete request from shallow-copy node ({}).", uri);
-    const auto success = file::remove(data);
-    return success ? Status::OK : Status::CANCELLED;
-  }
+  // we receive a delete from a former-shallow-copy node
+  //if(file::exists(data) && file::is_regular_file(data) && !metadata_mgr->exists(uri)) {
+  //  logger->trace("handling delete request from shallow-copy node ({}).", uri);
+  //  const auto success = file::remove(data);
+  //  return success ? Status::OK : Status::CANCELLED;
+  //}
 
   //TODO look on some other node (e.g. the successor that this node initially joined)
   //     maybe some other node became responsible for that file recently

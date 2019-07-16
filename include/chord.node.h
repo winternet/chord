@@ -18,6 +18,10 @@ struct node {
            && endpoint == other.endpoint;
   }
 
+  bool operator!=(const node& other) const {
+    return !(*this == other);
+  }
+
   std::string string() const {
     std::stringstream ss;
     ss << *this;

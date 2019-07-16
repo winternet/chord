@@ -140,32 +140,17 @@ Status Facade::get_file(const chord::uri& source, const chord::path& target) {
   }
 }
 
-/**
- * CALLBACKS
- */
-// called form within the node that joined the ring
-void Facade::on_join(const chord::node new_successor) {
-  logger->debug("joined chord ring: new_successor {}", new_successor);
-  const map<uri, set<Metadata>> metadata = metadata_mgr->get(context.uuid(), new_successor.uuid);
-}
-
-
-//called from within the node succeeding the joining node
-void Facade::on_joined(const chord::node old_predecessor, const chord::node new_predecessor) {
-  logger->debug("node joined: old_predecessor {}, new predecessor {}", old_predecessor, new_predecessor);
-  const map<uri, set<Metadata>> metadata = metadata_mgr->get(old_predecessor.uuid, new_predecessor.uuid);
-
-  // TODO cleanup! split in several private methods
+void Facade::rebalance(const map<uri, set<Metadata>>& metadata) {
   for(const auto& pair : metadata) {
     const auto& uri = pair.first;
     auto metadata_set = pair.second;
 
     // handle metadata only
     if(fs::is_directory(metadata_set)) {
-      const auto metadata_deleted = metadata_mgr->del(uri);
-      const auto status = fs_client->meta(uri, Client::Action::ADD, metadata_set);
+      auto metadata_deleted = metadata_mgr->del(uri);
+      const auto status = fs_client->meta(uri, Client::Action::ADD, metadata_deleted);
       if(!status.ok()) {
-        logger->warn("failed to add metadata for {} for node {} - restoring local metadata.", uri, new_predecessor);
+        logger->warn("failed to add metadata for {} - restoring local metadata.", uri);
         metadata_mgr->add(uri, metadata_deleted);
         //TODO abort? error is likely to be persistent...
       }
@@ -208,6 +193,24 @@ void Facade::on_joined(const chord::node old_predecessor, const chord::node new_
 }
 
 /**
+ * CALLBACKS
+ */
+// called form within the node that joined the ring
+void Facade::on_join(const chord::node new_successor) {
+  logger->debug("joined chord ring: new_successor {}", new_successor);
+  const map<uri, set<Metadata>> metadata = metadata_mgr->get(context.uuid(), new_successor.uuid);
+  rebalance(metadata);
+}
+
+
+//called from within the node succeeding the joining node
+void Facade::on_joined(const chord::node old_predecessor, const chord::node new_predecessor) {
+  logger->debug("node joined: old_predecessor {}, new predecessor {}", old_predecessor, new_predecessor);
+  const map<uri, set<Metadata>> metadata = metadata_mgr->get(old_predecessor.uuid, new_predecessor.uuid);
+  rebalance(metadata);
+}
+
+/**
  * called from within leaving node
  */
 void Facade::on_leave(const chord::node predecessor, const chord::node successor) {
@@ -224,6 +227,7 @@ void Facade::on_leave(const chord::node predecessor, const chord::node successor
     const auto& uri = pair.first;
     const auto& metadata_set = pair.second;
 
+    // handle metadata only
     if(fs::is_directory(metadata_set)) {
       auto metadata_deleted = metadata_mgr->del(uri);
       const auto status = fs_client->meta(successor, uri, Client::Action::ADD, metadata_deleted);

@@ -1,5 +1,7 @@
 #pragma once
 #include <grpcpp/impl/codegen/status.h>
+#include <map>
+#include <set>
 #include <iosfwd>
 #include <memory>
 
@@ -38,7 +40,7 @@ class Facade : public IFacade {
   bool is_directory(const chord::uri& target);
   grpc::Status get_and_integrate(const chord::fs::MetaResponse& metadata);
   grpc::Status get_shallow_copies(const chord::node& leaving_node);
-
+  void rebalance(const std::map<chord::uri, std::set<fs::Metadata>>&);
  public:
   Facade(Context& context, ChordFacade* chord);
 
