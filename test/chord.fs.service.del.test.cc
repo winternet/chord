@@ -91,8 +91,8 @@ TEST_F(FilesystemServiceDelTest, del_file) {
     //.WillOnce(Return(make_entry(self->context.node()))); // forward delete until not_found
 
   //--- delete file
-  EXPECT_CALL(*self->metadata_mgr, exists(target_uri))
-    .WillOnce(Return(true));
+  //EXPECT_CALL(*self->metadata_mgr, exists(target_uri))
+  //  .WillOnce(Return(true));
 
   Metadata metadata("file", "", "", perms::all, type::regular, {}, {}, {});
   EXPECT_CALL(*self->metadata_mgr, get(target_uri))

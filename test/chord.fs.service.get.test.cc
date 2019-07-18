@@ -110,6 +110,12 @@ TEST_F(FilesystemServiceGetTest, get_from_node_reference) {
   EXPECT_CALL(*self->metadata_mgr, get(source_uri))
     .WillOnce(Return(std::set<Metadata>{metadata}));
 
+  // source peer has itself set as node_ref
+  EXPECT_CALL(*source_peer.metadata_mgr, get(source_uri))
+    .WillOnce(Return(std::set<Metadata>{metadata}));
+  EXPECT_CALL(*source_peer.metadata_mgr, del(source_uri))
+    .WillOnce(Return(std::set<Metadata>{metadata}));
+
   // delete the node_ref and update the file hash
   metadata = {"file", "", "", perms::all, type::regular, crypto::sha256(source_file.path), {}};
   // update node_ref - file has been downloaded
@@ -118,8 +124,8 @@ TEST_F(FilesystemServiceGetTest, get_from_node_reference) {
     .WillOnce(Return(true));
 
   // no metadata exists on the node referenced by node_ref
-  EXPECT_CALL(*source_peer.metadata_mgr, exists(source_uri))
-    .WillOnce(Return(false));
+  //EXPECT_CALL(*source_peer.metadata_mgr, exists(source_uri))
+  //  .WillOnce(Return(false));
 
   TmpDir target_directory;
   const auto target_file = target_directory.path / "received_file";

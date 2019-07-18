@@ -454,13 +454,11 @@ Status Service::get_from_reference_or_replication(const chord::uri& uri) {
         if(!status.ok()) {
           logger->warn("failed to get from referenced node - trying to get replication.");
         } else {
-          {
-            logger->trace("successfully received file - reset node ref.");
-            m.node_ref = {};
-            m.file_hash = crypto::sha256(data);
-            std::set<Metadata> metadata = {m};
-            metadata_mgr->add(uri, metadata);
-          }
+          logger->trace("successfully received file - reset node ref.");
+          m.node_ref = {};
+          m.file_hash = crypto::sha256(data);
+          std::set<Metadata> metadata = {m};
+          metadata_mgr->add(uri, metadata);
           return make_client().del(node_ref, uri);
         }
       } catch (const ios_base::failure &error) {
