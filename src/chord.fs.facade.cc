@@ -246,6 +246,7 @@ void Facade::on_leave(const chord::node predecessor, const chord::node successor
         if(!status.ok()) {
           logger->warn("failed to put file {} on successor {}. error: {}", uri, successor, utils::to_string(status));
         } else {
+          // TODO make sure this makes sense...
           // set node_ref to self to tag the metadata as referenced.
           metadata.node_ref = context.node();
           metadata_mgr->add(uri, {metadata});

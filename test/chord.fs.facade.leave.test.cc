@@ -74,6 +74,61 @@ class FilesystemFacadeLeaveTest : public ::testing::Test {
     unique_ptr<MockPeer> self;
 };
 
+// self is leaving the cluster
+TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_local_files) {
+
+  TmpDir data_directory_2;
+  const endpoint source_endpoint_2("0.0.0.0:50051");
+  MockPeer peer_2(source_endpoint_2, data_directory_2);
+
+  TmpDir source_directory;
+
+  const auto target_uri = uri("chord:///file");
+  const auto source_file = self->data_directory.add_file("file");
+
+  map<uri, set<Metadata>> files;
+  Metadata metadata_file("file", "", "", perms::all, type::regular, crypto::sha256(source_file.path), {}, Replication());
+  set<Metadata> metadata_set{metadata_file};
+  files[target_uri] = metadata_set;
+  EXPECT_CALL(*self->metadata_mgr, get(peer_2.context.uuid(), self->context.uuid()))
+    .WillOnce(Return(files));
+
+  //TODO add test for directory handling
+  map<uri, set<Metadata>> empty;
+  EXPECT_CALL(*self->metadata_mgr, get_shallow_copies(self->context.node()))
+    .WillOnce(Return(empty));
+
+  //EXPECT_CALL(*peer_2.metadata_mgr, add(target_uri, metadata_set))
+  //  .WillOnce(Return(true));
+
+  EXPECT_CALL(*self->metadata_mgr, exists(target_uri))
+    .WillOnce(Return(true));
+  EXPECT_CALL(*self->metadata_mgr, get(target_uri))
+    .WillOnce(Return(metadata_set));
+
+  // chord::fs::Service::put
+  EXPECT_CALL(*peer_2.metadata_mgr, exists(target_uri))
+    .WillOnce(Return(false));
+  EXPECT_CALL(*peer_2.service, successor(_))
+    .WillRepeatedly(Return(make_entry(peer_2.context.node())));
+
+  EXPECT_CALL(*peer_2.metadata_mgr, add(target_uri, _))
+    .WillOnce(Return(true));
+  EXPECT_CALL(*peer_2.metadata_mgr, add(uri(target_uri.scheme(), target_uri.path().parent_path()), _))
+    .WillOnce(Return(true));
+
+  // set node_reference to next node within own metadata 
+  // TODO make sure this makes sense...
+  EXPECT_CALL(*self->metadata_mgr, add(target_uri, _))
+    .WillOnce(Return(true));
+
+  self->fs_facade->on_leave(peer_2.context.node(), peer_2.context.node());
+
+  const auto target_file = peer_2.context.data_directory / target_uri.path().filename();
+  ASSERT_TRUE(chord::file::file_size(target_file) > 0);
+  ASSERT_TRUE(chord::file::files_equal(source_file.path, target_file));
+}
+
 TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_node_reference) {
 
   TmpDir data_directory_2;
