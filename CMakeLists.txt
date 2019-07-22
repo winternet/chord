@@ -20,6 +20,7 @@ set(ProtoPath "${CMAKE_CURRENT_SOURCE_DIR}/proto")
 set(ProtoGenerateTargetPath "./gen")
 
 option(chord_BUILD_TESTS "build unit tests" OFF)
+option(chord_USE_CCACHE "use ccache for subsequent builds" ON)
 
 if(CMAKE_COMPILER_IS_GNUCC)
   option(ENABLE_COVERAGE "enable coverage reporting for gcc/clang" FALSE)
@@ -32,10 +33,10 @@ endif()
 # enable ccache
 #
 find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
+if(CCACHE_FOUND AND chord_USE_CCACHE)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-endif(CCACHE_FOUND)
+endif()
 
 #-Wshadow
 #-Wuseless-cast
