@@ -62,6 +62,7 @@ jobs:
             cd build
             CXX=g++-7 CC=gcc-7 cmake .. -DENABLE_COVERAGE:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=Release -Dchord_BUILD_TESTS:BOOL=ON
             cmake --build . -- -j4 
+          no_output_timeout: 30m
       - run:
           name: Run tests
           command: |
