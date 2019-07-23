@@ -61,8 +61,7 @@ jobs:
             mkdir build
             cd build
             CXX=g++-7 CC=gcc-7 cmake .. -DENABLE_COVERAGE:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=Release -Dchord_BUILD_TESTS:BOOL=ON -Dchord_USE_CCACHE:BOOL=FALSE
-            cmake --build . -- -j$(nproc) 
-          no_output_timeout: 30m
+            cmake --build . -- -j1
       - run:
           name: Run tests
           command: |
