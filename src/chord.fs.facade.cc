@@ -181,7 +181,11 @@ void Facade::rebalance(const map<uri, set<Metadata>>& metadata) {
         // handle replications (deep copy)
         } else {
           // note that we put the file from the beginning node to refresh all replications
-          fs_client->put(uri, local_path, metadata.replication);
+          const auto status = fs_client->put(uri, local_path, metadata.replication);
+          //if(status.ok() && !metadata.replication.has_next()) {
+          //  logger->warn("successfully put uri {} to predecessor - deleting local.", uri);
+          //  del(uri);
+          //}
         }
       } else {
         logger->warn("failed to handle on_joined for metadata {} - not found.", uri);
@@ -203,7 +207,7 @@ void Facade::on_join(const chord::node new_successor) {
 }
 
 
-//called from within the node succeeding the joining node
+//called from within the node preceding the joining node
 void Facade::on_joined(const chord::node old_predecessor, const chord::node new_predecessor) {
   logger->debug("node joined: old_predecessor {}, new predecessor {}", old_predecessor, new_predecessor);
   const map<uri, set<Metadata>> metadata = metadata_mgr->get(old_predecessor.uuid, new_predecessor.uuid);
@@ -214,27 +218,42 @@ void Facade::on_joined(const chord::node old_predecessor, const chord::node new_
  * called from within leaving node
  */
 void Facade::on_leave(const chord::node predecessor, const chord::node successor) {
-  const map<uri, set<Metadata>> metadata_uuids = metadata_mgr->get(predecessor.uuid, context.uuid());
-  const map<uri, set<Metadata>> managed_shallow_copies = metadata_mgr->get_shallow_copies(context.node());
+  using meta_map = map<uri, set<Metadata>>;
+  //FIXME beg refactor 'queries'
+  const meta_map metadata_uuids = metadata_mgr->get(predecessor.uuid, context.uuid());
+  const meta_map managed_shallow_copies = metadata_mgr->get_shallow_copies(context.node());
+  const meta_map replicated = metadata_mgr->get_replicated();
 
-  const auto metadata = utils::merge<uri, set<Metadata>>(metadata_uuids, managed_shallow_copies, [](const set<Metadata> a_value, const set<Metadata> b_value) { 
+  const auto merge_lambda = [](const set<Metadata> a_value, const set<Metadata> b_value) { 
       auto ret = a_value;
       ret.insert(b_value.begin(), b_value.end());
       return ret;
-  });
+  };
+
+  const meta_map pt1 = utils::merge<uri, set<Metadata>>(metadata_uuids, managed_shallow_copies, merge_lambda);
+  const meta_map metadata = utils::merge<uri, set<Metadata>>(pt1, replicated, merge_lambda);
+  //FIXME end refactor 'queries'
 
   for(const auto& pair : metadata) {
     const auto& uri = pair.first;
     const auto& metadata_set = pair.second;
 
+    //cant do this since router already flushed old nodes
+    //const auto hash = chord::crypto::sha256(uri);
+    //if(successor == chord->successor(hash)) {
+    //  logger->trace("omitting {} since new successor is already responsible", uri);
+    //  continue;
+    //}
+
     // handle metadata only
     if(fs::is_directory(metadata_set)) {
-      auto metadata_deleted = metadata_mgr->del(uri);
+      auto metadata_deleted = metadata_set;
+      //auto metadata_deleted = metadata_mgr->del(uri);
       const auto status = fs_client->meta(successor, uri, Client::Action::ADD, metadata_deleted);
       if(!status.ok()) {
         logger->warn("failed to add metadata for {} for node {} - restoring local metadata. error: {}", uri, successor, utils::to_string(status));
         //TODO: check whether this makes sense in any way...
-        metadata_mgr->add(uri, metadata_deleted);
+        ////metadata_mgr->add(uri, metadata_deleted);
       }
     } else if(fs::is_regular_file(metadata_set)) {
       const auto local_path = context.data_directory / uri.path();
@@ -248,12 +267,13 @@ void Facade::on_leave(const chord::node predecessor, const chord::node successor
         } else {
           // TODO make sure this makes sense...
           // set node_ref to self to tag the metadata as referenced.
-          metadata.node_ref = context.node();
-          metadata_mgr->add(uri, {metadata});
+          ////metadata.node_ref = context.node();
+          ////metadata_mgr->add(uri, {metadata});
         }
       } else {
         // handle metadata only
-        auto metadata_deleted = metadata_mgr->del(uri);
+        auto metadata_deleted = metadata_set;
+        //auto metadata_deleted = metadata_mgr->del(uri);
         const auto status = fs_client->meta(successor, uri, Client::Action::ADD, metadata_deleted);
         if(!status.ok()) {
           logger->warn("failed to add metadata for {} for node {} - restoring local metadata. error: {}", uri, successor, utils::to_string(status));
@@ -279,7 +299,7 @@ void Facade::on_successor_fail(const chord::node successor) {
     return;
   }
 
-  const map<uri, set<Metadata>> replicable_meta = metadata_mgr->get_replicable();
+  const map<uri, set<Metadata>> replicable_meta = metadata_mgr->get_replicated();
   const auto node = chord->successor();
   for(const auto& pair : replicable_meta) {
     const auto& uri = pair.first;

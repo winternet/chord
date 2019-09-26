@@ -3,6 +3,7 @@
 
 #include <grpcpp/server_context.h>
 #include <grpcpp/client_context.h>
+#include <grpcpp/completion_queue.h>
 
 #include <grpcpp/impl/codegen/status.h>
 

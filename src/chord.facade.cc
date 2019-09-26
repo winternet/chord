@@ -67,7 +67,8 @@ void ChordFacade::start() {
     join();
   }
 
-  start_scheduler();
+  //XXX TODO FIXME uncomment this after tests finished
+  //start_scheduler();
 }
 
 void ChordFacade::start_scheduler() {
@@ -83,9 +84,7 @@ void ChordFacade::start_scheduler() {
 
   //--- fix fingers
   scheduler->schedule(chrono::milliseconds(context.check_period_ms), [this] {
-    //TODO use uuid::UUID_BITS_MAX
-    next = (next%8) + 1;
-    //next = 0;
+    next = (next + 1) % Router::BITS;
     logger->trace("fix fingers with next index next: {}", next);
     fix_fingers(next);
     logger->trace("[dump] {}", *router);
@@ -97,7 +96,7 @@ void ChordFacade::start_scheduler() {
  */
 void ChordFacade::leave() {
   // freeze state: do no longer participate on node updates
-  scheduler->shutdown();
+  //scheduler->shutdown();
   // inform successor and predecessor about leave
   client->leave();
 
@@ -109,14 +108,17 @@ void ChordFacade::leave() {
  * join chord ring containing client-id.
  */
 void ChordFacade::join() {
-  auto status = client->join(context.join_addr);
+  const auto status = client->join(context.join_addr);
   if(!status.ok()) {
     logger->warn("failed to join {}; error: {}", context.join_addr, utils::to_string(status));
     return;
   }
-  logger->info("successfully joined ring via {} - notifying successor.", context.join_addr);
-  status = client->notify();
-  if(!status.ok()) {
+
+  logger->info("successfully joined ring via {} - notifying predecessor {}.", context.join_addr, router->predecessor()->endpoint);
+  const auto status_pred = client->notify(*router->predecessor(), *router->successor(), context.node());
+  logger->info("successfully joined ring via {} - notifying successor {}.", context.join_addr, router->successor()->endpoint);
+  const auto status_succ = client->notify(*router->successor(), *router->predecessor(), context.node());
+  if(!status_pred.ok() || !status_succ.ok()) {
     logger->warn("failed to notify {}; error: {}", context.join_addr, utils::to_string(status));
     router->reset();
     return;

@@ -15,6 +15,7 @@
 #include "chord.optional.h"
 #include "chord.client.mock.h"
 #include "chord.context.h"
+#include "chord.fs.context.metadata.h"
 #include "chord.crypto.h"
 #include "chord.facade.h"
 #include "chord.file.h"
@@ -40,6 +41,7 @@
 
 using std::make_unique;
 using std::unique_ptr;
+using std::make_pair;
 
 using chord::common::Header;
 using chord::common::RouterEntry;

@@ -15,7 +15,7 @@ stabilize_ms: 10000
 check_ms: 10000
 
 ## replication / striping
-replication-count: 3
+#replication-count: 3
 
 #uuid: "10"
 #2^256 / 2

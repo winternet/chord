@@ -63,6 +63,7 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
   if (!pred && (!succ || succ->uuid == context.uuid())) {
     logger->info("first node joining, setting the node as successor");
     router->set_successor(0, node);
+    router->set_predecessor(0, node);
   }
   /**
    * forward request to successor
@@ -90,7 +91,8 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
     res_pred->set_uuid(pred_or_self.uuid);
     res_pred->set_endpoint(pred_or_self.endpoint);
     // update router
-    router->set_successor(0, node);
+    //router->set_successor(0, node);
+    router->update_successor(succ_or_self, node);
   } else if(src.between(pred->uuid, context.uuid())) {
     // successor
     const auto successor = context.node();
@@ -235,26 +237,48 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
   const auto predecessor = router->predecessor();
   const uuid_t self{context.uuid()};
   const auto node = make_node(req->header().src());
+  auto status = Status::OK;
+  auto changed_successor = false;
+  auto changed_predecessor = false;
 
   // note that we detect newly joined nodes by their 
   // notification, thus we must not set the predecessor
   // beforehand - even though we know the predecessor
   // within chord::Service::join we have to wait for
-  // the joining node to notfiy its successor when it
+  // the joining node to notify its successor when it
   // is ready to handle requests
   if (!predecessor
       || node.uuid.between(predecessor->uuid, self)) {
+    //event_joined(*router->predecessor(), node);
     router->set_predecessor(0, node);
-    event_joined(predecessor.value_or(context.node()), node);
-  } else {
-    if (!predecessor)
-      logger->info("predecessor is null");
-    else {
-      logger->info("n' = {}\npredecessor = {}\nself={}", node.uuid, predecessor, self);
-    }
+    changed_predecessor = true;
+    //TODO maybe we should update successors too
+    //  router->update_successor(*predecessor, node);
   }
 
-  return Status::OK;
+  // handle circles
+  if(node != context.node() && req->has_old_predecessor() && req->has_new_predecessor()) {
+    const auto old_node = make_node(req->old_predecessor());
+    const auto new_node = make_node(req->new_predecessor());
+    router->update_successor(old_node, new_node);
+
+    // my successor is updated
+    if(node.uuid.between(context.uuid(), old_node.uuid)) {
+      changed_successor = true;
+      event_joined(*predecessor, new_node);
+    } else if(changed_predecessor) {
+
+    }
+  //  // propagate
+  //  //if(new_node != router->successor())
+  //  //  status = client->notify(old_node, new_node);
+  } 
+
+  //if(changed) {
+  //  event_joined(predecessor.value_or(context.node()), node);
+  //}
+
+  return status;
 }
 
 Status Service::check(ServerContext *serverContext, const CheckRequest *req, CheckResponse *res) {
@@ -267,11 +291,12 @@ Status Service::check(ServerContext *serverContext, const CheckRequest *req, Che
 }
 
 void Service::fix_fingers(size_t index) {
-  auto fix = context.uuid();
-  if (!router->successor(0)) {
-    fix += uuid_t{pow(2., static_cast<double>(index - 1))};
-    logger->trace("fix_fingers router successor is not null, increasing uuid");
-  }
+  const auto fix = router->calc_node_for_index(index);
+  //auto fix = context.uuid();
+  //if (!router->successor(0)) {
+  //  fix += uuid_t{pow(2., static_cast<double>(index - 1))};
+  //  logger->trace("fix_fingers router successor is not null, increasing uuid");
+  //}
 
   logger->trace("fixing finger for {}.", fix);
 

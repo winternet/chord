@@ -59,6 +59,7 @@ class Client : public IClient {
   void stabilize() override;
 
   grpc::Status notify() override;
+  grpc::Status notify(const node&, const node&, const node&) override;
 
   void check() override;
 

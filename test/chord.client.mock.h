@@ -16,6 +16,7 @@ class MockClient : public IClient {
   MOCK_METHOD0(stabilize, void(void));
 
   MOCK_METHOD0(notify, grpc::Status(void));
+  MOCK_METHOD3(notify, grpc::Status(const node&, const node&, const node&));
 
   MOCK_METHOD0(check, void(void));
 

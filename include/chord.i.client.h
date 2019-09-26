@@ -28,6 +28,7 @@ class IClient {
   virtual void stabilize() =0;
 
   virtual grpc::Status notify() =0;
+  virtual grpc::Status notify(const node&, const node&, const node&) =0;
 
   virtual void check() =0;
 

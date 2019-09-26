@@ -13,7 +13,7 @@
 #include "chord.uuid.h"
 #include "chord.signal.h"
 
-namespace chord { class Context; }
+namespace chord { struct Context; }
 namespace chord { struct Router; }
 namespace chord { class IClient; }
 

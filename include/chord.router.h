@@ -30,6 +30,9 @@ struct Router {
 
   virtual ~Router();
 
+  static uuid calc_node_for_index(const uuid&, const size_t i);
+  uuid calc_node_for_index(const size_t i) const;
+
   void cleanup();
 
   void reset();
@@ -54,6 +57,9 @@ struct Router {
   void set_successor(const size_t index, const chord::node& node);
 
   void replace_predecessor(const chord::node& old_node, const chord::node& new_node);
+
+  //TODO:  update predecessors accordingly?
+  bool update_successor(const chord::node& old_node, const chord::node& new_node);
 
   void set_predecessor(const size_t index, const chord::node& node);
 

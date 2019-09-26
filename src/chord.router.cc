@@ -5,6 +5,7 @@
 #include <ostream>
 #include <memory>
 #include <string>
+#include <boost/multiprecision/cpp_int.hpp>
 
 #include "chord.context.h"
 #include "chord.log.factory.h"
@@ -72,6 +73,33 @@ void Router::replace_predecessor(const chord::node& old_node, const chord::node&
         n = new_node.uuid;
       }
   });
+}
+
+uuid Router::calc_node_for_index(const uuid& self, const size_t i) {
+  const auto _pow = boost::multiprecision::pow(chord::uuid::value_t{2}, static_cast<unsigned int>(i));
+  const auto _mod = std::numeric_limits<chord::uuid::value_t>::max();
+  return (self + _pow) % _mod;
+}
+
+uuid Router::calc_node_for_index(const size_t i) const {
+  return Router::calc_node_for_index(context.uuid(), i);
+}
+
+bool Router::update_successor(const chord::node& old_node, const chord::node& new_node) {
+  std::lock_guard<mutex_t> lock(mtx);
+  logger->info("update_successor {} with {}", old_node, new_node);
+
+  routes[new_node.uuid] = new_node.endpoint;
+  bool updated = false;
+  for(size_t i = 0; i < BITS; ++i) {
+    const auto finger = calc_node_for_index(i);
+    if(finger == old_node.uuid || finger.between(old_node.uuid, new_node.uuid)) {
+      logger->info("update_successor: updating successor at {} with {}", i, new_node);
+      successors[i] = {new_node.uuid};
+      updated = true;
+    }
+  }
+  return updated;
 }
 
 void Router::replace_successor(const chord::node& old_node, const chord::node& new_node) {

@@ -9,8 +9,9 @@
 
 namespace chord {
 class uuid {
- private:
+public:
   using value_t = boost::multiprecision::uint256_t;
+ private:
 
   static constexpr int UUID_BITS_MAX = 256;
 
@@ -97,10 +98,15 @@ class uuid {
     return *this;
   }
 
+  inline uuid &operator%=(const uuid &other) { 
+    val %= other.val;
+    return *this;
+  }
+
   /**
    * @brief Check if the uuid is in the interval between the two given uuids on the ring.
    *
-   * Neither of the boundaries is included in the interval. If both uuuíds
+   * Neither of the boundaries is included in the interval. If both uuids
    * match the interval is assumed to span the whole uuid ring.
    */
   inline bool between(const uuid& from, const uuid& to) const {
@@ -141,6 +147,8 @@ class uuid {
   inline uuid operator*(const uuid &other) const { return uuid{val * other.val}; }
 
   inline uuid operator/(const uuid &other) const { return uuid{val / other.val}; }
+
+  inline uuid operator%(const uuid &other) const { return uuid{val % other.val}; }
 
   friend std::istream &operator>>(std::istream &is, uuid &hash) {
     is >> hash.val;

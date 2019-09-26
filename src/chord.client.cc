@@ -146,6 +146,7 @@ Status Client::join(const endpoint& addr) {
   logger->info("Successfully joined {}", addr);
   router->set_predecessor(0, pred);
   router->set_successor(0, succ);
+
   return status;
 }
 
@@ -210,6 +211,28 @@ void Client::stabilize() {
   notify();
 }
 
+Status Client::notify(const node& target, const node& old_node, const node& new_node) {
+  // get successor
+  //const auto n = router->successor();
+  const auto successor = target.uuid;
+  const auto endpoint = target.endpoint;
+
+  ClientContext clientContext;
+  NotifyRequest req;
+  NotifyResponse res;
+
+  logger->trace("calling notify on address {}@{}", successor, endpoint);
+
+  req.mutable_header()->CopyFrom(make_header(context));
+  const auto old_predecessor = req.mutable_old_predecessor();
+  old_predecessor->set_uuid(old_node.uuid);
+  old_predecessor->set_endpoint(old_node.endpoint);
+  const auto new_predecessor = req.mutable_new_predecessor();
+  new_predecessor->set_uuid(new_node.uuid);
+  new_predecessor->set_endpoint(new_node.endpoint);
+  return make_stub(endpoint)->notify(&clientContext, req, &res);
+}
+
 Status Client::notify() {
 
   // get successor
@@ -242,7 +265,6 @@ Status Client::successor(ClientContext *clientContext, const SuccessorRequest *r
     succ->set_endpoint(context.bind_addr);
     return Status::OK;
   }
-  //const auto endpoint = router->get(predecessor);
   logger->trace("forwarding request to {}", predecessor);
 
   return predecessor ? make_stub(predecessor->endpoint)->successor(clientContext, copy, res) : Status::CANCELLED;

@@ -31,6 +31,10 @@ void ContextMetadata::add(grpc::ClientContext& context, const chord::optional<ch
   if(hash) context.AddMetadata(ContextMetadata::file_hash, *hash);
 }
 
+void ContextMetadata::add_src(grpc::ClientContext& context, const chord::uuid& src) {
+  context.AddMetadata(ContextMetadata::src, src);
+}
+
 void ContextMetadata::set_file_hash_equal(grpc::ServerContext* context, const bool metadata_only) {
   context->AddInitialMetadata(ContextMetadata::file_hash_equal, metadata_only ? "true" : "false");
 }
@@ -71,6 +75,16 @@ Replication ContextMetadata::replication_from(const ServerContext* serverContext
   }
   return repl;
 }
+
+chord::uuid ContextMetadata::src_from(const grpc::ServerContext* serverContext) {
+  const auto metadata = serverContext->client_metadata();
+  if(metadata.count(ContextMetadata::src) == 0) {
+    throw__exception("missing id metadata in server context.");
+  }
+  const auto id_gstr = metadata.find(ContextMetadata::src)->second;
+  return chord::uuid{std::string(id_gstr.begin(), id_gstr.end())};
+}
+
 bool ContextMetadata::file_hash_equal_from(const grpc::ClientContext& clientContext) {
   const auto metadata = clientContext.GetServerInitialMetadata();
   if(metadata.count(ContextMetadata::file_hash_equal) > 0) {
