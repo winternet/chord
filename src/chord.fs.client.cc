@@ -27,6 +27,7 @@
 #include "chord.log.h"
 #include "chord.node.h"
 #include "chord.uuid.h"
+#include "chord.fs.client.options.h"
 
 using grpc::ClientContext;
 using grpc::Status;
@@ -62,37 +63,38 @@ Client::Client(Context &context, ChordFacade *chord, StubFactory make_stub)
       make_stub{make_stub},
       logger{context.logging.factory().get_or_create(logger_name)} {}
 
-void Client::init_context(ClientContext& client_context, const chord::uuid& id) {
-  ContextMetadata::add_src(client_context, id);
+void Client::init_context(ClientContext& client_context, const client::options& options) {
+  ContextMetadata::add_src(client_context, options.uuid);
+  ContextMetadata::add_rebalance(client_context, options.rebalance);
 }
 
-Status Client::put(const chord::uri& uri, const chord::path& source, Replication repl, const chord::uuid id) {
+Status Client::put(const chord::uri& uri, const chord::path& source, const client::options& options) {
   const auto hash = chord::crypto::sha256(uri);
   const auto node = chord->successor(hash);
-  return put(node, uri, source, repl, id);
+  return put(node, uri, source, options);
 }
 
-Status Client::put(const chord::node& node, const chord::uri& uri, const chord::path& source, Replication repl, const chord::uuid id) {
+Status Client::put(const chord::node& node, const chord::uri& uri, const chord::path& source, const client::options& options) {
   try {
     std::ifstream file;
     file.exceptions(ifstream::failbit | ifstream::badbit);
     file.open(source, std::fstream::binary);
 
-    return put(node, uri, file, repl, id);
+    return put(node, uri, file, options);
   } catch (const std::ios_base::failure& exception) {
     return Status(grpc::StatusCode::CANCELLED, "failed to put", exception.what());
   }
 }
 
-Status Client::put(const chord::node& node, const chord::uri &uri, istream &istream, Replication repl, const chord::uuid id) {
+Status Client::put(const chord::node& node, const chord::uri &uri, istream &istream, const client::options& options) {
 
   //TODO make configurable
   constexpr size_t len = 512*1024; // 512k
   array<char, len> buffer;
 
   ClientContext clientContext;
-  init_context(clientContext, id);
-  ContextMetadata::add(clientContext, repl);
+  init_context(clientContext, options);
+  ContextMetadata::add(clientContext, options.replication);
   ContextMetadata::add(clientContext, uri);
 
   if(metadata_mgr->exists(uri)) {
@@ -133,14 +135,14 @@ Status Client::put(const chord::node& node, const chord::uri &uri, istream &istr
   return writer->Finish();
 }
 
-Status Client::put(const chord::uri &uri, istream &istream, Replication repl, const chord::uuid id) {
+Status Client::put(const chord::uri &uri, istream &istream, const client::options& options) {
   const auto hash = chord::crypto::sha256(uri);
   const auto node = chord->successor(hash);
   logger->trace("put {} ({})", uri, hash);
-  return put(node, uri, istream, repl, id);
+  return put(node, uri, istream, options);
 }
 
-grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, const Action &action, set<Metadata>& metadata, const chord::uuid id) {
+grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, const Action &action, set<Metadata>& metadata, const client::options& options) {
   //--- find responsible node for uri.path()
   const auto path = uri.path().canonical();
   const auto meta_uri = uri::builder{uri.scheme(), path}.build();
@@ -149,7 +151,7 @@ grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, cons
   logger->trace("meta {} ({})", meta_uri, hash);
 
   ClientContext clientContext;
-  init_context(clientContext, id);
+  init_context(clientContext, options);
   MetaResponse res;
   MetaRequest req;
 
@@ -185,7 +187,7 @@ grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, cons
       req.set_action(DEL); 
       break;
     case Action::DIR:
-      return dir(uri, metadata);
+      return dir(uri, metadata, options);
   }
 
   const auto status = make_stub(target.endpoint)->meta(&clientContext, req, &res);
@@ -193,35 +195,35 @@ grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, cons
   return status;
 }
 
-grpc::Status Client::meta(const chord::uri &uri, const Action &action, std::set<Metadata>& m, const chord::uuid id) {
+grpc::Status Client::meta(const chord::uri &uri, const Action &action, std::set<Metadata>& m, const client::options& options) {
   const auto hash = chord::crypto::sha256(uri);
   const auto node = chord->successor(hash);
-  return meta(node, uri, action, m, id);
+  return meta(node, uri, action, m, options);
 }
 
-grpc::Status Client::meta(const chord::uri &uri, const Action &action, const chord::uuid id) {
+grpc::Status Client::meta(const chord::uri &uri, const Action &action, const client::options& options) {
   std::set<Metadata> m;
   const auto hash = chord::crypto::sha256(uri);
   const auto node = chord->successor(hash);
-  return meta(node, uri, action, m, id);
+  return meta(node, uri, action, m, options);
 }
 
-Status Client::del(const chord::node& node, const DelRequest* req, const chord::uuid id) {
+Status Client::del(const chord::node& node, const DelRequest* req, const client::options& options) {
   const auto endpoint = node.endpoint;
   ClientContext clientContext;
-  init_context(clientContext, id);
+  init_context(clientContext, options);
   DelResponse res;
   return make_stub(endpoint)->del(&clientContext, *req, &res);
 }
 
-Status Client::del(const chord::node& node, const chord::uri &uri, const bool recursive, const chord::uuid id) {
+Status Client::del(const chord::node& node, const chord::uri &uri, const bool recursive, const client::options& options) {
   const auto hash = chord::crypto::sha256(uri);
   const auto endpoint = node.endpoint;
 
   logger->trace("del {} ({}) from {}", uri, hash, endpoint);
 
   ClientContext clientContext;
-  init_context(clientContext, id);
+  init_context(clientContext, options);
   DelResponse res;
   DelRequest req;
 
@@ -235,13 +237,13 @@ Status Client::del(const chord::node& node, const chord::uri &uri, const bool re
 }
 
 // currently only files are supported
-Status Client::del(const chord::uri &uri, const bool recursive, const chord::uuid id) {
+Status Client::del(const chord::uri &uri, const bool recursive, const client::options& options) {
   const auto hash = chord::crypto::sha256(uri);
   const auto succ = chord->successor(hash);
-  return del(succ, uri, recursive, id);
+  return del(succ, uri, recursive, options);
 }
 
-grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata, const chord::uuid id) {
+grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata, const client::options& options) {
   //--- find responsible node
   const auto meta_uri = uri::builder{uri.scheme(), uri.path().canonical()}.build();
   const auto hash = chord::crypto::sha256(meta_uri);
@@ -250,7 +252,7 @@ grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata, co
   logger->trace("dir {} ({})", meta_uri, hash);
 
   ClientContext clientContext;
-  init_context(clientContext, id);
+  init_context(clientContext, options);
 
   MetaResponse res;
   MetaRequest req;

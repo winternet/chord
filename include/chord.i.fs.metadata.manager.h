@@ -21,6 +21,7 @@ class IMetadataManager {
 
   virtual bool add(const chord::uri& directory, const std::set<Metadata>& metadata) = 0;
 
+  virtual std::map<chord::uri, std::set<Metadata> > get_all() = 0;
   virtual std::map<chord::uri, std::set<Metadata> > get(const chord::uuid& from, const chord::uuid& to) = 0;
 
   virtual bool exists(const chord::uri& uri) = 0;

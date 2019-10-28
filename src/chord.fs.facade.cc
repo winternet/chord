@@ -125,7 +125,7 @@ Status Facade::put_file(const path& source, const chord::uri& target, Replicatio
     return Status(StatusCode::FAILED_PRECONDITION, "replication count above "+to_string(Replication::MAX_REPL_CNT)+" is not allowed");
   }
 
-  return fs_client->put(target, source, repl);
+  return fs_client->put(target, source, {repl});
 }
 
 Status Facade::get_file(const chord::uri& source, const chord::path& target) {
@@ -155,13 +155,13 @@ void Facade::rebalance(const map<uri, set<Metadata>>& metadata) {
         //TODO abort? error is likely to be persistent...
       }
     } else if(fs::is_regular_file(metadata_set)) {
-
       // assert the metadata does no contain hashes,
       // otherwise nodes might think that they're just 
       // updating a file that actually does not exist
       metadata_set = fs::clear_hashes(metadata_set);
 
       const auto local_path = context.data_directory / uri.path();
+      logger->info("trying to rebalance file {}", local_path);
       const bool exists = chord::file::exists(local_path) && chord::file::is_regular_file(local_path);
       if(exists) {
         auto metadata = *metadata_set.begin();
@@ -180,8 +180,13 @@ void Facade::rebalance(const map<uri, set<Metadata>>& metadata) {
 
         // handle replications (deep copy)
         } else {
+          client::options options;
+          metadata.replication.index=0;
+          options.replication = metadata.replication;
+          options.uuid = context.uuid();
+          options.rebalance = true;
           // note that we put the file from the beginning node to refresh all replications
-          const auto status = fs_client->put(uri, local_path, metadata.replication);
+          const auto status = fs_client->put(uri, local_path, options);
           //if(status.ok() && !metadata.replication.has_next()) {
           //  logger->warn("successfully put uri {} to predecessor - deleting local.", uri);
           //  del(uri);
@@ -202,15 +207,13 @@ void Facade::rebalance(const map<uri, set<Metadata>>& metadata) {
 // called form within the node that joined the ring
 void Facade::on_join(const chord::node new_successor) {
   logger->debug("joined chord ring: new_successor {}", new_successor);
-  const map<uri, set<Metadata>> metadata = metadata_mgr->get(context.uuid(), new_successor.uuid);
-  rebalance(metadata);
 }
 
 
 //called from within the node preceding the joining node
-void Facade::on_joined(const chord::node old_predecessor, const chord::node new_predecessor) {
-  logger->debug("node joined: old_predecessor {}, new predecessor {}", old_predecessor, new_predecessor);
-  const map<uri, set<Metadata>> metadata = metadata_mgr->get(old_predecessor.uuid, new_predecessor.uuid);
+void Facade::on_joined(const chord::node from_node, const chord::node to_node) {
+  logger->debug("node joined: replacing {}, with {}", from_node, to_node);
+  const map<uri, set<Metadata>> metadata = metadata_mgr->get_all();
   rebalance(metadata);
 }
 
@@ -261,7 +264,7 @@ void Facade::on_leave(const chord::node predecessor, const chord::node successor
 
       if(exists) {
         auto metadata = *metadata_set.begin();
-        const auto status = fs_client->put(successor, uri, local_path, metadata.replication);
+        const auto status = fs_client->put(successor, uri, local_path, {metadata.replication});
         if(!status.ok()) {
           logger->warn("failed to put file {} on successor {}. error: {}", uri, successor, utils::to_string(status));
         } else {
@@ -323,7 +326,7 @@ void Facade::on_successor_fail(const chord::node successor) {
       }
 
       auto repl = meta.replication;
-      fs_client->put(node, uri, local_path, ++repl);
+      fs_client->put(node, uri, local_path, {++repl});
     }
   }
 }

@@ -38,6 +38,7 @@ class Service final : public chord::fs::Filesystem::Service {
   grpc::Status handle_del_dir(grpc::ServerContext*,const DelRequest*);
 
   grpc::Status is_valid(grpc::ServerContext*);
+  bool file_hashes_equal(grpc::ServerContext*, grpc::ServerReader<PutRequest>*);
 
  public:
   explicit Service(Context &context, ChordFacade* chord, IMetadataManager* metadata_mgr);

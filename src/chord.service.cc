@@ -61,9 +61,7 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
    * initialize the ring
    */
   if (!pred && (!succ || succ->uuid == context.uuid())) {
-    logger->info("first node joining, setting the node as successor");
-    router->set_successor(0, node);
-    router->set_predecessor(0, node);
+    logger->info("first node joining, waiting for notify from joined node");
   }
   /**
    * forward request to successor
@@ -234,48 +232,46 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
   logger->trace("notify from {}@{}", req->header().src().uuid(),
                 req->header().src().endpoint());
 
+  const auto successor = router->successor();
   const auto predecessor = router->predecessor();
   const uuid_t self{context.uuid()};
-  const auto node = make_node(req->header().src());
+  const auto source_node = make_node(req->header().src());
   auto status = Status::OK;
   auto changed_successor = false;
   auto changed_predecessor = false;
 
-  // note that we detect newly joined nodes by their 
-  // notification, thus we must not set the predecessor
-  // beforehand - even though we know the predecessor
-  // within chord::Service::join we have to wait for
-  // the joining node to notify its successor when it
-  // is ready to handle requests
-  if (!predecessor
-      || node.uuid.between(predecessor->uuid, self)) {
-    //event_joined(*router->predecessor(), node);
-    router->set_predecessor(0, node);
-    changed_predecessor = true;
-    //TODO maybe we should update successors too
-    //  router->update_successor(*predecessor, node);
+  if(source_node == context.node()) {
+    logger->warn("Error notifying: Unable to notify self.");
+    return Status::CANCELLED;
   }
 
-  // handle circles
-  if(node != context.node() && req->has_old_predecessor() && req->has_new_predecessor()) {
+  // initializing ring
+  if(!predecessor) {
+    router->set_predecessor(0, source_node);
+    router->set_successor(0, source_node);
+    //check whether it makes sense to set both...
+    changed_successor = true;
+    changed_predecessor = true;
+  }
+  else if(context.uuid().between(predecessor->uuid, source_node.uuid)) {
+    changed_successor = true;
+    router->update_successor(*successor, source_node);
+  }
+  else if(context.uuid().between(source_node.uuid, successor->uuid)) {
+    changed_predecessor = true;
+    router->set_predecessor(0, source_node);
+  }
+
+  if(req->has_old_predecessor() && req->has_new_predecessor()) {
     const auto old_node = make_node(req->old_predecessor());
     const auto new_node = make_node(req->new_predecessor());
     router->update_successor(old_node, new_node);
-
-    // my successor is updated
-    if(node.uuid.between(context.uuid(), old_node.uuid)) {
-      changed_successor = true;
-      event_joined(*predecessor, new_node);
-    } else if(changed_predecessor) {
-
-    }
-  //  // propagate
-  //  //if(new_node != router->successor())
-  //  //  status = client->notify(old_node, new_node);
-  } 
-
-  //if(changed) {
-  //  event_joined(predecessor.value_or(context.node()), node);
+  }
+  if(changed_predecessor) {
+    event_joined(predecessor.value_or(context.node()), source_node);
+  }
+  //if(changed_successor) {
+  //  event_joined(source_node, *successor);
   //}
 
   return status;

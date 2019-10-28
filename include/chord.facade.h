@@ -45,6 +45,7 @@ public:
 
   void start_scheduler();
   void stop_scheduler();
+  void join_failed(const grpc::Status&);
 
  public:
   ChordFacade(const ChordFacade &) = delete;             // disable copying

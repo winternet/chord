@@ -104,6 +104,12 @@ void ChordFacade::leave() {
   const auto predecessor_node = router->predecessor().value_or(context.node());
   event_leave(predecessor_node, successor_node);
 }
+
+void ChordFacade::join_failed(const grpc::Status& status) {
+    logger->warn("failed to notify {}; error: {}", context.join_addr, utils::to_string(status));
+    router->reset();
+}
+
 /**
  * join chord ring containing client-id.
  */
@@ -119,9 +125,7 @@ void ChordFacade::join() {
   logger->info("successfully joined ring via {} - notifying successor {}.", context.join_addr, router->successor()->endpoint);
   const auto status_succ = client->notify(*router->successor(), *router->predecessor(), context.node());
   if(!status_pred.ok() || !status_succ.ok()) {
-    logger->warn("failed to notify {}; error: {}", context.join_addr, utils::to_string(status));
-    router->reset();
-    return;
+    return join_failed(status_pred.ok() ? status_succ : status_pred);
   }
 
   event_join(*router->successor());

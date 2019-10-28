@@ -162,6 +162,19 @@ class MetadataManager : public IMetadataManager {
     return added;
   }
 
+  std::map<chord::uri, std::set<Metadata> > get_all() override {
+    std::map<chord::uri, std::set<Metadata> > ret;
+    std::unique_ptr<leveldb::Iterator> it{db->NewIterator(leveldb::ReadOptions())};
+    for(it->SeekToFirst(); it->Valid(); it->Next()) {
+      const std::string& _path = it->key().ToString();
+
+      const chord::uri uri("chord", {_path});
+      const auto map = deserialize(it->value().ToString());
+      ret[uri] = extract_metadata_set(map);
+    }
+    return ret;
+  }
+
   /**
    * @brief Get all metadata in range (from...to)
    *

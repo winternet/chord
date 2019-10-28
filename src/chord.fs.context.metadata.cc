@@ -18,6 +18,14 @@ using grpc::ServerContext;
 namespace chord {
 namespace fs {
 
+client::options ContextMetadata::from(const grpc::ServerContext* serverContext) {
+  client::options options;
+  options.replication = replication_from(serverContext);
+  options.uuid = src_from(serverContext);
+  options.rebalance = rebalance_from(serverContext);
+  return options;
+}
+
 void ContextMetadata::add(ClientContext& context, const Metadata& metadata) {
   if(metadata.file_hash) {
     context.AddMetadata(ContextMetadata::file_hash, metadata.file_hash.value().string());
@@ -33,6 +41,10 @@ void ContextMetadata::add(grpc::ClientContext& context, const chord::optional<ch
 
 void ContextMetadata::add_src(grpc::ClientContext& context, const chord::uuid& src) {
   context.AddMetadata(ContextMetadata::src, src);
+}
+
+void ContextMetadata::add_rebalance(grpc::ClientContext& context, const bool rebalance) {
+  context.AddMetadata(ContextMetadata::rebalance, grpc::to_string(rebalance));
 }
 
 void ContextMetadata::set_file_hash_equal(grpc::ServerContext* context, const bool metadata_only) {
@@ -88,7 +100,17 @@ chord::uuid ContextMetadata::src_from(const grpc::ServerContext* serverContext) 
 bool ContextMetadata::file_hash_equal_from(const grpc::ClientContext& clientContext) {
   const auto metadata = clientContext.GetServerInitialMetadata();
   if(metadata.count(ContextMetadata::file_hash_equal) > 0) {
-    return metadata.find(ContextMetadata::file_hash_equal)->second == "true";
+    const auto& val = metadata.find(ContextMetadata::file_hash_equal)->second;
+    return (val == "1" || val == "true");
+  }
+  return false;
+}
+
+bool ContextMetadata::rebalance_from(const grpc::ServerContext* serverContext) {
+  const auto metadata = serverContext->client_metadata();
+  if(metadata.count(ContextMetadata::rebalance) > 0) {
+    const auto& val = metadata.find(ContextMetadata::rebalance)->second;
+    return (val == "1" || val == "true");
   }
   return false;
 }

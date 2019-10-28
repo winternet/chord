@@ -143,7 +143,7 @@ Status Client::join(const endpoint& addr) {
   const auto succ = make_node(res.successor());
   const auto pred = make_node(res.predecessor());
 
-  logger->info("Successfully joined {}", addr);
+  logger->info("Successfully joined {}, pred {}, succ {}", addr, pred, succ);
   router->set_predecessor(0, pred);
   router->set_successor(0, succ);
 
@@ -223,6 +223,7 @@ Status Client::notify(const node& target, const node& old_node, const node& new_
 
   logger->trace("calling notify on address {}@{}", successor, endpoint);
 
+  // TODO rename proto
   req.mutable_header()->CopyFrom(make_header(context));
   const auto old_predecessor = req.mutable_old_predecessor();
   old_predecessor->set_uuid(old_node.uuid);
