@@ -8,7 +8,7 @@ namespace fs {
 namespace client {
   struct options {
     Replication replication = Replication::NONE;
-    chord::uuid uuid = chord::uuid::random();
+    chord::uuid source = chord::uuid::random();
     union {
       bool recursive; // del
       bool rebalance; // put

@@ -103,7 +103,7 @@ Status Service::handle_meta_del(ServerContext *serverContext, const MetaRequest 
   if(!deleted_metadata.empty()) {
     const auto node = chord->successor();
     client::options options;
-    options.uuid = src;
+    options.source = src;
     const auto status = make_client().meta(node, uri, Client::Action::DEL, deleted_metadata, options);
   }
 
@@ -126,7 +126,7 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
       meta_dir.name = uri.path().filename();
       std::set<Metadata> m = {meta_dir};
       client::options options;
-      options.uuid = src;
+      options.source = src;
       make_client().meta(parent, Client::Action::ADD, m, options);
     }
   }
@@ -150,7 +150,7 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
     if(!new_metadata.empty()) {
       const auto node = chord->successor();
       client::options options;
-      options.uuid = src;
+      options.source = src;
       const auto status = make_client().meta(node, uri, Client::Action::ADD, new_metadata, options);
 
       if(!status.ok()) {
@@ -320,7 +320,7 @@ Status Service::handle_del_file(ServerContext *serverContext, const chord::fs::D
   const auto iter = std::find_if(deleted_metadata.begin(), deleted_metadata.end(), [&](const Metadata& m) { return m.name == uri.path().filename();});
 
   client::options options;
-  options.uuid = src;
+  options.source = src;
   // handle shallow copy
   if(iter != deleted_metadata.end() && iter->node_ref && *iter->node_ref != context.node()) {
     make_client().del(*iter->node_ref, req, options);
@@ -383,7 +383,7 @@ Status Service::handle_del_dir(ServerContext *serverContext, const chord::fs::De
 
   const auto src = ContextMetadata::src_from(serverContext);
   client::options options;
-  options.uuid = src;
+  options.source = src;
 
   // handle recursive delete
   if(!is_empty && req->recursive()) {

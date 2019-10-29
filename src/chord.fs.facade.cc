@@ -183,7 +183,7 @@ void Facade::rebalance(const map<uri, set<Metadata>>& metadata) {
           client::options options;
           metadata.replication.index=0;
           options.replication = metadata.replication;
-          options.uuid = context.uuid();
+          options.source = context.uuid();
           options.rebalance = true;
           // note that we put the file from the beginning node to refresh all replications
           const auto status = fs_client->put(uri, local_path, options);

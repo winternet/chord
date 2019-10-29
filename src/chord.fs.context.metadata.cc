@@ -21,7 +21,7 @@ namespace fs {
 client::options ContextMetadata::from(const grpc::ServerContext* serverContext) {
   client::options options;
   options.replication = replication_from(serverContext);
-  options.uuid = src_from(serverContext);
+  options.source = src_from(serverContext);
   options.rebalance = rebalance_from(serverContext);
   return options;
 }
