@@ -68,11 +68,11 @@ message NotifyRequest {
    * in case a node joined (A), A will inform its successor (B)
    * of its existence and B will propagate the diff to its 
    * successor C so that C can update its finger table:
-   *  (C.uuid + pow(2,i)).is_between(old_predecessor, new_predecessor)
-   *      => successors[i] = new_predecessor
+   *  (C.uuid + pow(2,i)).is_between(old_node, new_node)
+   *      => successors[i] = new_node
    */
-  chord.common.RouterEntry old_predecessor = 2;
-  chord.common.RouterEntry new_predecessor = 3;
+  chord.common.RouterEntry old_node = 2;
+  chord.common.RouterEntry new_node = 3;
 }
 message NotifyResponse {
   chord.common.Header header = 1;

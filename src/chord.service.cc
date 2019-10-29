@@ -262,10 +262,10 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
     router->set_predecessor(0, source_node);
   }
 
-  if(req->has_old_predecessor() && req->has_new_predecessor()) {
-    const auto old_node = make_node(req->old_predecessor());
-    const auto new_node = make_node(req->new_predecessor());
-    router->update_successor(old_node, new_node);
+  if(req->has_old_node() && req->has_new_node()) {
+    const auto old_node_ = make_node(req->old_node());
+    const auto new_node_ = make_node(req->new_node());
+    router->update_successor(old_node_, new_node_);
   }
   if(changed_predecessor) {
     event_joined(predecessor.value_or(context.node()), source_node);

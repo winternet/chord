@@ -225,12 +225,12 @@ Status Client::notify(const node& target, const node& old_node, const node& new_
 
   // TODO rename proto
   req.mutable_header()->CopyFrom(make_header(context));
-  const auto old_predecessor = req.mutable_old_predecessor();
-  old_predecessor->set_uuid(old_node.uuid);
-  old_predecessor->set_endpoint(old_node.endpoint);
-  const auto new_predecessor = req.mutable_new_predecessor();
-  new_predecessor->set_uuid(new_node.uuid);
-  new_predecessor->set_endpoint(new_node.endpoint);
+  const auto old_node_ = req.mutable_old_node();
+  old_node_->set_uuid(old_node.uuid);
+  old_node_->set_endpoint(old_node.endpoint);
+  const auto new_node_ = req.mutable_new_node();
+  new_node_->set_uuid(new_node.uuid);
+  new_node_->set_endpoint(new_node.endpoint);
   return make_stub(endpoint)->notify(&clientContext, req, &res);
 }
 
