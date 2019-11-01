@@ -97,7 +97,7 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_local_files) {
   map<uri, set<Metadata>> empty;
   EXPECT_CALL(*self->metadata_mgr, get_shallow_copies(self->context.node()))
     .WillOnce(Return(empty));
-  EXPECT_CALL(*self->metadata_mgr, get_replicated())
+  EXPECT_CALL(*self->metadata_mgr, get_replicated(0))
     .WillOnce(Return(empty));
 
   //EXPECT_CALL(*peer_2.metadata_mgr, add(target_uri, metadata_set))
@@ -145,7 +145,7 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_node_reference) {
   map<uri, set<Metadata>> empty;
   EXPECT_CALL(*peer_2.metadata_mgr, get(self->context.uuid(), peer_2.context.uuid()))
     .WillOnce(Return(empty));
-  EXPECT_CALL(*peer_2.metadata_mgr, get_replicated())
+  EXPECT_CALL(*peer_2.metadata_mgr, get_replicated(0))
     .WillOnce(Return(empty));
   EXPECT_CALL(*peer_2.service, successor(_))
     .WillRepeatedly(Return(make_entry(peer_2.context.node())));

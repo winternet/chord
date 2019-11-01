@@ -289,46 +289,13 @@ void Facade::on_leave(const chord::node predecessor, const chord::node successor
 }
 
 void Facade::on_predecessor_fail(const chord::node predecessor) {
-  //metadata_mgr->get(
-  logger->warn("\n\n************** PREDECESSOR FAIL!");
-  //TODO implement
+  logger->warn("detected predecessor failed");
+  const map<uri, set<Metadata>> metadata = metadata_mgr->get_replicated(1);
+  rebalance(metadata);
 }
 
 void Facade::on_successor_fail(const chord::node successor) {
-  logger->warn("successor {} failed, rebalancing replications", successor.string());
-
-  if(chord == nullptr) {
-    logger->warn("failed to handle on successor fail: chord facade unavailable");
-    return;
-  }
-
-  const map<uri, set<Metadata>> replicable_meta = metadata_mgr->get_replicated();
-  const auto node = chord->successor();
-  for(const auto& pair : replicable_meta) {
-    const auto& uri = pair.first;
-    for(auto meta:pair.second) {
-
-      const auto local_path = context.data_directory / uri.path();
-      const bool exists = chord::file::exists(local_path) && chord::file::is_regular_file(local_path);
-
-      if(!exists && meta.node_ref) {
-        logger->warn("trying to replicate shallow copy {} referencing node {}.", uri, *meta.node_ref);
-        const auto status = fs_client->get(uri, node, local_path);
-        if(!status.ok()) {
-          logger->error("failed to get shallow copy {} from referencing node {}.", uri, *meta.node_ref);
-          continue;
-        }
-        {
-          // reset node_ref
-          meta.node_ref.reset();
-          metadata_mgr->add(uri, {meta});
-        }
-      }
-
-      auto repl = meta.replication;
-      fs_client->put(node, uri, local_path, {++repl});
-    }
-  }
+  logger->warn("detected successor failed.");
 }
 
 

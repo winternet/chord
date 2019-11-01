@@ -235,7 +235,7 @@ class MetadataManager : public IMetadataManager {
     return ret;
   }
 
-  std::map<chord::uri, std::set<Metadata>> get_replicated() override {
+  std::map<chord::uri, std::set<Metadata>> get_replicated(const std::uint32_t min_idx) override {
     std::map<chord::uri, std::set<Metadata>> ret;
     std::unique_ptr<leveldb::Iterator> it{db->NewIterator(leveldb::ReadOptions())};
 
@@ -244,7 +244,7 @@ class MetadataManager : public IMetadataManager {
       const auto map = deserialize(it->value().ToString());
       const chord::uri uri("chord", {path});
       for(const auto& [_, meta] : map) {
-        if(meta.file_type != type::directory && meta.replication.count > 1) {
+        if(meta.file_type != type::directory && meta.replication.count > 1 && meta.replication.count >= min_idx) {
           ret[uri].insert(meta);
         }
       }

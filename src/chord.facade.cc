@@ -68,7 +68,7 @@ void ChordFacade::start() {
   }
 
   //XXX TODO FIXME uncomment this after tests finished
-  //start_scheduler();
+  start_scheduler();
 }
 
 void ChordFacade::start_scheduler() {

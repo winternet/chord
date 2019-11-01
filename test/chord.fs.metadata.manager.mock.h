@@ -27,7 +27,7 @@ class MockMetadataManager : public IMetadataManager {
   MOCK_METHOD2(get, std::map<chord::uri, std::set<Metadata> >(const chord::uuid&, const chord::uuid&));
 
   MOCK_METHOD1(get_shallow_copies, std::map<chord::uri, std::set<Metadata>>(const chord::node&));
-  MOCK_METHOD0(get_replicated, std::map<chord::uri, std::set<Metadata>>());
+  MOCK_METHOD1(get_replicated, std::map<chord::uri, std::set<Metadata>>(const std::uint32_t min_idx));
   MOCK_METHOD1(get, std::set<Metadata>(const chord::uri&));
 
   MOCK_METHOD1(exists, bool(const chord::uri&));
