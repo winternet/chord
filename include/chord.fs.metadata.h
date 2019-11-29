@@ -109,6 +109,7 @@ Metadata create_directory();
 Metadata create_directory(const std::set<Metadata>&);
 bool is_directory(const std::set<Metadata>&);
 bool is_regular_file(const std::set<Metadata>&);
+bool is_shallow_copy(const std::set<Metadata>&);
 std::set<Metadata> clear_hashes(std::set<Metadata>);
 
 }  // namespace fs

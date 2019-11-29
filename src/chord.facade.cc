@@ -67,7 +67,6 @@ void ChordFacade::start() {
     join();
   }
 
-  //XXX TODO FIXME uncomment this after tests finished
   start_scheduler();
 }
 
@@ -100,9 +99,12 @@ void ChordFacade::leave() {
   // inform successor and predecessor about leave
   client->leave();
 
+  // NOTE dont use the setter because we must not reset the router
+  context._uuid = (router->predecessor().value_or(context.node()).uuid);
   const auto successor_node = router->successor().value_or(context.node());
   const auto predecessor_node = router->predecessor().value_or(context.node());
-  event_leave(predecessor_node, successor_node);
+  if(successor_node != predecessor_node)
+    event_leave(predecessor_node, successor_node);
 }
 
 void ChordFacade::join_failed(const grpc::Status& status) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <grpc++/server.h>
 #include "chord.context.h"
 #include "chord.controller.service.h"
 #include "chord.facade.h"
@@ -28,6 +29,8 @@ class Peer : public std::enable_shared_from_this<Peer> {
   std::unique_ptr<chord::ShutdownHandler> shutdown_handler;
 
   std::shared_ptr<spdlog::logger> logger;
+
+  std::unique_ptr<grpc::Server> server;
 
   void start_server();
 

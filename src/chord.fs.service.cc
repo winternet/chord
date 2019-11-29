@@ -57,11 +57,16 @@ Service::Service(Context &context, ChordFacade* chord, IMetadataManager* metadat
       }},
       logger{context.logging.factory().get_or_create(logger_name)} { }
 
-Status Service::is_valid(ServerContext* serverContext) {
+Status Service::is_valid(ServerContext* serverContext, const RequestType req_type) {
   const auto src = ContextMetadata::src_from(serverContext);
   const auto is_rebalance = ContextMetadata::rebalance_from(serverContext);
-  if(!is_rebalance && src == context.uuid()) {
-    logger->error("Invalid request: received request from self");
+  const bool src_equals_this = src == context.uuid();
+  //if(req_type == RequestType::DEL && src_equals_this) {
+  //  logger->info("Invalid request: received del request from self");
+  //  return Status(StatusCode::ABORTED, "received request del from self - aborting.");
+  //} else 
+    if(!is_rebalance && src_equals_this) {
+    logger->warn("Invalid request: received request from self");
     return Status(StatusCode::ABORTED, "received request from self - aborting.");
   }
   return Status::OK;
@@ -166,7 +171,7 @@ Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaR
   (void)serverContext;
 
   // in case controller service queries...
-  //const auto status = is_valid(serverContext);
+  //const auto status = is_valid(serverContext, RequestType::META);
   //if(!status.ok()) {
   //  return status;
   //}
@@ -202,9 +207,9 @@ bool Service::file_hashes_equal(grpc::ServerContext* serverContext, grpc::Server
       const auto metadata = *metadata_set.begin();
       const auto local_hash = metadata.file_hash;
       hashes_equal = (local_hash && local_hash == hash);
-      ContextMetadata::set_file_hash_equal(serverContext, hashes_equal);
     }
   }
+  ContextMetadata::set_file_hash_equal(serverContext, hashes_equal);
   reader->SendInitialMetadata();
   return hashes_equal;
 }
@@ -213,7 +218,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   (void)response;
   PutRequest req;
 
-  const auto status = is_valid(serverContext);
+  const auto status = is_valid(serverContext, RequestType::PUT);
   if(!status.ok()) {
     return status;
   }
@@ -275,16 +280,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   // handle (recursive) file-replication
   if(++options.replication) {
 
-    //const auto uuid = chord::crypto::sha256(uri);
-    // next
     const auto next = chord->successor();
-    // TODO use some kind of call-uuid + logging
-    //if(uuid.between(context.uuid(), next.uuid)) {
-    //  // TODO rollback all puts?
-    //  const auto msg = "failed to store replication " + repl.string() + " : detected cycle.";
-    //  logger->warn(msg);
-    //  return {StatusCode::ABORTED, msg};
-    //}
 
     path data = context.data_directory;
     data /= uri.path().parent_path();
@@ -294,18 +290,14 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     file.exceptions(ifstream::failbit | ifstream::badbit);
     file.open(data, std::fstream::binary);
     //TODO rollback on status ABORTED?
-    //options.replication = repl;
     make_client().put(next, uri, file, options);
   }
   if(del_needed) {
     const auto hash = chord::crypto::sha256(uri);
     const auto next = chord->successor();
-    // skip deletion if reach begin
-    // TODO: use ContextMetadata src (!)
     if(next != chord->successor(hash)) {
+      logger->trace("deletion of file from successor needed.");
       make_client().del(next, uri, false, options);
-    } else {
-      logger->trace("would delete from begin, skipping.");
     }
   }
   return Status::OK;
@@ -443,7 +435,7 @@ Status Service::del(grpc::ServerContext *serverContext,
   (void)res;
   (void)serverContext;
 
-  const auto status = is_valid(serverContext);
+  const auto status = is_valid(serverContext, RequestType::DEL);
   if(!status.ok()) {
     return status;
   }

@@ -66,15 +66,8 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
   /**
    * forward request to successor
    */
-  else if(pred && !src.between(pred->uuid, context.uuid())) {
-    const auto status = client->join(req, res);
-
-    // node joined successfully? stabilize the ring
-    if(status.ok()) {
-      client->stabilize();
-    }
-
-    return status;
+  else if(pred && !src.between(context.uuid(), succ->uuid) && !src.between(pred->uuid, context.uuid())) {
+    return client->join(req, res);
   }
 
   auto* res_succ = res->mutable_successor();
@@ -85,12 +78,9 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
     res_succ->set_uuid(succ_or_self.uuid);
     res_succ->set_endpoint(succ_or_self.endpoint);
     // predecessor
-    const auto pred_or_self = pred.value_or(context.node());
-    res_pred->set_uuid(pred_or_self.uuid);
-    res_pred->set_endpoint(pred_or_self.endpoint);
-    // update router
-    //router->set_successor(0, node);
-    router->update_successor(succ_or_self, node);
+    const auto self = context.node();
+    res_pred->set_uuid(self.uuid);
+    res_pred->set_endpoint(self.endpoint);
   } else if(src.between(pred->uuid, context.uuid())) {
     // successor
     const auto successor = context.node();
@@ -205,7 +195,8 @@ Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, Lea
     const node leaving_node = make_node(req->header().src());
 
     router->replace_successor(leaving_node, new_successor);
-    //event_leave(leaving_node, new_predecessor);
+    router->update_successor(leaving_node, new_successor);
+    //event_leaving(leaving_node, new_successor);
   }
 
   if(req->has_predecessor()) {
@@ -213,6 +204,7 @@ Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, Lea
     const node leaving_node = make_node(req->header().src());
 
     router->replace_predecessor(leaving_node, new_predecessor);
+    router->replace_successor(leaving_node, new_predecessor);
     //event_leave(leaving_node, new_predecessor);
   } 
 
@@ -252,12 +244,10 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
     //check whether it makes sense to set both...
     changed_successor = true;
     changed_predecessor = true;
-  }
-  else if(context.uuid().between(predecessor->uuid, source_node.uuid)) {
+  } else if(context.uuid().between(predecessor->uuid, source_node.uuid)) {
     changed_successor = true;
     router->update_successor(*successor, source_node);
-  }
-  else if(context.uuid().between(source_node.uuid, successor->uuid)) {
+  } else if(context.uuid().between(source_node.uuid, successor->uuid)) {
     changed_predecessor = true;
     router->set_predecessor(0, source_node);
   }
@@ -270,9 +260,6 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
   if(changed_predecessor) {
     event_joined(predecessor.value_or(context.node()), source_node);
   }
-  //if(changed_successor) {
-  //  event_joined(source_node, *successor);
-  //}
 
   return status;
 }

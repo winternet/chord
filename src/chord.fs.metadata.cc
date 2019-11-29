@@ -62,6 +62,10 @@ bool is_directory(const std::set<Metadata>& metadata) {
   return std::any_of(begin(metadata), end(metadata), [&](const Metadata& m) { return m.name == "." && m.file_type == type::directory; });
 }
 
+bool is_shallow_copy(const std::set<Metadata>& metadata) {
+  return is_regular_file(metadata) && metadata.begin()->node_ref;
+}
+
 bool is_regular_file(const std::set<Metadata>& metadata) {
   return metadata.size() == 1 && metadata.begin()->file_type == type::regular;
 }

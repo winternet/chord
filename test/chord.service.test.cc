@@ -76,15 +76,15 @@ TEST(ServiceTest, join) {
   });
   service.join(&serverContext, &req, &res);
 
-  //--- router
-  ASSERT_EQ(router.size(), 2);
+  /**
+   * NOTE router is updated by the joining node after
+   * joining node notifies its new successor/predecessor
+   */
+  ASSERT_EQ(router.size(), 1);
   auto successor = router.successor(0);
   auto predecessor = router.predecessor(0);
-  ASSERT_EQ(successor->uuid, uuid_t{1});
-  ASSERT_EQ(successor->endpoint, "1.1.1.1:1111");
-  //predecessor is filled using notify later
+  ASSERT_FALSE(successor);
   ASSERT_FALSE(predecessor);
-  //ASSERT_EQ(predecessor->uuid, uuid_t{1});
 
   //--- response
   ASSERT_EQ(res.header().src().uuid(), "50");

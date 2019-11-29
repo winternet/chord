@@ -32,7 +32,7 @@ void Peer::start_server() {
   // filesystem service
   builder.RegisterService(filesystem->grpc_service());
 
-  unique_ptr<grpc::Server> server(builder.BuildAndStart());
+  server = builder.BuildAndStart();
   logger->debug("server listening on {}", bind_addr);
 
   // initialize || join
@@ -66,6 +66,7 @@ void Peer::start() {
 
 void Peer::stop() {
   chord->stop();
+  server->Shutdown();
 }
 
 } //namespace chord

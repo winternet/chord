@@ -30,6 +30,13 @@ using ClientFactory = std::function<chord::fs::Client()>;
 class Service final : public chord::fs::Filesystem::Service {
   static constexpr auto logger_name = "chord.fs.service";
 
+  enum class RequestType {
+    PUT,
+    GET,
+    DEL,
+    META
+  };
+
   grpc::Status get_from_reference_or_replication(const chord::uri& uri);
   grpc::Status handle_meta_add(grpc::ServerContext*,const MetaRequest*);
   grpc::Status handle_meta_del(grpc::ServerContext*,const MetaRequest*);
@@ -37,7 +44,7 @@ class Service final : public chord::fs::Filesystem::Service {
   grpc::Status handle_del_file(grpc::ServerContext*,const DelRequest*);
   grpc::Status handle_del_dir(grpc::ServerContext*,const DelRequest*);
 
-  grpc::Status is_valid(grpc::ServerContext*);
+  grpc::Status is_valid(grpc::ServerContext*, const RequestType);
   bool file_hashes_equal(grpc::ServerContext*, grpc::ServerReader<PutRequest>*);
 
  public:

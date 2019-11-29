@@ -57,7 +57,7 @@ Client::Client(const Context &context, Router *router)
 Client::Client(const Context &context, Router *router, StubFactory make_stub)
     : context{context}, router{router}, make_stub{make_stub}, logger{context.logging.factory().get_or_create(logger_name)} {}
 
-Status Client::inform_successour_about_leave() {
+Status Client::inform_successor_about_leave() {
   // get successor
   const auto successor_node = router->successor();
   const auto predecessor_node = router->predecessor();
@@ -106,7 +106,7 @@ Status Client::inform_predecessor_about_leave() {
 
 void Client::leave() {
 
-  const auto status_succ = inform_successour_about_leave();
+  const auto status_succ = inform_successor_about_leave();
   if (!status_succ.ok()) {
     logger->warn("failed to inform successor about leave");
   }

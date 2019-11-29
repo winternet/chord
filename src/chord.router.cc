@@ -93,7 +93,7 @@ bool Router::update_successor(const chord::node& old_node, const chord::node& ne
   bool updated = false;
   for(size_t i = 0; i < BITS; ++i) {
     const auto finger = calc_node_for_index(i);
-    if(finger == old_node.uuid || finger.between(old_node.uuid, new_node.uuid)) {
+    if( finger == old_node.uuid || finger.between(old_node.uuid, new_node.uuid)) {
       logger->info("update_successor: updating successor at {} with {}", i, new_node);
       successors[i] = {new_node.uuid};
       updated = true;

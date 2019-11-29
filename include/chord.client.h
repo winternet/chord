@@ -40,7 +40,7 @@ class Client : public IClient {
   std::shared_ptr<spdlog::logger> logger;
 
   grpc::Status inform_predecessor_about_leave();
-  grpc::Status inform_successour_about_leave();
+  grpc::Status inform_successor_about_leave();
 
  public:
   Client(const Context &context, Router *router);

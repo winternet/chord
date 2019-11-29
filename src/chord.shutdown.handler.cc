@@ -40,7 +40,7 @@ void ShutdownHandler::handle_stop(const boost::system::error_code& error, int si
   ShutdownHandler force;
 
   peer->stop();
-  std::exit(0);
+  logger->info("stopped peer - exiting.");
 }
 
 }  // namespace chord
