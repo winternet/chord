@@ -122,6 +122,7 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
   uuid_t id{req->id()};
   uuid_t self{context.uuid()};
 
+  logger->debug("[successor][dump] {}", *router);
   const auto successor = router->successor();
 
   if(!successor) {
@@ -232,8 +233,10 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
   auto changed_successor = false;
   auto changed_predecessor = false;
 
+  logger->trace("[notify] from{}", source_node);
+
   if(source_node == context.node()) {
-    logger->warn("Error notifying: Unable to notify self.");
+    logger->warn("[notify] error notifying: Unable to notify self.");
     return Status::CANCELLED;
   }
 
@@ -244,21 +247,24 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
     //check whether it makes sense to set both...
     changed_successor = true;
     changed_predecessor = true;
-  } else if(context.uuid().between(predecessor->uuid, source_node.uuid)) {
-    changed_successor = true;
-    router->update_successor(*successor, source_node);
+//  } else if(context.uuid().between(predecessor->uuid, source_node.uuid)) {
+//    changed_successor = true;
+//    logger->trace("[notify] updating old_node before.\n{}", *router);
+//    router->update_successor(*successor, source_node);
+//    logger->trace("[notify] updating old_node after.\n{}", *router);
   } else if(context.uuid().between(source_node.uuid, successor->uuid)) {
     changed_predecessor = true;
     router->set_predecessor(0, source_node);
   }
 
-  if(req->has_old_node() && req->has_new_node()) {
-    const auto old_node_ = make_node(req->old_node());
-    const auto new_node_ = make_node(req->new_node());
-    router->update_successor(old_node_, new_node_);
-  }
+  //if(req->has_old_node() && req->has_new_node()) {
+  //  const auto old_node_ = make_node(req->old_node());
+  //  const auto new_node_ = make_node(req->new_node());
+  //  router->update_successor(old_node_, new_node_);
+  //}
   if(changed_predecessor) {
-    event_joined(predecessor.value_or(context.node()), source_node);
+    //TODO uncomment after tests
+    //event_joined(predecessor.value_or(context.node()), source_node);
   }
 
   return status;
@@ -281,11 +287,11 @@ void Service::fix_fingers(size_t index) {
   //  logger->trace("fix_fingers router successor is not null, increasing uuid");
   //}
 
-  logger->trace("fixing finger for {}.", fix);
+  logger->trace("fixing finger for uuid {}.", fix);
 
   try {
     const auto succ = make_node(successor(fix));
-    logger->trace("fixing finger for {}. received successor {}", fix, succ);
+    logger->trace("fixing finger for {} - received successor {}", fix, succ);
     if( succ.uuid == context.uuid() ) {
       router->reset(fix);
       return;
@@ -295,6 +301,7 @@ void Service::fix_fingers(size_t index) {
   } catch (const chord::exception &e) {
     logger->warn("failed to fix fingers for {}", fix);
   }
+  logger->warn("[dump] {}", *router);
 }
 
 } //namespace chord

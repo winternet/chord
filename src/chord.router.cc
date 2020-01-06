@@ -44,6 +44,11 @@ bool Router::has_successor() const {
   return std::any_of(std::begin(successors), std::end(successors), [](const optional<uuid>& succ) {return succ;});
 }
 
+bool Router::has_predecessor() const {
+  std::lock_guard<mutex_t> lock(mtx);
+  return std::any_of(std::begin(predecessors), std::end(predecessors), [](const optional<uuid>& pred) {return pred;});
+}
+
 size_t Router::size() const {
   std::lock_guard<mutex_t> lock(mtx);
   return routes.size();
@@ -76,7 +81,8 @@ void Router::replace_predecessor(const chord::node& old_node, const chord::node&
 }
 
 uuid Router::calc_node_for_index(const uuid& self, const size_t i) {
-  const auto _pow = boost::multiprecision::pow(chord::uuid::value_t{2}, static_cast<unsigned int>(i));
+  namespace mp = boost::multiprecision;
+  const auto _pow = mp::pow(chord::uuid::value_t{2}, static_cast<unsigned int>(i));
   const auto _mod = std::numeric_limits<chord::uuid::value_t>::max();
   return (self + _pow) % _mod;
 }
@@ -93,12 +99,13 @@ bool Router::update_successor(const chord::node& old_node, const chord::node& ne
   bool updated = false;
   for(size_t i = 0; i < BITS; ++i) {
     const auto finger = calc_node_for_index(i);
-    if( finger == old_node.uuid || finger.between(old_node.uuid, new_node.uuid)) {
+    if(finger == old_node.uuid || finger.between(old_node.uuid, new_node.uuid)) {
       logger->info("update_successor: updating successor at {} with {}", i, new_node);
       successors[i] = {new_node.uuid};
       updated = true;
     }
   }
+  logger->info("[dump] {}", *this);
   return updated;
 }
 
@@ -145,10 +152,11 @@ void Router::reset(const uuid_t& uuid) {
 
   // replacement to fill holes in successors
   optional<uuid_t> replacement;
-  for (ssize_t i = successors.size() - 1; i >= 0; --i) {
+  for (ssize_t i = successors.size() - 1; i >= 0 && !replacement; --i) {
     auto succ = successors[i];
-    if (succ) {
-      if (*succ == uuid) break;
+    if(!succ) continue;
+
+    if (*succ != uuid) {
       replacement = succ;
     }
   }
@@ -177,20 +185,47 @@ void Router::reset(const uuid_t& uuid) {
   }
 }
 
+void Router::fill_successors(const chord::node& node) {
+  std::lock_guard<mutex_t> lock(mtx);
+  routes[node.uuid] = node.endpoint;
+  std::fill(std::begin(successors), std::end(successors), node.uuid);
+}
+
+void Router::fill_predecessors(const chord::node& node) {
+  std::lock_guard<mutex_t> lock(mtx);
+  routes[node.uuid] = node.endpoint;
+  std::fill(std::begin(predecessors), std::end(predecessors), node.uuid);
+}
+
+
 void Router::reset(const node& n) {
   reset(n.uuid);
+  // for the rare case the successor failed
+  // and only the predecessor known...
+  if(!has_successor() && predecessor()) {
+    const auto pred = predecessor()->uuid;
+    std::fill(std::begin(successors), std::end(successors), pred);
+  }
+// for the rare case the predecessor failed
+// and only the successor is known...
+//if(!has_predecessor() && has_successor()) {
+//  const auto succ = predecessor(BITS-1);
+//}
 }
 
 optional<node> Router::successor() {
-  for (auto succ : successors) {
-    // cppcheck-suppress CastIntegerToAddressAtReturn
-    if (succ) return node{*succ, routes[*succ]};
-  }
-  for (auto pred : predecessors) {
-    // cppcheck-suppress CastIntegerToAddressAtReturn
-    if (pred) return node{*pred, routes[*pred]};
-  }
-  return node{context.uuid(), routes[context.uuid()]};
+  auto succ = successors[0];
+  if(succ) return node{*succ, routes.at(*succ)};
+  return {};
+  //for (auto succ : successors) {
+  //  // cppcheck-suppress CastIntegerToAddressAtReturn
+  //  if (succ) return node{*succ, routes[*succ]};
+  //}
+  //for (auto pred : predecessors) {
+  //  // cppcheck-suppress CastIntegerToAddressAtReturn
+  //  if (pred) return node{*pred, routes[*pred]};
+  //}
+  //return node{context.uuid(), routes[context.uuid()]};
 }
 
 const optional<node> Router::predecessor() const {

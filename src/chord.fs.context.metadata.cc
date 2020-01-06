@@ -88,10 +88,11 @@ Replication ContextMetadata::replication_from(const ServerContext* serverContext
   return repl;
 }
 
-chord::uuid ContextMetadata::src_from(const grpc::ServerContext* serverContext) {
+chord::optional<chord::uuid> ContextMetadata::src_from(const grpc::ServerContext* serverContext) {
   const auto metadata = serverContext->client_metadata();
   if(metadata.count(ContextMetadata::src) == 0) {
-    throw__exception("missing id metadata in server context.");
+    return {};
+    //throw__exception("missing id metadata in server context.");
   }
   const auto id_gstr = metadata.find(ContextMetadata::src)->second;
   return chord::uuid{std::string(id_gstr.begin(), id_gstr.end())};

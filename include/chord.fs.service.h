@@ -19,6 +19,7 @@ namespace chord { namespace fs { class MetaRequest; } }
 namespace chord { namespace fs { class MetaResponse; } }
 namespace chord { namespace fs { class PutRequest; } }
 namespace chord { namespace fs { class PutResponse; } }
+namespace chord { namespace fs { namespace client { class options; } } }
 namespace chord { struct Context; }
 namespace spdlog { class logger; }
 
@@ -44,6 +45,7 @@ class Service final : public chord::fs::Filesystem::Service {
   grpc::Status handle_del_file(grpc::ServerContext*,const DelRequest*);
   grpc::Status handle_del_dir(grpc::ServerContext*,const DelRequest*);
 
+  fs::client::options update_source(fs::client::options) const;
   grpc::Status is_valid(grpc::ServerContext*, const RequestType);
   bool file_hashes_equal(grpc::ServerContext*, grpc::ServerReader<PutRequest>*);
 

@@ -51,7 +51,8 @@ void ChordFacade::stop() {
   logger->trace("shutting down scheduler...");
   stop_scheduler();
   logger->trace("shutting down chord...");
-  leave();
+  //TODO commont this in after tests
+  //leave();
 }
 
 void ChordFacade::stop_scheduler() {
@@ -118,13 +119,13 @@ void ChordFacade::join_failed(const grpc::Status& status) {
 void ChordFacade::join() {
   const auto status = client->join(context.join_addr);
   if(!status.ok()) {
-    logger->warn("failed to join {}; error: {}", context.join_addr, utils::to_string(status));
+    logger->warn("[join] failed to join {}; error: {}", context.join_addr, utils::to_string(status));
     return;
   }
 
-  logger->info("successfully joined ring via {} - notifying predecessor {}.", context.join_addr, router->predecessor()->endpoint);
+  logger->info("[join] successfully joined ring via {} - notifying predecessor {}.", context.join_addr, router->predecessor()->endpoint);
   const auto status_pred = client->notify(*router->predecessor(), *router->successor(), context.node());
-  logger->info("successfully joined ring via {} - notifying successor {}.", context.join_addr, router->successor()->endpoint);
+  logger->info("[join] successfully joined ring via {} - notifying successor {}.", context.join_addr, router->successor()->endpoint);
   const auto status_succ = client->notify(*router->successor(), *router->predecessor(), context.node());
   if(!status_pred.ok() || !status_succ.ok()) {
     return join_failed(status_pred.ok() ? status_succ : status_pred);

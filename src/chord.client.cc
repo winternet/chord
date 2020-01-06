@@ -63,7 +63,7 @@ Status Client::inform_successor_about_leave() {
   const auto predecessor_node = router->predecessor();
 
   if(successor_node == context.node()) {
-    logger->info("[leaving] no successor - shutting down");
+    logger->info("[leave] no successor - shutting down");
     return Status(grpc::StatusCode::NOT_FOUND, "no successor found.");
   }
 
@@ -72,7 +72,7 @@ Status Client::inform_successor_about_leave() {
   LeaveResponse res;
 
   // inform successor
-  logger->trace("leaving chord ring, informing {}", successor_node);
+  logger->trace("[leave] leaving chord ring, informing {}", successor_node);
 
   req.mutable_header()->CopyFrom(make_header(context));
   const auto predecessor = req.mutable_predecessor();
@@ -86,7 +86,7 @@ Status Client::inform_predecessor_about_leave() {
   const auto predecessor_node = router->predecessor();
 
   if(!predecessor_node) {
-    logger->info("[leaving] no predecessor - shutting down");
+    logger->info("[leave] no predecessor - shutting down");
     return Status(grpc::StatusCode::NOT_FOUND, "no predecessor found.");
   }
 
@@ -95,7 +95,7 @@ Status Client::inform_predecessor_about_leave() {
   LeaveRequest req;
   LeaveResponse res;
 
-  logger->trace("leaving chord ring, informing {}", predecessor_node);
+  logger->trace("[leave] leaving chord ring, informing {}", predecessor_node);
 
   req.mutable_header()->CopyFrom(make_header(context));
   const auto successor = req.mutable_successor();
@@ -108,11 +108,11 @@ void Client::leave() {
 
   const auto status_succ = inform_successor_about_leave();
   if (!status_succ.ok()) {
-    logger->warn("failed to inform successor about leave");
+    logger->warn("[leave] failed to inform successor about leave");
   }
   const auto status_pred = inform_predecessor_about_leave();
   if (!status_pred.ok()) {
-    logger->warn("failed to inform predecessor about leave");
+    logger->warn("[leave] failed to inform predecessor about leave");
   }
 
 }
@@ -125,7 +125,7 @@ signal<void(const node)>& Client::on_successor_fail() {
 }
 
 Status Client::join(const endpoint& addr) {
-  logger->debug("joining {}", addr);
+  logger->debug("[join] joining {}", addr);
 
   ClientContext clientContext;
   JoinRequest req;
@@ -136,16 +136,18 @@ Status Client::join(const endpoint& addr) {
   const auto status = make_stub(addr)->join(&clientContext, req, &res);
 
   if (!status.ok() || !res.has_successor()) {
-    logger->info("Failed to join {}", addr);
+    logger->info("[join] failed to join {}", addr);
     return status;
   }
 
   const auto succ = make_node(res.successor());
   const auto pred = make_node(res.predecessor());
 
-  logger->info("Successfully joined {}, pred {}, succ {}", addr, pred, succ);
-  router->set_predecessor(0, pred);
-  router->set_successor(0, succ);
+  logger->info("[join] successfully joined {}, pred {}, succ {}", addr, pred, succ);
+  router->fill_predecessors(pred);
+  router->fill_successors(succ);
+  //router->set_predecessor(0, pred);
+  //router->set_successor(0, succ);
 
   return status;
 }
@@ -157,16 +159,15 @@ Status Client::join(const JoinRequest *req, JoinResponse *res) {
 
 Status Client::join(ClientContext *clientContext, const JoinRequest *req, JoinResponse *res) {
 
-  logger->trace("forwarding join of {}", req->header().src().uuid());
+  logger->trace("[join] forwarding join of {}", req->header().src().uuid());
   JoinRequest copy(*req);
   //copy.mutable_header()->CopyFrom(make_header(context));
 
   const auto predecessor = router->closest_preceding_node(uuid_t(req->header().src().uuid()));
-  logger->trace("forwarding request to {}", predecessor);
+  logger->trace("[join] forwarding request to {}", predecessor);
 
   return predecessor ? make_stub(predecessor->endpoint)->join(clientContext, copy, res) : Status::CANCELLED;
 }
-
 
 void Client::stabilize() {
   ClientContext clientContext;
@@ -197,7 +198,7 @@ void Client::stabilize() {
 
   if (res.has_predecessor()) {
     const auto pred = make_node(res.predecessor());
-    logger->trace("received stabilize response with predecessor {}", pred);
+    logger->trace("[stabilize] received stabilize response with predecessor {}", pred);
 
     const uuid_t self(context.uuid());
     const uuid_t succ(router->successor()->uuid);
@@ -205,13 +206,13 @@ void Client::stabilize() {
       router->set_successor(0, pred);
     }
   } else {
-    logger->trace("received empty routing entry");
+    logger->trace("[stabilize] received empty routing entry");
   }
 
   notify();
 }
 
-Status Client::notify(const node& target, const node& old_node, const node& new_node) {
+Status Client::notify(const node& target, const node& old_node, const optional<node>& new_node) {
   // get successor
   //const auto n = router->successor();
   const auto successor = target.uuid;
@@ -221,52 +222,55 @@ Status Client::notify(const node& target, const node& old_node, const node& new_
   NotifyRequest req;
   NotifyResponse res;
 
-  logger->trace("calling notify on address {}@{}", successor, endpoint);
+  logger->trace("[notify] calling notify on address {}@{}", successor, endpoint);
 
   // TODO rename proto
   req.mutable_header()->CopyFrom(make_header(context));
   const auto old_node_ = req.mutable_old_node();
   old_node_->set_uuid(old_node.uuid);
   old_node_->set_endpoint(old_node.endpoint);
-  const auto new_node_ = req.mutable_new_node();
-  new_node_->set_uuid(new_node.uuid);
-  new_node_->set_endpoint(new_node.endpoint);
+  if(new_node) {
+    const auto new_node_ = req.mutable_new_node();
+    new_node_->set_uuid(new_node->uuid);
+    new_node_->set_endpoint(new_node->endpoint);
+  }
   return make_stub(endpoint)->notify(&clientContext, req, &res);
 }
 
 Status Client::notify() {
 
   // get successor
-  const auto n = router->successor();
-  const auto successor = n->uuid;
-  const auto endpoint = n->endpoint;
+  const auto successor = router->successor();
+  if(!successor) {
+    logger->trace("[notify] no successor to notify.");
+  }
 
   ClientContext clientContext;
   NotifyRequest req;
   NotifyResponse res;
 
-  logger->trace("calling notify on address {}@{}", successor, endpoint);
+  logger->trace("[notify] calling notify on address {}", *successor);
 
   req.mutable_header()->CopyFrom(make_header(context));
-  return make_stub(endpoint)->notify(&clientContext, req, &res);
+  return make_stub(successor->endpoint)->notify(&clientContext, req, &res);
 }
 
 Status Client::successor(ClientContext *clientContext, const SuccessorRequest *req, SuccessorResponse *res) {
 
-  logger->trace("trying to find successor of {}", req->id());
+  logger->trace("[successor] trying to find successor of {}", req->id());
   SuccessorRequest copy(*req);
   copy.mutable_header()->CopyFrom(make_header(context));
 
   const auto predecessor = router->closest_preceding_node(uuid_t(req->id()));
   // this node is the closest preceding node -> successor is node's direct successor
   if(predecessor && *predecessor == context.node()) {
-    logger->trace("this node seems to be the closest preceding node");
+    logger->trace("[successor] this node seems to be the closest preceding node");
     auto succ = res->mutable_successor();
     succ->set_uuid(context.uuid());
     succ->set_endpoint(context.bind_addr);
     return Status::OK;
   }
-  logger->trace("forwarding request to {}", predecessor);
+  logger->trace("[successor] forwarding request to {}", predecessor);
 
   return predecessor ? make_stub(predecessor->endpoint)->successor(clientContext, copy, res) : Status::CANCELLED;
 }
@@ -300,7 +304,7 @@ void Client::check() {
     return;
   }
   if (!successor) {
-    logger->trace("no successor, skip.");
+    logger->trace("[check] no successor, skip.");
     return;
   }
 
@@ -312,13 +316,13 @@ void Client::check() {
 
   const auto endpoint = predecessor->endpoint;//router->get(predecessor);
 
-  logger->trace("checking predecessor {}", *predecessor);
+  logger->trace("[check] checking predecessor {}", *predecessor);
   const auto status = make_stub(endpoint)->check(&clientContext, req, &res);
 
   if (!status.ok()) {
     logger->warn("[check] predecessor failed.");
     router->reset(*predecessor);
-    event_predecessor_fail(*predecessor);
+    //event_predecessor_fail(*predecessor);
   } else if(!res.has_header()) {
     logger->error("[check] returned without header, should remove endpoint {}@{}?", *predecessor, endpoint);
   }

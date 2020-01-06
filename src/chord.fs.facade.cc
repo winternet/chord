@@ -68,6 +68,15 @@ Status Facade::put(const chord::path &source, const chord::uri &target, Replicat
       const auto new_target = target.path().canonical() / relative_path;
       const auto status = put_file(child, {target.scheme(), new_target}, repl);
       //TODO error handling - rollback strategy?
+      switch(status.error_code()) {
+        case StatusCode::OK: 
+          continue;
+        case StatusCode::OUT_OF_RANGE:
+          logger->warn("Failed to put all replications of{} to {}: {}", source, target, utils::to_string(status));
+          continue;
+        default:
+          return status;
+      }
       if(!status.ok()) return status;
     }
   } else {
@@ -151,7 +160,7 @@ Status Facade::rebalance_metadata(const uri& uri) {
     return status;
 }
 
-void Facade::rebalance(const map<uri, set<Metadata>>& metadata, const bool node_joined) {
+void Facade::rebalance(const map<uri, set<Metadata>>& metadata) {
   for(const auto& pair : metadata) {
     const auto& uri = pair.first;
     auto metadata_set = pair.second;
@@ -169,10 +178,8 @@ void Facade::rebalance(const map<uri, set<Metadata>>& metadata, const bool node_
       client::options options;
       metadata.replication.index=0;
       options.replication = metadata.replication;
-      options.source = context.uuid();
-      if(node_joined) {
-        options.rebalance = true;
-      }
+      //options.source = context.uuid();
+      options.rebalance = true;
       // note that we put the file from the beginning node to refresh all replications
       const auto status = fs_client->put(uri, local_path, options);
     }
@@ -184,13 +191,13 @@ void Facade::rebalance(const map<uri, set<Metadata>>& metadata, const bool node_
  */
 // called form within the node that joined the ring
 void Facade::on_join(const chord::node new_successor) {
-  logger->debug("joined chord ring: new_successor {}", new_successor);
+  logger->debug("[on_join] joined chord ring: new_successor {}", new_successor);
 }
 
 
 //called from within the node preceding the joining node
 void Facade::on_joined(const chord::node from_node, const chord::node to_node) {
-  logger->debug("node joined: replacing {}, with {}", from_node, to_node);
+  logger->debug("[on_joined] node joined: replacing {}, with {}", from_node, to_node);
   const map<uri, set<Metadata>> metadata = metadata_mgr->get_all();
   rebalance(metadata);
 }
@@ -206,12 +213,14 @@ void Facade::on_leave(const chord::node predecessor, const chord::node successor
 
 void Facade::on_predecessor_fail(const chord::node predecessor) {
   logger->warn("detected predecessor failed");
-  const map<uri, set<Metadata>> metadata = metadata_mgr->get_replicated(1);
-  rebalance(metadata);
+  //const map<uri, set<Metadata>> metadata = metadata_mgr->get_replicated(1);
+  //rebalance(metadata);
 }
 
 void Facade::on_successor_fail(const chord::node successor) {
   logger->warn("detected successor failed.");
+  const map<uri, set<Metadata>> metadata = metadata_mgr->get_all();
+  rebalance(metadata);
 }
 
 

@@ -41,6 +41,7 @@ class Client : public IClient {
 
   grpc::Status inform_predecessor_about_leave();
   grpc::Status inform_successor_about_leave();
+  void handle_successor_fail(const chord::node&);
 
  public:
   Client(const Context &context, Router *router);
@@ -59,7 +60,7 @@ class Client : public IClient {
   void stabilize() override;
 
   grpc::Status notify() override;
-  grpc::Status notify(const node&, const node&, const node&) override;
+  grpc::Status notify(const node&, const node&, const optional<node>&) override;
 
   void check() override;
 

@@ -60,14 +60,13 @@ Service::Service(Context &context, ChordFacade* chord, IMetadataManager* metadat
 Status Service::is_valid(ServerContext* serverContext, const RequestType req_type) {
   const auto src = ContextMetadata::src_from(serverContext);
   const auto is_rebalance = ContextMetadata::rebalance_from(serverContext);
-  const bool src_equals_this = src == context.uuid();
-  //if(req_type == RequestType::DEL && src_equals_this) {
-  //  logger->info("Invalid request: received del request from self");
-  //  return Status(StatusCode::ABORTED, "received request del from self - aborting.");
-  //} else 
-    if(!is_rebalance && src_equals_this) {
-    logger->warn("Invalid request: received request from self");
-    return Status(StatusCode::ABORTED, "received request from self - aborting.");
+  const bool src_equals_this = src && (*src == context.uuid());
+  if(is_rebalance && req_type == RequestType::DEL) {
+    logger->warn("Received DEL request from self; should be ok.");
+    return Status::OK;
+  }
+  if(/*!is_rebalance&&*/src_equals_this) {
+    return {StatusCode::OUT_OF_RANGE, "received request from self - aborting."};
   }
   return Status::OK;
 }
@@ -118,9 +117,9 @@ Status Service::handle_meta_del(ServerContext *serverContext, const MetaRequest 
 Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest *req) {
   const auto uri = uri::from(req->uri());
   auto metadata = MetadataBuilder::from(req);
+  auto options = ContextMetadata::from(serverContext);
 
   const auto added = metadata_mgr->add(uri, metadata);
-  const auto src = ContextMetadata::src_from(serverContext);
 
   auto max_repl = max_replication(metadata);
   // update the parent (first node triggers replication)
@@ -130,9 +129,7 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
       auto meta_dir = create_directory(metadata);
       meta_dir.name = uri.path().filename();
       std::set<Metadata> m = {meta_dir};
-      client::options options;
-      options.source = src;
-      make_client().meta(parent, Client::Action::ADD, m, options);
+      make_client().meta(parent, Client::Action::ADD, m, client::clear_source(options));
     }
   }
 
@@ -154,9 +151,7 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
 
     if(!new_metadata.empty()) {
       const auto node = chord->successor();
-      client::options options;
-      options.source = src;
-      const auto status = make_client().meta(node, uri, Client::Action::ADD, new_metadata, options);
+      const auto status = make_client().meta(node, uri, Client::Action::ADD, new_metadata, update_source(options));
 
       if(!status.ok()) {
         logger->warn("Failed to add {} ({}) to {}", uri, max_repl, node);
@@ -171,10 +166,10 @@ Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaR
   (void)serverContext;
 
   // in case controller service queries...
-  //const auto status = is_valid(serverContext, RequestType::META);
-  //if(!status.ok()) {
-  //  return status;
-  //}
+  const auto status = is_valid(serverContext, RequestType::META);
+  if(!status.ok()) {
+    return status;
+  }
 
   try {
     switch (req->action()) {
@@ -200,18 +195,25 @@ bool Service::file_hashes_equal(grpc::ServerContext* serverContext, grpc::Server
 
     auto hashes_equal = false;
   // TODO: handle receive an update
-  if(hash && metadata_mgr->exists(uri)) {
-    const auto metadata_set = metadata_mgr->get(uri);
+  //if(hash && metadata_mgr->exists(uri)) {
+  //  const auto metadata_set = metadata_mgr->get(uri);
 
-    if(fs::is_regular_file(metadata_set)) {
-      const auto metadata = *metadata_set.begin();
-      const auto local_hash = metadata.file_hash;
-      hashes_equal = (local_hash && local_hash == hash);
-    }
-  }
+  //  if(fs::is_regular_file(metadata_set)) {
+  //    const auto metadata = *metadata_set.begin();
+  //    const auto local_hash = metadata.file_hash;
+  //    hashes_equal = (local_hash && local_hash == hash);
+  //  }
+  //}
   ContextMetadata::set_file_hash_equal(serverContext, hashes_equal);
   reader->SendInitialMetadata();
   return hashes_equal;
+}
+
+fs::client::options Service::update_source(fs::client::options options) const {
+  if(!options.source) {
+    return fs::client::update_source(options, context);
+  }
+  return options;
 }
 
 Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *reader, PutResponse *response) {
@@ -228,9 +230,9 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     file::create_directories(data);
   }
 
-  client::options options = ContextMetadata::from(serverContext);
+  auto options = ContextMetadata::from(serverContext);
   const auto uri = ContextMetadata::uri_from(serverContext);
-  bool del_needed = options.rebalance && !options.replication.has_next();
+  const bool del_needed = /*options.rebalance && */ !options.replication.has_next();
 
   // open - if needed (file hashes do not equal)
   if (!file_hashes_equal(serverContext, reader) && reader->Read(&req)) {
@@ -265,6 +267,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     }
   }
 
+  logger->info("successfully wrote file, replication: {}", options.replication.index);
   // add local metadata
   auto meta = MetadataBuilder::for_path(context, uri.path(), options.replication);
   metadata_mgr->add(uri, meta);
@@ -274,13 +277,14 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     const auto parent_uri = chord::uri{uri.scheme(), uri.path().parent_path()};
     // add directory "." to metadata
     meta.insert(create_directory(meta));
-    make_client().meta(parent_uri, Client::Action::ADD, meta, options);
+    const auto status = make_client().meta(parent_uri, Client::Action::ADD, meta, client::clear_source(options));
   }
 
   // handle (recursive) file-replication
   if(++options.replication) {
 
     const auto next = chord->successor();
+    logger->info("replication {} to {}", uri, next);
 
     path data = context.data_directory;
     data /= uri.path().parent_path();
@@ -290,14 +294,17 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     file.exceptions(ifstream::failbit | ifstream::badbit);
     file.open(data, std::fstream::binary);
     //TODO rollback on status ABORTED?
-    make_client().put(next, uri, file, options);
+    const auto status = make_client().put(next, uri, file, options);
+    if(!status.ok()) {
+      return status;
+    }
   }
   if(del_needed) {
     const auto hash = chord::crypto::sha256(uri);
     const auto next = chord->successor();
     if(next != chord->successor(hash)) {
       logger->trace("deletion of file from successor needed.");
-      make_client().del(next, uri, false, options);
+      make_client().del(next, uri, false, client::clear_source(options));
     }
   }
   return Status::OK;
@@ -307,15 +314,13 @@ Status Service::handle_del_file(ServerContext *serverContext, const chord::fs::D
   const auto uri = chord::uri::from(req->uri());
   auto data = context.data_directory / uri.path();
 
-  const auto src = ContextMetadata::src_from(serverContext);
+  auto options = ContextMetadata::from(serverContext);
   auto deleted_metadata = metadata_mgr->del(uri);
   const auto iter = std::find_if(deleted_metadata.begin(), deleted_metadata.end(), [&](const Metadata& m) { return m.name == uri.path().filename();});
 
-  client::options options;
-  options.source = src;
   // handle shallow copy
   if(iter != deleted_metadata.end() && iter->node_ref && *iter->node_ref != context.node()) {
-    make_client().del(*iter->node_ref, req, options);
+    make_client().del(*iter->node_ref, req, client::clear_source(options));
   }
   // handle local file
   if(file::exists(data)) {
@@ -330,7 +335,7 @@ Status Service::handle_del_file(ServerContext *serverContext, const chord::fs::D
   if(max_repl && max_repl.has_next()) {
     //TODO handle status
     const auto node = chord->successor();
-    make_client().del(node, req, options);
+    make_client().del(node, req, client::clear_source(options));
   }
   // end: handle replica
  
@@ -339,10 +344,10 @@ Status Service::handle_del_file(ServerContext *serverContext, const chord::fs::D
   const auto parent_path = data.parent_path();
   const auto dir_empty = file::exists(parent_path) && file::is_empty(parent_path);
   if(initial_delete && dir_empty) {
-    return make_client().del(parent_uri, false, options);
+    return make_client().del(parent_uri, false, client::clear_source(options));
   } else if(initial_delete && !parent_uri.path().empty()) {
     // beg: update parent path
-    make_client().meta(parent_uri, Client::Action::DEL, deleted_metadata, options);
+    make_client().meta(parent_uri, Client::Action::DEL, deleted_metadata, client::clear_source(options));
     //TODO handle return status
     // end: update parent path
   } 
@@ -386,7 +391,7 @@ Status Service::handle_del_dir(ServerContext *serverContext, const chord::fs::De
     for(const auto m:metadata) {
       if(m.name == ".") continue;
       const auto sub_uri = chord::uri(uri.scheme(), uri.path() / m.name);
-      const auto status = make_client().del(sub_uri, req->recursive(), options);
+      const auto status = make_client().del(sub_uri, req->recursive(), client::clear_source(options));
       if(!status.ok()) {
         logger->error("failed to delete directory: {} {}", status.error_message(), status.error_details());
         return status;
@@ -405,6 +410,7 @@ Status Service::handle_del_dir(ServerContext *serverContext, const chord::fs::De
   // end: handle local
 
   // beg: handle parent
+  // TODO use options.source...?
   const bool initial_delete = chord->successor(crypto::sha256(req->uri())) == context.node();
   {
     const auto parent_path = uri.path().parent_path();
@@ -413,7 +419,7 @@ Status Service::handle_del_dir(ServerContext *serverContext, const chord::fs::De
       Metadata deleted_dir = Metadata();
       deleted_dir.name = uri.path().filename();
       std::set<Metadata> metadata{deleted_dir};
-      make_client().meta(chord::uri(uri.scheme(), parent_path), Client::Action::DEL, metadata, options);
+      make_client().meta(chord::uri(uri.scheme(), parent_path), Client::Action::DEL, metadata, client::clear_source(options));
     }
   }
   // end: handle parent
@@ -422,7 +428,7 @@ Status Service::handle_del_dir(ServerContext *serverContext, const chord::fs::De
   auto max_repl = max_replication(deleted_metadata);
   if(++max_repl) {
     const auto node = chord->successor();
-    make_client().del(node, req, options);
+    make_client().del(node, req, update_source(options));
   }
   // end: handle replica
 

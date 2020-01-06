@@ -11,11 +11,12 @@ bootstrap: No
 no-controller: Yes
 
 ## details
-stabilize_ms: 10000
-check_ms: 10000
+stabilize_ms: 1000
+check_ms: 1000
 
 #uuid: "999999999999999999995555555555555555"
-uuid: "20"
+#uuid: "20"
+uuid: "86844066927987146567678238756515930889952488499230423029593188005934847229952"
 
 logging:
   level: trace
@@ -24,7 +25,7 @@ logging:
       type: "console"
     FILE_SINK:
       type: "file-rotating"
-      path: "logs/chord0.log"
+      path: "logs/chord3.log"
   loggers:
     CHORD_LOG:
       sinks: [FILE_SINK]

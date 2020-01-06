@@ -38,6 +38,7 @@ struct Router {
   void reset();
 
   bool has_successor() const;
+  bool has_predecessor() const;
 
   /**
    * get the amount of known routes.
@@ -68,6 +69,9 @@ struct Router {
   void reset(const node& n);
 
   optional<node> successor();
+
+  void fill_predecessors(const chord::node&);
+  void fill_successors(const chord::node&);
 
   const optional<node> predecessor() const;
 

@@ -64,13 +64,15 @@ Client::Client(Context &context, ChordFacade *chord, StubFactory make_stub)
       logger{context.logging.factory().get_or_create(logger_name)} {}
 
 void Client::init_context(ClientContext& client_context, const client::options& options) {
-  ContextMetadata::add_src(client_context, options.source);
+  if(options.source)
+    ContextMetadata::add_src(client_context, *options.source);
   ContextMetadata::add_rebalance(client_context, options.rebalance);
 }
 
 Status Client::put(const chord::uri& uri, const chord::path& source, const client::options& options) {
   const auto hash = chord::crypto::sha256(uri);
   const auto node = chord->successor(hash);
+  logger->info("[put] file {} ({}) -> {}", uri, hash, node);
   return put(node, uri, source, options);
 }
 
@@ -127,7 +129,9 @@ Status Client::put(const chord::node& node, const chord::uri &uri, istream &istr
       offset += read;
 
       if (!writer->Write(req)) {
-        throw__exception("broken stream.");
+        //received !status.ok()
+        break;
+        //throw__exception("broken stream.");
       }
   }
   writer->WritesDone();
@@ -138,7 +142,7 @@ Status Client::put(const chord::node& node, const chord::uri &uri, istream &istr
 Status Client::put(const chord::uri &uri, istream &istream, const client::options& options) {
   const auto hash = chord::crypto::sha256(uri);
   const auto node = chord->successor(hash);
-  logger->trace("put {} ({})", uri, hash);
+  logger->trace("[put] {} ({}) -> {}", uri, hash, node);
   return put(node, uri, istream, options);
 }
 
