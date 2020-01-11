@@ -10,12 +10,12 @@ class MockService : public IService {
                             const chord::JoinRequest *req,
                             chord::JoinResponse *res));
 
-  MOCK_METHOD1(successor, chord::common::RouterEntry(const uuid_t &uuid));
+  MOCK_METHOD1(lookup, chord::common::RouterEntry(const uuid_t &uuid));
 
 
-  MOCK_METHOD3(successor, grpc::Status(grpc::ServerContext *context,
-                                 const chord::SuccessorRequest *req,
-                                 chord::SuccessorResponse *res));
+  MOCK_METHOD3(lookup, grpc::Status(grpc::ServerContext *context,
+                                 const chord::LookupRequest *req,
+                                 chord::LookupResponse *res));
 
   MOCK_METHOD3(stabilize, grpc::Status(grpc::ServerContext *context,
                                  const chord::StabilizeRequest *req,

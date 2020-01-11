@@ -150,6 +150,10 @@ public:
 
   inline uuid operator%(const uuid &other) const { return uuid{val % other.val}; }
 
+  static bool between(const uuid& lower, const uuid& element, const uuid& upper) {
+    return element.between(lower, upper);
+  }
+
   friend std::istream &operator>>(std::istream &is, uuid &hash) {
     is >> hash.val;
     return is;

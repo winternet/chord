@@ -83,7 +83,7 @@ TEST_F(FilesystemServiceDelTest, del_file) {
   const auto root_uri = uri("chord:///");
   const auto target_uri = uri("chord:///file");
 
-  EXPECT_CALL(*self->service, successor(_))
+  EXPECT_CALL(*self->service, lookup(_))
     .WillOnce(Return(make_entry(self->context.node())))  // client - remove file
     .WillOnce(Return(make_entry(self->context.node())))  // initial delete - flag (handle_del_file)
     .WillOnce(Return(make_entry(self->context.node())))  // client - remove empty folder

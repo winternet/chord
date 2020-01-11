@@ -26,12 +26,12 @@ class IService {
                             const chord::JoinRequest *req,
                             chord::JoinResponse *res) = 0;
 
-  virtual chord::common::RouterEntry successor(const uuid_t &uuid) = 0;
+  virtual chord::common::RouterEntry lookup(const uuid_t &uuid) = 0;
 
 
-  virtual grpc::Status successor(grpc::ServerContext *context,
-                                 const chord::SuccessorRequest *req,
-                                 chord::SuccessorResponse *res) = 0;
+  virtual grpc::Status lookup(grpc::ServerContext *context,
+                                 const chord::LookupRequest *req,
+                                 chord::LookupResponse *res) = 0;
 
   virtual grpc::Status stabilize(grpc::ServerContext *context,
                                  const chord::StabilizeRequest *req,

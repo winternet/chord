@@ -13,8 +13,8 @@
 
 namespace chord { class JoinRequest; }                                                                                                         
 namespace chord { class JoinResponse; }                                                                                                        
-namespace chord { class SuccessorRequest; }                                                                                                    
-namespace chord { class SuccessorResponse; }
+namespace chord { class LookupRequest; }                                                                                                    
+namespace chord { class LookupResponse; }
 namespace chord { struct Context; }
 namespace chord { struct Router; }
 namespace chord { struct node; }
@@ -64,11 +64,11 @@ class Client : public IClient {
 
   void check() override;
 
-  chord::common::RouterEntry successor(const uuid_t &id) override;
+  chord::common::RouterEntry lookup(const uuid_t &id) override;
 
-  grpc::Status successor(grpc::ClientContext *context, const chord::SuccessorRequest *req, chord::SuccessorResponse *res) override;
+  grpc::Status lookup(grpc::ClientContext *context, const chord::LookupRequest *req, chord::LookupResponse *res) override;
 
-  grpc::Status successor(const chord::SuccessorRequest *req, chord::SuccessorResponse *res) override;
+  grpc::Status lookup(const chord::LookupRequest *req, chord::LookupResponse *res) override;
 
 };
 } // namespace chord

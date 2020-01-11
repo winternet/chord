@@ -25,8 +25,8 @@ namespace chord { class NotifyRequest; }
 namespace chord { class NotifyResponse; }
 namespace chord { class StabilizeRequest; }
 namespace chord { class StabilizeResponse; }
-namespace chord { class SuccessorRequest; }
-namespace chord { class SuccessorResponse; }
+namespace chord { class LookupRequest; }
+namespace chord { class LookupResponse; }
 namespace chord { struct Context; }
 namespace chord { struct Router; }
 namespace chord { struct node; }
@@ -44,11 +44,11 @@ class Service final : public chord::Chord::Service, public IService {
   grpc::Status join(grpc::ServerContext *context, const chord::JoinRequest *req,
                     chord::JoinResponse *res) override;
 
-  chord::common::RouterEntry successor(const uuid_t &uuid) override;
+  chord::common::RouterEntry lookup(const uuid_t &uuid) override;
 
-  grpc::Status successor(grpc::ServerContext *context,
-                         const chord::SuccessorRequest *req,
-                         chord::SuccessorResponse *res) override;
+  grpc::Status lookup(grpc::ServerContext *context,
+                         const chord::LookupRequest *req,
+                         chord::LookupResponse *res) override;
 
   grpc::Status stabilize(grpc::ServerContext *context,
                          const chord::StabilizeRequest *req,

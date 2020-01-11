@@ -92,9 +92,9 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_local_files) {
   files[target_uri] = metadata_set;
 
   // take self out of the ring, peer_2's successor is peer_2 (self 'already' left)
-  EXPECT_CALL(*peer_2.service, successor(_))
+  EXPECT_CALL(*peer_2.service, lookup(_))
     .WillRepeatedly(Return(make_entry(peer_2.context.node())));
-  EXPECT_CALL(*self->service, successor(_))
+  EXPECT_CALL(*self->service, lookup(_))
     .WillRepeatedly(Return(make_entry(peer_2.context.node())));
 
   EXPECT_CALL(*self->metadata_mgr, get_all())
@@ -126,7 +126,7 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_node_reference) {
   const auto source_file = source_directory.add_file("file");
 
   map<uri, set<Metadata>> empty;
-  EXPECT_CALL(*peer_2.service, successor(_))
+  EXPECT_CALL(*peer_2.service, lookup(_))
     .WillRepeatedly(Return(make_entry(self->context.node())));
 
   //TODO add test for directory handling

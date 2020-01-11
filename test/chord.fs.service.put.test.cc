@@ -79,7 +79,7 @@ TEST_F(FilesystemServicePutTest, put) {
   const auto source_file = source_directory.add_file("file");
 
   // connect the two nodes, first successor call will return self
-  EXPECT_CALL(*self->service, successor(_))
+  EXPECT_CALL(*self->service, lookup(_))
     .WillRepeatedly(Return(make_entry(self->context.node())));
 
   // self peer metadata
@@ -115,17 +115,17 @@ TEST_F(FilesystemServicePutTest, put_replication_2) {
   const auto source_file = source_directory.add_file("file");
 
   // stay on same node
-  EXPECT_CALL(*self->service, successor(Ne(self->context.uuid())))
+  EXPECT_CALL(*self->service, lookup(Ne(self->context.uuid())))
     .WillRepeatedly(Return(make_entry(self->context.node())));
   // replication handling will ask for own successor -> next node
-  EXPECT_CALL(*self->service, successor(self->context.uuid()))
+  EXPECT_CALL(*self->service, lookup(self->context.uuid()))
     .WillRepeatedly(Return(make_entry(peer_2.context.node())));
 
   // stay on same node
-  EXPECT_CALL(*peer_2.service, successor(Ne(peer_2.context.uuid())))
+  EXPECT_CALL(*peer_2.service, lookup(Ne(peer_2.context.uuid())))
     .WillRepeatedly(Return(make_entry(peer_2.context.node())));
   // replication handling will ask for own successor -> next node
-  EXPECT_CALL(*peer_2.service, successor(peer_2.context.uuid()))
+  EXPECT_CALL(*peer_2.service, lookup(peer_2.context.uuid()))
     .WillRepeatedly(Return(make_entry(peer_2.context.node())));
 
   // self peer metadata

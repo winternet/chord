@@ -78,7 +78,7 @@ TEST_F(FilesystemServiceGetTest, get) {
   GetResponse res;
   ServerContext serverContext;
 
-  EXPECT_CALL(*self->service, successor(_)).WillOnce(Return(make_entry("0", "0.0.0.0:50050")));
+  EXPECT_CALL(*self->service, lookup(_)).WillOnce(Return(make_entry("0", "0.0.0.0:50050")));
 
   TmpDir tmp;
   TmpFile source_file(self->context.data_directory / "file");
@@ -101,10 +101,10 @@ TEST_F(FilesystemServiceGetTest, get_from_node_reference) {
   file::copy_file(source_file.path, source_file_backup);
 
   // connect the two nodes, first successor call will return self
-  EXPECT_CALL(*self->service, successor(_))
+  EXPECT_CALL(*self->service, lookup(_))
     .WillOnce(Return(make_entry(self->context.node())))
     .WillRepeatedly(Return(make_entry(source_peer.context.node())));
-  EXPECT_CALL(*source_peer.service, successor(_))
+  EXPECT_CALL(*source_peer.service, lookup(_))
     .WillRepeatedly(Return(make_entry(self->context.node())));
 
   // reference source peer
@@ -150,10 +150,10 @@ TEST_F(FilesystemServiceGetTest, get_from_replication) {
   const auto source_file = source_data_directory.add_file("file");
 
   // connect the two nodes, first successor call will return self
-  EXPECT_CALL(*self->service, successor(_))
+  EXPECT_CALL(*self->service, lookup(_))
     .WillOnce(Return(make_entry(self->context.node())))
     .WillRepeatedly(Return(make_entry(source_peer.context.node())));
-  EXPECT_CALL(*source_peer.service, successor(_))
+  EXPECT_CALL(*source_peer.service, lookup(_))
     .WillRepeatedly(Return(make_entry(self->context.node())));
 
   // reference source peer
@@ -187,12 +187,12 @@ TEST_F(FilesystemServiceGetTest, get_from_replication_propagates) {
   const auto source_file = source_data_directory.add_file("file");
 
   // connect the two nodes, first successor call will return self
-  EXPECT_CALL(*self->service, successor(_))
+  EXPECT_CALL(*self->service, lookup(_))
     .WillOnce(Return(make_entry(self->context.node())))
     .WillRepeatedly(Return(make_entry(middle_peer.context.node())));
-  EXPECT_CALL(*middle_peer.service, successor(_))
+  EXPECT_CALL(*middle_peer.service, lookup(_))
     .WillRepeatedly(Return(make_entry(source_peer.context.node())));
-  EXPECT_CALL(*source_peer.service, successor(_))
+  EXPECT_CALL(*source_peer.service, lookup(_))
     .WillRepeatedly(Return(make_entry(self->context.node())));
 
   // self peer metadata

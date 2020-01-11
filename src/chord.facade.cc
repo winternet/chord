@@ -138,11 +138,11 @@ void ChordFacade::join() {
  * successor
  */
 chord::node ChordFacade::successor(const uuid_t &uuid) {
-  return make_node(service->successor(uuid));
+  return make_node(service->lookup(uuid));
 }
 
 chord::node ChordFacade::successor() {
-  return make_node(service->successor(context.uuid()));
+  return make_node(service->lookup(context.uuid()));
 }
 
 /**

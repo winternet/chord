@@ -33,5 +33,16 @@ chord::node make_node(const RouterEntry& entry) {
   return {uuid_t{entry.uuid()}, entry.endpoint()};
 }
 
+RouterEntry make_entry(const node& n) {
+  return make_entry(n.uuid, n.endpoint);
+}
+
+RouterEntry make_entry(const uuid &id, const endpoint& addr) {
+  RouterEntry entry;
+  entry.set_uuid(id);
+  entry.set_endpoint(addr);
+  return entry;
+}
+
 }
 }
