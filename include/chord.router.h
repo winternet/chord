@@ -29,26 +29,32 @@ public:
   static constexpr size_t BITS = 256;
   using mutex_t = std::recursive_mutex;
 
+protected:
+  struct RouterEntry {
+    chord::uuid uuid;
+    optional<chord::node> _node;
+    inline bool valid() const { return _node.has_value(); }
+    inline chord::node node() const { return *_node; }
+    inline std::ostream& print(std::ostream& os) const {
+      os << (valid() ? _node->string() : "<empty>");
+      return os;
+    }
+  };
+
 private:
   struct sequence_tag {};
   struct key_tag {};
   struct value_tag {};
 
-  struct RouterEntry {
-    chord::uuid uuid;
-    optional<chord::endpoint> endpoint;
-    bool valid() const { return endpoint.has_value(); }
-    chord::node node() const { return {uuid, *endpoint}; }
-  };
 
-  struct change_endpoint {
-    change_endpoint(const chord::endpoint& endpoint)
-      : endpoint(endpoint) {}
+  struct change_node {
+    change_node(const chord::node& node)
+      : _node(node) {}
     void operator()(RouterEntry& entry) {
-      entry.endpoint = endpoint;
+      entry._node = _node;
     }
   private:
-    chord::endpoint endpoint;
+    chord::node _node;
   };
 
   using entry_t = RouterEntry;
@@ -58,12 +64,11 @@ private:
         boost::multi_index::sequenced<boost::multi_index::tag<struct sequence_tag>>,
         boost::multi_index::ordered_non_unique<
           boost::multi_index::tag<struct key_tag>,
-          boost::multi_index::member<entry_t, uuid, &entry_t::uuid>>,
-        boost::multi_index::ordered_non_unique<
-          boost::multi_index::tag<struct value_tag>,
-          boost::multi_index::member<entry_t, optional<endpoint>, &entry_t::endpoint>>>>;
+          boost::multi_index::member<entry_t, uuid, &entry_t::uuid>>>>;//,
+        //boost::multi_index::ordered_non_unique<
+        //  boost::multi_index::tag<struct value_tag>,
+        //  boost::multi_index::member<entry_t, optional<endpoint>, &entry_t::_node>>>>;
 
-private:
   static constexpr auto logger_name = "chord.router";
 
   chord::Context &context;
@@ -71,11 +76,12 @@ private:
 
   mutable mutex_t mtx;
 
-  sequence_map_t successors;
-  RouterEntry _predecessor;
-
   void init();
   void cleanup();
+
+protected:
+  sequence_map_t successors;
+  RouterEntry _predecessor;
 
 public:
   explicit Router(const chord::Router&) = delete;
@@ -99,6 +105,8 @@ public:
   bool update(const node&);
   bool remove(const node&);
   uuid get(const size_t) const;
+
+  std::ostream& print(std::ostream&) const;
 
   /**
    * get the amount of known routes.

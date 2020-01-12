@@ -44,7 +44,7 @@ void Router::init() {
 void Router::cleanup() {
   std::lock_guard<mutex_t> lock(mtx);
   successors.clear();
-  _predecessor.endpoint.reset();
+  _predecessor._node.reset();
   init();
 }
 
@@ -250,26 +250,26 @@ void Router::update(const std::set<chord::node>& nodes) {
 bool Router::update(const chord::node& insert) {
   bool changed = false;
   for(auto it=successors.begin(); it != successors.end(); ++it) {
-    if(!it->endpoint)
-      changed |= successors.modify(it, change_endpoint(insert.endpoint));
+    //if(!it->valid())
+    //  changed |= successors.modify(it, change_node(insert));
 
-    if(uuid::between(context.uuid(), insert.uuid, it->uuid)) {
-      changed |= successors.modify(it, change_endpoint(insert.endpoint));
+    if(uuid::between(it->uuid, insert.uuid, (it->_node ? it->node().uuid : context.uuid()))) {
+      changed |= successors.modify(it, change_node(insert));
     }
   }
-  if(!_predecessor.valid() || uuid::between(context.uuid(), insert.uuid, _predecessor.uuid)) {
-    _predecessor.endpoint = insert.uuid;
+  if(!_predecessor.valid() || uuid::between(_predecessor.uuid, insert.uuid, context.uuid())) {
+    _predecessor._node = insert;
   }
   return changed;
 }
 
 bool Router::remove(const chord::node& node) {
   bool changed = false;
-  RouterEntry replacement = {context.uuid(), context.bind_addr};
+  RouterEntry replacement = {calc_successor_uuid_for_index(BITS), context.node()};
 
   for(auto it=boost::rbegin(successors); it != boost::rend(successors); ++it) {
     if(it->node() == node || !it->valid()) {
-      changed |= successors.modify(std::prev(it.base()), change_endpoint(*replacement.endpoint));
+      changed |= successors.modify(std::prev(it.base()), change_node(*replacement._node));
     }
     replacement = *it;
   }
@@ -283,7 +283,7 @@ optional<node> Router::predecessor() const {
 
 optional<node> Router::closest_preceding_node(const uuid_t &uuid) {
   for(auto it=std::crbegin(successors); it != crend(successors); ++it) {
-    if(it->valid() && uuid::between(context.uuid(), uuid, it->uuid)) {
+    if(it->valid() && uuid::between(context.uuid(), it->node().uuid, uuid)) {
       logger->info("closest preceding node for {} found is {}", uuid, it->node());
       return it->node();
     }
@@ -299,26 +299,43 @@ uuid Router::get(const size_t index) const {
   return it->uuid;
 }
 
+std::ostream& Router::print(std::ostream& os) const {
+  size_t beg = 0, end = 0;
+  auto curr = successors.front();
+  for(const auto successor:successors) {
+    //os << "\nrouter[" << beg++ << "]: "; successor.print(os);
+    if(curr.valid() ^ successor.valid() || (curr.valid() && successor.valid() && curr.node() != successor.node())) {
+      os << "\nrouter[" << beg << ".." << end-1 << "]: "; curr.print(os);
+      curr = successor;
+      beg = end;
+    }
+    ++end;
+  }
+  os << "\nrouter[" << beg << ".." << end  << "]: "; curr.print(os);
+  return os;
+}
+
 std::ostream& operator<<(std::ostream &os, const Router &router) {
-  size_t beg = 0;
-  for (size_t i=1; i < Router::BITS; i++) {
-    //const auto succ_a = router.successor(i-1);
-    //const auto succ_b = router.successor(i);
-    //auto beg_a = (!succ_a ? std::string{"<unknown>"} : succ_a->string());
-    //auto beg_b = (!succ_b ? std::string{"<unknown>"} : succ_b->string());
-    //if(beg_a != beg_b) {
-    //  os << "\n::router[successor][" << beg << ".." << i-1 << "] " << beg_a;
-    //  beg=i;
-    //}
-  }
-  if (beg != Router::BITS) {
-    //const auto succ_b = router.successor(beg);
-    //auto beg_b = (!succ_b ? std::string{"<unknown>"} : succ_b->string());
-    //os << "\n::router[successor][" << beg << ".." << Router::BITS-1 << "] " << beg_b;
-  }
+  return router.print(os);
+  //size_t beg = 0;
+  //for (size_t i=1; i < Router::BITS; i++) {
+  //  const auto succ_a = router.successor(i-1);
+  //  const auto succ_b = router.successor(i);
+  //  auto beg_a = (!succ_a ? std::string{"<unknown>"} : succ_a->string());
+  //  auto beg_b = (!succ_b ? std::string{"<unknown>"} : succ_b->string());
+  //  if(beg_a != beg_b) {
+  //    os << "\n::router[successor][" << beg << ".." << i-1 << "] " << beg_a;
+  //    beg=i;
+  //  }
+  //}
+  //if (beg != Router::BITS) {
+  //  const auto succ_b = router.successor(beg);
+  //  auto beg_b = (!succ_b ? std::string{"<unknown>"} : succ_b->string());
+  //  os << "\n::router[successor][" << beg << ".." << Router::BITS-1 << "] " << beg_b;
+  //}
   //os << "\n::router [predecessor] ";
   //if(router.predecessor()) os << *router.predecessor();
   //else os << "<unknown>";
-  return os;
+  //return os;
 }
 } // namespace chord
