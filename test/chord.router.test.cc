@@ -230,66 +230,84 @@ TEST(RouterTest, set_successor_rewrites_same_preceding_nodes) {
   }
 }
 
-//TEST(RouterTest, reset_block) {
-//  Context context = make_context(0);
-//  Router router{context};
-//
-//  ASSERT_FALSE(router.has_successor());
-//  ASSERT_FALSE(router.successor());
-//
-//  // initialize successors in groups(i) of 5
-//  for (size_t i = 0; i < 20; i += 5) {
-//    for (size_t j = i; j < 5; ++j) {
-//      router.set_successor(j, {i, "localhost:" + std::to_string(i)});
-//    }
-//  }
-//
-//  // reset first group
-//  router.reset(uuid{1});
-//
-//  for (size_t i = 0; i < 20; i += 5) {
-//    for (size_t j = i; j < 5; ++j) {
-//      if (i == 1) {
-//        // check reset
-//        ASSERT_EQ(router.successor(i+j)->uuid, uuid_t{i+1});
-//      } else {
-//        ASSERT_EQ(router.successor(i+j)->uuid, uuid_t{i});
-//      }
-//    }
-//  }
-//  ASSERT_TRUE(router.has_successor());
-//}
+TEST(RouterTest, reset_block_last) {
+  Context context = make_context(0);
+  RouterSpy router{context};
 
-//TEST(RouterTest, reset_fill_empty_blocks) {
-//  Context context;
-//  Router router{context};
-//
-//  ASSERT_NOT_NULL(router.successor());
-//  EXPECT_EQ(router.successor()->uuid, context.uuid());
-//
-//  // initialize successors in groups(i) of 5
-//  for (size_t i = 0; i < 20; i += 5) {
-//    for (size_t j = i; j < 5; ++j) {
-//      if(i==1) {
-//        router.set_successor(j, {});
-//      }
-//      router.set_successor(j, {i, "localhost:" + std::to_string(i)});
-//    }
-//  }
-//
-//  // reset second group - should fill empty nodes within first group
-//  router.reset(node{2, "localhost:2"});
-//
-//  for (size_t i = 0; i < 20; i += 5) {
-//    for (size_t j = i; j < 5; ++j) {
-//      if (i == 1) {
-//        // check reset
-//        ASSERT_EQ(router.successor(i+j)->uuid, uuid_t{i+1});
-//      } else {
-//        ASSERT_EQ(router.successor(i+j)->uuid, uuid_t{i});
-//      }
-//    }
-//  }
-//
-//  ASSERT_TRUE(router.has_successor());
-//}
+  ASSERT_FALSE(router.has_successor());
+  ASSERT_FALSE(router.successor());
+  ASSERT_FALSE(router.has_predecessor());
+  ASSERT_FALSE(router.predecessor());
+
+  // initialize successors in groups(i) of 5
+  for (size_t i = 0; i < 20; i += 5) {
+    router.update({router.calc_successor_uuid_for_index(i), "localhost:"+to_string(i)});
+  }
+
+  std::cout << "\n\nrouter:\n" << router;
+
+  for (size_t i=5; i < 20; i += 5) {
+    for (size_t j=i; j < 5; ++j) {
+      ASSERT_EQ("localhost:"+to_string(i), router.entry(i).node().endpoint);
+    }
+  }
+
+  ASSERT_TRUE(router.has_predecessor());
+  ASSERT_TRUE(router.has_successor());
+
+  ASSERT_EQ(router.successor()->uuid, 32);
+  ASSERT_EQ(router.predecessor()->uuid, 32768);
+
+  router.remove({32768, "localhost:15"});
+
+  ASSERT_EQ(router.successor()->uuid, 32);
+  ASSERT_EQ(router.predecessor()->uuid, 1024);
+
+  for(size_t i=0; i < 32; ++i) {
+    if(i<5) 
+      ASSERT_EQ(router.entry(i).node().uuid, 32);
+    else if(i<15)
+      ASSERT_EQ(router.entry(i).node().uuid, 1024);
+    else
+      ASSERT_FALSE(router.entry(i).valid());
+  }
+
+  std::cout << "\n\nrouter:\n" << router;
+}
+
+TEST(RouterTest, reset_block_middle) {
+  Context context = make_context(0);
+  RouterSpy router{context};
+
+  ASSERT_FALSE(router.has_successor());
+  ASSERT_FALSE(router.successor());
+  ASSERT_FALSE(router.has_predecessor());
+  ASSERT_FALSE(router.predecessor());
+
+  // initialize successors in groups(i) of 5
+  for (size_t i = 0; i < 20; i += 5) {
+    router.update({router.calc_successor_uuid_for_index(i), "localhost:"+to_string(i)});
+  }
+
+  std::cout << "\n\nrouter:\n" << router;
+
+  ASSERT_EQ(router.successor()->uuid, 32);
+  ASSERT_EQ(router.predecessor()->uuid, 32768);
+
+  router.remove({1024, "localhost:15"});
+
+  ASSERT_EQ(router.successor()->uuid, 32);
+  ASSERT_EQ(router.predecessor()->uuid, 32768);
+
+  for(size_t i=0; i < 32; ++i) {
+    if(i<5) 
+      ASSERT_EQ(router.entry(i).node().uuid, 32);
+    else if(i<15)
+      ASSERT_EQ(router.entry(i).node().uuid, 32768);
+    else
+      ASSERT_FALSE(router.entry(i).valid());
+  }
+
+  std::cout << "\n\nrouter:\n" << router;
+}
+

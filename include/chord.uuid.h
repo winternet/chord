@@ -106,26 +106,13 @@ public:
   /**
    * @brief Check if the uuid is in the interval between the two given uuids on the ring.
    *
-   * Neither of the boundaries is included in the interval. If both uuids
-   * match the interval is assumed to span the whole uuid ring.
+   * Neither of the boundaries is included in the interval. 
    */
   inline bool between(const uuid& from, const uuid& to) const {
-    if(from == to) {
-      return (*this != from);
-    }
-
-    // interval does not cross zero
     if(from < to) {
-      return (from < *this && *this < to);
+      return from < *this && *this < to;
     }
-
-    const value_t max_value = std::numeric_limits<value_t>::max();
-    const value_t min_value = std::numeric_limits<value_t>::min();
-
-    // first interval (from, max]
-    // second interval [min, to)
-    return (from != max_value && from < *this && *this <= max_value)
-      || (to != min_value && *this < to && *this >= min_value);
+    return from < *this || *this < to;
   }
 
   inline bool operator==(const uuid &other) const { return val == other.val; }

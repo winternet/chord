@@ -250,9 +250,6 @@ void Router::update(const std::set<chord::node>& nodes) {
 bool Router::update(const chord::node& insert) {
   bool changed = false;
   for(auto it=successors.begin(); it != successors.end(); ++it) {
-    //if(!it->valid())
-    //  changed |= successors.modify(it, change_node(insert));
-
     if(uuid::between(it->uuid, insert.uuid, (it->_node ? it->node().uuid : context.uuid()))) {
       changed |= successors.modify(it, change_node(insert));
     }
@@ -265,14 +262,24 @@ bool Router::update(const chord::node& insert) {
 
 bool Router::remove(const chord::node& node) {
   bool changed = false;
-  RouterEntry replacement = {calc_successor_uuid_for_index(BITS), context.node()};
+  auto replacement = successors.rbegin();
 
   for(auto it=boost::rbegin(successors); it != boost::rend(successors); ++it) {
-    if(it->node() == node || !it->valid()) {
-      changed |= successors.modify(std::prev(it.base()), change_node(*replacement._node));
+    if(!it->valid()) continue;
+
+    if(_predecessor.valid() && node.uuid == _predecessor.node().uuid) {
+      _predecessor = *it;
     }
-    replacement = *it;
+
+    if(it->node().uuid == node.uuid) {
+      if(replacement->valid())
+        changed |= successors.modify(std::prev(it.base()), change_node(replacement->node()));
+      else 
+        changed |= successors.modify(std::prev(it.base()), clear_node());
+    }
+    replacement = it;
   }
+
   return changed;
 }
 

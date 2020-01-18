@@ -57,6 +57,13 @@ private:
     chord::node _node;
   };
 
+  struct clear_node {
+    clear_node(){}
+    void operator()(RouterEntry& entry) {
+      entry._node.reset();
+    }
+  };
+
   using entry_t = RouterEntry;
   using sequence_map_t = boost::multi_index::multi_index_container<
     entry_t,
