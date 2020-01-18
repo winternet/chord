@@ -100,9 +100,6 @@ public:
   static uuid calc_successor_uuid_for_index(const uuid&, const size_t i);
   uuid calc_successor_uuid_for_index(const size_t i) const;
 
-  //static uuid calc_predecessor_uuid_for_index(const uuid&, const size_t i);
-  //uuid calc_predecessor_uuid_for_index(const size_t i) const;
-
   void reset();
 
   bool has_successor() const;
@@ -115,40 +112,7 @@ public:
 
   std::ostream& print(std::ostream&) const;
 
-  /**
-   * get the amount of known routes.
-   *
-   * note that this does _neither_ return the size of the
-   * chord ring nor the currently known routes, it just returns
-   * all routes it once knew.
-   */
-  //size_t size() const;
-
-  //optional<node> successor(size_t idx) const;
-
-  //optional<node> predecessor(size_t idx) const;
-
-  //void replace_successor(const chord::node& old_node, const chord::node& new_node);
-
-  //void set_successor(const size_t index, const chord::node& node);
-
-  //void replace_predecessor(const chord::node& old_node, const chord::node& new_node);
-
-  ////TODO:  update predecessors accordingly?
-  //bool update_successor(const chord::node& old_node, const chord::node& new_node);
-
-  //void set_predecessor(const size_t index, const chord::node& node);
-
-  //void reset(const uuid_t& uuid);
-
-  //void reset(const node& n);
-
   optional<node> successor() const;
-
-  //void fill_predecessors(const chord::node&);
-  //void fill_successors(const chord::node&);
-
-  //const optional<node> predecessor() const;
 
   optional<node> predecessor() const;
 
