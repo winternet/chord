@@ -110,6 +110,7 @@ public:
   bool remove(const node&);
   uuid get(const size_t) const;
 
+  std::string print() const;
   std::ostream& print(std::ostream&) const;
 
   optional<node> successor() const;
@@ -117,6 +118,8 @@ public:
   optional<node> predecessor() const;
 
   optional<node> closest_preceding_node(const uuid_t &uuid);
+
+  std::set<node> finger() const;
 
   friend std::ostream &operator<<(std::ostream &os, const Router &router);
 

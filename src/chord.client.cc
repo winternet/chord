@@ -28,6 +28,7 @@ using chord::common::Header;
 using chord::common::RouterEntry;
 using chord::common::make_node;
 using chord::common::make_header;
+using chord::common::set_source;
 
 using chord::JoinResponse;
 using chord::JoinRequest;
@@ -124,36 +125,87 @@ signal<void(const node)>& Client::on_successor_fail() {
   return event_successor_fail;
 }
 
+Status Client::ping(const chord::node& node) {
+  ClientContext clientContext;
+  PingRequest req;
+  PingResponse res;
+
+  set_source(req, context);
+  return make_stub(node.endpoint)->ping(&clientContext, req, &res);
+}
+
+void Client::handle_state_response(const StateResponse& res) {
+  if(res.has_predecessor()) 
+    router->update(make_node(res.predecessor()));
+  if(res.finger_size() > 0)
+    for(const auto f : res.finger())
+      router->update(make_node(f));
+}
+
 Status Client::join(const endpoint& addr) {
+  if(addr == context.bind_addr) {
+    logger->error("[join] cannot join self");
+    return Status::CANCELLED;
+  }
+
   logger->debug("[join] joining {}", addr);
 
   ClientContext clientContext;
-  JoinRequest req;
+  LookupRequest req;
+  LookupResponse res;
 
-  req.mutable_header()->CopyFrom(make_header(context));
+  set_source(req, context);
+  //req.mutable_header()->CopyFrom(make_header(context));
+  auto status = make_stub(addr)->lookup(&clientContext, req, &res);
 
-  JoinResponse res;
-  const auto status = make_stub(addr)->join(&clientContext, req, &res);
-
-  if (!status.ok() || !res.has_successor()) {
+  if(!status.ok()) {
     logger->info("[join] failed to join {}", addr);
     return status;
   }
 
-  const auto succ = make_node(res.successor());
-  const auto pred = make_node(res.predecessor());
+  ClientContext stateClientContext;
+  StateRequest stateReq;
+  StateResponse stateRes;
+  set_source(stateReq, context);
+  stateReq.set_finger(true);
+  stateReq.set_predecessor(true);
+  status = make_stub(addr)->state(&stateClientContext, stateReq, &stateRes);
 
-  logger->info("[join] successfully joined {}, pred {}, succ {}", addr, pred, succ);
-  router->update({pred, succ});
+  if(!status.ok()) {
+    logger->info("[join] failed to join {}", addr);
+    return status;
+  }
+
+  handle_state_response(stateRes);
+
+  //TODO remove join
+  //JoinRequest req;
+  //JoinResponse res;
+  //req.mutable_header()->CopyFrom(make_header(context));
+
+  //const auto status = make_stub(addr)->join(&clientContext, req, &res);
+
+  //if (!status.ok() || !res.has_successor()) {
+  //  logger->info("[join] failed to join {}", addr);
+  //  return status;
+  //}
+
+  //const auto succ = make_node(res.successor());
+  //const auto pred = make_node(res.predecessor());
+
+  logger->info("[join] successfully joined {}, pred {}, succ {}", addr, *router->predecessor(), *router->successor());
+  //router->update({pred, succ});
 
   return status;
 }
 
+//TODO remove
 Status Client::join(const JoinRequest *req, JoinResponse *res) {
   ClientContext clientContext;
   return join(&clientContext, req, res);
 }
 
+//TODO remove
 Status Client::join(ClientContext *clientContext, const JoinRequest *req, JoinResponse *res) {
 
   logger->trace("[join] forwarding join of {}", req->header().src().uuid());

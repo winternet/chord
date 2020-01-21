@@ -10,6 +10,10 @@ class MockService : public IService {
                             const chord::JoinRequest *req,
                             chord::JoinResponse *res));
 
+  MOCK_METHOD3(ping, grpc::Status(grpc::ServerContext *context,
+                            const chord::PingRequest *req,
+                            chord::PingResponse *res));
+
   MOCK_METHOD1(lookup, chord::common::RouterEntry(const uuid_t &uuid));
 
 

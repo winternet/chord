@@ -42,6 +42,7 @@ class Client : public IClient {
   grpc::Status inform_predecessor_about_leave();
   grpc::Status inform_successor_about_leave();
   void handle_successor_fail(const chord::node&);
+  void handle_state_response(const StateResponse&);
 
  public:
   Client(const Context &context, Router *router);
@@ -53,6 +54,7 @@ class Client : public IClient {
   signal<void(const node)>& on_predecessor_fail() override;
   signal<void(const node)>& on_successor_fail() override;
 
+  grpc::Status ping(const node&) override;
   grpc::Status join(const endpoint& addr) override;
   grpc::Status join(const JoinRequest *req, JoinResponse *res) override;
   grpc::Status join(grpc::ClientContext *clientContext, const JoinRequest *req, JoinResponse *res) override;

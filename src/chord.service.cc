@@ -17,6 +17,7 @@
 #include "chord.log.h"
 #include "chord.node.h"
 #include "chord.router.h"
+#include "chord.utils.h"
 
 using grpc::ServerContext;
 using grpc::Status;
@@ -43,6 +44,16 @@ Service::Service(Context &context, Router *router, IClient* client)
       router{router},
       client{client},
       logger{context.logging.factory().get_or_create(logger_name)} {}
+
+Status Service::ping(ServerContext *serverContext, const PingRequest *req, PingResponse *res) {
+  (void)serverContext;
+
+  logger->trace("[ping] from {}", source_of(req));
+
+  router->update(source_of(req));
+
+  return Status::OK;
+}
 
 Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
   (void)serverContext;
@@ -97,6 +108,22 @@ RouterEntry Service::lookup(const uuid_t &uuid) {
   return res.successor();
 }
 
+Status Service::state(ServerContext *serverContext, const StateRequest *req, StateResponse *res) {
+  (void)serverContext;
+  logger->trace("[state] from {}", source_of(req));
+
+  if(req->predecessor())
+    res->mutable_predecessor()->CopyFrom(make_entry(*router->predecessor()));
+  if(req->finger()) {
+    auto finger_field = res->mutable_finger();
+    for(const auto f:router->finger()) {
+      finger_field->Add(make_entry(f));
+    }
+  }
+
+  return Status::OK;
+}
+
 Status Service::lookup(ServerContext *serverContext, const LookupRequest *req, LookupResponse *res) {
   (void)serverContext;
   logger->trace("[successor] from {}@{} successor of? {}",
@@ -108,21 +135,33 @@ Status Service::lookup(ServerContext *serverContext, const LookupRequest *req, L
   uuid_t self{context.uuid()};
 
   logger->debug("[successor][dump] {}", *router);
+
+  //TODO: use helper
+  router->update(source_of(req));
+  set_source(res, context);
+
   const auto successor = router->successor();
 
+  // handle node join
   if(!successor) {
     logger->error("failed to query successor from this->router");
+    const auto entry = make_entry(context.node());
+    res->mutable_successor()->CopyFrom(entry);
     return Status::CANCELLED;
   }
 
-  if(id == self || id.between(self, successor->uuid)) {
+  if(id == successor->uuid || uuid::between(self, id, successor->uuid)) { //id.between(self, successor->uuid)) {
     logger->trace("[successor] the requested id {} lies between self {} and my successor {}, returning successor", id.string(), self.string(), successor->uuid);
 
-    //--- router entry
-    RouterEntry entry;
-    entry.set_uuid(successor->uuid);
-    entry.set_endpoint(successor->endpoint);
+    const auto status = client->ping(*successor);
+    if(!status.ok()) {
+      logger->error("[successor] pinging successor failed. {}", utils::to_string(status));
+      return Status::CANCELLED;
+      //TODO handle somehow
+    }
 
+    //--- router entry
+    const auto entry = make_entry(*successor);
     res->mutable_successor()->CopyFrom(entry);
   } else {
     logger->trace("[successor] trying to spawn client to forward request.");

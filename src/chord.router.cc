@@ -1,11 +1,13 @@
 #include "chord.router.h"
 
 #include <algorithm>
+#include <set>
 #include <iterator>
 #include <ostream>
 #include <memory>
 #include <vector>
 #include <string>
+#include <sstream>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/iterator/reverse_iterator.hpp>
 
@@ -138,6 +140,12 @@ uuid Router::get(const size_t index) const {
   return it->uuid;
 }
 
+std::string Router::print() const {
+  std::stringstream ss;
+  print(ss);
+  return ss.str();
+}
+
 std::ostream& Router::print(std::ostream& os) const {
   size_t beg = 0, end = 0;
   auto curr = successors.front();
@@ -152,6 +160,15 @@ std::ostream& Router::print(std::ostream& os) const {
   }
   os << "\nrouter[" << beg << ".." << end  << "]: "; curr.print(os);
   return os;
+}
+
+std::set<node> Router::finger() const {
+  std::set<node> finger;
+  for(const auto& entry:successors) {
+    if(entry.valid())
+      finger.insert(entry.node());
+  }
+  return finger;
 }
 
 std::ostream& operator<<(std::ostream &os, const Router &router) {

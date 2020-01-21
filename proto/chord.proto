@@ -19,6 +19,8 @@ service Chord {
   rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
   rpc check     (CheckRequest)      returns (CheckResponse) {}
   rpc leave     (LeaveRequest)      returns (LeaveResponse) {}
+  rpc state     (StateRequest)      returns (StateResponse) {}
+  rpc ping      (PingRequest)       returns (PingResponse) {}
 }
 
 /**
@@ -104,6 +106,32 @@ message LeaveRequest {
 }
 
 message LeaveResponse { 
+  chord.common.Header header = 1;
+}
+
+/**
+ * STATE
+ */
+message StateRequest {
+  chord.common.Header header = 1;
+  bool predecessor = 2;
+  bool finger = 4;
+}
+
+message StateResponse { 
+  chord.common.Header header = 1;
+  chord.common.RouterEntry predecessor = 2;
+  repeated chord.common.RouterEntry finger = 3;
+}
+
+/**
+ * PING
+ */
+message PingRequest {
+  chord.common.Header header = 1;
+}
+
+message PingResponse { 
   chord.common.Header header = 1;
 }
 

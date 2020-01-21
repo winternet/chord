@@ -11,7 +11,7 @@ using chord::common::RouterEntry;
 namespace chord {
 namespace common {
 
-chord::common::Header make_header(const chord::node &node) {
+Header make_header(const chord::node &node) {
   Header header;
   RouterEntry src;
   src.set_uuid(node.uuid);
@@ -20,7 +20,7 @@ chord::common::Header make_header(const chord::node &node) {
   return header;
 }
 
-chord::common::Header make_header(const Context &context) {
+Header make_header(const Context &context) {
   Header header;
   RouterEntry src;
   src.set_uuid(context.uuid());
@@ -29,7 +29,7 @@ chord::common::Header make_header(const Context &context) {
   return header;
 }
 
-chord::node make_node(const RouterEntry& entry) {
+node make_node(const RouterEntry& entry) {
   return {uuid_t{entry.uuid()}, entry.endpoint()};
 }
 

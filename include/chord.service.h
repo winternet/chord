@@ -25,6 +25,8 @@ namespace chord { class NotifyRequest; }
 namespace chord { class NotifyResponse; }
 namespace chord { class StabilizeRequest; }
 namespace chord { class StabilizeResponse; }
+namespace chord { class StateRequest; }
+namespace chord { class StateResponse; }
 namespace chord { class LookupRequest; }
 namespace chord { class LookupResponse; }
 namespace chord { struct Context; }
@@ -45,6 +47,9 @@ class Service final : public chord::Chord::Service, public IService {
                     chord::JoinResponse *res) override;
 
   chord::common::RouterEntry lookup(const uuid_t &uuid) override;
+
+  grpc::Status ping(grpc::ServerContext*, const PingRequest*, PingResponse*) override;
+  grpc::Status state(grpc::ServerContext*, const StateRequest*, StateResponse*) override;
 
   grpc::Status lookup(grpc::ServerContext *context,
                          const chord::LookupRequest *req,

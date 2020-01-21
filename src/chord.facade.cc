@@ -149,17 +149,19 @@ chord::node ChordFacade::successor() {
  * stabilize the ring
  */
 void ChordFacade::stabilize() {
+  if(!router->has_successor()) return;
   client->stabilize();
   // lost connection and we know where to join -> re-join
-  if(!router->has_successor() && !context.join_addr.empty()) {
-    join();
-  }
+  //if(!router->has_successor() && !context.join_addr.empty()) {
+  //  join();
+  //}
 }
 
 /**
  * check predecessor
  */
 void ChordFacade::check_predecessor() {
+  if(!router->has_successor()) return;
   client->check();
 }
 
@@ -167,6 +169,7 @@ void ChordFacade::check_predecessor() {
  * fix finger table
  */
 void ChordFacade::fix_fingers(size_t index) {
+  if(!router->has_successor()) return;
   service->fix_fingers(index);
 }
 
