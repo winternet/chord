@@ -23,8 +23,6 @@ using grpc::ServerContext;
 using grpc::Status;
 
 using chord::common::Header;
-using chord::JoinResponse;
-using chord::JoinRequest;
 using chord::LookupResponse;
 using chord::LookupRequest;
 using chord::StabilizeResponse;
@@ -47,48 +45,11 @@ Service::Service(Context &context, Router *router, IClient* client)
 
 Status Service::ping(ServerContext *serverContext, const PingRequest *req, PingResponse *res) {
   (void)serverContext;
+  (void)res;
 
   logger->trace("[ping] from {}", source_of(req));
 
   router->update(source_of(req));
-
-  return Status::OK;
-}
-
-Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
-  (void)serverContext;
-  const auto node = make_node(req->header().src());
-
-  logger->trace("join request from {}", node);
-  /**
-   * find successor
-   */
-  const auto& src = node.uuid;
-
-  const auto pred = router->predecessor();
-  const auto succ = router->successor();
-
-  /**
-   * initialize the ring
-   */
-  if (!router->has_predecessor()) {
-    logger->info("first node joining, waiting for notify from joined node");
-  }
-  /**
-   * forward request to successor
-   */
-  else if(!uuid::between(context.uuid(), src, succ->uuid)) {
-    return client->join(req, res);
-  }
-
-  auto* res_succ = res->mutable_successor();
-  auto* res_pred = res->mutable_predecessor();
-
-  const auto succ_or_self = succ.value_or(context.node());
-  res_succ->CopyFrom(make_entry(succ_or_self));
-  res_pred->CopyFrom(make_entry(context.node()));
-
-  res->mutable_header()->CopyFrom(make_header(context));
 
   return Status::OK;
 }
@@ -98,7 +59,8 @@ RouterEntry Service::lookup(const uuid_t &uuid) {
   LookupRequest req;
   LookupResponse res;
 
-  req.mutable_header()->CopyFrom(make_header(context));
+  set_source(req, context);
+
   req.set_id(uuid);
 
   const auto status = lookup(&serverContext, &req, &res);
@@ -138,19 +100,11 @@ Status Service::lookup(ServerContext *serverContext, const LookupRequest *req, L
 
   //TODO: use helper
   router->update(source_of(req));
-  set_source(res, context);
+  //set_source(res, context);
 
   const auto successor = router->successor();
 
-  // handle node join
-  if(!successor) {
-    logger->error("failed to query successor from this->router");
-    const auto entry = make_entry(context.node());
-    res->mutable_successor()->CopyFrom(entry);
-    return Status::CANCELLED;
-  }
-
-  if(id == successor->uuid || uuid::between(self, id, successor->uuid)) { //id.between(self, successor->uuid)) {
+  if(id == successor->uuid || uuid::between(self, id, successor->uuid)) {
     logger->trace("[successor] the requested id {} lies between self {} and my successor {}, returning successor", id.string(), self.string(), successor->uuid);
 
     const auto status = client->ping(*successor);
@@ -161,21 +115,19 @@ Status Service::lookup(ServerContext *serverContext, const LookupRequest *req, L
     }
 
     //--- router entry
-    const auto entry = make_entry(*successor);
-    res->mutable_successor()->CopyFrom(entry);
-  } else {
-    logger->trace("[successor] trying to spawn client to forward request.");
-    const auto status = client->lookup(req, res);
-    if (!status.ok()) {
-      logger->warn("[successor] failed to query successor from client!");
-    } else {
-      logger->trace("spawned client, got result");
-      logger->trace("entry {}@{}", res->successor().uuid(), res->successor().endpoint());
-    }
-    return status;
+    res->mutable_successor()->CopyFrom(make_entry(*successor));
+    return Status::OK;
   }
 
-  return Status::OK;
+  logger->trace("[successor] trying to spawn client to forward request.");
+  const auto status = client->lookup(req, res);
+  if (!status.ok()) {
+    logger->warn("[successor] failed to query successor from client!");
+  } else {
+    logger->trace("spawned client, got result");
+    logger->trace("entry {}@{}", res->successor().uuid(), res->successor().endpoint());
+  }
+  return status;
 }
 
 Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *req, StabilizeResponse *res) {
@@ -235,7 +187,7 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
   (void)res;
 
   //--- validate
-  if (!req->has_header() && !req->header().has_src()) {
+  if (!req->has_header() || !req->header().has_src()) {
     logger->warn("failed to validate header");
     return Status::CANCELLED;
   }
@@ -247,11 +199,12 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
   const auto predecessor = router->predecessor();
   const uuid_t self{context.uuid()};
   const auto source_node = make_node(req->header().src());
+
   auto status = Status::OK;
   auto changed_successor = false;
   auto changed_predecessor = false;
 
-  logger->trace("[notify] from{}", source_node);
+  logger->trace("[notify] from {}", source_node);
 
   if(source_node == context.node()) {
     logger->warn("[notify] error notifying: Unable to notify self.");

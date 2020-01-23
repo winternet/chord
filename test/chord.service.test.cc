@@ -31,8 +31,6 @@ using chord::common::RouterEntry;
 using grpc::ServerContext;
 using grpc::Status;
 
-using chord::JoinRequest;
-using chord::JoinResponse;
 using chord::LookupRequest;
 using chord::LookupResponse;
 

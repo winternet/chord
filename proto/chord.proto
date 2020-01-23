@@ -14,7 +14,6 @@ service Chord {
 
   //--- common chord calls
   rpc lookup    (LookupRequest)     returns (LookupResponse) {}
-  rpc join      (JoinRequest)       returns (JoinResponse) {}
   rpc stabilize (StabilizeRequest)  returns (StabilizeResponse) {}
   rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
   rpc check     (CheckRequest)      returns (CheckResponse) {}
@@ -35,19 +34,6 @@ message LookupRequest {
 message LookupResponse { 
   chord.common.Header header = 1;
   chord.common.RouterEntry successor = 2;
-}
-
-/**
- * JOIN
- */
-message JoinRequest {
-  chord.common.Header header = 1;
-}
-
-message JoinResponse { 
-  chord.common.Header header = 1;
-  chord.common.RouterEntry successor = 2;
-  chord.common.RouterEntry predecessor = 3;
 }
 
 /**

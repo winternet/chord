@@ -24,9 +24,6 @@ class IService {
 
   virtual grpc::Status ping(grpc::ServerContext*, const PingRequest*, PingResponse*)=0;
   virtual grpc::Status state(grpc::ServerContext*, const StateRequest*, StateResponse*)=0;
-  virtual grpc::Status join(grpc::ServerContext *context,
-                            const chord::JoinRequest *req,
-                            chord::JoinResponse *res) = 0;
 
   virtual chord::common::RouterEntry lookup(const uuid_t &uuid) = 0;
 

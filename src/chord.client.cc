@@ -30,8 +30,6 @@ using chord::common::make_node;
 using chord::common::make_header;
 using chord::common::set_source;
 
-using chord::JoinResponse;
-using chord::JoinRequest;
 using chord::LookupResponse;
 using chord::LookupRequest;
 using chord::StabilizeResponse;
@@ -178,44 +176,9 @@ Status Client::join(const endpoint& addr) {
 
   handle_state_response(stateRes);
 
-  //TODO remove join
-  //JoinRequest req;
-  //JoinResponse res;
-  //req.mutable_header()->CopyFrom(make_header(context));
-
-  //const auto status = make_stub(addr)->join(&clientContext, req, &res);
-
-  //if (!status.ok() || !res.has_successor()) {
-  //  logger->info("[join] failed to join {}", addr);
-  //  return status;
-  //}
-
-  //const auto succ = make_node(res.successor());
-  //const auto pred = make_node(res.predecessor());
-
   logger->info("[join] successfully joined {}, pred {}, succ {}", addr, *router->predecessor(), *router->successor());
-  //router->update({pred, succ});
 
   return status;
-}
-
-//TODO remove
-Status Client::join(const JoinRequest *req, JoinResponse *res) {
-  ClientContext clientContext;
-  return join(&clientContext, req, res);
-}
-
-//TODO remove
-Status Client::join(ClientContext *clientContext, const JoinRequest *req, JoinResponse *res) {
-
-  logger->trace("[join] forwarding join of {}", req->header().src().uuid());
-  JoinRequest copy(*req);
-  //copy.mutable_header()->CopyFrom(make_header(context));
-
-  const auto predecessor = router->closest_preceding_node(uuid_t(req->header().src().uuid()));
-  logger->trace("[join] forwarding request to {}", predecessor);
-
-  return predecessor ? make_stub(predecessor->endpoint)->join(clientContext, copy, res) : Status::CANCELLED;
 }
 
 void Client::stabilize() {
@@ -307,13 +270,13 @@ Status Client::lookup(ClientContext *clientContext, const LookupRequest *req, Lo
 
   const auto predecessor = router->closest_preceding_node(uuid_t(req->id()));
   // this node is the closest preceding node -> successor is node's direct successor
-  if(predecessor && *predecessor == context.node()) {
-    logger->trace("[successor] this node seems to be the closest preceding node");
-    auto succ = res->mutable_successor();
-    succ->set_uuid(context.uuid());
-    succ->set_endpoint(context.bind_addr);
-    return Status::OK;
-  }
+  //if(predecessor && *predecessor == context.node()) {
+  //  logger->trace("[successor] this node seems to be the closest preceding node");
+  //  auto succ = res->mutable_successor();
+  //  succ->set_uuid(context.uuid());
+  //  succ->set_endpoint(context.bind_addr);
+  //  return Status::OK;
+  //}
   logger->trace("[successor] forwarding request to {}", predecessor);
 
   return predecessor ? make_stub(predecessor->endpoint)->lookup(clientContext, copy, res) : Status::CANCELLED;

@@ -56,8 +56,6 @@ class Client : public IClient {
 
   grpc::Status ping(const node&) override;
   grpc::Status join(const endpoint& addr) override;
-  grpc::Status join(const JoinRequest *req, JoinResponse *res) override;
-  grpc::Status join(grpc::ClientContext *clientContext, const JoinRequest *req, JoinResponse *res) override;
 
   void stabilize() override;
 

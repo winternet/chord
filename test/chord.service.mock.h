@@ -6,10 +6,6 @@ namespace chord {
 class MockService : public IService {
   public:
 
-  MOCK_METHOD3(join, grpc::Status(grpc::ServerContext *context,
-                            const chord::JoinRequest *req,
-                            chord::JoinResponse *res));
-
   MOCK_METHOD3(ping, grpc::Status(grpc::ServerContext *context,
                             const chord::PingRequest *req,
                             chord::PingResponse *res));

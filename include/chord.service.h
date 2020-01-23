@@ -17,8 +17,6 @@
 
 namespace chord { class CheckRequest; }
 namespace chord { class CheckResponse; }
-namespace chord { class JoinRequest; }
-namespace chord { class JoinResponse; }
 namespace chord { class LeaveRequest; }
 namespace chord { class LeaveResponse; }
 namespace chord { class NotifyRequest; }
@@ -42,9 +40,6 @@ class Service final : public chord::Chord::Service, public IService {
 
  public:
   Service(Context &context, Router *router, IClient* client);
-
-  grpc::Status join(grpc::ServerContext *context, const chord::JoinRequest *req,
-                    chord::JoinResponse *res) override;
 
   chord::common::RouterEntry lookup(const uuid_t &uuid) override;
 
