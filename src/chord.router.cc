@@ -93,19 +93,18 @@ bool Router::update(const chord::node& insert) {
   }
   return changed;
 }
-
-bool Router::remove(const chord::node& node) {
+bool Router::remove(const chord::uuid& uuid) {
   bool changed = false;
   auto replacement = successors.rbegin();
 
   for(auto it=boost::rbegin(successors); it != boost::rend(successors); ++it) {
     if(!it->valid()) continue;
 
-    if(_predecessor.valid() && node.uuid == _predecessor.node().uuid) {
+    if(_predecessor.valid() && uuid == _predecessor.node().uuid) {
       _predecessor = *it;
     }
 
-    if(it->node().uuid == node.uuid) {
+    if(it->node().uuid == uuid) {
       if(replacement->valid())
         changed |= successors.modify(std::prev(it.base()), change_node(replacement->node()));
       else 
@@ -115,6 +114,10 @@ bool Router::remove(const chord::node& node) {
   }
 
   return changed;
+}
+
+bool Router::remove(const chord::node& node) {
+  return remove(node.uuid);
 }
 
 optional<node> Router::predecessor() const {

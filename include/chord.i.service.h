@@ -32,17 +32,9 @@ class IService {
                                  const chord::LookupRequest *req,
                                  chord::LookupResponse *res) = 0;
 
-  virtual grpc::Status stabilize(grpc::ServerContext *context,
-                                 const chord::StabilizeRequest *req,
-                                 chord::StabilizeResponse *res) = 0;
-
   virtual grpc::Status notify(grpc::ServerContext *context,
                               const chord::NotifyRequest *req,
                               chord::NotifyResponse *res) = 0;
-
-  virtual grpc::Status check(grpc::ServerContext *context,
-                             const chord::CheckRequest *req,
-                             chord::CheckResponse *res) = 0;
 
   virtual grpc::Status leave(grpc::ServerContext *context,
                              const chord::LeaveRequest *req,

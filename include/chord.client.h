@@ -56,13 +56,14 @@ class Client : public IClient {
 
   grpc::Status ping(const node&) override;
   grpc::Status join(const endpoint& addr) override;
+  grpc::Status state(const node&, const bool, const bool) override;
 
-  void stabilize() override;
+  //void stabilize() override;
 
   grpc::Status notify() override;
   grpc::Status notify(const node&, const node&, const optional<node>&) override;
 
-  void check() override;
+  //void check() override;
 
   chord::common::RouterEntry lookup(const uuid_t &id) override;
 

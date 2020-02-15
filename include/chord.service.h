@@ -15,14 +15,10 @@
 #include "chord.uuid.h"
 #include "chord.signal.h"
 
-namespace chord { class CheckRequest; }
-namespace chord { class CheckResponse; }
 namespace chord { class LeaveRequest; }
 namespace chord { class LeaveResponse; }
 namespace chord { class NotifyRequest; }
 namespace chord { class NotifyResponse; }
-namespace chord { class StabilizeRequest; }
-namespace chord { class StabilizeResponse; }
 namespace chord { class StateRequest; }
 namespace chord { class StateResponse; }
 namespace chord { class LookupRequest; }
@@ -44,23 +40,16 @@ class Service final : public chord::Chord::Service, public IService {
   chord::common::RouterEntry lookup(const uuid_t &uuid) override;
 
   grpc::Status ping(grpc::ServerContext*, const PingRequest*, PingResponse*) override;
+
   grpc::Status state(grpc::ServerContext*, const StateRequest*, StateResponse*) override;
 
   grpc::Status lookup(grpc::ServerContext *context,
                          const chord::LookupRequest *req,
                          chord::LookupResponse *res) override;
 
-  grpc::Status stabilize(grpc::ServerContext *context,
-                         const chord::StabilizeRequest *req,
-                         chord::StabilizeResponse *res) override;
-
   grpc::Status notify(grpc::ServerContext *context,
                       const chord::NotifyRequest *req,
                       chord::NotifyResponse *res) override;
-
-  grpc::Status check(grpc::ServerContext *context,
-                     const chord::CheckRequest *req,
-                     chord::CheckResponse *res) override;
 
   grpc::Status leave(grpc::ServerContext *context, 
                      const chord::LeaveRequest *req,

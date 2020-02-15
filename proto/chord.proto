@@ -14,9 +14,7 @@ service Chord {
 
   //--- common chord calls
   rpc lookup    (LookupRequest)     returns (LookupResponse) {}
-  rpc stabilize (StabilizeRequest)  returns (StabilizeResponse) {}
   rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
-  rpc check     (CheckRequest)      returns (CheckResponse) {}
   rpc leave     (LeaveRequest)      returns (LeaveResponse) {}
   rpc state     (StateRequest)      returns (StateResponse) {}
   rpc ping      (PingRequest)       returns (PingResponse) {}
@@ -37,17 +35,6 @@ message LookupResponse {
 }
 
 /**
- * STABILIZE
- */
-message StabilizeRequest {
-  chord.common.Header header = 1;
-}
-message StabilizeResponse {
-  chord.common.Header header = 1;
-  chord.common.RouterEntry predecessor = 2;
-}
-
-/**
  * NOTIFY
  */
 message NotifyRequest {
@@ -64,18 +51,6 @@ message NotifyRequest {
 }
 message NotifyResponse {
   chord.common.Header header = 1;
-}
-
-/**
- * CHECK
- */
-message CheckRequest {
-  chord.common.Header header = 1;
-  string id = 2;
-}
-message CheckResponse {
-  chord.common.Header header = 1;
-  string id = 2;
 }
 
 /**

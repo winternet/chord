@@ -12,12 +12,10 @@ class MockClient : public IClient {
 
   MOCK_METHOD1(join, grpc::Status(const endpoint&));
 
-  MOCK_METHOD0(stabilize, void(void));
-
   MOCK_METHOD0(notify, grpc::Status(void));
   MOCK_METHOD3(notify, grpc::Status(const node&, const node&, const optional<node>&));
 
-  MOCK_METHOD0(check, void(void));
+  //MOCK_METHOD0(check, void(void));
 
   MOCK_METHOD1(lookup, chord::common::RouterEntry(const uuid_t &id));
 

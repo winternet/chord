@@ -72,15 +72,49 @@ void ChordFacade::start() {
 }
 
 void ChordFacade::start_scheduler() {
-  //--- stabilize
-  scheduler->schedule(chrono::milliseconds(context.stabilize_period_ms), [this] {
-    stabilize();
+  //--- maintain finger table elements
+  size_t i = 0;
+  scheduler->schedule(chrono::milliseconds(context.check_period_ms), [this, &i]() mutable {
+    if(i >= Router::BITS) {
+      i = 0;
+    }
+
+    const auto id = this->router->calc_successor_uuid_for_index(i);
+    try {
+      const auto node = make_node(this->client->lookup(id));
+      this->router->update(node);
+    } catch(...) {
+      this->router->remove(id);
+    }
   });
 
-  //--- check predecessor
-  scheduler->schedule(chrono::milliseconds(context.check_period_ms), [this] {
-    check_predecessor();
+  // stabilize
+  size_t j=0;
+  scheduler->schedule(chrono::milliseconds(context.stabilize_period_ms), [this, &j]() mutable {
+
+    const auto successor = this->router->successor();
+    if(!successor) return;
+
+    const auto predecessor = this->router->predecessor();
+
+    this->client->state(*successor, true, true);
+
+    const auto newSuccessor = this->router->successor();
+    const auto newPredecessor = this->router->predecessor();
+
+    if(uuid::between(this->context.uuid(), newSuccessor->uuid, successor->uuid)) {
+      
+    }
+
   });
+  //scheduler->schedule(chrono::milliseconds(context.stabilize_period_ms), [this, &i] {
+  //  //stabilize();
+  //});
+
+  //--- check predecessor
+  //scheduler->schedule(chrono::milliseconds(context.check_period_ms), [this] {
+  //  check_predecessor();
+  //});
 
   //--- fix fingers
   scheduler->schedule(chrono::milliseconds(context.check_period_ms), [this] {
@@ -150,7 +184,8 @@ chord::node ChordFacade::successor() {
  */
 void ChordFacade::stabilize() {
   if(!router->has_successor()) return;
-  client->stabilize();
+  //TODO
+  //client->stabilize();
   // lost connection and we know where to join -> re-join
   //if(!router->has_successor() && !context.join_addr.empty()) {
   //  join();
@@ -162,7 +197,8 @@ void ChordFacade::stabilize() {
  */
 void ChordFacade::check_predecessor() {
   if(!router->has_successor()) return;
-  client->check();
+  //TODO
+  //client->check();
 }
 
 /**

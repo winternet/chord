@@ -21,15 +21,16 @@ class IClient {
   virtual ~IClient() {}
   virtual void leave() =0;
 
+  virtual grpc::Status state(const node&, const bool, const bool) =0;
   virtual grpc::Status ping(const node&) =0;
   virtual grpc::Status join(const endpoint& addr) =0;
 
-  virtual void stabilize() =0;
+  //virtual void stabilize() =0;
 
   virtual grpc::Status notify() =0;
   virtual grpc::Status notify(const node&, const node&, const optional<node>&) =0;
 
-  virtual void check() =0;
+  //virtual void check() =0;
 
   virtual chord::common::RouterEntry lookup(const uuid_t &id) =0;
 

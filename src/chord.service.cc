@@ -25,12 +25,8 @@ using grpc::Status;
 using chord::common::Header;
 using chord::LookupResponse;
 using chord::LookupRequest;
-using chord::StabilizeResponse;
-using chord::StabilizeRequest;
 using chord::NotifyResponse;
 using chord::NotifyRequest;
-using chord::CheckResponse;
-using chord::CheckRequest;
 
 using namespace std;
 using namespace chord::common;
@@ -104,6 +100,8 @@ Status Service::lookup(ServerContext *serverContext, const LookupRequest *req, L
 
   const auto successor = router->successor();
 
+  if(!successor) return Status::CANCELLED;
+
   if(id == successor->uuid || uuid::between(self, id, successor->uuid)) {
     logger->trace("[successor] the requested id {} lies between self {} and my successor {}, returning successor", id.string(), self.string(), successor->uuid);
 
@@ -128,26 +126,6 @@ Status Service::lookup(ServerContext *serverContext, const LookupRequest *req, L
     logger->trace("entry {}@{}", res->successor().uuid(), res->successor().endpoint());
   }
   return status;
-}
-
-Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *req, StabilizeResponse *res) {
-  (void)serverContext;
-  logger->trace("stabilize from {}@{}", req->header().src().uuid(),
-                req->header().src().endpoint());
-
-  const auto predecessor = router->predecessor();
-  if (predecessor) {
-    logger->debug("returning predecessor {}", predecessor);
-
-    RouterEntry entry;
-    entry.set_uuid(predecessor->uuid);
-    entry.set_endpoint(predecessor->endpoint);
-
-    res->mutable_predecessor()->CopyFrom(entry);
-  }
-  res->mutable_header()->CopyFrom(make_header(context));
-
-  return Status::OK;
 }
 
 Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, LeaveResponse *res) {
@@ -229,15 +207,6 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
   }
 
   return status;
-}
-
-Status Service::check(ServerContext *serverContext, const CheckRequest *req, CheckResponse *res) {
-  (void)serverContext;
-  logger->trace("check from {}@{}", req->header().src().uuid(),
-                req->header().src().endpoint());
-  res->mutable_header()->CopyFrom(make_header(context));
-  res->set_id(req->id());
-  return Status::OK;
 }
 
 void Service::fix_fingers(size_t index) {

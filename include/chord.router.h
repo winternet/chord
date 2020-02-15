@@ -86,6 +86,9 @@ private:
   void init();
   void cleanup();
 
+  //signal<void(const node)> event_predecessor_fail;
+  //signal<void(const node)> event_predecessor_fail;
+
 protected:
   sequence_map_t successors;
   RouterEntry _predecessor;
@@ -108,6 +111,7 @@ public:
   void update(const std::set<chord::node>&);
   bool update(const node&);
   bool remove(const node&);
+  bool remove(const uuid&);
   uuid get(const size_t) const;
 
   std::string print() const;
