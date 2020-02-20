@@ -102,7 +102,7 @@ Status Service::lookup(ServerContext *serverContext, const LookupRequest *req, L
 
   if(!successor) return Status::CANCELLED;
 
-  if(id == successor->uuid || uuid::between(self, id, successor->uuid)) {
+  if(self == id || id == successor->uuid || uuid::between(self, id, successor->uuid)) {
     logger->trace("[successor] the requested id {} lies between self {} and my successor {}, returning successor", id.string(), self.string(), successor->uuid);
 
     const auto status = client->ping(*successor);

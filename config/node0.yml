@@ -12,6 +12,7 @@ no-controller: No
 
 ## details
 stabilize_ms: 1000
+#stabilize_ms: 30000
 check_ms: 1000
 
 ## replication / striping

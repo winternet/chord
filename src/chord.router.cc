@@ -143,6 +143,15 @@ uuid Router::get(const size_t index) const {
   return it->uuid;
 }
 
+std::vector<node> Router::get() const {
+  std::vector<node> ret;
+  auto&& ordered_unique = successors.get<ordered_unique_tag>();
+  for(const auto entry:ordered_unique) {
+    if(entry.valid()) ret.push_back(entry.node());
+  }
+  return ret;
+}
+
 std::string Router::print() const {
   std::stringstream ss;
   print(ss);

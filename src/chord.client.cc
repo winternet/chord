@@ -227,6 +227,7 @@ Status Client::notify() {
   const auto successor = router->successor();
   if(!successor) {
     logger->trace("[notify] no successor to notify.");
+    return Status::OK;
   }
 
   ClientContext clientContext;

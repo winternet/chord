@@ -89,22 +89,26 @@ void ChordFacade::start_scheduler() {
   });
 
   // stabilize
-  size_t j=0;
-  scheduler->schedule(chrono::milliseconds(context.stabilize_period_ms), [this, &j]() mutable {
+  scheduler->schedule(chrono::milliseconds(context.stabilize_period_ms), [this]() mutable {
+    const auto successors = this->router->get();
+    for(const auto successor : successors) {
+      const auto predecessor = this->router->predecessor();
 
-    const auto successor = this->router->successor();
-    if(!successor) return;
+      auto state = this->client->state(successor, true, true);
+      if(!state.ok()) {
+        continue;
+      }
 
-    const auto predecessor = this->router->predecessor();
+      const auto new_successor = this->router->successor();
+      const auto new_predecessor = this->router->predecessor();
 
-    this->client->state(*successor, true, true);
-
-    const auto newSuccessor = this->router->successor();
-    const auto newPredecessor = this->router->predecessor();
-
-    if(uuid::between(this->context.uuid(), newSuccessor->uuid, successor->uuid)) {
-      
+      if(uuid::between(this->context.uuid(), new_successor->uuid, successor.uuid)) {
+        //re-fetch since successor has changed
+        this->client->state(*new_successor, true, false);
+      }
     }
+
+    this->client->notify();
 
   });
   //scheduler->schedule(chrono::milliseconds(context.stabilize_period_ms), [this, &i] {

@@ -43,7 +43,7 @@ protected:
 
 private:
   struct sequence_tag {};
-  struct key_tag {};
+  struct ordered_unique_tag {};
   struct value_tag {};
 
 
@@ -69,12 +69,13 @@ private:
     entry_t,
     boost::multi_index::indexed_by<
         boost::multi_index::sequenced<boost::multi_index::tag<struct sequence_tag>>,
-        boost::multi_index::ordered_non_unique<
-          boost::multi_index::tag<struct key_tag>,
+        boost::multi_index::ordered_unique<
+          boost::multi_index::tag<struct ordered_unique_tag>,
           boost::multi_index::member<entry_t, uuid, &entry_t::uuid>>>>;//,
         //boost::multi_index::ordered_non_unique<
         //  boost::multi_index::tag<struct value_tag>,
         //  boost::multi_index::member<entry_t, optional<endpoint>, &entry_t::_node>>>>;
+        //>>;
 
   static constexpr auto logger_name = "chord.router";
 
@@ -112,7 +113,9 @@ public:
   bool update(const node&);
   bool remove(const node&);
   bool remove(const uuid&);
+
   uuid get(const size_t) const;
+  std::vector<node> get() const;
 
   std::string print() const;
   std::ostream& print(std::ostream&) const;
