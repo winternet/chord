@@ -5,9 +5,10 @@
 #include <iostream>
 #include <string>
 #include "chord.context.h"
+#include "util/chord.test.helper.h"
 #include "chord.node.h"
 #include "chord.path.h"
-#include "chord.router.h"
+#include "chord.router.spy.h"
 #include "chord.signal.h"
 #include "chord.uuid.h"
 
@@ -19,25 +20,25 @@
 
 using namespace std;
 using namespace chord;
+using namespace chord::test;
 
 TEST(RouterTest, initialize) {
-  Context context;
-  Router router{context};
+  Context context = make_context(0);
+  RouterSpy router{context};
 
-  ASSERT_NOT_NULL(router.successor());
-  EXPECT_EQ(router.successor()->uuid, context.uuid());
+  //TODO check
+  //ASSERT_FALSE(router.successor());
+  ASSERT_FALSE(router.predecessor());
 
   ASSERT_FALSE(router.has_successor());
+  ASSERT_FALSE(router.has_predecessor());
 
   for (size_t i = 1; i < Router::BITS; i++) {
-    ASSERT_NULL(router.successor(i));
+    const auto entry = router.entry(i);
+    ASSERT_FALSE(entry.valid());
+    ASSERT_EQ(entry.uuid, chord::Router::calc_successor_uuid_for_index(context.uuid(), i));
   }
-
-  for (size_t i = 0; i < Router::BITS; i++) {
-    ASSERT_NULL(router.predecessor(i));
-  }
-
-  ASSERT_EQ(1, router.size());
+  ASSERT_EQ(context.node(), router.closest_preceding_node(9999));
 }
 
 TEST(RouterTest, dump) {
@@ -47,63 +48,94 @@ TEST(RouterTest, dump) {
 }
 
 TEST(RouterTest, closest_preceding_node) {
-  Context context;
-  context.set_uuid(0);
-  Router router(context);
+  Context context = make_context(0);
+  RouterSpy router(context);
 
-  for (int i = 0; i <= 100; i++) {
-    router.set_successor(i, {i, to_string(i)});
+  ASSERT_FALSE(router.has_predecessor());
+  ASSERT_FALSE(router.has_successor());
+
+  for (size_t i = 1; i <= 100; i++) {
+    router.update(node{i, "127.0.0.1:50"+to_string(i)});
   }
+  router.update(node{199, "192.168.1.1:50199"});
 
-  auto predecessor = router.closest_preceding_node(200)->uuid;
+  ASSERT_TRUE(router.has_predecessor());
+  ASSERT_EQ(router.predecessor()->uuid, 199);
+  ASSERT_TRUE(router.has_successor());
 
-  ASSERT_EQ(predecessor, 100);
-  ASSERT_EQ(101, router.size());
+  auto predecessor = router.closest_preceding_node(200);
+  ASSERT_EQ(predecessor->uuid, 199);
+  ASSERT_EQ(predecessor->endpoint, "192.168.1.1:50199");
+
+  predecessor = router.closest_preceding_node(257);
+  ASSERT_EQ(predecessor->uuid, 199);
+  ASSERT_EQ(predecessor->endpoint, "192.168.1.1:50199");
+
+  // updating a further node wont affect finger of 128 (199)
+  router.update(node{230, "192.168.1.3:50230"});
+  ASSERT_EQ(router.predecessor()->uuid, 230);
+
+  predecessor = router.closest_preceding_node(257);
+  ASSERT_EQ(predecessor->uuid, 199);
+  ASSERT_EQ(predecessor->endpoint, "192.168.1.1:50199");
+
+  predecessor = router.closest_preceding_node(400);
+  ASSERT_EQ(predecessor->uuid, 199);
+  ASSERT_EQ(predecessor->endpoint, "192.168.1.1:50199");
+
+  router.update(node{600, "192.168.1.1:50600"});
+  ASSERT_EQ(router.predecessor()->uuid, 600);
+
+  predecessor = router.closest_preceding_node(1000);
+  ASSERT_EQ(predecessor->uuid, 600);
+  ASSERT_EQ(predecessor->endpoint, "192.168.1.1:50600");
+
+  predecessor = router.closest_preceding_node(500);
+  ASSERT_EQ(predecessor->uuid, 199);
+  ASSERT_EQ(predecessor->endpoint, "192.168.1.1:50199");
+
+  ASSERT_EQ(router.predecessor()->uuid, 600);
+  std::cout << "\nrouter dump:\n" << router << std::endl;
 }
 
 TEST(RouterTest, closest_preceding_node_less_1) {
-  Context context;
-  context.set_uuid(1);
+  Context context = make_context(1);
   Router router(context);
 
-  router.set_successor(7, {100, to_string(100)});
+  router.update({100, "127.0.0.1:100"});
 
   // predecessor of 1 is 100
   uuid_t predecessor = router.closest_preceding_node(1)->uuid;
 
   ASSERT_EQ(predecessor, 100);
-  ASSERT_EQ(2, router.size());
 }
 
 TEST(RouterTest, closest_preceding_node_mod) {
-  Context context;
-  context.set_uuid(999);
+  Context context = make_context(999);
   Router router(context);
 
   // direct successor of 999 is 0
-  for (int i = 0; i <= 100; i++) {
-    router.set_successor(i, {i, to_string(i)});
+  for (size_t i = 0; i <= 100; i++) {
+    router.update({router.calc_successor_uuid_for_index(i), to_string(i)});
   }
+  uuid_t predecessor = router.closest_preceding_node(router.calc_successor_uuid_for_index(50))->uuid;
 
-  uuid_t predecessor = router.closest_preceding_node(50)->uuid;
-
-  ASSERT_EQ(predecessor, 49);
-  ASSERT_EQ(102, router.size());
+  ASSERT_EQ(predecessor, router.calc_successor_uuid_for_index(49));
 }
 
 TEST(RouterTest, closest_preceding_node_mod_2) {
-  Context context;
-  context.set_uuid(5);
+  Context context = make_context(5);
   Router router(context);
 
   // 5 -> [0]
-  router.set_successor(0, {0, "0.0.0.0:50050"});
-  router.set_predecessor(0, {0, "0.0.0.0:50050"});
+  router.update({0, "0.0.0.0:50050"});
 
-  uuid_t predecessor = router.closest_preceding_node(5)->uuid;
+  const auto predecessor = router.closest_preceding_node(5)->uuid;
 
   ASSERT_EQ(predecessor, 0);
-  ASSERT_EQ(2, router.size());
+
+  ASSERT_TRUE(router.has_predecessor());
+  ASSERT_EQ(router.predecessor()->uuid, 0);
 }
 
 /**
@@ -115,173 +147,175 @@ TEST(RouterTest, closest_preceding_node_mod_2) {
 TEST(RouterTest, set_uuid_resets_router) {
   Context context;
   Router router(context);
-  auto uuid = context.uuid();
 
   auto successor = router.successor();
-  ASSERT_EQ(successor->uuid, uuid);
-
-  //--- calls router#reset() internally
-  context.set_uuid(0);
-
-  auto successor2 = router.successor();
-  ASSERT_EQ(successor2->uuid, 0);
-  ASSERT_EQ(successor2->endpoint, context.bind_addr);
-  // first uuid + second uuid
-  ASSERT_EQ(2, router.size());
+  ASSERT_FALSE(router.has_predecessor());
+  //TODO check
+  //ASSERT_FALSE(successor);
 }
 
 TEST(RouterTest, closest_preceding_node_mod_3) {
-  Context context;
-  context.set_uuid(8);
+  Context context = make_context(8);
   Router router(context);
 
   //  4<-8-[1]->4
-  router.set_successor(0, {4, "0.0.0.0:50050"});
-  router.set_predecessor(0, {4, "0.0.0.0:50050"});
+  router.update({4, "0.0.0.0:50004"});
 
-  uuid_t predecessor = router.closest_preceding_node(1)->uuid;
+  const auto predecessor = router.closest_preceding_node(1)->uuid;
 
   ASSERT_EQ(predecessor, 8);
-  ASSERT_EQ(2, router.size());
 }
 
 TEST(RouterTest, closest_preceding_node_3) {
-  Context context;
-  context.set_uuid(8);
+  Context context = make_context(8);
   Router router(context);
 
   // direct successor of 4<-8->10-[1]->4->...
-  router.set_successor(0, {10, "0.0.0.0:50050"});
-  router.set_successor(1, { 4, "0.0.0.0:50050"});
+  
+  router.update({10, "0.0.0.0:50050"});
+  router.update({ 4, "0.0.0.0:50050"});
 
-  router.set_predecessor(0, {4, "0.0.0.0:50050"});
-
-  uuid_t predecessor = router.closest_preceding_node(1)->uuid;
+  const auto predecessor = router.closest_preceding_node(1)->uuid;
 
   ASSERT_EQ(predecessor, 10);
-  ASSERT_EQ(3, router.size());
 }
 
 TEST(RouterTest, set_successor_sets_preceding_nodes) {
   Context context;
-  Router router{context};
+  RouterSpy router{context};
 
-  ASSERT_NOT_NULL(router.successor());
-  EXPECT_EQ(router.successor()->uuid, context.uuid());
+  //TODO check
+  //ASSERT_FALSE(router.successor());
 
-  // --> 0: {}, 1: {}, 2: {}, ...
-  ASSERT_EQ(1, router.size());
-
-  for (size_t i = 5; i < 10; i++) {
-    router.set_successor(i, {1, "1"});
-  }
+  router.update({5, to_string(5)});
 
   // --> 0: {1}, 1: {1}, 2: {1}, ..., 9:{1}, 10: {}
-  ASSERT_EQ(2, router.size());
   for (size_t i = 0; i < 10; i++) {
-    ASSERT_NOT_NULL(router.successor(i));
-    ASSERT_EQ(router.successor(i)->uuid, uuid_t{1});
+    ASSERT_TRUE(router.entry(i).valid());
+    ASSERT_EQ(router.entry(i).node().uuid, uuid_t{5});
   }
 }
 
 TEST(RouterTest, set_successor_rewrites_same_preceding_nodes) {
-  Context context;
-  Router router{context};
+  Context context = make_context(0);
+  RouterSpy router{context};
 
-  ASSERT_NOT_NULL(router.successor());
-  EXPECT_EQ(router.successor()->uuid, context.uuid());
+  ASSERT_FALSE(router.has_successor());
+  //TODO check
+  //ASSERT_FALSE(router.successor());
 
   // [0..5] -> uuid_t{5}
-  router.set_successor(5, {5, "5"});
+  router.update({32, "32"});
   // [6..10] -> uuid_t{5}
-  router.set_successor(10, {10, "10"});
+  router.update({128, "128"});
 
   for (size_t i = 0; i < 10; i++) {
-    const auto succ = router.successor(i);
-    ASSERT_NOT_NULL(succ);
-    if(i <= 5) {
-      ASSERT_EQ(router.successor(i)->uuid, uuid_t{5});
+    const auto succ = router.entry(i);
+    std::cerr << "i: " << i;
+    if(i < 5) {
+      ASSERT_EQ(router.entry(i).node().uuid, uuid_t{32});
     } else {
-      ASSERT_EQ(router.successor(i)->uuid, uuid_t{10});
+      ASSERT_EQ(router.entry(i).node().uuid, uuid_t{128});
     }
   }
 
   // insert new node
-  router.set_successor(2, {2, "2"});
+  router.update({8, "8"});
 
   for (size_t i = 0; i < 10; i++) {
-    const auto succ = router.successor(i);
-    ASSERT_NOT_NULL(succ);
-    if(i <= 2) {
-      ASSERT_EQ(router.successor(i)->uuid, uuid_t{2});
-    } else if(i <= 5) {
-      ASSERT_EQ(router.successor(i)->uuid, uuid_t{5});
+    const auto succ = router.entry(i);
+    if(i < 3) {
+      ASSERT_EQ(router.entry(i).node().uuid, uuid_t{8});
+    } else if(i < 5) {
+      ASSERT_EQ(router.entry(i).node().uuid, uuid_t{32});
     } else {
-      ASSERT_EQ(router.successor(i)->uuid, uuid_t{10});
+      ASSERT_EQ(router.entry(i).node().uuid, uuid_t{128});
     }
   }
+  const auto node_set = router.get();
+  ASSERT_EQ(node_set.size(), 3);
 }
 
-TEST(RouterTest, reset_block) {
-  Context context;
-  Router router{context};
+TEST(RouterTest, reset_block_last) {
+  Context context = make_context(0);
+  RouterSpy router{context};
 
-  ASSERT_NOT_NULL(router.successor());
-  EXPECT_EQ(router.successor()->uuid, context.uuid());
+  ASSERT_FALSE(router.has_successor());
+  //TODO check
+  //ASSERT_FALSE(router.successor());
+  ASSERT_FALSE(router.has_predecessor());
+  ASSERT_FALSE(router.predecessor());
 
   // initialize successors in groups(i) of 5
   for (size_t i = 0; i < 20; i += 5) {
-    for (size_t j = i; j < 5; ++j) {
-      router.set_successor(j, {i, "localhost:" + std::to_string(i)});
+    router.update({router.calc_successor_uuid_for_index(i), "localhost:"+to_string(i)});
+  }
+
+  std::cout << "\n\nrouter:\n" << router;
+
+  for (size_t i=5; i < 20; i += 5) {
+    for (size_t j=i; j < 5; ++j) {
+      ASSERT_EQ("localhost:"+to_string(i), router.entry(i).node().endpoint);
     }
   }
 
-  // reset first group
-  router.reset(uuid{1});
-
-  for (size_t i = 0; i < 20; i += 5) {
-    for (size_t j = i; j < 5; ++j) {
-      if (i == 1) {
-        // check reset
-        ASSERT_EQ(router.successor(i+j)->uuid, uuid_t{i+1});
-      } else {
-        ASSERT_EQ(router.successor(i+j)->uuid, uuid_t{i});
-      }
-    }
-  }
+  ASSERT_TRUE(router.has_predecessor());
   ASSERT_TRUE(router.has_successor());
+
+  ASSERT_EQ(router.successor()->uuid, 32);
+  ASSERT_EQ(router.predecessor()->uuid, 32768);
+
+  router.remove({32768, "localhost:15"});
+
+  ASSERT_EQ(router.successor()->uuid, 32);
+  ASSERT_EQ(router.predecessor()->uuid, 1024);
+
+  for(size_t i=0; i < 32; ++i) {
+    if(i<5) 
+      ASSERT_EQ(router.entry(i).node().uuid, 32);
+    else if(i<15)
+      ASSERT_EQ(router.entry(i).node().uuid, 1024);
+    else
+      ASSERT_FALSE(router.entry(i).valid());
+  }
+
+  std::cout << "\n\nrouter:\n" << router;
 }
 
-TEST(RouterTest, reset_fill_empty_blocks) {
-  Context context;
-  Router router{context};
+TEST(RouterTest, reset_block_middle) {
+  Context context = make_context(0);
+  RouterSpy router{context};
 
-  ASSERT_NOT_NULL(router.successor());
-  EXPECT_EQ(router.successor()->uuid, context.uuid());
+  ASSERT_FALSE(router.has_successor());
+  //TODO: check
+  //ASSERT_FALSE(router.successor());
+  ASSERT_FALSE(router.has_predecessor());
+  ASSERT_FALSE(router.predecessor());
 
   // initialize successors in groups(i) of 5
   for (size_t i = 0; i < 20; i += 5) {
-    for (size_t j = i; j < 5; ++j) {
-      if(i==1) {
-        router.set_successor(j, {});
-      }
-      router.set_successor(j, {i, "localhost:" + std::to_string(i)});
-    }
+    router.update({router.calc_successor_uuid_for_index(i), "localhost:"+to_string(i)});
   }
 
-  // reset second group - should fill empty nodes within first group
-  router.reset(node{2, "localhost:2"});
+  std::cout << "\n\nrouter:\n" << router;
 
-  for (size_t i = 0; i < 20; i += 5) {
-    for (size_t j = i; j < 5; ++j) {
-      if (i == 1) {
-        // check reset
-        ASSERT_EQ(router.successor(i+j)->uuid, uuid_t{i+1});
-      } else {
-        ASSERT_EQ(router.successor(i+j)->uuid, uuid_t{i});
-      }
-    }
+  ASSERT_EQ(router.successor()->uuid, 32);
+  ASSERT_EQ(router.predecessor()->uuid, 32768);
+
+  router.remove({1024, "localhost:15"});
+
+  ASSERT_EQ(router.successor()->uuid, 32);
+  ASSERT_EQ(router.predecessor()->uuid, 32768);
+
+  for(size_t i=0; i < 32; ++i) {
+    if(i<5) 
+      ASSERT_EQ(router.entry(i).node().uuid, 32);
+    else if(i<15)
+      ASSERT_EQ(router.entry(i).node().uuid, 32768);
+    else
+      ASSERT_FALSE(router.entry(i).valid());
   }
 
-  ASSERT_TRUE(router.has_successor());
+  std::cout << "\n\nrouter:\n" << router;
 }
+

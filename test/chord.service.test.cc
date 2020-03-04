@@ -23,6 +23,7 @@
 #include "chord_common.pb.h"
 #include "chord.signal.h"
 #include "chord.log.h"
+#include "chord.router.spy.h"
 #include "util/chord.test.helper.h"
 
 using chord::common::Header;
@@ -56,12 +57,12 @@ TEST(ServiceTest, join) {
   ServerContext serverContext;
   Context context = Context();
   context.set_uuid(50);
-  Router router(context);
+  RouterSpy router(context);
 	MockClient client;
   Service service(context, &router, &client);
 
   // assert we're the only one
-  ASSERT_EQ(router.size(), 1);
+  //ASSERT_EQ(router.size(), 1);
 
   bool callback_called = false;
 
@@ -80,10 +81,14 @@ TEST(ServiceTest, join) {
    * NOTE router is updated by the joining node after
    * joining node notifies its new successor/predecessor
    */
-  ASSERT_EQ(router.size(), 1);
-  auto successor = router.successor(0);
-  auto predecessor = router.predecessor(0);
-  ASSERT_FALSE(successor);
+  //ASSERT_EQ(router.size(), 1);
+  auto successor = router.successor();
+  auto predecessor = router.predecessor();
+  ASSERT_FALSE(router.has_successor());
+  ASSERT_FALSE(router.has_predecessor());
+
+  //ASSERT_FALSE(successor);
+  ASSERT_EQ(successor, context.node());
   ASSERT_FALSE(predecessor);
 
   //--- response
@@ -123,8 +128,10 @@ TEST(ServiceTest, successor_two_nodes) {
   Router router(context);
 	MockClient client;
 
-  router.set_successor(0, {5, "0.0.0.0:50055"});
-  router.set_predecessor(0, {5, "0.0.0.0:50055"});
+  router.update({5, "0.0.0.0:50055"});
+  router.update({5, "0.0.0.0:50055"});
+  //router.set_successor(0, {5, "0.0.0.0:50055"});
+  //router.set_predecessor(0, {5, "0.0.0.0:50055"});
 
   Service service(context, &router, &client);
 
@@ -145,8 +152,10 @@ TEST(ServiceTest, successor_two_nodes_mod) {
   Router router(context);
 	MockClient client;
 
-  router.set_successor(0, {0, "0.0.0.0:50050"});
-  router.set_predecessor(0, {0, "0.0.0.0:50050"});
+  router.update({0, "0.0.0.0:50050"});
+  router.update({0, "0.0.0.0:50050"});
+  //router.set_successor(0, {0, "0.0.0.0:50050"});
+  //router.set_predecessor(0, {0, "0.0.0.0:50050"});
 
   chord::Service service(context, &router, &client);
 
@@ -281,8 +290,10 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   Context context = make_context(5);
   Router router(context);
 
-  router.set_successor(0, {0, "0.0.0.0:50050"});
-  router.set_predecessor(0, {0, "0.0.0.0:50050"});
+  router.update({0, "0.0.0.0:50050"});
+  router.update({0, "0.0.0.0:50050"});
+  //router.set_successor(0, {0, "0.0.0.0:50050"});
+  //router.set_predecessor(0, {0, "0.0.0.0:50050"});
 
   std::unique_ptr<MockStub> stub(new MockStub);
   auto stub_factory = [&](const endpoint& endpoint) { (void)endpoint; return std::move(stub); };
@@ -349,7 +360,8 @@ TEST(ServiceTest, stabilize__without_predecessor) {
 TEST(ServiceTest, stabilize) {
   Context context = make_context(5);
   Router router(context);
-  router.set_predecessor(0, {"1", "1.1.1.1:8888"});
+  router.update(node{"1", "1.1.1.1:8888"});
+  //router.set_predecessor(0, {"1", "1.1.1.1:8888"});
 
   std::unique_ptr<MockStub> stub(new MockStub);
 
@@ -488,7 +500,8 @@ TEST(ServiceTest, notify__update_predecessor) {
   Context context = make_context(20);
 
   Router router(context);
-  router.set_predecessor(0, {"0", "0.0.0.0:8888"});
+  router.update(node{"0", "0.0.0.0:8888"});
+  //router.set_predecessor(0, {"0", "0.0.0.0:8888"});
 
   Service service{context, &router, nullptr};
 
@@ -513,7 +526,7 @@ TEST(ServiceTest, notify__no_update) {
   Router router(context);
 
   const node pred{"10", "10.10.10.10:8888"};
-  router.set_predecessor(0, pred);
+  router.update(pred);
 
   Service service{context, &router, nullptr};
 
@@ -560,14 +573,14 @@ TEST(ServiceTest, check) {
 TEST(ServiceTest, fix_fingers) {
   Context context = make_context(20);
 
-  Router router(context);
+  RouterSpy router(context);
 
   const node succ{"50", "5.5.5.5:8888"};
-  router.set_successor(0, succ);
+  router.update(succ);
 
   Service service{context, &router, nullptr};
 
   service.fix_fingers(2);
-  ASSERT_EQ(router.successor(1), succ); // no holes in successors
-  ASSERT_EQ(router.successor(2), succ);
+  ASSERT_EQ(router.entry(1).node(), succ); // no holes in successors
+  ASSERT_EQ(router.entry(2).node(), succ);
 }

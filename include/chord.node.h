@@ -22,6 +22,10 @@ struct node {
     return !(*this == other);
   }
 
+  bool operator<(const node& other) const {
+    return uuid < other.uuid;
+  }
+
   std::string string() const {
     std::stringstream ss;
     ss << *this;

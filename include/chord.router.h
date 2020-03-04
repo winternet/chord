@@ -3,9 +3,15 @@
 #include <array>
 #include <iosfwd>
 #include <map>
+#include <set>
 #include <memory>
 #include <mutex>
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/sequenced_index.hpp>
+#include <boost/multi_index/ordered_index.hpp>
 
+#include "chord.signal.h"
 #include "chord.types.h"
 #include "chord.optional.h"
 #include "chord.node.h"
@@ -20,72 +26,113 @@ namespace spdlog {
 namespace chord {
 
 struct Router {
-
+public:
   static constexpr size_t BITS = 256;
+  using mutex_t = std::recursive_mutex;
+
+protected:
+  struct RouterEntry {
+    chord::uuid uuid;
+    optional<chord::node> _node;
+    inline bool valid() const { return _node.has_value(); }
+    inline chord::node node() const { return *_node; }
+    inline std::ostream& print(std::ostream& os) const {
+      os << (valid() ? _node->string() : "<empty>");
+      return os;
+    }
+  };
+
+private:
+  struct sequence_tag {};
+  struct ordered_unique_tag {};
+  struct value_tag {};
+
+
+  struct change_node {
+    change_node(const chord::node& node)
+      : _node(node) {}
+    void operator()(RouterEntry& entry) {
+      entry._node = _node;
+    }
+  private:
+    chord::node _node;
+  };
+
+  struct clear_node {
+    clear_node(){}
+    void operator()(RouterEntry& entry) {
+      entry._node.reset();
+    }
+  };
+
+  using entry_t = RouterEntry;
+  using sequence_map_t = boost::multi_index::multi_index_container<
+    entry_t,
+    boost::multi_index::indexed_by<
+        boost::multi_index::sequenced<boost::multi_index::tag<struct sequence_tag>>>>;//,
+        //boost::multi_index::ordered_unique<
+        //  boost::multi_index::tag<struct ordered_unique_tag>,
+        //  boost::multi_index::member<entry_t, optional<node>, &entry_t::_node>>>>;
+
   static constexpr auto logger_name = "chord.router";
 
+  chord::Context &context;
+  std::shared_ptr<spdlog::logger> logger;
+
+  mutable mutex_t mtx;
+
+  void init();
+  void cleanup();
+
+  signal<void(const node)> event_successor_fail;
+  signal<void(const node)> event_predecessor_fail;
+
+  signal<void(const node, const node)> event_successor_update;
+  signal<void(const node, const node)> event_predecessor_update;
+
+
+protected:
+  sequence_map_t successors;
+  //RouterEntry _predecessor;
+  optional<node> _predecessor;
+
+public:
   explicit Router(const chord::Router&) = delete;
 
   explicit Router(chord::Context &context);
 
   virtual ~Router();
 
-  static uuid calc_node_for_index(const uuid&, const size_t i);
-  uuid calc_node_for_index(const size_t i) const;
-
-  void cleanup();
+  static uuid calc_successor_uuid_for_index(const uuid&, const size_t i);
+  uuid calc_successor_uuid_for_index(const size_t i) const;
 
   void reset();
 
   bool has_successor() const;
+  bool has_predecessor() const;
 
-  /**
-   * get the amount of known routes.
-   *
-   * note that this does _neither_ return the size of the
-   * chord ring nor the currently known routes, it just returns
-   * all routes it once knew.
-   */
-  size_t size() const;
+  inline signal<void(const node)>& on_successor_fail() { return event_successor_fail; }
+  inline signal<void(const node)>& on_predecessor_fail() { return event_predecessor_fail; }
+  inline signal<void(const node, const node)>& on_predecessor_update() { return event_predecessor_update; }
 
-  optional<node> successor(size_t idx) const;
+  void update(const std::set<chord::node>&);
+  bool update(const node&);
+  bool remove(const node&);
+  bool remove(const uuid&);
 
-  optional<node> predecessor(size_t idx) const;
+  uuid get(const size_t) const;
+  std::set<node> get() const;
 
-  void replace_successor(const chord::node& old_node, const chord::node& new_node);
+  std::string print() const;
+  std::ostream& print(std::ostream&) const;
 
-  void set_successor(const size_t index, const chord::node& node);
+  optional<node> successor() const;
 
-  void replace_predecessor(const chord::node& old_node, const chord::node& new_node);
-
-  //TODO:  update predecessors accordingly?
-  bool update_successor(const chord::node& old_node, const chord::node& new_node);
-
-  void set_predecessor(const size_t index, const chord::node& node);
-
-  void reset(const uuid_t& uuid);
-
-  void reset(const node& n);
-
-  optional<node> successor();
-
-  const optional<node> predecessor() const;
-
-  optional<node> predecessor();
+  optional<node> predecessor() const;
 
   optional<node> closest_preceding_node(const uuid_t &uuid);
 
   friend std::ostream &operator<<(std::ostream &os, const Router &router);
 
- private:
-  using mutex_t = std::recursive_mutex;
-  chord::Context &context;
-  std::shared_ptr<spdlog::logger> logger;
-
-  mutable std::recursive_mutex mtx;
-  std::map<uuid_t, endpoint> routes;
-
-  std::array<optional<uuid_t>, BITS> predecessors;
-  std::array<optional<uuid_t>, BITS> successors;
 };
 }  // namespace chord

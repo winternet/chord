@@ -144,8 +144,10 @@ Status Client::join(const endpoint& addr) {
   const auto pred = make_node(res.predecessor());
 
   logger->info("Successfully joined {}, pred {}, succ {}", addr, pred, succ);
-  router->set_predecessor(0, pred);
-  router->set_successor(0, succ);
+  router->update(succ);
+  router->update(pred);
+  //router->set_predecessor(0, pred);
+  //router->set_successor(0, succ);
 
   return status;
 }
@@ -190,7 +192,7 @@ void Client::stabilize() {
 
   if (!status.ok()) {
     logger->warn("[stabilize] failed - removing endpoint {}?", endpoint);
-    router->reset(*successor);
+    router->remove(*successor);
     event_successor_fail(*successor);
     return;
   }
@@ -202,7 +204,8 @@ void Client::stabilize() {
     const uuid_t self(context.uuid());
     const uuid_t succ(router->successor()->uuid);
     if(pred.uuid.between(self, succ)) {
-      router->set_successor(0, pred);
+      router->update(pred);
+      //router->set_successor(0, pred);
     }
   } else {
     logger->trace("received empty routing entry");
@@ -317,7 +320,7 @@ void Client::check() {
 
   if (!status.ok()) {
     logger->warn("[check] predecessor failed.");
-    router->reset(*predecessor);
+    router->remove(*predecessor);
     event_predecessor_fail(*predecessor);
   } else if(!res.has_header()) {
     logger->error("[check] returned without header, should remove endpoint {}@{}?", *predecessor, endpoint);

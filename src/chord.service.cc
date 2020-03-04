@@ -194,18 +194,23 @@ Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, Lea
     const node new_successor = make_node(req->successor());
     const node leaving_node = make_node(req->header().src());
 
-    router->replace_successor(leaving_node, new_successor);
-    router->update_successor(leaving_node, new_successor);
-    //event_leaving(leaving_node, new_successor);
+    router->remove(leaving_node);
+    router->update(new_successor);
+    //router->replace_successor(leaving_node, new_successor);
+    //router->update_successor(leaving_node, new_successor);
+    ////event_leaving(leaving_node, new_successor);
   }
 
   if(req->has_predecessor()) {
     const node new_predecessor = make_node(req->predecessor());
     const node leaving_node = make_node(req->header().src());
 
-    router->replace_predecessor(leaving_node, new_predecessor);
-    router->replace_successor(leaving_node, new_predecessor);
-    //event_leave(leaving_node, new_predecessor);
+    router->remove(leaving_node);
+    //TODO check whether really needed
+    router->update(new_predecessor);
+    //router->replace_predecessor(leaving_node, new_predecessor);
+    //router->replace_successor(leaving_node, new_predecessor);
+    ////event_leave(leaving_node, new_predecessor);
   } 
 
   return Status::OK;
@@ -239,23 +244,28 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
 
   // initializing ring
   if(!predecessor) {
-    router->set_predecessor(0, source_node);
-    router->set_successor(0, source_node);
-    //check whether it makes sense to set both...
+    router->update(source_node);
+    //router->set_predecessor(0, source_node);
+    //router->set_successor(0, source_node);
+    ////check whether it makes sense to set both...
     changed_successor = true;
     changed_predecessor = true;
   } else if(context.uuid().between(predecessor->uuid, source_node.uuid)) {
     changed_successor = true;
-    router->update_successor(*successor, source_node);
+    router->update(source_node);
+    //router->update_successor(*successor, source_node);
   } else if(context.uuid().between(source_node.uuid, successor->uuid)) {
     changed_predecessor = true;
-    router->set_predecessor(0, source_node);
+    router->update(source_node);
+    //router->set_predecessor(0, source_node);
   }
 
   if(req->has_old_node() && req->has_new_node()) {
     const auto old_node_ = make_node(req->old_node());
     const auto new_node_ = make_node(req->new_node());
-    router->update_successor(old_node_, new_node_);
+    router->update(old_node_);
+    router->update(new_node_);
+    //router->update_successor(old_node_, new_node_);
   }
   if(changed_predecessor) {
     event_joined(predecessor.value_or(context.node()), source_node);
@@ -274,7 +284,8 @@ Status Service::check(ServerContext *serverContext, const CheckRequest *req, Che
 }
 
 void Service::fix_fingers(size_t index) {
-  const auto fix = router->calc_node_for_index(index);
+  const auto fix = router->calc_successor_uuid_for_index(index);
+  //const auto fix = router->calc_node_for_index(index);
   //auto fix = context.uuid();
   //if (!router->successor(0)) {
   //  fix += uuid_t{pow(2., static_cast<double>(index - 1))};
@@ -287,11 +298,13 @@ void Service::fix_fingers(size_t index) {
     const auto succ = make_node(successor(fix));
     logger->trace("fixing finger for {}. received successor {}", fix, succ);
     if( succ.uuid == context.uuid() ) {
-      router->reset(fix);
+      router->remove(fix);
+      //router->reset(fix);
       return;
     } 
 
-    router->set_successor(index, succ);
+    router->update(succ);
+    //router->set_successor(index, succ);
   } catch (const chord::exception &e) {
     logger->warn("failed to fix fingers for {}", fix);
   }

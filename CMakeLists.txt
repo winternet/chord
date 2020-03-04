@@ -49,7 +49,7 @@ add_compile_options(
   -Wold-style-cast
   -Wunused
   -Woverloaded-virtual
-  -Wpedantic
+  #-Wpedantic
   -Wconversion
   -Wmisleading-indentation
   -Wduplicated-cond
