@@ -2,14 +2,11 @@
 
 #include <algorithm>
 #include <set>
+#include <array>
 #include <iterator>
 #include <ostream>
 #include <memory>
-#include <vector>
 #include <string>
-#include <sstream>
-#include <boost/multiprecision/cpp_int.hpp>
-#include <boost/iterator/reverse_iterator.hpp>
 
 #include "chord.context.h"
 #include "chord.log.factory.h"
@@ -35,13 +32,12 @@ void Router::init() {
   std::lock_guard<mutex_t> lock(mtx);
   for(size_t idx=0; idx < BITS; ++idx) {
     const auto finger = calc_successor_uuid_for_index(idx);
-    successors.push_back({finger, {}});
+    successors[idx] = {finger, {}};
   }
 }
 
 void Router::cleanup() {
   std::lock_guard<mutex_t> lock(mtx);
-  successors.clear();
   _predecessor.reset();
   init();
 }
@@ -96,7 +92,8 @@ bool Router::update(const chord::node& insert) {
       if(successors.begin()->valid() && it == successors.begin()) {
         old_successor = it->node();
       }
-      changed |= successors.modify(it, change_node(insert));
+      it->_node = insert;
+      changed |= true;
     }
   }
   if(!_predecessor 
@@ -122,38 +119,29 @@ bool Router::remove(const chord::uuid& uuid) {
     if(successor->valid() && successor->node().uuid == uuid) {
       successor_failed = successor->node();
     }
-    //if(_predecessor.valid() && _predecessor.node().uuid == uuid) {
-    //  predecessor_failed = _predecessor.node();
-    //}
     if(_predecessor && _predecessor->uuid == uuid) {
       predecessor_failed = _predecessor;
     }
   }
 
-  for(auto it=boost::rbegin(successors); it != boost::rend(successors); ++it) {
+  for(auto it=successors.rbegin(); it != successors.rend(); ++it) {
     if(!it->valid()) continue;
 
-    //if(_predecessor.valid() && uuid == _predecessor.node().uuid && it->node().uuid != uuid) {
-    //  _predecessor = *it;
-    //}
     if(_predecessor && uuid == _predecessor->uuid && it->node().uuid != uuid) {
       _predecessor = it->node();
     }
 
     if(it->node().uuid == uuid) {
-      auto fwd_it = std::prev(it.base());
-      if(replacement->valid())
-        changed |= successors.modify(fwd_it, change_node(replacement->node()));
-      else 
-        changed |= successors.modify(fwd_it, clear_node());
+      if(replacement->valid()) {
+        it->_node = replacement->node();
+      } else {
+        it->_node.reset();
+      }
     }
     replacement = it;
   }
 
   // not found any replacement - reset
-  //if(_predecessor.valid() && _predecessor.node().uuid == uuid) {
-  //  _predecessor._node.reset();
-  //}
   if(_predecessor && _predecessor->uuid == uuid) {
     _predecessor.reset();
   }
@@ -171,8 +159,6 @@ bool Router::remove(const chord::node& node) {
 
 optional<node> Router::predecessor() const {
   std::lock_guard<mutex_t> lock(mtx);
-  //if(_predecessor.valid()) return _predecessor.node();
-  //return {};
   return _predecessor;
 }
 
@@ -227,15 +213,6 @@ std::ostream& Router::print(std::ostream& os) const {
   os << "\nrouter[" << beg << ".." << end  << "]: "; curr.print(os);
   return os;
 }
-
-//std::set<node> Router::finger() const {
-//  std::set<node> finger;
-//  for(const auto& entry:successors) {
-//    if(entry.valid())
-//      finger.insert(entry.node());
-//  }
-//  return finger;
-//}
 
 std::ostream& operator<<(std::ostream &os, const Router &router) {
   return router.print(os);

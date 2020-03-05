@@ -43,38 +43,10 @@ protected:
   };
 
 private:
-  struct sequence_tag {};
-  struct ordered_unique_tag {};
-  struct value_tag {};
-
-
-  struct change_node {
-    change_node(const chord::node& node)
-      : _node(node) {}
-    void operator()(RouterEntry& entry) {
-      entry._node = _node;
-    }
-  private:
-    chord::node _node;
-  };
-
-  struct clear_node {
-    clear_node(){}
-    void operator()(RouterEntry& entry) {
-      entry._node.reset();
-    }
-  };
+  static constexpr auto logger_name = "chord.router";
 
   using entry_t = RouterEntry;
-  using sequence_map_t = boost::multi_index::multi_index_container<
-    entry_t,
-    boost::multi_index::indexed_by<
-        boost::multi_index::sequenced<boost::multi_index::tag<struct sequence_tag>>>>;//,
-        //boost::multi_index::ordered_unique<
-        //  boost::multi_index::tag<struct ordered_unique_tag>,
-        //  boost::multi_index::member<entry_t, optional<node>, &entry_t::_node>>>>;
-
-  static constexpr auto logger_name = "chord.router";
+  using sequence_map_t = std::array<RouterEntry, Router::BITS>;
 
   chord::Context &context;
   std::shared_ptr<spdlog::logger> logger;
@@ -93,7 +65,6 @@ private:
 
 protected:
   sequence_map_t successors;
-  //RouterEntry _predecessor;
   optional<node> _predecessor;
 
 public:
