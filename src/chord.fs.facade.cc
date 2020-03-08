@@ -151,7 +151,7 @@ Status Facade::rebalance_metadata(const uri& uri) {
     return status;
 }
 
-void Facade::rebalance(const map<uri, set<Metadata>>& metadata, const bool node_joined) {
+void Facade::rebalance(const map<uri, set<Metadata>>& metadata) {
   for(const auto& pair : metadata) {
     const auto& uri = pair.first;
     auto metadata_set = pair.second;
@@ -169,12 +169,14 @@ void Facade::rebalance(const map<uri, set<Metadata>>& metadata, const bool node_
       client::options options;
       metadata.replication.index=0;
       options.replication = metadata.replication;
-      options.source = context.uuid();
-      if(node_joined) {
-        options.rebalance = true;
-      }
+      //options.source = context.uuid();
+      options.rebalance = true;
       // note that we put the file from the beginning node to refresh all replications
-      const auto status = fs_client->put(uri, local_path, options);
+      try {
+        const auto status = fs_client->put(uri, local_path, options);
+      } catch(chord::exception& e) {
+        logger->error("[rebalance] failed to put file {}:{}", uri, e.message());
+      }
     }
   }
 }
@@ -184,7 +186,7 @@ void Facade::rebalance(const map<uri, set<Metadata>>& metadata, const bool node_
  */
 // called form within the node that joined the ring
 void Facade::on_join(const chord::node new_successor) {
-  logger->debug("joined chord ring: new_successor {}", new_successor);
+  logger->debug("[on_join] joined chord ring: new_successor {}", new_successor);
 }
 
 

@@ -64,7 +64,8 @@ Client::Client(Context &context, ChordFacade *chord, StubFactory make_stub)
       logger{context.logging.factory().get_or_create(logger_name)} {}
 
 void Client::init_context(ClientContext& client_context, const client::options& options) {
-  ContextMetadata::add_src(client_context, options.source);
+  if(options.source)
+    ContextMetadata::add_src(client_context, *options.source);
   ContextMetadata::add_rebalance(client_context, options.rebalance);
 }
 

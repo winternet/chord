@@ -202,7 +202,6 @@ std::ostream& Router::print(std::ostream& os) const {
   size_t beg = 0, end = 0;
   auto curr = successors.front();
   for(const auto successor:successors) {
-    //os << "\nrouter[" << beg++ << "]: "; successor.print(os);
     if(curr.valid() ^ successor.valid() || (curr.valid() && successor.valid() && curr.node() != successor.node())) {
       os << "\nrouter[" << beg << ".." << end-1 << "]: "; curr.print(os);
       curr = successor;

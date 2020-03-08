@@ -27,7 +27,9 @@ using grpc::Status;
 using chord::common::Header;
 using chord::common::RouterEntry;
 using chord::common::make_node;
+using chord::common::make_entry;
 using chord::common::make_header;
+using chord::common::set_source;
 
 using chord::JoinResponse;
 using chord::JoinRequest;
@@ -57,36 +59,41 @@ Client::Client(const Context &context, Router *router)
 Client::Client(const Context &context, Router *router, StubFactory make_stub)
     : context{context}, router{router}, make_stub{make_stub}, logger{context.logging.factory().get_or_create(logger_name)} {}
 
+//! TODO merge with inform predecessor about leave
 Status Client::inform_successor_about_leave() {
   // get successor
   const auto successor_node = router->successor();
   const auto predecessor_node = router->predecessor();
 
   if(successor_node == context.node()) {
-    logger->info("[leaving] no successor - shutting down");
+    logger->info("[leave] no successor - shutting down");
     return Status(grpc::StatusCode::NOT_FOUND, "no successor found.");
   }
 
+  // inform successor
   ClientContext clientContext;
   LeaveRequest req;
   LeaveResponse res;
 
-  // inform successor
-  logger->trace("leaving chord ring, informing {}", successor_node);
+  logger->trace("[leave] informing successor {}", successor_node);
 
-  req.mutable_header()->CopyFrom(make_header(context));
-  const auto predecessor = req.mutable_predecessor();
-  predecessor->set_uuid(predecessor_node->uuid);
-  predecessor->set_endpoint(predecessor_node->endpoint);
+  set_source(req, context);
+
+  //req.mutable_header()->CopyFrom(make_header(context));
+  auto entries = req.mutable_entries();
+  for(const auto node : router->get()) {
+    entries->Add(make_entry(node));
+  }
   return make_stub(successor_node->endpoint)->leave(&clientContext, req, &res);
 }
 
+//! TODO merge with inform successor about leave
 Status Client::inform_predecessor_about_leave() {
   const auto successor_node = router->successor();
   const auto predecessor_node = router->predecessor();
 
   if(!predecessor_node) {
-    logger->info("[leaving] no predecessor - shutting down");
+    logger->info("[leave] no predecessor - shutting down");
     return Status(grpc::StatusCode::NOT_FOUND, "no predecessor found.");
   }
 
@@ -95,12 +102,13 @@ Status Client::inform_predecessor_about_leave() {
   LeaveRequest req;
   LeaveResponse res;
 
-  logger->trace("leaving chord ring, informing {}", predecessor_node);
+  logger->trace("[leave] informing predecessor {}", predecessor_node);
 
   req.mutable_header()->CopyFrom(make_header(context));
-  const auto successor = req.mutable_successor();
-  successor->set_uuid(successor_node->uuid);
-  successor->set_endpoint(successor_node->endpoint);
+  auto entries = req.mutable_entries();
+  for(const auto node : router->get()) {
+    entries->Add(make_entry(node));
+  }
   return make_stub(predecessor_node->endpoint)->leave(&clientContext, req, &res);
 }
 

@@ -39,7 +39,7 @@ struct ContextMetadata {
   static chord::fs::Replication replication_from(const grpc::ServerContext*);
   static chord::optional<chord::uuid> file_hash_from(const grpc::ServerContext*);
   static chord::uri uri_from(const grpc::ServerContext*);
-  static chord::uuid src_from(const grpc::ServerContext*);
+  static chord::optional<chord::uuid> src_from(const grpc::ServerContext*);
   static bool file_hash_equal_from(const grpc::ClientContext&);
   static bool rebalance_from(const grpc::ServerContext*);
 };

@@ -13,10 +13,7 @@ namespace common {
 
 chord::common::Header make_header(const chord::node &node) {
   Header header;
-  RouterEntry src;
-  src.set_uuid(node.uuid);
-  src.set_endpoint(node.endpoint);
-  header.mutable_src()->CopyFrom(src);
+  header.mutable_src()->CopyFrom(make_entry(node));
   return header;
 }
 
@@ -31,6 +28,13 @@ chord::common::Header make_header(const Context &context) {
 
 chord::node make_node(const RouterEntry& entry) {
   return {uuid_t{entry.uuid()}, entry.endpoint()};
+}
+
+RouterEntry make_entry(const chord::node& node) {
+  RouterEntry ret;
+  ret.set_uuid(node.uuid);
+  ret.set_endpoint(node.endpoint);
+  return ret;
 }
 
 }
