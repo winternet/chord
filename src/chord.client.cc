@@ -80,7 +80,6 @@ Status Client::inform_successor_about_leave() {
 
   set_source(req, context);
 
-  //req.mutable_header()->CopyFrom(make_header(context));
   auto entries = req.mutable_entries();
   for(const auto node : router->get()) {
     entries->Add(make_entry(node));
@@ -167,7 +166,6 @@ Status Client::join(ClientContext *clientContext, const JoinRequest *req, JoinRe
 
   logger->trace("forwarding join of {}", req->header().src().uuid());
   JoinRequest copy(*req);
-  //copy.mutable_header()->CopyFrom(make_header(context));
 
   const auto predecessor = router->closest_preceding_node(uuid_t(req->header().src().uuid()));
   logger->trace("forwarding request to {}", predecessor);

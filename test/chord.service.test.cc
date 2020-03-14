@@ -307,7 +307,7 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   SuccessorRequest req = make_request<SuccessorRequest>(context);
   SuccessorResponse res;
 
-  req.mutable_header()->CopyFrom(make_header(5, "0.0.0.0:50055"));
+  //req.mutable_header()->CopyFrom(make_header(5, "0.0.0.0:50055"));
   req.set_id("2");
 
   //--- stub's capture parameter
