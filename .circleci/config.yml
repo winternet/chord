@@ -28,34 +28,31 @@ jobs:
                        libboost-serialization-dev \
                        libleveldb-dev \
                        libyaml-cpp-dev \
-                       libgrpc++-dev \
-                       protobuf-compiler \
-                       protobuf-compiler-grpc \
                        libboost-thread-dev \
                        libboost-program-options-dev \
                        libssl-dev
 
-                       # - run:
-                       #     name: Install grpc
-                       #     command: |
-                       #       cd $DEPS
-                       #       git clone -b $VERSION_GRPC https://github.com/grpc/grpc
-                       #       cd grpc
-                       #       git submodule update --init
-                       #       make -j4 CFLAGS='-Wno-error -Wno-expansion-to-defined' && make install CFLAGS='-Wno-error -Wno-expansion-to-defined'
-                       #       ldconfig
-
-                       # - run:
-                       #     name: Install protobuf
-                       #     command: |
-                       #       cd $DEPS
-                       #       git clone -b $VERSION_PROTOBUF https://github.com/google/protobuf.git protobuf
-                       #       cd protobuf
-                       #       ./autogen.sh
-                       #       ./configure
-                       #       make -j4 && make install
-                       #       ldconfig
-                       #       protoc --version
+      - run:
+          name: Install grpc
+          command: |
+            cd $DEPS
+            git clone -b $VERSION_GRPC https://github.com/grpc/grpc
+            cd grpc
+            git submodule update --init
+            make -j4 CFLAGS='-Wno-error -Wno-expansion-to-defined' && make install CFLAGS='-Wno-error -Wno-expansion-to-defined'
+            ldconfig
+      
+      - run:
+          name: Install protobuf
+          command: |
+            cd $DEPS
+            git clone -b $VERSION_PROTOBUF https://github.com/google/protobuf.git protobuf
+            cd protobuf
+            ./autogen.sh
+            ./configure
+            make -j4 && make install
+            ldconfig
+            protoc --version
 
       - run:
           name: Install chord

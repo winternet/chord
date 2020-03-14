@@ -82,8 +82,7 @@ Status Client::inform_successor_about_leave() {
 
   auto entries = req.mutable_entries();
   for(const auto node : router->get()) {
-   auto e = entries->Add();
-   e->CopyFrom(make_entry(node));
+   entries->Add(make_entry(node));
   }
   return make_stub(successor_node->endpoint)->leave(&clientContext, req, &res);
 }
@@ -107,8 +106,7 @@ Status Client::inform_predecessor_about_leave() {
 
   auto entries = req.mutable_entries();
   for(const auto node : router->get()) {
-    auto e = entries->Add();
-    e->CopyFrom(make_entry(node));
+   entries->Add(make_entry(node));
   }
   return make_stub(predecessor_node->endpoint)->leave(&clientContext, req, &res);
 }
