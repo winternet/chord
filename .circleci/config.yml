@@ -8,7 +8,7 @@ executors:
 jobs:
   build:
     docker:
-      - image: ubuntu:18.04
+      - image: ubuntu:20.04
     environment:
       VERSION_GRPC: v1.27.3
       VERSION_PROTOBUF: v3.11.4
@@ -29,38 +29,40 @@ jobs:
                        libleveldb-dev \
                        libyaml-cpp-dev \
                        libgrpc++-dev \
+                       protobuf-compiler \
+                       protobuf-compiler-grpc \
                        libboost-thread-dev \
                        libboost-program-options-dev \
                        libssl-dev
 
-      - run:
-          name: Install grpc
-          command: |
-            cd $DEPS
-            git clone -b $VERSION_GRPC https://github.com/grpc/grpc
-            cd grpc
-            git submodule update --init
-            make -j4 CFLAGS='-Wno-error -Wno-expansion-to-defined' && make install CFLAGS='-Wno-error -Wno-expansion-to-defined'
-            ldconfig
+                       # - run:
+                       #     name: Install grpc
+                       #     command: |
+                       #       cd $DEPS
+                       #       git clone -b $VERSION_GRPC https://github.com/grpc/grpc
+                       #       cd grpc
+                       #       git submodule update --init
+                       #       make -j4 CFLAGS='-Wno-error -Wno-expansion-to-defined' && make install CFLAGS='-Wno-error -Wno-expansion-to-defined'
+                       #       ldconfig
 
-      - run:
-          name: Install protobuf
-          command: |
-            cd $DEPS
-            git clone -b $VERSION_PROTOBUF https://github.com/google/protobuf.git protobuf
-            cd protobuf
-            ./autogen.sh
-            ./configure
-            make -j4 && make install
-            ldconfig
-            protoc --version
+                       # - run:
+                       #     name: Install protobuf
+                       #     command: |
+                       #       cd $DEPS
+                       #       git clone -b $VERSION_PROTOBUF https://github.com/google/protobuf.git protobuf
+                       #       cd protobuf
+                       #       ./autogen.sh
+                       #       ./configure
+                       #       make -j4 && make install
+                       #       ldconfig
+                       #       protoc --version
 
       - run:
           name: Install chord
           command: |
             mkdir build
             cd build
-            CXX=g++-7 CC=gcc-7 cmake .. -DENABLE_COVERAGE:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=Release -Dchord_BUILD_TESTS:BOOL=ON -Dchord_USE_CCACHE:BOOL=FALSE
+            CXX=g++-9 CC=gcc-9 cmake .. -DENABLE_COVERAGE:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=Release -Dchord_BUILD_TESTS:BOOL=ON -Dchord_USE_CCACHE:BOOL=FALSE
             cmake --build . -- -j1
       - run:
           name: Run tests
