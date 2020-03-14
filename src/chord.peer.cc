@@ -50,8 +50,8 @@ Peer::Peer(Context ctx)
 {
   const auto fs = filesystem.get();
   chord->on_join().connect(fs, &chord::fs::Facade::on_join);
-  chord->on_joined().connect(fs, &chord::fs::Facade::on_joined);
   chord->on_leave().connect(fs, &chord::fs::Facade::on_leave);
+  chord->on_predecessor_update().connect(fs, &chord::fs::Facade::on_predecessor_update);
   chord->on_predecessor_fail().connect(fs, &chord::fs::Facade::on_predecessor_fail);
   chord->on_successor_fail().connect(fs, &chord::fs::Facade::on_successor_fail);
 }

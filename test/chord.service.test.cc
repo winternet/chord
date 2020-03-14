@@ -70,7 +70,7 @@ TEST(ServiceTest, join) {
 
   // join from 1
   req.mutable_header()->CopyFrom(make_header({1}, "1.1.1.1:1111"));
-  service.on_joined().connect([&](const chord::node old_predecessor, const chord::node new_predecessor) {
+  service.on_predecessor_update().connect([&](const chord::node old_predecessor, const chord::node new_predecessor) {
       callback_called = true;
       ASSERT_EQ(old_predecessor.endpoint, "0.0.0.0:50050");
       ASSERT_EQ(old_predecessor.uuid, uuid_t{50});

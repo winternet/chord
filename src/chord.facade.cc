@@ -173,8 +173,8 @@ ChordFacade::event_unary_t& ChordFacade::on_join() {
   return event_join;
 }
 
-ChordFacade::event_binary_t& ChordFacade::on_joined() {
-  return service->on_joined();
+ChordFacade::event_binary_t& ChordFacade::on_predecessor_update() {
+  return service->on_predecessor_update();
 }
 
 ChordFacade::event_binary_t& ChordFacade::on_leave() {

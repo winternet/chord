@@ -186,13 +186,13 @@ void Facade::rebalance(const map<uri, set<Metadata>>& metadata) {
  */
 // called form within the node that joined the ring
 void Facade::on_join(const chord::node new_successor) {
-  logger->debug("[on_join] joined chord ring: new_successor {}", new_successor);
+  logger->info("[on_join] joined chord ring: new_successor {}", new_successor);
 }
 
 
 //called from within the node preceding the joining node
-void Facade::on_joined(const chord::node from_node, const chord::node to_node) {
-  logger->debug("node joined: replacing {}, with {}", from_node, to_node);
+void Facade::on_predecessor_update(const chord::node from_node, const chord::node to_node) {
+  logger->info("[on_predecessor_update] predecessor updated: replacing {}, with {}", from_node, to_node);
   const map<uri, set<Metadata>> metadata = metadata_mgr->get_all();
   rebalance(metadata);
 }
@@ -201,19 +201,19 @@ void Facade::on_joined(const chord::node from_node, const chord::node to_node) {
  * called from the leaving node
  */
 void Facade::on_leave(const chord::node predecessor, const chord::node successor) {
-  logger->debug("node leaving: informing predecessor {}", predecessor);
+  logger->debug("[on_leave] node leaving: informing predecessor {}", predecessor);
   const map<uri, set<Metadata>> metadata = metadata_mgr->get_all();
   rebalance(metadata);
 }
 
 void Facade::on_predecessor_fail(const chord::node predecessor) {
-  logger->warn("detected predecessor failed");
+  logger->warn("[on_predecessor_fail] detected predecessor failed");
   const map<uri, set<Metadata>> metadata = metadata_mgr->get_replicated(1);
   rebalance(metadata);
 }
 
 void Facade::on_successor_fail(const chord::node successor) {
-  logger->warn("detected successor failed.");
+  logger->warn("[on_successor_fail] detected successor failed.");
 }
 
 

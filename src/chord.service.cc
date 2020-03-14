@@ -247,7 +247,7 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
     router->update(new_node_);
   }
   if(changed_predecessor) {
-    event_joined(predecessor.value_or(context.node()), source);
+    event_predecessor_update(predecessor.value_or(context.node()), source);
   }
 
   return status;

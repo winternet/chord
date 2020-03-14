@@ -68,8 +68,8 @@ class Service final : public chord::Chord::Service, public IService {
 
   void fix_fingers(size_t index) override;
 
-  signal<void(const node, const node)>& on_joined() override {
-    return event_joined;
+  signal<void(const node, const node)>& on_predecessor_update() override {
+    return event_predecessor_update;
   }
 
   ::grpc::Service* grpc_service() override {
@@ -79,7 +79,7 @@ class Service final : public chord::Chord::Service, public IService {
   Context &context;
   Router *router;
   IClient *client;
-  signal<void(const node, const node)> event_joined;
+  signal<void(const node, const node)> event_predecessor_update;
   std::shared_ptr<spdlog::logger> logger;
 };
 }  // namespace chord

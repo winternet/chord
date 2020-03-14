@@ -98,9 +98,9 @@ public:
 
   event_unary_t& on_join();
 
-  event_binary_t& on_joined();
-
   event_binary_t& on_leave();
+
+  event_binary_t& on_predecessor_update();
 
   event_unary_t& on_successor_fail();
 
