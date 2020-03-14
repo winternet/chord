@@ -30,6 +30,7 @@ using chord::common::make_node;
 using chord::common::make_entry;
 using chord::common::make_header;
 using chord::common::set_source;
+using chord::common::make_request;
 
 using chord::JoinResponse;
 using chord::JoinRequest;
@@ -99,12 +100,11 @@ Status Client::inform_predecessor_about_leave() {
 
   // inform predecessor
   ClientContext clientContext;
-  LeaveRequest req;
+  LeaveRequest req = make_request<LeaveRequest>(context);
   LeaveResponse res;
 
   logger->trace("[leave] informing predecessor {}", predecessor_node);
 
-  req.mutable_header()->CopyFrom(make_header(context));
   auto entries = req.mutable_entries();
   for(const auto node : router->get()) {
     entries->Add(make_entry(node));
@@ -136,9 +136,7 @@ Status Client::join(const endpoint& addr) {
   logger->debug("joining {}", addr);
 
   ClientContext clientContext;
-  JoinRequest req;
-
-  req.mutable_header()->CopyFrom(make_header(context));
+  JoinRequest req = make_request<JoinRequest>(context);
 
   JoinResponse res;
   const auto status = make_stub(addr)->join(&clientContext, req, &res);
@@ -180,10 +178,8 @@ Status Client::join(ClientContext *clientContext, const JoinRequest *req, JoinRe
 
 void Client::stabilize() {
   ClientContext clientContext;
-  StabilizeRequest req;
+  StabilizeRequest req = make_request<StabilizeRequest>(context);
   StabilizeResponse res;
-
-  req.mutable_header()->CopyFrom(make_header(context));
 
   const auto successor = router->successor();
 
@@ -229,13 +225,12 @@ Status Client::notify(const node& target, const node& old_node, const node& new_
   const auto endpoint = target.endpoint;
 
   ClientContext clientContext;
-  NotifyRequest req;
+  NotifyRequest req = make_request<NotifyRequest>(context);
   NotifyResponse res;
 
   logger->trace("calling notify on address {}@{}", successor, endpoint);
 
   // TODO rename proto
-  req.mutable_header()->CopyFrom(make_header(context));
   const auto old_node_ = req.mutable_old_node();
   old_node_->set_uuid(old_node.uuid);
   old_node_->set_endpoint(old_node.endpoint);
@@ -253,12 +248,11 @@ Status Client::notify() {
   const auto endpoint = n->endpoint;
 
   ClientContext clientContext;
-  NotifyRequest req;
+  NotifyRequest req = make_request<NotifyRequest>(context);
   NotifyResponse res;
 
   logger->trace("calling notify on address {}@{}", successor, endpoint);
 
-  req.mutable_header()->CopyFrom(make_header(context));
   return make_stub(endpoint)->notify(&clientContext, req, &res);
 }
 
@@ -290,8 +284,7 @@ Status Client::successor(const SuccessorRequest *req, SuccessorResponse *res) {
 
 RouterEntry Client::successor(const uuid_t &uuid) {
   ClientContext clientContext;
-  SuccessorRequest req;
-  req.mutable_header()->CopyFrom(make_header(context));
+  SuccessorRequest req = make_request<SuccessorRequest>(context);
   req.set_id(uuid);
   SuccessorResponse res;
 
@@ -316,10 +309,8 @@ void Client::check() {
   }
 
   ClientContext clientContext;
-  CheckRequest req;
+  CheckRequest req = make_request<CheckRequest>(context);
   CheckResponse res;
-
-  req.mutable_header()->CopyFrom(make_header(context));
 
   const auto endpoint = predecessor->endpoint;//router->get(predecessor);
 

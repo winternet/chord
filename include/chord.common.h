@@ -33,6 +33,17 @@ void set_source(T& res, const Context& context) {
   res.mutable_header()->CopyFrom(make_header(context));
 }
 
+template<typename T>
+bool has_valid_header(const T* message) {
+  return message->has_header() && message->header().has_src();
+}
+
+template<typename REQ>
+REQ make_request(const Context& context) {
+  REQ r;
+  set_source(r, context);
+  return r;
+}
 
 }
 }

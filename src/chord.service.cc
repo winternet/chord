@@ -46,7 +46,10 @@ Service::Service(Context &context, Router *router, IClient* client)
 
 Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
   (void)serverContext;
-  const auto node = make_node(req->header().src());
+
+  if(!has_valid_header(req)) return Status::CANCELLED;
+
+  const auto node = source_of(req);
 
   logger->trace("join request from {}", node);
   /**
@@ -92,17 +95,16 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
     res_pred->set_endpoint(pred_or_self.endpoint);
   }
 
-  res->mutable_header()->CopyFrom(make_header(context));
+  set_source(res, context);
 
   return Status::OK;
 }
 
 RouterEntry Service::successor(const uuid_t &uuid) {
   ServerContext serverContext;
-  SuccessorRequest req;
+  SuccessorRequest req = make_request<SuccessorRequest>(context);
   SuccessorResponse res;
 
-  req.mutable_header()->CopyFrom(make_header(context));
   req.set_id(uuid);
 
   const auto status = successor(&serverContext, &req, &res);
@@ -114,9 +116,12 @@ RouterEntry Service::successor(const uuid_t &uuid) {
 
 Status Service::successor(ServerContext *serverContext, const SuccessorRequest *req, SuccessorResponse *res) {
   (void)serverContext;
-  logger->trace("[successor] from {}@{} successor of? {}",
-                req->header().src().uuid(), req->header().src().endpoint(),
-                req->id());
+
+  if(!has_valid_header(req)) return Status::CANCELLED;
+
+  const auto source = source_of(req);
+  router->update(source);
+  logger->trace("[successor] from {} successor of? {}", source, req->id());
 
   //--- destination of the request
   uuid_t id{req->id()};
@@ -150,13 +155,20 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
     return status;
   }
 
+
   return Status::OK;
 }
 
 Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *req, StabilizeResponse *res) {
   (void)serverContext;
-  logger->trace("stabilize from {}@{}", req->header().src().uuid(),
-                req->header().src().endpoint());
+
+  //TODO adapt test and enable?
+  //if(!has_valid_header(req)) return Status::CANCELLED;
+
+  const auto source = source_of(req);
+  //TODO adapt test and uncomment?
+  //router->update(source);
+  logger->trace("stabilize from {}", source);
 
   const auto predecessor = router->predecessor();
   if (predecessor) {
@@ -168,7 +180,7 @@ Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *
 
     res->mutable_predecessor()->CopyFrom(entry);
   }
-  res->mutable_header()->CopyFrom(make_header(context));
+  set_source(res, context);
 
   return Status::OK;
 }
@@ -177,15 +189,11 @@ Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, Lea
   (void)serverContext;
   (void)res;
 
-  //--- validate
-  if (!req->has_header() && !req->header().has_src()) {
-    logger->warn("[leave] failed to validate header");
-    return Status::CANCELLED;
-  }
+  if(!has_valid_header(req)) return Status::CANCELLED;
 
-  logger->trace("[leave] received leaving node {}", make_node(req->header().src()));
+  const auto leaving_node = source_of(req);
 
-  const node leaving_node = make_node(req->header().src());
+  logger->trace("[leave] received leaving node {}", leaving_node);
 
   router->remove(leaving_node);
   for(auto entry:req->entries()) {
@@ -199,40 +207,36 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
   (void)serverContext;
   (void)res;
 
-  //--- validate
-  if (!req->has_header() && !req->header().has_src()) {
-    logger->warn("failed to validate header");
-    return Status::CANCELLED;
-  }
+  if(!has_valid_header(req)) return Status::CANCELLED;
 
-  logger->trace("notify from {}@{}", req->header().src().uuid(),
-                req->header().src().endpoint());
+  const auto source = source_of(req);
+
+  logger->trace("[notify] from {}", source);
 
   const auto successor = router->successor();
   const auto predecessor = router->predecessor();
   const uuid_t self{context.uuid()};
-  const auto source_node = make_node(req->header().src());
   auto status = Status::OK;
   auto changed_successor = false;
   auto changed_predecessor = false;
 
-  if(source_node == context.node()) {
+  if(source == context.node()) {
     logger->warn("Error notifying: Unable to notify self.");
     return Status::CANCELLED;
   }
 
   // initializing ring
   if(!predecessor) {
-    router->update(source_node);
+    router->update(source);
     changed_successor = true;
     changed_predecessor = true;
-  } else if(context.uuid().between(predecessor->uuid, source_node.uuid)) {
+  } else if(context.uuid().between(predecessor->uuid, source.uuid)) {
     changed_successor = true;
-    router->update(source_node);
+    router->update(source);
     //router->update_successor(*successor, source_node);
-  } else if(context.uuid().between(source_node.uuid, successor->uuid)) {
+  } else if(context.uuid().between(source.uuid, successor->uuid)) {
     changed_predecessor = true;
-    router->update(source_node);
+    router->update(source);
     //router->set_predecessor(0, source_node);
   }
 
@@ -243,7 +247,7 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
     router->update(new_node_);
   }
   if(changed_predecessor) {
-    event_joined(predecessor.value_or(context.node()), source_node);
+    event_joined(predecessor.value_or(context.node()), source);
   }
 
   return status;
@@ -251,9 +255,12 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
 
 Status Service::check(ServerContext *serverContext, const CheckRequest *req, CheckResponse *res) {
   (void)serverContext;
-  logger->trace("check from {}@{}", req->header().src().uuid(),
-                req->header().src().endpoint());
-  res->mutable_header()->CopyFrom(make_header(context));
+
+  if(!has_valid_header(req)) return Status::CANCELLED;
+
+  const auto source = source_of(req);
+  logger->trace("[check] from {}", source);
+  set_source(res, context);
   res->set_id(req->id());
   return Status::OK;
 }

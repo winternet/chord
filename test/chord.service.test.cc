@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "chord.common.h"
 #include "chord.client.h"
 #include "chord.client.mock.h"
 #include "chord.context.h"
@@ -26,6 +27,7 @@
 #include "chord.router.spy.h"
 #include "util/chord.test.helper.h"
 
+using chord::common::make_request;
 using chord::common::Header;
 using chord::common::RouterEntry;
 
@@ -302,7 +304,7 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   Service service(context, &router, &client);
 
   ServerContext serverContext;
-  SuccessorRequest req;
+  SuccessorRequest req = make_request<SuccessorRequest>(context);
   SuccessorResponse res;
 
   req.mutable_header()->CopyFrom(make_header(5, "0.0.0.0:50055"));
