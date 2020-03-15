@@ -36,8 +36,8 @@ using grpc::Status;
 
 using chord::JoinRequest;
 using chord::JoinResponse;
-using chord::SuccessorRequest;
-using chord::SuccessorResponse;
+using chord::LookupRequest;
+using chord::LookupResponse;
 
 using ::testing::Eq;
 
@@ -190,8 +190,8 @@ class MockStub : public chord::Chord::StubInterface {
 
   MOCK_METHOD3(successor, grpc::Status(
       grpc::ClientContext*context,
-      const chord::SuccessorRequest&,
-      chord::SuccessorResponse*));
+      const chord::LookupRequest&,
+      chord::LookupResponse*));
 
   MOCK_METHOD3(join, grpc::Status(
       grpc::ClientContext*,
@@ -218,14 +218,14 @@ class MockStub : public chord::Chord::StubInterface {
       const chord::CheckRequest&,
       chord::CheckResponse*));
 
-  MOCK_METHOD3(PrepareAsyncsuccessorRaw, grpc::ClientAsyncResponseReaderInterface<chord::SuccessorResponse>*(
+  MOCK_METHOD3(PrepareAsyncsuccessorRaw, grpc::ClientAsyncResponseReaderInterface<chord::LookupResponse>*(
       grpc::ClientContext*,
-      const chord::SuccessorRequest&,
+      const chord::LookupRequest&,
       grpc::CompletionQueue*));
 
-  MOCK_METHOD3(AsyncsuccessorRaw, grpc::ClientAsyncResponseReaderInterface<chord::SuccessorResponse>*(
+  MOCK_METHOD3(AsyncsuccessorRaw, grpc::ClientAsyncResponseReaderInterface<chord::LookupResponse>*(
       grpc::ClientContext*,
-      const chord::SuccessorRequest&,
+      const chord::LookupRequest&,
       grpc::CompletionQueue*));
 
   MOCK_METHOD3(PrepareAsyncjoinRaw, grpc::ClientAsyncResponseReaderInterface<chord::JoinResponse>*(
@@ -304,16 +304,16 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   Service service(context, &router, &client);
 
   ServerContext serverContext;
-  SuccessorRequest req = make_request<SuccessorRequest>(context);
-  SuccessorResponse res;
+  LookupRequest req = make_request<LookupRequest>(context);
+  LookupResponse res;
 
   //req.mutable_header()->CopyFrom(make_header(5, "0.0.0.0:50055"));
   req.set_id("2");
 
   //--- stub's capture parameter
-  SuccessorRequest captured_request;
+  LookupRequest captured_request;
   //--- stub's mocked return parameter
-  SuccessorResponse mocked_response;
+  LookupResponse mocked_response;
   RouterEntry *entry = mocked_response.mutable_successor();
   entry->set_uuid(uuid_t{5});
   entry->set_endpoint("0.0.0.0:50055");
