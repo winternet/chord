@@ -19,6 +19,7 @@ service Chord {
   rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
   rpc check     (CheckRequest)      returns (CheckResponse) {}
   rpc leave     (LeaveRequest)      returns (LeaveResponse) {}
+  rpc ping      (PingRequest)       returns (PingResponse) {}
 }
 
 /**
@@ -99,6 +100,17 @@ message LeaveRequest {
 }
 
 message LeaveResponse { 
+  chord.common.Header header = 1;
+}
+
+/**
+ * PING 
+ */
+message PingRequest {
+  chord.common.Header header = 1;
+}
+
+message PingResponse { 
   chord.common.Header header = 1;
 }
 

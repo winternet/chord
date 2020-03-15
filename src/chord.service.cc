@@ -265,6 +265,17 @@ Status Service::check(ServerContext *serverContext, const CheckRequest *req, Che
   return Status::OK;
 }
 
+Status Service::ping(ServerContext *serverContext, const PingRequest *req, PingResponse *res) {
+  (void)serverContext;
+
+  if(!has_valid_header(req)) return Status::CANCELLED;
+
+  const auto source = source_of(req);
+  logger->trace("[ping] from {}", source);
+  set_source(res, context);
+  return Status::OK;
+}
+
 void Service::fix_fingers(size_t index) {
   const auto fix = router->calc_successor_uuid_for_index(index);
 

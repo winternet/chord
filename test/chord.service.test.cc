@@ -218,6 +218,11 @@ class MockStub : public chord::Chord::StubInterface {
       const chord::CheckRequest&,
       chord::CheckResponse*));
 
+  MOCK_METHOD3(ping, grpc::Status(
+      grpc::ClientContext*,
+      const chord::PingRequest&,
+      chord::PingResponse*));
+
   MOCK_METHOD3(PrepareAsyncsuccessorRaw, grpc::ClientAsyncResponseReaderInterface<chord::SuccessorResponse>*(
       grpc::ClientContext*,
       const chord::SuccessorRequest&,
@@ -276,6 +281,16 @@ class MockStub : public chord::Chord::StubInterface {
   MOCK_METHOD3(AsynccheckRaw, grpc::ClientAsyncResponseReaderInterface<chord::CheckResponse>*(
       grpc::ClientContext*,
       const chord::CheckRequest&,
+      grpc::CompletionQueue*));
+
+  MOCK_METHOD3(PrepareAsyncpingRaw, grpc::ClientAsyncResponseReaderInterface<chord::PingResponse>*(
+      grpc::ClientContext*,
+      const chord::PingRequest&,
+      grpc::CompletionQueue*));
+
+  MOCK_METHOD3(AsyncpingRaw, grpc::ClientAsyncResponseReaderInterface<chord::PingResponse>*(
+      grpc::ClientContext*,
+      const chord::PingRequest&,
       grpc::CompletionQueue*));
 };
 

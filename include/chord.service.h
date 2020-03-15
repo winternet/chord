@@ -66,6 +66,10 @@ class Service final : public chord::Chord::Service, public IService {
                      const chord::LeaveRequest *req,
                      chord::LeaveResponse *res) override;
 
+  grpc::Status ping(grpc::ServerContext *context,
+                    const chord::PingRequest *req,
+                    chord::PingResponse *res) override;
+
   void fix_fingers(size_t index) override;
 
   signal<void(const node, const node)>& on_predecessor_update() override {
