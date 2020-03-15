@@ -127,13 +127,15 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
 
   const auto successor = router->successor();
 
-  if(!successor) {
-    logger->error("failed to query successor from this->router");
-    return Status::CANCELLED;
-  }
-
-  if(id == self || id.between(self, successor->uuid)) {
+  if(id == self || uuid::between(self, id, successor->uuid)) {
     logger->trace("[successor] the requested id {} lies between self {} and my successor {}, returning successor", id.string(), self.string(), successor->uuid);
+
+    if(*successor != context.node()) {
+      const auto status = client->ping(successor->endpoint);
+      if(!status.ok()) {
+        //TODO handle
+      }
+    }
 
     //--- router entry
     RouterEntry entry;

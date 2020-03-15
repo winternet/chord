@@ -252,22 +252,32 @@ Status Client::notify() {
   return make_stub(endpoint)->notify(&clientContext, req, &res);
 }
 
+Status Client::ping(const endpoint& endpoint) {
+  ClientContext clientContext;
+  PingRequest req = make_request<PingRequest>(context);
+  PingResponse res;
+
+  logger->trace("[ping] {}", endpoint);
+
+  return make_stub(endpoint)->ping(&clientContext, req, &res);
+}
+
 Status Client::successor(ClientContext *clientContext, const SuccessorRequest *req, SuccessorResponse *res) {
 
-  logger->trace("trying to find successor of {}", req->id());
+  logger->trace("[successor] trying to find successor of {}", req->id());
   SuccessorRequest copy(*req);
   copy.mutable_header()->CopyFrom(make_header(context));
 
   const auto predecessor = router->closest_preceding_node(uuid_t(req->id()));
   // this node is the closest preceding node -> successor is node's direct successor
   if(predecessor && *predecessor == context.node()) {
-    logger->trace("this node seems to be the closest preceding node");
+    logger->trace("[successor] this node seems to be the closest preceding node");
     auto succ = res->mutable_successor();
     succ->set_uuid(context.uuid());
     succ->set_endpoint(context.bind_addr);
     return Status::OK;
   }
-  logger->trace("forwarding request to {}", predecessor);
+  logger->trace("[successor] forwarding request to {}", predecessor);
 
   return predecessor ? make_stub(predecessor->endpoint)->successor(clientContext, copy, res) : Status::CANCELLED;
 }

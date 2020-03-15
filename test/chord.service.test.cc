@@ -575,12 +575,16 @@ TEST(ServiceTest, ping) {
 TEST(ServiceTest, fix_fingers) {
   Context context = make_context(20);
 
+  MockClient client;
   RouterSpy router(context);
 
   const node succ{"50", "5.5.5.5:8888"};
   router.update(succ);
 
-  Service service{context, &router, nullptr};
+  Service service{context, &router, &client};
+
+  EXPECT_CALL(client, ping(_))
+    .WillOnce(Return(Status::OK));
 
   service.fix_fingers(2);
   ASSERT_EQ(router.entry(1).node(), succ); // no holes in successors
