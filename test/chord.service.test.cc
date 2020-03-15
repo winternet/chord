@@ -213,11 +213,6 @@ class MockStub : public chord::Chord::StubInterface {
       const chord::NotifyRequest&,
       chord::NotifyResponse*));
 
-  MOCK_METHOD3(check, grpc::Status(
-      grpc::ClientContext*,
-      const chord::CheckRequest&,
-      chord::CheckResponse*));
-
   MOCK_METHOD3(ping, grpc::Status(
       grpc::ClientContext*,
       const chord::PingRequest&,
@@ -271,16 +266,6 @@ class MockStub : public chord::Chord::StubInterface {
   MOCK_METHOD3(AsyncnotifyRaw, grpc::ClientAsyncResponseReaderInterface<chord::NotifyResponse>*(
       grpc::ClientContext*,
       const chord::NotifyRequest&,
-      grpc::CompletionQueue*));
-
-  MOCK_METHOD3(PrepareAsynccheckRaw, grpc::ClientAsyncResponseReaderInterface<chord::CheckResponse>*(
-      grpc::ClientContext*,
-      const chord::CheckRequest&,
-      grpc::CompletionQueue*));
-
-  MOCK_METHOD3(AsynccheckRaw, grpc::ClientAsyncResponseReaderInterface<chord::CheckResponse>*(
-      grpc::ClientContext*,
-      const chord::CheckRequest&,
       grpc::CompletionQueue*));
 
   MOCK_METHOD3(PrepareAsyncpingRaw, grpc::ClientAsyncResponseReaderInterface<chord::PingResponse>*(
@@ -563,7 +548,7 @@ TEST(ServiceTest, notify__no_update) {
   ASSERT_EQ(router.predecessor(), pred);
 }
 
-TEST(ServiceTest, check) {
+TEST(ServiceTest, ping) {
   Context context = make_context(20);
 
   Router router(context);
@@ -571,15 +556,15 @@ TEST(ServiceTest, check) {
   Service service{context, &router, nullptr};
 
   ServerContext serverContext;
-  CheckRequest req;
-  CheckResponse res;
+  PingRequest req;
+  PingResponse res;
 
   const node from_node{"1", "1.1.1.1:8888"};
   auto src = req.mutable_header()->mutable_src();
   src->set_uuid(from_node.uuid.string());
   src->set_endpoint(from_node.endpoint);
 
-  const auto status = service.check(&serverContext, &req, &res);
+  const auto status = service.ping(&serverContext, &req, &res);
 
   ASSERT_TRUE(status.ok());
   ASSERT_TRUE(res.has_header());

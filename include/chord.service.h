@@ -58,10 +58,6 @@ class Service final : public chord::Chord::Service, public IService {
                       const chord::NotifyRequest *req,
                       chord::NotifyResponse *res) override;
 
-  grpc::Status check(grpc::ServerContext *context,
-                     const chord::CheckRequest *req,
-                     chord::CheckResponse *res) override;
-
   grpc::Status leave(grpc::ServerContext *context, 
                      const chord::LeaveRequest *req,
                      chord::LeaveResponse *res) override;

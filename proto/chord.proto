@@ -17,7 +17,6 @@ service Chord {
   rpc join      (JoinRequest)       returns (JoinResponse) {}
   rpc stabilize (StabilizeRequest)  returns (StabilizeResponse) {}
   rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
-  rpc check     (CheckRequest)      returns (CheckResponse) {}
   rpc leave     (LeaveRequest)      returns (LeaveResponse) {}
   rpc ping      (PingRequest)       returns (PingResponse) {}
 }
@@ -77,18 +76,6 @@ message NotifyRequest {
 }
 message NotifyResponse {
   chord.common.Header header = 1;
-}
-
-/**
- * CHECK
- */
-message CheckRequest {
-  chord.common.Header header = 1;
-  string id = 2;
-}
-message CheckResponse {
-  chord.common.Header header = 1;
-  string id = 2;
 }
 
 /**

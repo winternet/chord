@@ -41,10 +41,6 @@ class IService {
                               const chord::NotifyRequest *req,
                               chord::NotifyResponse *res) = 0;
 
-  virtual grpc::Status check(grpc::ServerContext *context,
-                             const chord::CheckRequest *req,
-                             chord::CheckResponse *res) = 0;
-
   virtual grpc::Status leave(grpc::ServerContext *context,
                              const chord::LeaveRequest *req,
                              chord::LeaveResponse *res) = 0;

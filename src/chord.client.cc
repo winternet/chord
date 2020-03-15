@@ -40,8 +40,6 @@ using chord::StabilizeResponse;
 using chord::StabilizeRequest;
 using chord::NotifyResponse;
 using chord::NotifyRequest;
-using chord::CheckResponse;
-using chord::CheckRequest;
 using chord::Chord;
 
 using namespace std;
@@ -302,18 +300,18 @@ void Client::check() {
     return;
   }
   if (!successor) {
-    logger->trace("no successor, skip.");
+    logger->trace("[check] no successor, skip.");
     return;
   }
 
   ClientContext clientContext;
-  CheckRequest req = make_request<CheckRequest>(context);
-  CheckResponse res;
+  PingRequest req = make_request<PingRequest>(context);
+  PingResponse res;
 
   const auto endpoint = predecessor->endpoint;//router->get(predecessor);
 
-  logger->trace("checking predecessor {}", *predecessor);
-  const auto status = make_stub(endpoint)->check(&clientContext, req, &res);
+  logger->trace("[check] checking predecessor {}", *predecessor);
+  const auto status = make_stub(endpoint)->ping(&clientContext, req, &res);
 
   if (!status.ok()) {
     logger->warn("[check] predecessor failed.");

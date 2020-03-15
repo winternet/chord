@@ -30,8 +30,6 @@ using chord::StabilizeResponse;
 using chord::StabilizeRequest;
 using chord::NotifyResponse;
 using chord::NotifyRequest;
-using chord::CheckResponse;
-using chord::CheckRequest;
 
 using namespace std;
 using namespace chord::common;
@@ -251,18 +249,6 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
   }
 
   return status;
-}
-
-Status Service::check(ServerContext *serverContext, const CheckRequest *req, CheckResponse *res) {
-  (void)serverContext;
-
-  if(!has_valid_header(req)) return Status::CANCELLED;
-
-  const auto source = source_of(req);
-  logger->trace("[check] from {}", source);
-  set_source(res, context);
-  res->set_id(req->id());
-  return Status::OK;
 }
 
 Status Service::ping(ServerContext *serverContext, const PingRequest *req, PingResponse *res) {

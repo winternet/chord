@@ -25,10 +25,6 @@ class MockService : public IService {
                               const chord::NotifyRequest *req,
                               chord::NotifyResponse *res));
 
-  MOCK_METHOD3(check, grpc::Status(grpc::ServerContext *context,
-                             const chord::CheckRequest *req,
-                             chord::CheckResponse *res));
-
   MOCK_METHOD3(leave, grpc::Status(grpc::ServerContext *context,
                              const chord::LeaveRequest *req,
                              chord::LeaveResponse *res));
