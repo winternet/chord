@@ -30,8 +30,8 @@ class IService {
 
 
   virtual grpc::Status successor(grpc::ServerContext *context,
-                                 const chord::LookupRequest *req,
-                                 chord::LookupResponse *res) = 0;
+                                 const chord::SuccessorRequest *req,
+                                 chord::SuccessorResponse *res) = 0;
 
   virtual grpc::Status stabilize(grpc::ServerContext *context,
                                  const chord::StabilizeRequest *req,

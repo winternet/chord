@@ -34,9 +34,9 @@ class IClient {
 
   virtual chord::common::RouterEntry successor(const uuid_t &id) =0;
 
-  virtual grpc::Status successor(grpc::ClientContext *context, const chord::LookupRequest *req, chord::LookupResponse *res) =0;
+  virtual grpc::Status successor(grpc::ClientContext *context, const chord::SuccessorRequest *req, chord::SuccessorResponse *res) =0;
 
-  virtual grpc::Status successor(const chord::LookupRequest *req, chord::LookupResponse *res) =0;
+  virtual grpc::Status successor(const chord::SuccessorRequest *req, chord::SuccessorResponse *res) =0;
 
   virtual signal<void(const node)>& on_successor_fail() = 0;
   virtual signal<void(const node)>& on_predecessor_fail() = 0;

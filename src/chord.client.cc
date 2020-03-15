@@ -34,8 +34,8 @@ using chord::common::make_request;
 
 using chord::JoinResponse;
 using chord::JoinRequest;
-using chord::LookupResponse;
-using chord::LookupRequest;
+using chord::SuccessorResponse;
+using chord::SuccessorRequest;
 using chord::StabilizeResponse;
 using chord::StabilizeRequest;
 using chord::NotifyResponse;
@@ -73,10 +73,12 @@ Status Client::inform_successor_about_leave() {
 
   // inform successor
   ClientContext clientContext;
-  LeaveRequest req = make_request<LeaveRequest>(context);
+  LeaveRequest req;
   LeaveResponse res;
 
   logger->trace("[leave] informing successor {}", successor_node);
+
+  set_source(req, context);
 
   auto entries = req.mutable_entries();
   for(const auto node : router->get()) {
@@ -252,10 +254,10 @@ Status Client::notify() {
   return make_stub(endpoint)->notify(&clientContext, req, &res);
 }
 
-Status Client::successor(ClientContext *clientContext, const LookupRequest *req, LookupResponse *res) {
+Status Client::successor(ClientContext *clientContext, const SuccessorRequest *req, SuccessorResponse *res) {
 
   logger->trace("trying to find successor of {}", req->id());
-  LookupRequest copy(*req);
+  SuccessorRequest copy(*req);
   copy.mutable_header()->CopyFrom(make_header(context));
 
   const auto predecessor = router->closest_preceding_node(uuid_t(req->id()));
@@ -273,16 +275,16 @@ Status Client::successor(ClientContext *clientContext, const LookupRequest *req,
 }
 
 /** called by chord.service **/
-Status Client::successor(const LookupRequest *req, LookupResponse *res) {
+Status Client::successor(const SuccessorRequest *req, SuccessorResponse *res) {
   ClientContext clientContext;
   return successor(&clientContext, req, res);
 }
 
 RouterEntry Client::successor(const uuid_t &uuid) {
   ClientContext clientContext;
-  LookupRequest req = make_request<LookupRequest>(context);
+  SuccessorRequest req = make_request<SuccessorRequest>(context);
   req.set_id(uuid);
-  LookupResponse res;
+  SuccessorResponse res;
 
   const auto status = successor(&clientContext, &req, &res);
 

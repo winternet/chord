@@ -13,7 +13,7 @@ package chord;
 service Chord {
 
   //--- common chord calls
-  rpc successor (LookupRequest)     returns (LookupResponse) {}
+  rpc successor (SuccessorRequest)  returns (SuccessorResponse) {}
   rpc join      (JoinRequest)       returns (JoinResponse) {}
   rpc stabilize (StabilizeRequest)  returns (StabilizeResponse) {}
   rpc notify    (NotifyRequest)     returns (NotifyResponse) {}
@@ -24,13 +24,13 @@ service Chord {
 /**
  * SUCCESSOR 
  */
-message LookupRequest {
+message SuccessorRequest {
   chord.common.Header header = 1;
   //--- id to find
   string id = 2;
 }
 
-message LookupResponse { 
+message SuccessorResponse { 
   chord.common.Header header = 1;
   chord.common.RouterEntry successor = 2;
 }

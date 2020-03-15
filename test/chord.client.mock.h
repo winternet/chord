@@ -22,9 +22,9 @@ class MockClient : public IClient {
 
   MOCK_METHOD1(successor, chord::common::RouterEntry(const uuid_t &id));
 
-  MOCK_METHOD3(successor, grpc::Status(grpc::ClientContext *context, const chord::LookupRequest *req, chord::LookupResponse *res));
+  MOCK_METHOD3(successor, grpc::Status(grpc::ClientContext *context, const chord::SuccessorRequest *req, chord::SuccessorResponse *res));
 
-  MOCK_METHOD2(successor, grpc::Status(const chord::LookupRequest *req, chord::LookupResponse *res));
+  MOCK_METHOD2(successor, grpc::Status(const chord::SuccessorRequest *req, chord::SuccessorResponse *res));
   
   MOCK_METHOD0(on_successor_fail, signal<void(const node)>&(void));
 

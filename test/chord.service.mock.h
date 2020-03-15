@@ -14,8 +14,8 @@ class MockService : public IService {
 
 
   MOCK_METHOD3(successor, grpc::Status(grpc::ServerContext *context,
-                                 const chord::LookupRequest *req,
-                                 chord::LookupResponse *res));
+                                 const chord::SuccessorRequest *req,
+                                 chord::SuccessorResponse *res));
 
   MOCK_METHOD3(stabilize, grpc::Status(grpc::ServerContext *context,
                                  const chord::StabilizeRequest *req,

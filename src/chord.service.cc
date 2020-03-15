@@ -24,8 +24,8 @@ using grpc::Status;
 using chord::common::Header;
 using chord::JoinResponse;
 using chord::JoinRequest;
-using chord::LookupResponse;
-using chord::LookupRequest;
+using chord::SuccessorResponse;
+using chord::SuccessorRequest;
 using chord::StabilizeResponse;
 using chord::StabilizeRequest;
 using chord::NotifyResponse;
@@ -102,8 +102,8 @@ Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinR
 
 RouterEntry Service::successor(const uuid_t &uuid) {
   ServerContext serverContext;
-  LookupRequest req = make_request<LookupRequest>(context);
-  LookupResponse res;
+  SuccessorRequest req = make_request<SuccessorRequest>(context);
+  SuccessorResponse res;
 
   req.set_id(uuid);
 
@@ -114,7 +114,7 @@ RouterEntry Service::successor(const uuid_t &uuid) {
   return res.successor();
 }
 
-Status Service::successor(ServerContext *serverContext, const LookupRequest *req, LookupResponse *res) {
+Status Service::successor(ServerContext *serverContext, const SuccessorRequest *req, SuccessorResponse *res) {
   (void)serverContext;
 
   if(!has_valid_header(req)) return Status::CANCELLED;
