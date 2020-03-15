@@ -1,4 +1,4 @@
-FROM ubuntu:18.04 AS build
+FROM ubuntu:20.04 AS build
 
 #
 # install dependencies
@@ -14,7 +14,6 @@ RUN apt-get update \
             libboost-serialization-dev \
             libleveldb-dev \
             libyaml-cpp-dev \
-            libgrpc++-dev \
             libboost-thread-dev \
             libboost-program-options-dev \
             libssl-dev
@@ -22,14 +21,14 @@ RUN apt-get update \
 #
 # install grpc
 #
-RUN git clone -b v1.20.1 https://github.com/grpc/grpc /opt/grpc && cd /opt/grpc \
+RUN git clone -b v1.27.3 https://github.com/grpc/grpc /opt/grpc && cd /opt/grpc \
     && git submodule update --init \
     && make -j$(nproc) CFLAGS='-Wno-error -Wno-expansion-to-defined' && make install CFLAGS='-Wno-error -Wno-expansion-to-defined'
 
 #
 # install protobuf
 #
-RUN git clone -b v3.6.1 https://github.com/google/protobuf.git /opt/protobuf && cd /opt/protobuf/cmake \
+RUN git clone -b v3.11.4 https://github.com/google/protobuf.git /opt/protobuf && cd /opt/protobuf/cmake \
     && mkdir build && cd build \
     && cmake .. -DCMAKE_BUILD_TYPE=Release \
                 -Dprotobuf_BUILD_EXAMPLES=OFF \
