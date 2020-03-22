@@ -18,7 +18,7 @@ class IClient {
 
  public:
 
-  virtual ~IClient() {}
+  virtual ~IClient() = default;
   virtual void leave() =0;
 
   virtual grpc::Status join(const endpoint& addr) =0;

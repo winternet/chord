@@ -49,13 +49,13 @@ class Facade : public IFacade {
 
   ::grpc::Service* grpc_service();
 
-  grpc::Status put(const chord::path& source, const chord::uri& target, Replication repl = Replication());
+  grpc::Status put(const chord::path& source, const chord::uri& target, Replication repl = Replication()) override;
 
-  grpc::Status get(const chord::uri& source, const chord::path& target);
+  grpc::Status get(const chord::uri& source, const chord::path& target) override;
 
-  grpc::Status dir(const chord::uri& uri, std::iostream& iostream);
+  grpc::Status dir(const chord::uri& uri, std::iostream& iostream) override;
 
-  grpc::Status del(const chord::uri& uri, const bool recursive=false);
+  grpc::Status del(const chord::uri& uri, const bool recursive=false) override;
 
   /**
    * callbacks

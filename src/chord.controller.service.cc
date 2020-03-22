@@ -145,7 +145,7 @@ Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
       const uri& target = {*target_it};
       // TODO if taget is no directory rename the file
       //      and put it under that name
-      filesystem->put(source, target, {repl});
+      filesystem->put(source, target, fs::Replication{repl});
     }
   } catch (const chord::exception& exception) {
     logger->error("failed to issue put request: {}", exception.what());

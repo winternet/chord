@@ -210,7 +210,6 @@ Status Service::notify([[maybe_unused]] ServerContext *serverContext, const Noti
   const auto predecessor = router->predecessor();
   const uuid_t self{context.uuid()};
   auto status = Status::OK;
-  auto changed_successor = false;
   auto changed_predecessor = false;
 
   if(source == context.node()) {
@@ -221,16 +220,12 @@ Status Service::notify([[maybe_unused]] ServerContext *serverContext, const Noti
   // initializing ring
   if(!predecessor) {
     router->update(source);
-    changed_successor = true;
     changed_predecessor = true;
   } else if(context.uuid().between(predecessor->uuid, source.uuid)) {
-    changed_successor = true;
     router->update(source);
-    //router->update_successor(*successor, source_node);
   } else if(context.uuid().between(source.uuid, successor->uuid)) {
     changed_predecessor = true;
     router->update(source);
-    //router->set_predecessor(0, source_node);
   }
 
   if(req->has_old_node() && req->has_new_node()) {

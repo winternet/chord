@@ -19,7 +19,7 @@ namespace chord { namespace fs { class MetaRequest; } }
 namespace chord { namespace fs { class MetaResponse; } }
 namespace chord { namespace fs { class PutRequest; } }
 namespace chord { namespace fs { class PutResponse; } }
-namespace chord { namespace fs { namespace client { class options; } } }
+namespace chord { namespace fs { namespace client { struct options; } } }
 namespace chord { struct Context; }
 namespace spdlog { class logger; }
 

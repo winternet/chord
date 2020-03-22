@@ -23,7 +23,7 @@ Replication& Replication::operator=(Replication rhs) {
     return *this;
   }
 
-  Replication Replication::operator++(int) {
+  const Replication Replication::operator++(int) {
     Replication tmp{*this};
     ++(*this);
     return tmp;
@@ -34,7 +34,7 @@ Replication& Replication::operator=(Replication rhs) {
     return *this;
   }
 
-  Replication Replication::operator--(int) {
+  const Replication Replication::operator--(int) {
     Replication tmp{*this};
     --(*this);
     return tmp;

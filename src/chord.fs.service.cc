@@ -72,7 +72,7 @@ Status Service::is_valid(ServerContext* serverContext, const RequestType req_typ
   return Status::OK;
 }
 
-Status Service::handle_meta_dir(ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
+Status Service::handle_meta_dir([[maybe_unused]] ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
   const auto uri = uri::from(req->uri());
   if(!metadata_mgr->exists(uri)) {
     return Status{StatusCode::NOT_FOUND, "not found: " + to_string(uri)};
@@ -186,7 +186,7 @@ Status Service::meta([[maybe_unused]] ServerContext *serverContext, const MetaRe
     }
   } catch(const chord::exception& e) {
     const auto uri = uri::from(req->uri());
-    logger->error("failed in meta for uri {}, reason: {}", uri, e.what());
+    //logger->error("failed in meta for uri {}, reason: {}", uri, e.what());
     return Status{StatusCode::NOT_FOUND, e.what()};
   }
 

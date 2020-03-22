@@ -18,14 +18,14 @@ struct Replication {
   
   Replication();
   Replication(const Replication& repl);
-  Replication(std::uint32_t count);
+  explicit Replication(std::uint32_t count);
   Replication(std::uint32_t index, std::uint32_t count);
 
   Replication& operator=(Replication rhs);
   Replication& operator++();
-  Replication operator++(int);
+  const Replication operator++(int);
   Replication& operator--();
-  Replication operator--(int);
+  const Replication operator--(int);
 
   bool operator==(const Replication& other) const;
 
