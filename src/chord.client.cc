@@ -268,18 +268,16 @@ Status Client::successor(ClientContext *clientContext, const SuccessorRequest *r
   SuccessorRequest copy(*req);
   copy.mutable_header()->CopyFrom(make_header(context));
 
-  const auto predecessor = router->closest_preceding_node(uuid_t(req->id()));
-  // this node is the closest preceding node -> successor is node's direct successor
-  if(predecessor && *predecessor == context.node()) {
-    logger->trace("[successor] this node seems to be the closest preceding node");
-    auto succ = res->mutable_successor();
-    succ->set_uuid(context.uuid());
-    succ->set_endpoint(context.bind_addr);
-    return Status::OK;
-  }
-  logger->trace("[successor] forwarding request to {}", predecessor);
+  auto status = Status::CANCELLED;
 
-  return predecessor ? make_stub(predecessor->endpoint)->successor(clientContext, copy, res) : Status::CANCELLED;
+  const auto predecessors = router->closest_preceding_nodes(uuid{req->id()});
+  for(const auto predecessor : predecessors) {
+    ClientContext ctxt;
+    status = make_stub(predecessor.endpoint)->successor(&ctxt, copy, res);
+    if(!status.ok()) continue;
+  }
+
+  return status;
 }
 
 /** called by chord.service **/

@@ -39,6 +39,7 @@ TEST(RouterTest, initialize) {
     ASSERT_EQ(entry.uuid, chord::Router::calc_successor_uuid_for_index(context.uuid(), i));
   }
   ASSERT_EQ(context.node(), router.closest_preceding_node(9999));
+  ASSERT_TRUE(router.closest_preceding_nodes(9999).empty());
 }
 
 TEST(RouterTest, dump) {
@@ -58,6 +59,35 @@ TEST(RouterTest, closest_preceding_node) {
     router.update(node{i, "127.0.0.1:50"+to_string(i)});
   }
   router.update(node{199, "192.168.1.1:50199"});
+  //note: 2^i-1
+  router.print(std::cerr);
+  ASSERT_EQ(router.closest_preceding_nodes(200).size(), 8);
+
+  const std::vector<size_t> expected_nodes{2,3,5,9,17,33,65,199};
+
+  for(size_t i=Router::BITS; i > 0; --i) {
+    const auto predecessors = router.closest_preceding_nodes(i);
+
+    const bool is_sorted = std::is_sorted(predecessors.crbegin(), predecessors.crend());
+
+    const bool all_between = 
+      std::all_of(predecessors.begin(), predecessors.end(), [&](const auto& pred) {
+        return uuid::between(context.uuid(), pred.uuid, uuid{i});
+    });
+
+    const auto all_expected_nodes =
+      std::all_of(predecessors.begin(), predecessors.end(), [&](const auto& p) {
+          const bool pred_contained = std::any_of(expected_nodes.begin(), expected_nodes.end(), [&](const auto& nbr) {
+              return uuid{nbr} == p.uuid;
+              });
+          if(!pred_contained) std::cerr << "\n\n\nNOT CONTAINED: " << p;
+          return pred_contained;
+          });
+
+    ASSERT_TRUE(is_sorted);
+    ASSERT_TRUE(all_between);
+    ASSERT_TRUE(all_expected_nodes);
+  }
 
   ASSERT_TRUE(router.has_predecessor());
   ASSERT_EQ(router.predecessor()->uuid, 199);

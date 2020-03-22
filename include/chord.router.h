@@ -101,7 +101,8 @@ public:
 
   optional<node> predecessor() const;
 
-  optional<node> closest_preceding_node(const uuid_t &uuid);
+  std::vector<node> closest_preceding_nodes(const uuid& uuid);
+  optional<node> closest_preceding_node(const uuid& uuid);
 
   friend std::ostream &operator<<(std::ostream &os, const Router &router);
 
