@@ -165,10 +165,15 @@ Status Client::join(ClientContext *clientContext, const JoinRequest *req, JoinRe
   logger->trace("forwarding join of {}", req->header().src().uuid());
   JoinRequest copy(*req);
 
-  const auto predecessor = router->closest_preceding_node(uuid_t(req->header().src().uuid()));
-  logger->trace("forwarding request to {}", predecessor);
+  const auto predecessors = router->closest_preceding_nodes(uuid_t(req->header().src().uuid()));
 
-  return predecessor ? make_stub(predecessor->endpoint)->join(clientContext, copy, res) : Status::CANCELLED;
+  for(const auto predecessor:predecessors) {
+    logger->trace("forwarding request to {}", predecessor);
+    const auto status = make_stub(predecessor.endpoint)->join(clientContext, copy, res);
+    if(status.ok()) return status;
+  }
+
+  return Status::CANCELLED;
 }
 
 
@@ -262,22 +267,20 @@ Status Client::ping(const endpoint& endpoint) {
   return make_stub(endpoint)->ping(&clientContext, req, &res);
 }
 
-Status Client::successor(ClientContext *clientContext, const SuccessorRequest *req, SuccessorResponse *res) {
+Status Client::successor([[maybe_unused]] ClientContext *clientContext, const SuccessorRequest *req, SuccessorResponse *res) {
 
   logger->trace("[successor] trying to find successor of {}", req->id());
   SuccessorRequest copy(*req);
   copy.mutable_header()->CopyFrom(make_header(context));
 
-  auto status = Status::CANCELLED;
-
   const auto predecessors = router->closest_preceding_nodes(uuid{req->id()});
   for(const auto predecessor : predecessors) {
     ClientContext ctxt;
-    status = make_stub(predecessor.endpoint)->successor(&ctxt, copy, res);
-    if(!status.ok()) continue;
+    const auto status = make_stub(predecessor.endpoint)->successor(&ctxt, copy, res);
+    if(status.ok()) return status;
   }
 
-  return status;
+  return Status::CANCELLED;
 }
 
 /** called by chord.service **/

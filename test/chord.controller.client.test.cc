@@ -39,8 +39,7 @@ TEST(chord_controller_client, custom_stub_constructor) {
 
 TEST(chord_controller_client, control) {
   std::unique_ptr<MockControllerStub> stub(new MockControllerStub);
-  const auto make_stub = [&](const endpoint& endpoint) {
-    (void)endpoint;
+  const auto make_stub = [&]([[maybe_unused]] const endpoint& endpoint) {
     return std::move(stub);
   };
   Client client(make_stub);
@@ -66,8 +65,7 @@ TEST(chord_controller_client, control) {
 
 TEST(chord_controller_client, control_with_exception) {
   std::unique_ptr<MockControllerStub> stub(new MockControllerStub);
-  const auto make_stub = [&](const endpoint& endpoint) {
-    (void)endpoint;
+  const auto make_stub = [&]([[maybe_unused]] const endpoint& endpoint) {
     return std::move(stub);
   };
   Client client(make_stub);

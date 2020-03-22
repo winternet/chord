@@ -173,21 +173,13 @@ std::vector<node> Router::closest_preceding_nodes(const uuid& uuid) {
     }
   }
 
-  //TODO check whether we need to return self in case vector is empty
+  if(ret.empty() || ret.front() != context.node()) ret.push_back(context.node());
+
   return ret;
 }
 
 optional<node> Router::closest_preceding_node(const uuid_t &uuid) {
-  std::lock_guard<mutex_t> lock(mtx);
-  for(auto it=std::crbegin(successors); it != crend(successors); ++it) {
-    if(it->valid() && uuid::between(context.uuid(), it->node().uuid, uuid)) {
-      logger->info("closest preceding node for {} found is {}", uuid, it->node());
-      return it->node();
-    }
-  }
-
-  logger->info("no closest preceding node for {} found, returning self {}", uuid, context.uuid());
-  return context.node();
+  return closest_preceding_nodes(uuid).front();
 }
 
 uuid Router::get(const size_t index) const {

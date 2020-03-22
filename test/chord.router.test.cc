@@ -39,7 +39,7 @@ TEST(RouterTest, initialize) {
     ASSERT_EQ(entry.uuid, chord::Router::calc_successor_uuid_for_index(context.uuid(), i));
   }
   ASSERT_EQ(context.node(), router.closest_preceding_node(9999));
-  ASSERT_TRUE(router.closest_preceding_nodes(9999).empty());
+  ASSERT_FALSE(router.closest_preceding_nodes(9999).empty());
 }
 
 TEST(RouterTest, dump) {
@@ -61,9 +61,9 @@ TEST(RouterTest, closest_preceding_node) {
   router.update(node{199, "192.168.1.1:50199"});
   //note: 2^i-1
   router.print(std::cerr);
-  ASSERT_EQ(router.closest_preceding_nodes(200).size(), 8);
+  ASSERT_EQ(router.closest_preceding_nodes(200).size(), 9);
 
-  const std::vector<size_t> expected_nodes{2,3,5,9,17,33,65,199};
+  const std::vector<size_t> expected_nodes{0,2,3,5,9,17,33,65,199};
 
   for(size_t i=Router::BITS; i > 0; --i) {
     const auto predecessors = router.closest_preceding_nodes(i);
@@ -72,7 +72,7 @@ TEST(RouterTest, closest_preceding_node) {
 
     const bool all_between = 
       std::all_of(predecessors.begin(), predecessors.end(), [&](const auto& pred) {
-        return uuid::between(context.uuid(), pred.uuid, uuid{i});
+        return uuid::between(context.uuid(), pred.uuid, uuid{i}) || pred == context.node() ;
     });
 
     const auto all_expected_nodes =

@@ -167,8 +167,7 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
   return Status::OK;
 }
 
-Status Service::meta(ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
-  (void)serverContext;
+Status Service::meta([[maybe_unused]] ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
 
   // in case controller service queries...
   //const auto status = is_valid(serverContext, RequestType::META);
@@ -214,8 +213,7 @@ bool Service::file_hashes_equal(grpc::ServerContext* serverContext, grpc::Server
   return hashes_equal;
 }
 
-Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *reader, PutResponse *response) {
-  (void)response;
+Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *reader, [[maybe_unused]] PutResponse *response) {
   PutRequest req;
 
   const auto status = is_valid(serverContext, RequestType::PUT);
@@ -429,12 +427,9 @@ Status Service::handle_del_dir(ServerContext *serverContext, const chord::fs::De
   return Status::OK;
 }
 
-Status Service::del(grpc::ServerContext *serverContext,
+Status Service::del([[maybe_unused]] grpc::ServerContext *serverContext,
                     const chord::fs::DelRequest *req,
-                    chord::fs::DelResponse *res) {
-  (void)res;
-  (void)serverContext;
-
+                    [[maybe_unused]] chord::fs::DelResponse *res) {
   const auto status = is_valid(serverContext, RequestType::DEL);
   if(!status.ok()) {
     return status;
@@ -526,8 +521,7 @@ Status Service::get_from_reference_or_replication(const chord::uri& uri) {
   return Status::CANCELLED;
 }
 
-Status Service::get(ServerContext *serverContext, const GetRequest *req, grpc::ServerWriter<GetResponse> *writer) {
-  (void)serverContext;
+Status Service::get([[maybe_unused]] ServerContext *serverContext, const GetRequest *req, grpc::ServerWriter<GetResponse> *writer) {
   ifstream file;
   file.exceptions(ifstream::failbit | ifstream::badbit);
 

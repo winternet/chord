@@ -42,8 +42,7 @@ Service::Service(Context &context, Router *router, IClient* client)
       client{client},
       logger{context.logging.factory().get_or_create(logger_name)} {}
 
-Status Service::join(ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
-  (void)serverContext;
+Status Service::join([[maybe_unused]] ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
 
   if(!has_valid_header(req)) return Status::CANCELLED;
 
@@ -112,8 +111,7 @@ RouterEntry Service::successor(const uuid_t &uuid) {
   return res.successor();
 }
 
-Status Service::successor(ServerContext *serverContext, const SuccessorRequest *req, SuccessorResponse *res) {
-  (void)serverContext;
+Status Service::successor([[maybe_unused]] ServerContext *serverContext, const SuccessorRequest *req, SuccessorResponse *res) {
 
   if(!has_valid_header(req)) return Status::CANCELLED;
 
@@ -159,8 +157,7 @@ Status Service::successor(ServerContext *serverContext, const SuccessorRequest *
   return Status::OK;
 }
 
-Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *req, StabilizeResponse *res) {
-  (void)serverContext;
+Status Service::stabilize([[maybe_unused]] ServerContext *serverContext, const StabilizeRequest *req, StabilizeResponse *res) {
 
   //TODO adapt test and enable?
   //if(!has_valid_header(req)) return Status::CANCELLED;
@@ -185,9 +182,7 @@ Status Service::stabilize(ServerContext *serverContext, const StabilizeRequest *
   return Status::OK;
 }
 
-Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, LeaveResponse *res) {
-  (void)serverContext;
-  (void)res;
+Status Service::leave([[maybe_unused]] ServerContext *serverContext, const LeaveRequest *req, [[maybe_unused]] LeaveResponse *res) {
 
   if(!has_valid_header(req)) return Status::CANCELLED;
 
@@ -203,9 +198,7 @@ Status Service::leave(ServerContext *serverContext, const LeaveRequest *req, Lea
   return Status::OK;
 }
 
-Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, NotifyResponse *res) {
-  (void)serverContext;
-  (void)res;
+Status Service::notify([[maybe_unused]] ServerContext *serverContext, const NotifyRequest *req, [[maybe_unused]] NotifyResponse *res) {
 
   if(!has_valid_header(req)) return Status::CANCELLED;
 
@@ -253,8 +246,7 @@ Status Service::notify(ServerContext *serverContext, const NotifyRequest *req, N
   return status;
 }
 
-Status Service::ping(ServerContext *serverContext, const PingRequest *req, PingResponse *res) {
-  (void)serverContext;
+Status Service::ping([[maybe_unused]] ServerContext *serverContext, const PingRequest *req, PingResponse *res) {
 
   if(!has_valid_header(req)) return Status::CANCELLED;
 

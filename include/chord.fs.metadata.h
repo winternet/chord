@@ -119,24 +119,21 @@ namespace boost {
 namespace serialization {
 
 template<class Archive>
-void serialize(Archive & ar, chord::uuid &uuid, const unsigned int version)
+void serialize(Archive & ar, chord::uuid &uuid, [[maybe_unused]] const unsigned int version)
 {
-  (void)version;
   ar & uuid.value();
 }
 
 template<class Archive>
-void serialize(Archive & ar, chord::node &node, const unsigned int version)
+void serialize(Archive & ar, chord::node &node, [[maybe_unused]] const unsigned int version)
 {
-  (void)version;
   ar & node.uuid;
   ar & node.endpoint;
 }
 
 template<class Archive>
-void serialize(Archive & ar, chord::fs::Replication &replication, const unsigned int version)
+void serialize(Archive & ar, chord::fs::Replication &replication, [[maybe_unused]] const unsigned int version)
 {
-  (void)version;
   ar & replication.index;
   ar & replication.count;
 }

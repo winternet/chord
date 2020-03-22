@@ -184,8 +184,7 @@ class MockStub : public chord::Chord::StubInterface {
  public:
   MockStub() {}
 
-  MockStub(const MockStub &stub) {
-    (void)stub;
+  MockStub([[maybe_unused]] const MockStub &stub) {
   }
 
   MOCK_METHOD3(successor, grpc::Status(
@@ -293,21 +292,17 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   Router router(context);
 
   router.update({0, "0.0.0.0:50050"});
-  router.update({0, "0.0.0.0:50050"});
-  //router.set_successor(0, {0, "0.0.0.0:50050"});
-  //router.set_predecessor(0, {0, "0.0.0.0:50050"});
 
   std::unique_ptr<MockStub> stub(new MockStub);
-  auto stub_factory = [&](const endpoint& endpoint) { (void)endpoint; return std::move(stub); };
+  auto stub_factory = [&]([[maybe_unused]] const endpoint& endpoint) { (void)endpoint; return std::move(stub); };
 
-  Client client{context, &router, stub_factory};
+  Client client(context, &router, stub_factory);
   Service service(context, &router, &client);
 
   ServerContext serverContext;
   SuccessorRequest req = make_request<SuccessorRequest>(context);
   SuccessorResponse res;
 
-  //req.mutable_header()->CopyFrom(make_header(5, "0.0.0.0:50055"));
   req.set_id("2");
 
   //--- stub's capture parameter

@@ -5,8 +5,7 @@ class MockControllerStub : public chord::controller::Control::StubInterface {
  public:
   MockControllerStub() {}
 
-  MockControllerStub(const MockControllerStub &stub) {
-    (void)stub;
+  MockControllerStub([[maybe_unused]] const MockControllerStub &stub) {
   }
 
   MOCK_METHOD3(control, grpc::Status(
