@@ -141,8 +141,8 @@ Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
   try {
     const auto target_it = prev(tokens.end());
     for (auto it = next(tokens.begin()); it != target_it; ++it) {
-      const path& source = {*it};
-      const uri& target = {*target_it};
+      const path source{*it};
+      const uri target(*target_it);
       // TODO if taget is no directory rename the file
       //      and put it under that name
       filesystem->put(source, target, fs::Replication{repl});
@@ -164,8 +164,8 @@ Status Service::handle_get(const vector<string>& token, ControlResponse* res) {
   try {
     const auto target_it = prev(token.end());
     for (auto it = next(token.begin()); it != target_it; ++it) {
-      const uri& source = {*it};
-      const path& target = {*target_it};
+      const uri source{*it};
+      const path target{*target_it};
       // TODO if taget is no directory rename the file
       //      and put it under that name
       filesystem->get(source, target);

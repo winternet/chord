@@ -71,7 +71,7 @@ chord::uri ContextMetadata::uri_from(const grpc::ServerContext* serverContext) {
     throw__exception("missing uri metadata in server context.");
   }
   const auto uri_gstr = metadata.find(ContextMetadata::uri)->second;
-  return {std::string(uri_gstr.begin(), uri_gstr.end())};
+  return chord::uri{std::string(uri_gstr.begin(), uri_gstr.end())};
 }
 
 Replication ContextMetadata::replication_from(const ServerContext* serverContext) {

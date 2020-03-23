@@ -57,7 +57,7 @@ class MetadataManager : public IMetadataManager {
     db.reset(db_tmp);
 
     // make root
-    add({"chord:///"}, {{".", "", "", perms::all, type::directory}});
+    add(uri{"chord:///"}, {{".", "", "", perms::all, type::directory}});
   }
 
   void __del(const chord::uri& uri) {
