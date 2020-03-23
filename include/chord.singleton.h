@@ -6,8 +6,8 @@ namespace chord {
 template<class T>
 class Singleton {
 protected:
-  Singleton() {}
-  ~Singleton() {}
+  Singleton() = default;
+  ~Singleton() = default;
 public:
   template<class... Args>
   static T& instance(Args... args) {

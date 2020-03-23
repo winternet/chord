@@ -124,7 +124,7 @@ Status Facade::put_file(const path& source, const chord::uri& target, Replicatio
     return Status(StatusCode::FAILED_PRECONDITION, "replication count above "+to_string(Replication::MAX_REPL_CNT)+" is not allowed");
   }
 
-  return fs_client->put(target, source, {repl});
+  return fs_client->put(target, source, client::options{repl});
 }
 
 Status Facade::get_file(const chord::uri& source, const chord::path& target) {

@@ -11,6 +11,10 @@ namespace client {
   struct options {
     Replication replication = Replication::NONE;
     chord::optional<chord::uuid> source;
+
+    options() = default;
+    options(Replication replication) : replication{replication} {}
+
     union {
       bool recursive; // del
       bool rebalance; // put
