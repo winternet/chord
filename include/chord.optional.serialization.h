@@ -84,5 +84,5 @@ struct version<chord::optional<T> > {
     BOOST_STATIC_CONSTANT(int, value = 1);
 };
 
-} // serialization
-} // boost
+} //namespace serialization
+} //namespace boost

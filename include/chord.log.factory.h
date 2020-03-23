@@ -5,12 +5,8 @@
 #include <string>
 #include <memory>
 
-namespace spdlog {
-  class logger;
-  namespace sinks {
-    class sink;
-  }
-}
+namespace spdlog { class logger; }
+namespace spdlog { namespace sinks { class sink; } }
 
 namespace chord {
 namespace log {
@@ -33,7 +29,7 @@ class Factory final : public Singleton<Factory> {
     std::shared_ptr<T> configure_sink(std::shared_ptr<T>, const Sink* ) const;
 
   public:
-    Factory(const Logging& logging);
+    explicit Factory(const Logging& logging);
 
     std::shared_ptr<spdlog::logger> get_or_create(std::string name);
 };

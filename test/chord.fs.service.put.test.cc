@@ -161,7 +161,7 @@ TEST_F(FilesystemServicePutTest, put_replication_2) {
   EXPECT_CALL(*peer_2.metadata_mgr, add(uri(target_uri.scheme(), target_uri.path().parent_path()), metadata_set_dir))
     .WillOnce(Return(true));
 
-  const auto status = self->fs_client->put(target_uri, source_file, {Replication(2)});
+  const auto status = self->fs_client->put(target_uri, source_file, client::options{Replication(2)});
 
   ASSERT_TRUE(status.ok());
   const auto target_file = self->data_directory.path / target_uri.path();

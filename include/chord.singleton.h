@@ -19,5 +19,5 @@ public:
   Singleton& operator=(const Singleton) = delete;
 };
 
-}
+} //namespace chord
 
