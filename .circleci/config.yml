@@ -12,6 +12,7 @@ jobs:
     environment:
       VERSION_GRPC: v1.27.3
       VERSION_PROTOBUF: v3.11.4
+      DEBIAN_FRONTEND: noninteractive
     steps:
       - checkout
       - run:
