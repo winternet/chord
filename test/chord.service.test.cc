@@ -40,6 +40,7 @@ using chord::SuccessorRequest;
 using chord::SuccessorResponse;
 
 using ::testing::Eq;
+using ::testing::NiceMock;
 
 using namespace chord::test;
 using namespace chord;
@@ -182,10 +183,8 @@ using ::testing::DoAll;
 
 class MockStub : public chord::Chord::StubInterface {
  public:
-  MockStub() {}
-
-  MockStub([[maybe_unused]] const MockStub &stub) {
-  }
+  MockStub() = default;
+  MockStub(const MockStub &stub) = default;
 
   MOCK_METHOD3(successor, grpc::Status(
       grpc::ClientContext*context,
@@ -293,8 +292,24 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
 
   router.update({0, "0.0.0.0:50050"});
 
-  std::unique_ptr<MockStub> stub(new MockStub);
-  auto stub_factory = [&]([[maybe_unused]] const endpoint& endpoint) { (void)endpoint; return std::move(stub); };
+  //--- stub's capture parameter
+  SuccessorRequest captured_request;
+  //--- stub's mocked return parameter
+  SuccessorResponse mocked_response;
+
+  auto stub_factory = [&]([[maybe_unused]] const endpoint& endpoint) {
+    auto stub = std::make_unique<NiceMock<MockStub>>();
+    
+    ON_CALL(*stub, successor(_, _, _))
+        .WillByDefault(DoAll(
+            SaveArg<1>(&captured_request),
+            SetArgPointee<2>(mocked_response),
+            Return(Status::OK)));
+
+    ON_CALL(*stub, ping(_,_,_))
+      .WillByDefault(Return(Status::OK));
+    return stub;
+  };
 
   Client client(context, &router, stub_factory);
   Service service(context, &router, &client);
@@ -305,20 +320,9 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
 
   req.set_id("2");
 
-  //--- stub's capture parameter
-  SuccessorRequest captured_request;
-  //--- stub's mocked return parameter
-  SuccessorResponse mocked_response;
   RouterEntry *entry = mocked_response.mutable_successor();
   entry->set_uuid(uuid_t{5});
   entry->set_endpoint("0.0.0.0:50055");
-
-  EXPECT_CALL(*stub, successor(_, _, _))
-      .Times(1)
-      .WillOnce(DoAll(
-          SaveArg<1>(&captured_request),
-          SetArgPointee<2>(mocked_response),
-          Return(Status::OK)));
 
   service.successor(&serverContext, &req, &res);
 

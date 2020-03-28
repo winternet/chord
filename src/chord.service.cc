@@ -123,17 +123,14 @@ Status Service::successor([[maybe_unused]] ServerContext *serverContext, const S
   uuid_t id{req->id()};
   uuid_t self{context.uuid()};
 
-  const auto successor = router->successor();
+  auto successor = router->successor();
+  while(successor && !client->ping(successor->endpoint).ok()) {
+    router->remove(*successor);
+    successor = router->successor();
+  }
 
   if(id == self || uuid::between(self, id, successor->uuid)) {
     logger->trace("[successor] the requested id {} lies between self {} and my successor {}, returning successor", id.string(), self.string(), successor->uuid);
-
-    if(*successor != context.node()) {
-      const auto status = client->ping(successor->endpoint);
-      if(!status.ok()) {
-        //TODO handle
-      }
-    }
 
     //--- router entry
     RouterEntry entry;
@@ -141,20 +138,11 @@ Status Service::successor([[maybe_unused]] ServerContext *serverContext, const S
     entry.set_endpoint(successor->endpoint);
 
     res->mutable_successor()->CopyFrom(entry);
-  } else {
-    logger->trace("[successor] trying to spawn client to forward request.");
-    const auto status = client->successor(req, res);
-    if (!status.ok()) {
-      logger->warn("[successor] failed to query successor from client!");
-    } else {
-      logger->trace("spawned client, got result");
-      logger->trace("entry {}@{}", res->successor().uuid(), res->successor().endpoint());
-    }
-    return status;
-  }
+    
+    return Status::OK;
+  } 
 
-
-  return Status::OK;
+  return client->successor(req, res);
 }
 
 Status Service::stabilize([[maybe_unused]] ServerContext *serverContext, const StabilizeRequest *req, StabilizeResponse *res) {
