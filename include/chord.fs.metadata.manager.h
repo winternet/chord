@@ -193,7 +193,7 @@ class MetadataManager : public IMetadataManager {
       const chord::uri uri("chord", {_path});
       const chord::uuid hash = chord::crypto::sha256(uri);
 
-      if(hash.between(from, to)) {
+      if(uuid::between(from, hash, to)) {
         const auto map = deserialize(it->value().ToString());
         //TODO refactor this, either always save uri
         //     or save scheme in metadata

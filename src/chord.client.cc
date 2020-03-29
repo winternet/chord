@@ -208,7 +208,7 @@ void Client::stabilize() {
 
     const uuid_t self(context.uuid());
     const uuid_t succ(router->successor()->uuid);
-    if(pred.uuid.between(self, succ)) {
+    if(uuid::between(self, pred.uuid, succ)) {
       router->update(pred);
       //router->set_successor(0, pred);
     }

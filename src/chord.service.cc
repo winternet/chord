@@ -66,13 +66,14 @@ Status Service::join([[maybe_unused]] ServerContext *serverContext, const JoinRe
   /**
    * forward request to successor
    */
-  else if(pred && !src.between(context.uuid(), succ->uuid) && !src.between(pred->uuid, context.uuid())) {
+  else if(pred && !uuid::between(context.uuid(), src, succ->uuid) 
+      && !uuid::between(pred->uuid, src, context.uuid())) {
     return client->join(req, res);
   }
 
   auto* res_succ = res->mutable_successor();
   auto* res_pred = res->mutable_predecessor();
-  if(src.between(context.uuid(), succ->uuid)) {
+  if(uuid::between(context.uuid(), src, succ->uuid)) {
     // successor
     const auto succ_or_self = succ.value_or(context.node());
     res_succ->set_uuid(succ_or_self.uuid);
@@ -81,7 +82,7 @@ Status Service::join([[maybe_unused]] ServerContext *serverContext, const JoinRe
     const auto self = context.node();
     res_pred->set_uuid(self.uuid);
     res_pred->set_endpoint(self.endpoint);
-  } else if(src.between(pred->uuid, context.uuid())) {
+  } else if(uuid::between(pred->uuid, src, context.uuid())) {
     // successor
     const auto successor = context.node();
     res_succ->set_uuid(successor.uuid);
@@ -209,9 +210,9 @@ Status Service::notify([[maybe_unused]] ServerContext *serverContext, const Noti
   if(!predecessor) {
     router->update(source);
     changed_predecessor = true;
-  } else if(context.uuid().between(predecessor->uuid, source.uuid)) {
+  } else if(uuid::between(predecessor->uuid, context.uuid(), source.uuid)) {
     router->update(source);
-  } else if(context.uuid().between(source.uuid, successor->uuid)) {
+  } else if(uuid::between(source.uuid, context.uuid(), successor->uuid)) {
     changed_predecessor = true;
     router->update(source);
   }
