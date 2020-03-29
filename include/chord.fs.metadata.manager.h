@@ -1,7 +1,7 @@
 #pragma once
 
-// metadata strategy: leveldb
-#include <leveldb/db.h>
+// metadata strategy: rocksdb
+#include <rocksdb/db.h>
 #include <set>
 #include <map>
 
@@ -21,10 +21,10 @@ class MetadataManager : public IMetadataManager {
 
  private:
   Context &context;
-  std::unique_ptr<leveldb::DB> db;
+  std::unique_ptr<rocksdb::DB> db;
   std::shared_ptr<spdlog::logger> logger;
 
-  void check_status(const leveldb::Status &status) {
+  void check_status(const rocksdb::Status &status) {
     if(status.ok()) return;
 
     throw__exception(status.ToString());
@@ -49,11 +49,11 @@ class MetadataManager : public IMetadataManager {
   }
 
   void initialize() {
-    leveldb::DB *db_tmp;
-    leveldb::Options options;
+    rocksdb::DB *db_tmp;
+    rocksdb::Options options;
     options.create_if_missing = true;
 
-    check_status(leveldb::DB::Open(options, context.meta_directory, &db_tmp));
+    check_status(rocksdb::DB::Open(options, context.meta_directory, &db_tmp));
     db.reset(db_tmp);
 
     // make root
@@ -62,7 +62,7 @@ class MetadataManager : public IMetadataManager {
 
   void __del(const chord::uri& uri) {
     logger->trace("[DEL] uri {}", uri);
-    check_status(db->Delete(leveldb::WriteOptions(), uri.path().canonical().string()));
+    check_status(db->Delete(rocksdb::WriteOptions(), uri.path().canonical().string()));
   }
 
  public:
@@ -82,7 +82,7 @@ class MetadataManager : public IMetadataManager {
   std::set<Metadata> del(const chord::uri& directory, const std::set<Metadata> &metadata, const bool removeIfEmpty) override {
     std::string value;
     const auto path = directory.path().canonical().string();
-    check_status(db->Get(leveldb::ReadOptions(), path, &value));
+    check_status(db->Get(rocksdb::ReadOptions(), path, &value));
 
     logger->trace("[DEL] {}", directory);
     for(const auto& meta:metadata) {
@@ -102,7 +102,7 @@ class MetadataManager : public IMetadataManager {
       __del(directory);
     } else {
       value = serialize(current);
-      check_status(db->Put(leveldb::WriteOptions(), path, value));
+      check_status(db->Put(rocksdb::WriteOptions(), path, value));
     }
 
     return retVal;
@@ -110,7 +110,7 @@ class MetadataManager : public IMetadataManager {
 
   std::set<Metadata> dir(const chord::uri& directory) override {
     std::string value;
-    const auto status = db->Get(leveldb::ReadOptions(), directory.path().canonical().string(), &value);
+    const auto status = db->Get(rocksdb::ReadOptions(), directory.path().canonical().string(), &value);
 
     if(status.ok()) {
       logger->trace("[DIR] {}", directory);
@@ -129,7 +129,7 @@ class MetadataManager : public IMetadataManager {
   bool add(const chord::uri& directory, const std::set<Metadata>& metadata) override {
     std::string value;
     const auto path = directory.path().canonical().string();
-    const auto status = db->Get(leveldb::ReadOptions(), path, &value);
+    const auto status = db->Get(rocksdb::ReadOptions(), path, &value);
 
     if(!status.ok() && !status.IsNotFound()){
       check_status(status);
@@ -157,14 +157,14 @@ class MetadataManager : public IMetadataManager {
 
     value = serialize(current);
 
-    check_status(db->Put(leveldb::WriteOptions(), path, value));
+    check_status(db->Put(rocksdb::WriteOptions(), path, value));
 
     return added;
   }
 
   std::map<chord::uri, std::set<Metadata> > get_all() override {
     std::map<chord::uri, std::set<Metadata> > ret;
-    std::unique_ptr<leveldb::Iterator> it{db->NewIterator(leveldb::ReadOptions())};
+    std::unique_ptr<rocksdb::Iterator> it{db->NewIterator(rocksdb::ReadOptions())};
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
       const std::string& _path = it->key().ToString();
 
@@ -186,7 +186,7 @@ class MetadataManager : public IMetadataManager {
    */
   std::map<chord::uri, std::set<Metadata> > get(const chord::uuid& from, const chord::uuid& to) override {
     std::map<chord::uri, std::set<Metadata> > ret;
-    std::unique_ptr<leveldb::Iterator> it{db->NewIterator(leveldb::ReadOptions())};
+    std::unique_ptr<rocksdb::Iterator> it{db->NewIterator(rocksdb::ReadOptions())};
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
       const std::string& _path = it->key().ToString();
 
@@ -220,7 +220,7 @@ class MetadataManager : public IMetadataManager {
   //TODO 
   std::map<chord::uri, std::set<Metadata>> get_shallow_copies(const chord::node& node) override {
     std::map<chord::uri, std::set<Metadata>> ret;
-    std::unique_ptr<leveldb::Iterator> it{db->NewIterator(leveldb::ReadOptions())};
+    std::unique_ptr<rocksdb::Iterator> it{db->NewIterator(rocksdb::ReadOptions())};
 
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
       const std::string& path = it->key().ToString();
@@ -237,7 +237,7 @@ class MetadataManager : public IMetadataManager {
 
   std::map<chord::uri, std::set<Metadata>> get_replicated(const std::uint32_t min_idx) override {
     std::map<chord::uri, std::set<Metadata>> ret;
-    std::unique_ptr<leveldb::Iterator> it{db->NewIterator(leveldb::ReadOptions())};
+    std::unique_ptr<rocksdb::Iterator> it{db->NewIterator(rocksdb::ReadOptions())};
 
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
       const std::string& path = it->key().ToString();
@@ -254,12 +254,12 @@ class MetadataManager : public IMetadataManager {
 
   bool exists(const chord::uri& uri) override {
     std::string value;
-    return db->Get(leveldb::ReadOptions(), uri.path().string(), &value).ok();
+    return db->Get(rocksdb::ReadOptions(), uri.path().string(), &value).ok();
   }
 
   std::set<Metadata> get(const chord::uri& directory) override {
     std::string value;
-    check_status(db->Get(leveldb::ReadOptions(), directory.path().string(), &value));
+    check_status(db->Get(rocksdb::ReadOptions(), directory.path().string(), &value));
 
     const auto map = deserialize(value);
     for (const auto& [path, meta]: map) {

@@ -98,7 +98,7 @@ find_package(Boost REQUIRED COMPONENTS thread system program_options serializati
 find_package(Protobuf REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
-find_package(LevelDB REQUIRED)
+find_package(RocksDB REQUIRED)
 find_package(YamlCpp REQUIRED)
 
 #
@@ -132,7 +132,7 @@ include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}/gen")
 add_library(${PROJECT_NAME}++ SHARED ${SOURCES} ${SOURCES_GEN} ${ProtoSources} ${ProtoHeaders} ${GrpcSources} ${GrpcHeaders})
 target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT}
   #debug asan
-  general stdc++fs grpc++ grpc ssl crypto leveldb yaml-cpp)
+  general stdc++fs grpc++ grpc ssl crypto rocksdb yaml-cpp)
 target_link_libraries(${PROJECT_NAME}++ --coverage)
 install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 

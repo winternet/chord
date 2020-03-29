@@ -14,6 +14,7 @@ RUN apt-get update \
             libboost-system-dev \
             libboost-serialization-dev \
             libleveldb-dev \
+            librocksdb-dev \
             libyaml-cpp-dev \
             libboost-thread-dev \
             libboost-program-options-dev \
