@@ -97,6 +97,10 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_local_files) {
   EXPECT_CALL(*self->service, successor(_))
     .WillRepeatedly(Return(make_entry(peer_2.context.node())));
 
+  EXPECT_CALL(*self->metadata_mgr, exists(_))
+    .WillRepeatedly(Return(true));
+  EXPECT_CALL(*self->metadata_mgr, get(_))
+    .WillOnce(Return(metadata_set));
   EXPECT_CALL(*self->metadata_mgr, get_all())
     .WillOnce(Return(files));
 
@@ -105,6 +109,9 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_local_files) {
     .WillOnce(Return(true));
   EXPECT_CALL(*peer_2.metadata_mgr, add(uri(target_uri.scheme(), target_uri.path().parent_path()), _))
     .WillOnce(Return(true));
+  // peer2 doesnt have the file yet
+  EXPECT_CALL(*peer_2.metadata_mgr, exists(_))
+    .WillRepeatedly(Return(false));
 
   self->fs_facade->on_leave(peer_2.context.node(), peer_2.context.node());
 
@@ -122,15 +129,20 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_node_reference) {
 
   TmpDir source_directory;
 
+  const auto root_uri = uri("chord:///");
   const auto target_uri = uri("chord:///file");
   const auto source_file = source_directory.add_file("file");
 
   map<uri, set<Metadata>> empty;
+  const auto successor = make_entry(self->context.node());
   EXPECT_CALL(*peer_2.service, successor(_))
-    .WillRepeatedly(Return(make_entry(self->context.node())));
+    .WillRepeatedly(Return(successor));
+  EXPECT_CALL(*peer_2.client, successor(_))
+    .WillRepeatedly(Return(successor));
 
   //TODO add test for directory handling
   map<uri, set<Metadata>> shallow_copies;
+  Metadata metadata_dir(".", "", "", perms::none, type::directory, crypto::sha256(source_file.path.parent_path()), {}, Replication());
   Metadata metadata_file("file", "", "", perms::all, type::regular, crypto::sha256(source_file.path), self->context.node(), Replication());
   set<Metadata> metadata_set{metadata_file};
   shallow_copies[target_uri] = metadata_set;
@@ -139,7 +151,13 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_node_reference) {
     .WillOnce(Return(shallow_copies));
   EXPECT_CALL(*peer_2.metadata_mgr, del(target_uri))
     .WillOnce(Return(metadata_set));
+
+  // self will update parent metadata, self is the only one left.
+  EXPECT_CALL(*self->service, successor(_))
+    .WillOnce(Return(successor));
   EXPECT_CALL(*self->metadata_mgr, add(target_uri, metadata_set))
+    .WillOnce(Return(true));
+  EXPECT_CALL(*self->metadata_mgr, add(root_uri, std::set<Metadata>{metadata_dir, metadata_file}))
     .WillOnce(Return(true));
 
   peer_2.fs_facade->on_leave(self->context.node(), self->context.node());

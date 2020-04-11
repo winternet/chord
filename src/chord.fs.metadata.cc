@@ -23,11 +23,11 @@ bool Metadata::operator<(const Metadata &other) const {
 bool Metadata::operator==(const Metadata &other) const { 
   return name == other.name 
     && file_type == other.file_type 
-    && owner == other.owner 
-    && group == other.group
+    //&& owner == other.owner 
+    //&& group == other.group
     && node_ref == other.node_ref
-    && replication == other.replication
-    && file_hash == other.file_hash; 
+    && replication == other.replication;
+    //&& file_hash == other.file_hash; 
 }
 
 Metadata create_directory() {

@@ -125,14 +125,19 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
   auto max_repl = max_replication(metadata);
   // update the parent (first node triggers replication)
   if(added && max_repl.index == 0 && !uri.path().parent_path().empty()) {
-    const auto parent = uri::builder{uri.scheme(), uri.path().parent_path()}.build();
+    const auto parent_uri = chord::uri{uri.scheme(), uri.path().parent_path()};
     {
-      auto meta_dir = create_directory(metadata);
-      meta_dir.name = uri.path().filename();
-      std::set<Metadata> m = {meta_dir};
+      // see chord::fs::Service::put - trigger recursive metadata replication for parent
       client::options options;
       options.source = src;
-      make_client().meta(parent, Client::Action::ADD, m, options);
+      metadata.insert(create_directory(metadata));
+      make_client().meta(parent_uri, Client::Action::ADD, metadata, options);
+      //auto meta_dir = create_directory(metadata);
+      //meta_dir.name = uri.path().filename();
+      //std::set<Metadata> m = {meta_dir};
+      //client::options options;
+      //options.source = src;
+      //make_client().meta(parent, Client::Action::ADD, m, options);
     }
   }
 

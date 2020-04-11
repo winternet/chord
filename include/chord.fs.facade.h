@@ -41,7 +41,7 @@ class Facade : public IFacade {
   grpc::Status get_and_integrate(const chord::fs::MetaResponse& metadata);
   grpc::Status get_shallow_copies(const chord::node& leaving_node);
   void rebalance(const std::map<chord::uri, std::set<fs::Metadata>>&);
-  grpc::Status rebalance_metadata(const uri&);
+  grpc::Status rebalance_metadata(const uri&, const bool=false);
  public:
   Facade(Context& context, ChordFacade* chord);
 

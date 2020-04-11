@@ -84,6 +84,8 @@ bool Router::update(const chord::node& insert) {
   //std::lock_guard<mutex_t> lock(mtx);
   bool changed = false;
 
+  if(insert == context.node()) return false;
+
   optional<node> old_successor;
   optional<node> old_predecessor;
 
