@@ -1,4 +1,5 @@
 #include "chord.fs.metadata.h"
+#include "chord.context.h"
 
 using std::begin;
 using std::end;
@@ -62,8 +63,15 @@ bool is_directory(const std::set<Metadata>& metadata) {
   return std::any_of(begin(metadata), end(metadata), [&](const Metadata& m) { return m.name == "." && m.file_type == type::directory; });
 }
 
-bool is_shallow_copy(const std::set<Metadata>& metadata) {
-  return is_regular_file(metadata) && metadata.begin()->node_ref;
+bool is_shallow_copy(const std::set<Metadata>& metadata, const Context& context) {
+  return is_regular_file(metadata) 
+    && metadata.begin()->node_ref && *metadata.begin()->node_ref != context.node();
+}
+
+bool is_shallow_copyable(const std::set<Metadata>& metadata, const Context& context) {
+  return is_regular_file(metadata) 
+    && max_replication(metadata) == Replication::NONE
+    && (!metadata.begin()->node_ref || *metadata.begin()->node_ref != context.node());
 }
 
 bool is_regular_file(const std::set<Metadata>& metadata) {

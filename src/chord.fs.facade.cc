@@ -142,18 +142,20 @@ Status Facade::get_file(const chord::uri& source, const chord::path& target) {
   }
 }
 
-Status Facade::rebalance_metadata(const uri& uri, const bool as_shallow_copy) {
+Status Facade::rebalance_metadata(const uri& uri, const bool shallow_copy) {
     logger->info("trying to rebalance metadata {}", uri);
     auto metadata_deleted = metadata_mgr->del(uri);
 
-    //if(as_shallow_copy) {
-    //  std::for_each(metadata_deleted.begin(), metadata_deleted.end(), [&](auto& meta) { 
-    //      if(auto node = metadata_deleted.extract(meta)) {
-    //        node.value().node_ref = context.node();
-    //        metadata_deleted.insert(std::move(node));
-    //      }
-    //  });
-    //}
+    if(shallow_copy) {
+      std::for_each(metadata_deleted.begin(), metadata_deleted.end(), [&](auto& meta) { 
+          if(meta.node_ref) return;
+          // set node ref
+          if(auto node = metadata_deleted.extract(meta)) {
+            node.value().node_ref = context.node();
+            metadata_deleted.insert(std::move(node));
+          }
+      });
+    }
 
     const auto status = fs_client->meta(uri, Client::Action::ADD, metadata_deleted);
     if(!status.ok()) {
@@ -164,19 +166,20 @@ Status Facade::rebalance_metadata(const uri& uri, const bool as_shallow_copy) {
     return status;
 }
 
-void Facade::rebalance(const map<uri, set<Metadata>>& metadata) {
+void Facade::rebalance(const map<uri, set<Metadata>>& metadata, const RebalanceEvent event) {
   for(const auto& pair : metadata) {
     const auto& uri = pair.first;
     auto metadata_set = pair.second;
 
     const auto local_path = context.data_directory / uri.path();
     const bool exists = chord::file::exists(local_path) && chord::file::is_regular_file(local_path);
-    const bool is_shallow_copy = !exists && fs::is_shallow_copy(metadata_set);
-    //const bool is_shallow_copyable = exists && max_replication(metadata_set) == Replication::NONE;
+    const bool is_shallow_copy = !exists && fs::is_shallow_copy(metadata_set, context);
+    const bool is_shallow_copyable = event == RebalanceEvent::PREDECESSOR_UPDATE
+                                      && fs::is_shallow_copyable(metadata_set, context);
 
     // handle metadata only
-    if(fs::is_directory(metadata_set) || is_shallow_copy /*|| is_shallow_copyable*/) {
-      rebalance_metadata(uri);
+    if(fs::is_directory(metadata_set) || is_shallow_copy || is_shallow_copyable) {
+      rebalance_metadata(uri, is_shallow_copyable);
     } else {
       logger->info("trying to rebalance file {}", local_path);
       auto metadata = *metadata_set.begin();
@@ -208,7 +211,7 @@ void Facade::on_join(const chord::node new_successor) {
 void Facade::on_predecessor_update(const chord::node from_node, const chord::node to_node) {
   logger->info("[on_predecessor_update] predecessor updated: replacing {}, with {}", from_node, to_node);
   const map<uri, set<Metadata>> metadata = metadata_mgr->get_all();
-  rebalance(metadata);
+  rebalance(metadata, RebalanceEvent::PREDECESSOR_UPDATE);
 }
 
 /**
@@ -217,13 +220,13 @@ void Facade::on_predecessor_update(const chord::node from_node, const chord::nod
 void Facade::on_leave(const chord::node predecessor, const chord::node successor) {
   logger->debug("[on_leave] node leaving: informing predecessor {}", predecessor);
   const map<uri, set<Metadata>> metadata = metadata_mgr->get_all();
-  rebalance(metadata);
+  rebalance(metadata, RebalanceEvent::LEAVE);
 }
 
 void Facade::on_predecessor_fail(const chord::node predecessor) {
   logger->warn("[on_predecessor_fail] detected predecessor failed");
   const map<uri, set<Metadata>> metadata = metadata_mgr->get_replicated(1);
-  rebalance(metadata);
+  rebalance(metadata, RebalanceEvent::PREDECESSOR_FAIL);
 }
 
 void Facade::on_successor_fail(const chord::node successor) {

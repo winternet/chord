@@ -244,7 +244,7 @@ class MetadataManager : public IMetadataManager {
       const auto map = deserialize(it->value().ToString());
       const chord::uri uri("chord", {path});
       for(const auto& [_, meta] : map) {
-        if(meta.file_type != type::directory && meta.replication.count > 1 && meta.replication.count >= min_idx) {
+        if(meta.file_type != type::directory && meta.replication.count > 1 && meta.replication.index >= min_idx) {
           ret[uri].insert(meta);
         }
       }

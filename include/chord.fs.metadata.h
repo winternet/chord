@@ -22,6 +22,7 @@
 #include "chord.optional.serialization.h"
 
 namespace boost { namespace serialization { class access; } }
+namespace chord { struct Context; }
 
 namespace chord {
 namespace fs {
@@ -109,7 +110,8 @@ Metadata create_directory();
 Metadata create_directory(const std::set<Metadata>&);
 bool is_directory(const std::set<Metadata>&);
 bool is_regular_file(const std::set<Metadata>&);
-bool is_shallow_copy(const std::set<Metadata>&);
+bool is_shallow_copy(const std::set<Metadata>&, const Context&);
+bool is_shallow_copyable(const std::set<Metadata>& metadata, const Context&);
 std::set<Metadata> clear_hashes(std::set<Metadata>);
 
 }  // namespace fs
