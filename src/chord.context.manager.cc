@@ -23,6 +23,13 @@ bool read(const YAML::Node& node, std::string key, T& target) {
   }
   return false;
 }
+
+template<class T>
+bool read(const YAML::Node& node, std::string key, T& target, const T default_value) {
+  if(!read(node, key, target)) target = default_value;
+  return true;
+}
+
 template<class T>
 void set(const YAML::Node& node, std::string key, std::function<void(T)> setter) {
   T val;
@@ -159,6 +166,7 @@ void operator>>(const YAML::Node& node, Context& context) {
   read(node, "data-directory", context.data_directory);
   read(node, "meta-directory", context.meta_directory);
   read(node, "bind-addr", context.bind_addr);
+  read(node, "advertise-addr", context.advertise_addr, context.bind_addr);
   read(node, "join-addr", context.join_addr);
   read(node, "bootstrap", context.bootstrap);
   read(node, "no-controller", context.no_controller);

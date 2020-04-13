@@ -21,7 +21,7 @@ chord::common::Header make_header(const Context &context) {
   Header header;
   RouterEntry src;
   src.set_uuid(context.uuid());
-  src.set_endpoint(context.bind_addr);
+  src.set_endpoint(context.advertise_addr);
   header.mutable_src()->CopyFrom(src);
   return header;
 }

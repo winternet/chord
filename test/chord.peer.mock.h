@@ -35,6 +35,7 @@ public:
     : data_directory(data_directory) {
       context = make_context(chord::uuid::random(), data_directory);
       context.bind_addr = endpoint;
+      context.advertise_addr = endpoint;
       router = new chord::Router(context);
       client = new MockClient();
       service = new MockService();

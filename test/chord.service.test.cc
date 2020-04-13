@@ -115,7 +115,7 @@ TEST(ServiceTest, successor_single_node) {
 	MockClient client;
   Service service(context, &router, &client);
 
-  EXPECT_CALL(client, ping(context.bind_addr))
+  EXPECT_CALL(client, ping(context.advertise_addr))
     .WillOnce(Return(Status::OK));
 
   const auto router_entry = service.successor({10});
@@ -605,7 +605,7 @@ TEST(ServiceTest, ping) {
   ASSERT_TRUE(status.ok());
   ASSERT_TRUE(res.has_header());
   ASSERT_EQ(res.header().src().uuid(), context.uuid().string());
-  ASSERT_EQ(res.header().src().endpoint(), context.bind_addr);
+  ASSERT_EQ(res.header().src().endpoint(), context.advertise_addr);
 }
 
 TEST(ServiceTest, fix_fingers) {

@@ -33,7 +33,7 @@ void Peer::start_server() {
   builder.RegisterService(filesystem->grpc_service());
 
   server = builder.BuildAndStart();
-  logger->debug("server listening on {}", bind_addr);
+  logger->debug("server listening on {}, advertising {}", bind_addr, context.advertise_addr);
 
   // initialize || join
   chord->start();

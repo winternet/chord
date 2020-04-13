@@ -29,6 +29,7 @@ struct Context {
   chord::path config{"./config.yml"};
   //--- promoted endpoint
   chord::endpoint bind_addr{"0.0.0.0:50050"};
+  chord::endpoint advertise_addr{bind_addr};
   chord::endpoint join_addr; //{"0.0.0.0:50050"};
 
   //--- scheduling
@@ -42,7 +43,7 @@ struct Context {
   log::Logging logging;
 
   inline const uuid_t &uuid() const { return _uuid; }
-  inline const chord::node node() const { return {_uuid, bind_addr}; }
+  inline const chord::node node() const { return {_uuid, advertise_addr}; }
 
   void set_uuid(const uuid_t uuid);
 

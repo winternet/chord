@@ -11,6 +11,20 @@ using namespace std;
 using namespace chord;
 using namespace chord::log;
 
+TEST(chord_context_manager, parse_addresses) {
+  Context context = ContextManager::load(R"(
+      version: 1
+      ## networking
+      bind-addr: 127.0.0.1:50050
+      join-addr: 127.0.0.1:50051
+      advertise-addr: 8.8.8.8:4444
+  )");
+
+  ASSERT_EQ(context.bind_addr, "127.0.0.1:50050");
+  ASSERT_EQ(context.join_addr, "127.0.0.1:50051");
+  ASSERT_EQ(context.advertise_addr, "8.8.8.8:4444");
+}
+
 TEST(chord_context_manager, parse_valid_config) {
   Context context = ContextManager::load(R"(
       version: 1
@@ -50,6 +64,7 @@ TEST(chord_context_manager, parse_valid_config) {
   ASSERT_EQ(context.meta_directory, "./meta-dir");
   ASSERT_EQ(context.bind_addr, "127.0.0.1:50050");
   ASSERT_EQ(context.join_addr, "127.0.0.1:50051");
+  ASSERT_EQ(context.advertise_addr, "127.0.0.1:50050");
   ASSERT_EQ(context.stabilize_period_ms, 5000);
   ASSERT_EQ(context.check_period_ms, 5000);
   ASSERT_EQ(context.uuid(), 1234567890);

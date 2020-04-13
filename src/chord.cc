@@ -37,15 +37,15 @@ Context parse_program_options(int ac, char *av[]) {
 
   Context context;
 
-  global.add_options()("help,h", "produce help message")(
-      "config,c", po::value<string>(), "path to the yaml configuration file.")(
-      "join,j", po::value<endpoint>(&(context.join_addr)),
-      "join to an existing address.")(
-      "bootstrap,b", "bootstrap peer to create a new chord ring.")(
-      "no-controller,n", "do not start the controller.")(
-      "uuid,u,id", po::value<uuid>(), "client uuid.")(
-      "bind", po::value<endpoint>(&(context.bind_addr)),
-      "bind address that is promoted to clients.");
+  global.add_options()
+    ("help,h", "produce help message")
+    ("config,c", po::value<string>(), "path to the yaml configuration file.")
+    ("join,j", po::value<endpoint>(&(context.join_addr)), "join to an existing address.")
+    ("bootstrap,b", "bootstrap peer to create a new chord ring.")
+    ("no-controller,n", "do not start the controller.")
+    ("uuid,u,id", po::value<uuid>(), "client uuid.")
+    ("advertise", po::value<endpoint>(&(context.advertise_addr)), "advertise address that is publicly promoted on the ring.")
+    ("bind", po::value<endpoint>(&(context.bind_addr)), "the bind address.");
 
   po::variables_map vm;
   po::parsed_options parsed = po::command_line_parser(ac, av)
