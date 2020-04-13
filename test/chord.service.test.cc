@@ -40,6 +40,7 @@ using chord::SuccessorRequest;
 using chord::SuccessorResponse;
 
 using ::testing::Eq;
+using ::testing::Return;
 using ::testing::NiceMock;
 
 using namespace chord::test;
@@ -114,6 +115,9 @@ TEST(ServiceTest, successor_single_node) {
 	MockClient client;
   Service service(context, &router, &client);
 
+  EXPECT_CALL(client, ping(context.bind_addr))
+    .WillOnce(Return(Status::OK));
+
   const auto router_entry = service.successor({10});
 
   ASSERT_EQ(router_entry.uuid(), "0");
@@ -131,10 +135,11 @@ TEST(ServiceTest, successor_two_nodes) {
   Router router(context);
 	MockClient client;
 
-  router.update({5, "0.0.0.0:50055"});
-  router.update({5, "0.0.0.0:50055"});
-  //router.set_successor(0, {5, "0.0.0.0:50055"});
-  //router.set_predecessor(0, {5, "0.0.0.0:50055"});
+  const auto successor = "0.0.0.0:50055";
+  router.update({5, successor});
+
+  EXPECT_CALL(client, ping(successor))
+    .WillOnce(Return(Status::OK));
 
   Service service(context, &router, &client);
 
@@ -142,6 +147,37 @@ TEST(ServiceTest, successor_two_nodes) {
 
   ASSERT_EQ(entry.uuid(), "5");
   ASSERT_EQ(entry.endpoint(), "0.0.0.0:50055");
+}
+
+/**
+ * ring with 3 nodes one down
+ *   - 0 @ 0.0.0.0:50050
+ *   - 5 @ 0.0.0.0:50055
+ *   -10 @ 0.0.0.0:50060
+ * node 0 tries to find successor of id 2 -> 5 (down) -> 10
+ */
+TEST(ServiceTest, successor_three_nodes_first_successor_down) {
+  Context context = make_context(0);
+  Router router(context);
+	MockClient client;
+
+  const auto successor_1 = "0.0.0.0:50055";
+  router.update({5, successor_1});
+  const auto successor_2 = "0.0.0.0:50060";
+  router.update({10, successor_2});
+
+  EXPECT_CALL(client, ping(successor_1))
+    .WillOnce(Return(Status::CANCELLED));
+  // fallback to next known successor
+  EXPECT_CALL(client, ping(successor_2))
+    .WillOnce(Return(Status::OK));
+
+  Service service(context, &router, &client);
+
+  const auto entry = service.successor({2});
+
+  ASSERT_EQ(entry.uuid(), "10");
+  ASSERT_EQ(entry.endpoint(), "0.0.0.0:50060");
 }
 
 /**
@@ -155,12 +191,13 @@ TEST(ServiceTest, successor_two_nodes_mod) {
   Router router(context);
 	MockClient client;
 
-  router.update({0, "0.0.0.0:50050"});
-  router.update({0, "0.0.0.0:50050"});
-  //router.set_successor(0, {0, "0.0.0.0:50050"});
-  //router.set_predecessor(0, {0, "0.0.0.0:50050"});
+  const auto successor = "0.0.0.0:50050";
+  router.update({0, successor});
 
   chord::Service service(context, &router, &client);
+
+  EXPECT_CALL(client, ping(successor))
+    .WillOnce(Return(Status::OK));
 
   const auto entry = service.successor({10});
 
