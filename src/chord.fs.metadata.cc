@@ -59,6 +59,12 @@ Metadata create_directory(const std::set<Metadata>& metadata) {
   return meta;
 }
 
+std::set<Metadata> create_directory(const std::set<Metadata>& metadata, const std::string& folder_name) {
+  auto meta_dir = create_directory(metadata);
+  meta_dir.name = folder_name;
+  return {meta_dir};
+}
+
 bool is_directory(const std::set<Metadata>& metadata) {
   return std::any_of(begin(metadata), end(metadata), [&](const Metadata& m) { return m.name == "." && m.file_type == type::directory; });
 }

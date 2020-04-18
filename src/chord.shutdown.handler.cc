@@ -21,7 +21,7 @@ ShutdownHandler::ShutdownHandler(std::shared_ptr<Peer> peer)
   , logger{log::get_or_create(logger_name)}
 {}
 
-void ShutdownHandler::handle_stop(const boost::system::error_code& error, int signal_number) {
+void ShutdownHandler::handle_stop([[maybe_unused]] const boost::system::error_code& error, [[maybe_unused]] int signal_number) {
 
   if(invocation_cnt.fetch_add(1) > 0) {
     logger->warn("received force quit");

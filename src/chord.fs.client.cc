@@ -31,6 +31,7 @@
 
 using grpc::ClientContext;
 using grpc::Status;
+using grpc::StatusCode;
 using grpc::ClientWriter;
 using grpc::ClientReader;
 
@@ -89,9 +90,13 @@ Status Client::put(const chord::node& node, const chord::uri& uri, const chord::
 
 Status Client::put(const chord::node& node, const chord::uri &uri, istream &istream, const client::options& options) {
 
+  if(node == context.node() && options.source && *options.source == context.uuid()) {
+    return Status{StatusCode::ALREADY_EXISTS, "trying to issue request from self - aborting."};
+  }
+
   //TODO make configurable
   constexpr size_t len = 512*1024; // 512k
-  array<char, len> buffer;
+  std::array<char, len> buffer;
 
   ClientContext clientContext;
   init_context(clientContext, options);
@@ -128,7 +133,8 @@ Status Client::put(const chord::node& node, const chord::uri &uri, istream &istr
       offset += read;
 
       if (!writer->Write(req)) {
-        throw__exception("broken stream.");
+        break;
+        //throw__exception("broken stream.");
       }
   }
   writer->WritesDone();

@@ -23,6 +23,8 @@ namespace spdlog { class logger; }
 namespace chord {
 namespace fs {
 
+bool is_successful(const ::grpc::Status& status);
+
 class Facade : public IFacade {
   static constexpr auto logger_name = "chord.fs.facade";
 

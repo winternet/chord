@@ -11,6 +11,7 @@ struct Replication {
 
   static constexpr auto MAX_REPL_CNT = 10;
   static const Replication NONE;
+  static const Replication ALL;
 
   // if count == 1, index == 0
   std::uint32_t index;
@@ -27,9 +28,10 @@ struct Replication {
   Replication& operator--();
   const Replication operator--(int);
 
-  bool operator==(const Replication& other) const;
+  bool operator==(const Replication&) const;
+  bool operator!=(const Replication&) const;
 
-  bool operator<(const Replication& other) const;
+  bool operator<(const Replication&) const;
 
   bool has_next() const;
 

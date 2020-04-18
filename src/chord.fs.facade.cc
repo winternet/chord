@@ -9,6 +9,7 @@
 
 #include <grpcpp/impl/codegen/status_code_enum.h>
 
+#include "chord.fs.common.h"
 #include "chord.context.h"
 #include "chord.exception.h"
 #include "chord.facade.h"
@@ -71,7 +72,8 @@ Status Facade::put(const chord::path &source, const chord::uri &target, Replicat
       const auto new_target = target.path().canonical() / relative_path;
       const auto status = put_file(child, {target.scheme(), new_target}, repl);
       //TODO error handling - rollback strategy?
-      if(!status.ok()) return status;
+      //if(!status.ok()) return status;
+      if(!is_successful(status)) return status;
     }
   } else {
     const auto new_target = is_directory(target) ? target.path().canonical() / source.filename() : target.path().canonical();
@@ -123,9 +125,9 @@ Status Facade::del(const chord::uri &uri, const bool recursive) {
 
 Status Facade::put_file(const path& source, const chord::uri& target, Replication repl) {
   // validate input...
-  if(repl.count > Replication::MAX_REPL_CNT) {
-    return Status(StatusCode::FAILED_PRECONDITION, "replication count above "+to_string(Replication::MAX_REPL_CNT)+" is not allowed");
-  }
+  //if(repl.count > Replication::MAX_REPL_CNT) {
+  //  return Status(StatusCode::FAILED_PRECONDITION, "replication count above "+to_string(Replication::MAX_REPL_CNT)+" is not allowed");
+  //}
 
   return fs_client->put(target, source, client::options{repl});
 }

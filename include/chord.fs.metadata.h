@@ -108,6 +108,7 @@ void Metadata::serialize(Archive & ar, const unsigned int version)
 Replication max_replication(const std::set<Metadata>&);
 Metadata create_directory();
 Metadata create_directory(const std::set<Metadata>&);
+std::set<Metadata> create_directory(const std::set<Metadata>& metadata, const std::string&);
 bool is_directory(const std::set<Metadata>&);
 bool is_regular_file(const std::set<Metadata>&);
 bool is_shallow_copy(const std::set<Metadata>&, const Context&);

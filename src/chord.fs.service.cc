@@ -11,6 +11,7 @@
 #include <grpcpp/impl/codegen/server_context.h>
 #include <grpcpp/impl/codegen/sync_stream.h>
 
+#include "chord.fs.common.h"
 #include "chord.context.h"
 #include "chord.crypto.h"
 #include "chord.exception.h"
@@ -67,7 +68,7 @@ Status Service::is_valid(ServerContext* serverContext, const RequestType req_typ
   //} else 
     if(!is_rebalance && src_equals_this) {
     logger->warn("Invalid request: received request from self");
-    return Status(StatusCode::ABORTED, "received request from self - aborting.");
+    return Status(StatusCode::ALREADY_EXISTS, "received request from self - aborting.");
   }
   return Status::OK;
 }
@@ -120,25 +121,23 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
   auto metadata = MetadataBuilder::from(req);
 
   const auto added = metadata_mgr->add(uri, metadata);
-  const auto src = ContextMetadata::src_from(serverContext);
+
+  auto options = ContextMetadata::from(serverContext);
 
   auto max_repl = max_replication(metadata);
   // update the parent (first node triggers replication)
-  if(added && max_repl.index == 0 && !uri.path().parent_path().empty()) {
-    const auto parent_uri = chord::uri{uri.scheme(), uri.path().parent_path()};
+  const auto parent_path = uri.path().parent_path();
+  if(added && max_repl.index == 0 && !parent_path.empty() && fs::is_directory(metadata)) {
+    const auto parent_uri = chord::uri{uri.scheme(), parent_path};
     {
-      // see chord::fs::Service::put - trigger recursive metadata replication for parent
-      client::options options;
-      options.source = src;
-      metadata.insert(create_directory(metadata));
-      make_client().meta(parent_uri, Client::Action::ADD, metadata, options);
-      //auto meta_dir = create_directory(metadata);
-      //meta_dir.name = uri.path().filename();
-      //std::set<Metadata> m = {meta_dir};
-      //client::options options;
-      //options.source = src;
-      //make_client().meta(parent, Client::Action::ADD, m, options);
+      auto meta_dir = create_directory(metadata, uri.path().filename());
+      make_client().meta(parent_uri, Client::Action::ADD, meta_dir, options);
     }
+  }
+
+  // time to set source
+  if(!options.source) {
+    options.source = context.uuid();
   }
 
   // handle replication
@@ -159,11 +158,11 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
 
     if(!new_metadata.empty()) {
       const auto node = chord->successor();
-      client::options options;
-      options.source = src;
+      //client::options options;
+      //options.source = src;
       const auto status = make_client().meta(node, uri, Client::Action::ADD, new_metadata, options);
 
-      if(!status.ok()) {
+      if(!is_successful(status)) {
         logger->warn("Failed to add {} ({}) to {}", uri, max_repl, node);
       }
     }
@@ -175,10 +174,10 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
 Status Service::meta([[maybe_unused]] ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
 
   // in case controller service queries...
-  //const auto status = is_valid(serverContext, RequestType::META);
-  //if(!status.ok()) {
-  //  return status;
-  //}
+  const auto status = is_valid(serverContext, RequestType::META);
+  if(!status.ok()) {
+    return status;
+  }
 
   try {
     switch (req->action()) {
@@ -219,7 +218,6 @@ bool Service::file_hashes_equal(grpc::ServerContext* serverContext, grpc::Server
 }
 
 Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *reader, [[maybe_unused]] PutResponse *response) {
-  PutRequest req;
 
   const auto status = is_valid(serverContext, RequestType::PUT);
   if(!status.ok()) {
@@ -231,11 +229,12 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     file::create_directories(data);
   }
 
-  client::options options = ContextMetadata::from(serverContext);
+  auto options = ContextMetadata::from(serverContext);
   const auto uri = ContextMetadata::uri_from(serverContext);
   bool del_needed = options.rebalance && !options.replication.has_next();
 
   // open - if needed (file hashes do not equal)
+  PutRequest req;
   if (!file_hashes_equal(serverContext, reader) && reader->Read(&req)) {
 
     data /= uri.path().parent_path();
@@ -271,6 +270,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   // add local metadata
   auto meta = MetadataBuilder::for_path(context, uri.path(), options.replication);
   metadata_mgr->add(uri, meta);
+  
 
   // trigger recursive metadata replication for parent
   if(options.replication.index == 0) {
@@ -278,6 +278,11 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     // add directory "." to metadata
     meta.insert(create_directory(meta));
     make_client().meta(parent_uri, Client::Action::ADD, meta, options);
+  }
+
+  // time to set source
+  if(!options.source) {
+    options.source = context.uuid();
   }
 
   // handle (recursive) file-replication

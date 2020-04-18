@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <utility>
+#include <limits>
 
 namespace chord {
 namespace fs {
@@ -44,6 +45,10 @@ Replication& Replication::operator=(Replication rhs) {
     return other.index == index && other.count == count;
   }
 
+  bool Replication::operator!=(const Replication& other) const {
+    return !(*this == other);
+  }
+
   bool Replication::operator<(const Replication& other) const {
     return count < other.count;
   }
@@ -62,6 +67,7 @@ Replication& Replication::operator=(Replication rhs) {
 
 
 const Replication Replication::NONE = Replication();
+const Replication Replication::ALL = Replication(std::numeric_limits<std::uint32_t>::max());
 
 } // namespace fs
 } // namespace chord
