@@ -59,16 +59,12 @@ Service::Service(Context &context, ChordFacade* chord, IMetadataManager* metadat
       logger{context.logging.factory().get_or_create(logger_name)} { }
 
 Status Service::is_valid(ServerContext* serverContext, const RequestType req_type) {
-  const auto src = ContextMetadata::src_from(serverContext);
-  const auto is_rebalance = ContextMetadata::rebalance_from(serverContext);
-  const bool src_equals_this = src == context.uuid();
-  //if(req_type == RequestType::DEL && src_equals_this) {
-  //  logger->info("Invalid request: received del request from self");
-  //  return Status(StatusCode::ABORTED, "received request del from self - aborting.");
-  //} else 
-    if(!is_rebalance && src_equals_this) {
-    logger->warn("Invalid request: received request from self");
-    return Status(StatusCode::ALREADY_EXISTS, "received request from self - aborting.");
+  const auto options = ContextMetadata::from(serverContext);
+  const bool src_equals_this = options.source == context.uuid();
+  if(src_equals_this) {
+    const auto message = "received request from self.";
+    logger->info(message);
+    return Status(StatusCode::ALREADY_EXISTS, message);
   }
   return Status::OK;
 }
