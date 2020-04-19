@@ -28,20 +28,20 @@ TEST(chord_metadata, output_empty_directory) {
 
   stringstream ss;
   ss << meta;
-  ASSERT_EQ(R"(drwxrwxrwx usr grp / (1/1))", ss.str());
+  ASSERT_EQ(R"(drwxrwxrwx usr grp 1  /)", ss.str());
 }
 
 TEST(chord_metadata, output_directory) {
   set<Metadata> contents(
-      {{"/", "usr", "grp", perms::all, type::directory},
-       {"foo", "usr", "grp", perms::owner_all, type::regular},
-       {"bar", "usr2", "grp", perms::owner_all | perms::group_read, type::regular}});
+      {{"/", "usr", "grp", perms::all, type::directory, {}, {}, Replication::ALL},
+       {"foo", "usr", "grp", perms::owner_all, type::regular, {}, {}, Replication::ALL},
+       {"bar", "usr2", "grp", perms::owner_all | perms::group_read, type::regular, {}, {}, Replication::ALL}});
 
   stringstream ss;
   ss << contents;
-  ASSERT_EQ(R"(drwxrwxrwx usr  grp / (1/1)
--rwxr----- usr2 grp bar (1/1)
--rwx------ usr  grp foo (1/1)
+  ASSERT_EQ(R"(drwxrwxrwx usr  grp ∞  /
+-rwxr----- usr2 grp ∞  bar
+-rwx------ usr  grp ∞  foo
 )", ss.str());
 }
 

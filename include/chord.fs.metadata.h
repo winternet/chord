@@ -66,13 +66,25 @@ struct Metadata {
     os<< (metadata.file_type == type::directory ? "d" : "-")
       << metadata.permissions << " "
       << std::left << std::setw(static_cast<int>(max_owner_len+1)) << metadata.owner
-      << std::left << std::setw(static_cast<int>(max_group_len+1)) << metadata.group
-      << metadata.name;
-    const auto repl = metadata.replication;
-    os << " (" << repl.index+1 << '/' << repl.count << ')';
-    if(metadata.node_ref) {
-      os << " (node_ref: " << *metadata.node_ref << ")";
+      << std::left << std::setw(static_cast<int>(max_group_len+1)) << metadata.group;
+    // replication 
+    {
+      const auto repl = metadata.replication;
+      if(repl == Replication::ALL)
+        os << std::left << std::setw(5) << "∞";
+      else 
+        //os << std::left << std::setw(6) << repl.index+1 << '/' << repl.count;
+        os << std::left << std::setw(3) << repl.count;
     }
+    // node reference
+    {
+      if(metadata.node_ref) {
+        //os << " (node_ref: " << *metadata.node_ref << ")";
+        os << std::left << std::setw(5) << "☇";
+      }
+    }
+
+    os << metadata.name;
     return os;
   }
 
