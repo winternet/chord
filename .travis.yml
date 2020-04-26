@@ -18,6 +18,7 @@ addons:
       - libtool
       - git
       - curl
+      - fswatch
 
     cache:
       apt: true

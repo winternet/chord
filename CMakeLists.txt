@@ -100,6 +100,7 @@ find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(RocksDB REQUIRED)
 find_package(YamlCpp REQUIRED)
+find_library(fswatch NAMES libfswatch fswatch)
 
 #
 # generate messages and services
@@ -132,7 +133,7 @@ include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}/gen")
 add_library(${PROJECT_NAME}++ SHARED ${SOURCES} ${SOURCES_GEN} ${ProtoSources} ${ProtoHeaders} ${GrpcSources} ${GrpcHeaders})
 target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT}
   #debug asan
-  general stdc++fs grpc++ grpc ssl crypto rocksdb yaml-cpp)
+  general stdc++fs grpc++ grpc ssl crypto rocksdb yaml-cpp fswatch)
 target_link_libraries(${PROJECT_NAME}++ --coverage)
 install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 

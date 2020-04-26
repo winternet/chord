@@ -16,6 +16,7 @@
 #include "chord.node.h"
 #include "chord.shutdown.handler.h"
 #include "chord.uuid.h"
+#include <libfswatch/c++/monitor_factory.hpp>
 
 using grpc::ServerBuilder;
 using namespace std;

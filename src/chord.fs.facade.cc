@@ -9,6 +9,7 @@
 
 #include <grpcpp/impl/codegen/status_code_enum.h>
 
+#include "chord.fs.monitor.h"
 #include "chord.fs.common.h"
 #include "chord.context.h"
 #include "chord.exception.h"
@@ -36,6 +37,7 @@ Facade::Facade(Context& context, ChordFacade* chord)
       metadata_mgr{make_unique<chord::fs::MetadataManager>(context)},
       fs_client{make_unique<fs::Client>(context, chord, metadata_mgr.get())},
       fs_service{make_unique<fs::Service>(context, chord, metadata_mgr.get())},
+      monitor{make_unique<fs::monitor>(context)},
       logger{context.logging.factory().get_or_create(logger_name)}
 {}
 
@@ -45,6 +47,7 @@ Facade::Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service,
     metadata_mgr{metadata_mgr},
     fs_client{fs_client},
     fs_service{fs_service},
+    monitor{nullptr},
     logger{context.logging.factory().get_or_create(logger_name)}
 {}
 

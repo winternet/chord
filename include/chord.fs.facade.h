@@ -5,6 +5,7 @@
 #include <iosfwd>
 #include <memory>
 
+#include "chord.fs.monitor.h"
 #include "chord.fs.replication.h"
 #include "chord.fs.client.h"
 #include "chord.fs.service.h"
@@ -41,6 +42,7 @@ public:
   std::unique_ptr<chord::fs::IMetadataManager> metadata_mgr;
   std::unique_ptr<Client> fs_client;
   std::unique_ptr<Service> fs_service;
+  std::unique_ptr<chord::fs::monitor> monitor;
   std::shared_ptr<spdlog::logger> logger;
 
  private:

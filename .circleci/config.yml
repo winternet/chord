@@ -32,7 +32,8 @@ jobs:
                        libyaml-cpp-dev \
                        libboost-thread-dev \
                        libboost-program-options-dev \
-                       libssl-dev
+                       libssl-dev \
+                       fswatch
 
       - run:
           name: Install grpc
