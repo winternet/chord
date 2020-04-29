@@ -18,7 +18,8 @@ RUN apt-get update \
             libyaml-cpp-dev \
             libboost-thread-dev \
             libboost-program-options-dev \
-            libssl-dev
+            libssl-dev \
+            fswatch
 
 #
 # install grpc
@@ -31,6 +32,7 @@ RUN git clone -b v1.27.3 https://github.com/grpc/grpc /opt/grpc && cd /opt/grpc 
 # install protobuf
 #
 RUN git clone -b v3.11.4 https://github.com/google/protobuf.git /opt/protobuf && cd /opt/protobuf/cmake \
+    $$ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/libfswatch" \
     && mkdir build && cd build \
     && cmake .. -DCMAKE_BUILD_TYPE=Release \
                 -Dprotobuf_BUILD_EXAMPLES=OFF \

@@ -60,6 +60,7 @@ jobs:
       - run:
           name: Install chord
           command: |
+            export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/libfswatch"
             mkdir build
             cd build
             CXX=g++-9 CC=gcc-9 cmake .. -DENABLE_COVERAGE:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=Release -Dchord_BUILD_TESTS:BOOL=ON -Dchord_USE_CCACHE:BOOL=FALSE
