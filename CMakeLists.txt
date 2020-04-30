@@ -100,7 +100,7 @@ find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(RocksDB REQUIRED)
 find_package(YamlCpp REQUIRED)
-find_library(fswatch NAMES libfswatch fswatch)
+find_package(FsWatch REQUIRED)
 
 #
 # generate messages and services
