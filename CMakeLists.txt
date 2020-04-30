@@ -131,9 +131,9 @@ include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}/gen")
 # create shared library chord++
 #
 add_library(${PROJECT_NAME}++ SHARED ${SOURCES} ${SOURCES_GEN} ${ProtoSources} ${ProtoHeaders} ${GrpcSources} ${GrpcHeaders})
-target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT}
+target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${FsWatch_LIBRARY} ${RocksDB_LIBRARY} ${YAMLCPP_LIBRARY}
   #debug asan
-  general stdc++fs grpc++ grpc ssl crypto rocksdb yaml-cpp fswatch)
+  general stdc++fs grpc++ grpc ssl crypto)
 target_link_libraries(${PROJECT_NAME}++ --coverage)
 install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 

@@ -5,7 +5,7 @@
 # YAMLCPP_INCLUDE_DIR, where to find yaml.h
 #
 # Look for the header file.
-find_path(YAMLCPP_INCLUDE yaml-cpp/yaml.h
+find_path(YAMLCPP_INCLUDE_DIR yaml-cpp/yaml.h
     PATHS
     /opt/local/include
     /usr/local/include/yaml-cpp/
@@ -18,10 +18,7 @@ find_path(YAMLCPP_INCLUDE yaml-cpp/yaml.h
     /opt/yaml-cpp/
     DOC "Path in which the file yaml-cpp/yaml.h is located.")
 
-  #set(CMAKE_REQUIRED_INCLUDES ${YAMLCPP_INCLUDE_DIR})
-  #set(CMAKE_REQUIRED_QUIET True)
-  #
-  ## attempt to find static library first if this is set
+## attempt to find static library first if this is set
 if(YAMLCPP_STATIC_LIBRARY)
     set(YAMLCPP_STATIC libyaml-cpp.a)
 endif()
@@ -41,11 +38,9 @@ find_library(YAMLCPP_LIBRARY
     ${YAMLCPP_DIR}/lib)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(YamlCpp DEFAULT_MSG YAMLCPP_INCLUDE YAMLCPP_LIBRARY)
+find_package_handle_standard_args(YamlCpp DEFAULT_MSG YAMLCPP_INCLUDE_DIR YAMLCPP_LIBRARY)
 
 if(YAMLCPP_FOUND)
-  message(STATUS "Found YamlCpp (include: ${YAMLCPP_INCLUDE}, library: ${YAMLCPP_LIBRARY})")
-  set(YAMLCCP_INCLUDES ${YAMLCPP_INCLUDE})
-  set(YAMLCCP_LIBRARIES ${YAMLCPP_LIBRARY})
-  mark_as_advanced(LevelDB_INCLUDE LevelDB_LIBRARY)
+  message(STATUS "Found YamlCpp (include: ${YAMLCPP_INCLUDE_DIR}, library: ${YAMLCPP_LIBRARY})")
+  mark_as_advanced(LevelDB_INCLUDE_DIR LevelDB_LIBRARY)
 endif()
