@@ -12,9 +12,9 @@ find_path(
     DOC "Path in which the file monitor_factory.h is located.")
 
 # find the FsWatch library
-set(CMAKE_PREFIX_PATH "/usr/lib/x86_64-linux-gnu")
 find_library(FsWatch_LIBRARY
-    NAMES fswatch)
+    NAMES fswatch
+    PATH_SUFFIXES libfswatch)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FsWatch DEFAULT_MSG FsWatch_INCLUDE_DIR FsWatch_LIBRARY)
