@@ -52,7 +52,6 @@ TEST(monitor, create_file) {
       std::lock_guard<std::mutex> lck(mtx);
       callback_invoked = true;
       cv.notify_one();
-      mon.stop();
   });
   tmpDir.add_file("foo");
 
@@ -81,7 +80,6 @@ TEST(monitor, remove_file) {
       std::lock_guard<std::mutex> lck(mtx);
       callback_invoked = true;
       cv.notify_one();
-      mon.stop();
   });
   file.remove();
 
@@ -103,9 +101,9 @@ TEST(monitor, filter_file) {
   });
   mon.add_filter({tmpDir.path / "foo", 3}); // create, update, remove
   const auto file = tmpDir.add_file("foo");
-  mon.stop();
 
   sleep();
+  mon.stop();
 
   //ASSERT_THAT(mon.filters(), IsEmpty());
   ASSERT_FALSE(callback_invoked);
@@ -122,9 +120,9 @@ TEST(monitor, filter_file_by_flag) {
   mon.add_filter({tmpDir.path / "foo", 1, chord::fs::monitor::event::flag::CREATED});
   mon.add_filter({tmpDir.path / "foo", 2, chord::fs::monitor::event::flag::UPDATED});
   const auto file = tmpDir.add_file("foo");
-  mon.stop();
 
   sleep();
+  mon.stop();
   
   //ASSERT_THAT(mon.filters(), IsEmpty());
   ASSERT_FALSE(callback_invoked);
