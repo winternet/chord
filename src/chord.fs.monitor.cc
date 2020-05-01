@@ -1,6 +1,5 @@
 #include "chord.fs.monitor.h"
 
-//#include "chord.path.h"
 #include "chord.context.h"
 
 #include <thread>
@@ -26,7 +25,6 @@ monitor::monitor(const chord::Context& context)
   mon->set_recursive(true);
   mon->set_follow_symlinks(true);
   mon->set_fire_idle_event(false);
-  mon->set_latency(0.);
   for(const auto& flag:event::flag::values()) {
     mon->add_event_type_filter(fsw_event_type_filter{flag.mapped_type()});
   }

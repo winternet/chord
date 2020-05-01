@@ -120,6 +120,7 @@ TEST(monitor, filter_file_by_flag) {
       callback_invoked = true;
   });
   mon.add_filter({tmpDir.path / "foo", 1, chord::fs::monitor::event::flag::CREATED});
+  mon.add_filter({tmpDir.path / "foo", 2, chord::fs::monitor::event::flag::UPDATED});
   const auto file = tmpDir.add_file("foo");
   mon.stop();
 
