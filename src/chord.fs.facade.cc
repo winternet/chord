@@ -57,9 +57,15 @@ Facade::Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service,
   return fs_service.get();
 }
 
-void Facade::on_fs_event(const std::vector<chord::fs::monitor::event> events) {
+void Facade::on_fs_event(std::vector<chord::fs::monitor::event> events) {
+  events.erase(std::remove_if(events.begin(), events.end(), [&](auto& event) {
+      const auto flgs = event.flags;
+      const auto removed = std::any_of(flgs.begin(), flgs.end(), [](const auto& f) { return f == monitor::event::flag::REMOVED; });
+      const auto not_exists = !metadata_mgr->exists(uri{"chord", path{event.path}-context.data_directory});
+      return removed && not_exists;
+  }), events.end());
   std::for_each(events.begin(), events.end(), [&](const auto& e) {
-      logger->info("received event at {}", e);
+      logger->info("received (filtered) event at {}", e);
   });
 }
 

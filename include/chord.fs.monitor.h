@@ -86,7 +86,7 @@ public:
     friend std::ostream& operator<<(std::ostream&, const event&);
   };
 
-  using event_t = signal<void(const std::vector<event>)>;
+  using event_t = signal<void(std::vector<event>)>;
 
 private:
   fsw::monitor* _monitor = nullptr;
