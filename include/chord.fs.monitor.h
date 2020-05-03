@@ -3,12 +3,14 @@
 #include <thread>
 #include <ctime>
 #include <optional>
+#include <iterator>
 #include <map>
 #include <vector>
 #include <functional>
 #include <libfswatch/c++/monitor_factory.hpp>
 
 #include "chord.signal.h"
+#include "chord.scheduler.h"
 #include "chord.path.h"
 
 namespace chord { struct Context; }
@@ -23,21 +25,30 @@ public:
 
     struct flag {
       private:
-        const fsw_event_flag _flag;
-        const char* _string;
-        constexpr explicit flag(fsw_event_flag f, const char* str) : _flag{f}, _string{str} {}
+        fsw_event_flag _flag;
+        std::string _string;
+        explicit flag(fsw_event_flag f, const std::string& str) : _flag{f}, _string{str} {}
+
       public:
+        flag(const flag& other) : _flag{other._flag}, _string{other._string} {}
+        flag& operator=(const flag& other) {
+          _flag = other._flag;
+          _string = other._string;
+          return *this;
+        }
+        ~flag() = default;
+
         inline std::string name() const { return _string; }
         inline fsw_event_flag mapped_type() const { return _flag; }
         inline bool operator==(const flag& other) const { return _flag == other._flag; }
         inline bool operator!=(const flag& other) const { return _flag != other._flag; }
 
-        static const flag CREATED;
+        //static const flag CREATED;
         static const flag UPDATED;
         static const flag REMOVED;
 
         static std::vector<flag> values() {
-          return {CREATED, UPDATED, REMOVED};
+          return {/*CREATED,*/ UPDATED, REMOVED};
         }
 
         static std::optional<flag> from(const fsw_event_flag& f) {
@@ -78,11 +89,39 @@ public:
   using event_t = signal<void(const std::vector<event>)>;
 
 private:
-  fsw::monitor* mon = nullptr;
+  fsw::monitor* _monitor = nullptr;
 
-  std::thread thrd;
+  static constexpr auto debounce_duration {400};
+
+  std::mutex _mutex;
+  Scheduler _scheduler;
+
+  std::thread _thread;
   event_t fs_events;
+
   std::vector<event::filter> _filters;
+  std::vector<event> _events;
+
+  void fire_events() {
+    std::lock_guard<std::mutex> lock(_mutex);
+    if(!_events.empty()) {
+
+      // most recent events first
+      std::reverse(_events.begin(), _events.end());
+
+      // debounce
+      std::sort(_events.begin(), _events.end(), [](const auto& lhs, const auto& rhs) {
+          return lhs.path < rhs.path;
+      });
+      // unique keeps first (most recent) event
+      _events.erase(std::unique(_events.begin(), _events.end(), [](const auto& lhs, const auto& rhs) {
+          return lhs.path == rhs.path;
+      }), _events.end());
+
+      fs_events(_events);
+      _events.clear();
+    }
+  }
 
   void process(const std::vector<fsw::event>& events) {
     //for(const auto& m:events) {
@@ -92,6 +131,7 @@ private:
     //    }
     //    std::cout << "\n>" << m.get_time() << " [" << flags << "] -> " << m.get_path();
     //}
+    std::lock_guard<std::mutex> lock(_mutex);
 
     std::vector<event> mapped_events;
     std::transform(events.begin(), events.end(), std::back_inserter(mapped_events), [](const auto& ev) { 
@@ -104,6 +144,7 @@ private:
         });
         return mapped;
       });
+
     const auto rem_begin = std::remove_if(mapped_events.begin(), mapped_events.end(), [&](const auto& e) {
         return std::any_of(_filters.begin(), _filters.end(), [&](auto& f) {
             const bool filter_has_flag = f.flag.has_value();
@@ -121,9 +162,14 @@ private:
     _filters.erase(std::remove_if(_filters.begin(), _filters.end(), [](const auto& f) {return f.counter <= 0;}), _filters.end());
     // remove filtered events
     mapped_events.erase(rem_begin, mapped_events.end());
+    
     // signal events
     if(!mapped_events.empty()) {
-      fs_events(mapped_events);
+      _events.insert(_events.end(), mapped_events.begin(), mapped_events.end());
+      auto fire_at = std::chrono::system_clock::now() + std::chrono::milliseconds(debounce_duration);
+      _scheduler.schedule(fire_at, [this]{
+          fire_events();
+      });
     }
   }
 

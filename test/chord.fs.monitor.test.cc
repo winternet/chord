@@ -18,6 +18,8 @@ using chord::test::TmpDir;
 using ::testing::Contains;
 using ::testing::IsEmpty;
 
+using namespace std::literals::chrono_literals;
+
 //class MonitorTest : public ::testing::Test {
 //  protected:
 //    void SetUp() override {
@@ -40,25 +42,27 @@ TEST(monitor, create_file) {
   chord::fs::monitor mon(make_context(tmpDir.path));
   bool callback_invoked = false;
 
-  std::mutex mtx;
-  std::condition_variable cv;
+  std::timed_mutex mtx;
+  std::condition_variable_any cv;
 
   mon.events().connect([&](const std::vector<chord::fs::monitor::event> events) {
       std::copy(events.begin(), events.end(), std::ostream_iterator<chord::fs::monitor::event>(std::cout, "\n"));
 
       ASSERT_GE(events.size(), 1);
       const auto ev = events.at(0);
-      ASSERT_THAT(ev.flags, Contains(chord::fs::monitor::event::flag::CREATED));
-      std::lock_guard<std::mutex> lck(mtx);
+      //note that the most recent flag we receive is updated not created
+      ASSERT_THAT(ev.flags, Contains(chord::fs::monitor::event::flag::UPDATED));
+      std::unique_lock<std::timed_mutex> lck(mtx, 5s);
       callback_invoked = true;
       cv.notify_one();
   });
-  tmpDir.add_file("foo");
+  const auto holder = tmpDir.add_file("foo");
 
-  std::unique_lock<std::mutex> lock(mtx);
+  std::unique_lock<std::timed_mutex> lock(mtx, 5s);
   cv.wait(lock, [&]{return callback_invoked;});
   
   ASSERT_TRUE(callback_invoked);
+  holder.remove();
 }
 
 TEST(monitor, remove_file) {
@@ -67,8 +71,8 @@ TEST(monitor, remove_file) {
 
   chord::fs::monitor mon(make_context(tmpDir.path));
 
-  std::mutex mtx;
-  std::condition_variable cv;
+  std::timed_mutex mtx;
+  std::condition_variable_any cv;
   bool callback_invoked = false;
 
   mon.events().connect([&](const std::vector<chord::fs::monitor::event> events) {
@@ -77,13 +81,14 @@ TEST(monitor, remove_file) {
       ASSERT_GE(events.size(), 1);
       const auto ev = events.at(0);
       ASSERT_THAT(ev.flags, Contains(chord::fs::monitor::event::flag::REMOVED));
-      std::lock_guard<std::mutex> lck(mtx);
+      //std::lock_guard<std::timed_mutex> lck(mtx);
+      std::unique_lock<std::timed_mutex> lck(mtx, 5s);
       callback_invoked = true;
       cv.notify_one();
   });
   file.remove();
 
-  std::unique_lock<std::mutex> lock(mtx);
+  std::unique_lock<std::timed_mutex> lock(mtx, 5s);
   cv.wait(lock, [&]{return callback_invoked;});
   
   ASSERT_TRUE(callback_invoked);
@@ -117,8 +122,8 @@ TEST(monitor, filter_file_by_flag) {
       std::copy(events.begin(), events.end(), std::ostream_iterator<chord::fs::monitor::event>(std::cout, "\n"));
       callback_invoked = true;
   });
-  mon.add_filter({tmpDir.path / "foo", 1, chord::fs::monitor::event::flag::CREATED});
-  mon.add_filter({tmpDir.path / "foo", 2, chord::fs::monitor::event::flag::UPDATED});
+  //mon.add_filter({tmpDir.path / "foo", 1, chord::fs::monitor::event::flag::CREATED});
+  mon.add_filter({tmpDir.path / "foo", 1, chord::fs::monitor::event::flag::UPDATED});
   const auto file = tmpDir.add_file("foo");
 
   sleep();

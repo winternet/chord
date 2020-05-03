@@ -39,7 +39,9 @@ Facade::Facade(Context& context, ChordFacade* chord)
       fs_service{make_unique<fs::Service>(context, chord, metadata_mgr.get())},
       monitor{make_unique<fs::monitor>(context)},
       logger{context.logging.factory().get_or_create(logger_name)}
-{}
+{
+  monitor->events().connect(this, &Facade::on_fs_event);
+}
 
 Facade::Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service, fs::IMetadataManager* metadata_mgr)
   : context{context},
@@ -53,6 +55,12 @@ Facade::Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service,
 
 ::grpc::Service* Facade::grpc_service() {
   return fs_service.get();
+}
+
+void Facade::on_fs_event(const std::vector<chord::fs::monitor::event> events) {
+  std::for_each(events.begin(), events.end(), [&](const auto& e) {
+      logger->info("received event at {}", e);
+  });
 }
 
 bool Facade::is_directory(const chord::uri& target) {

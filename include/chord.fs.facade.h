@@ -53,6 +53,8 @@ public:
   grpc::Status get_shallow_copies(const chord::node& leaving_node);
   void rebalance(const std::map<chord::uri, std::set<fs::Metadata>>&, const RebalanceEvent event);
   grpc::Status rebalance_metadata(const uri&, const bool=false);
+
+  void on_fs_event(const std::vector<chord::fs::monitor::event> events);
  public:
   Facade(Context& context, ChordFacade* chord);
 
