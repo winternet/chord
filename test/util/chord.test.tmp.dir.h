@@ -28,7 +28,11 @@ struct TmpDir final {
   }
 
   TmpFile add_file() const {
-    return TmpFile();
+    return TmpFile(path/chord::path{chord::uuid::random().string()});
+  }
+
+  TmpDir add_dir() const {
+    return TmpDir(path/chord::path{chord::uuid::random().string()});
   }
 
   TmpFile add_file(const std::string& filename) const {

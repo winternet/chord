@@ -56,6 +56,8 @@ TEST(monitor, create_file) {
       callback_invoked = true;
       cv.notify_one();
   });
+  sleep();
+
   const auto holder = tmpDir.add_file("foo");
 
   std::unique_lock<std::timed_mutex> lock(mtx, 5s);
@@ -63,6 +65,29 @@ TEST(monitor, create_file) {
   
   ASSERT_TRUE(callback_invoked);
   holder.remove();
+}
+
+TEST(monitor, create_directories) {
+  const TmpDir tmpDir;
+  chord::fs::monitor mon(make_context(tmpDir.path));
+  bool callback_invoked = false;
+
+  std::timed_mutex mtx;
+  std::condition_variable_any cv;
+
+  mon.events().connect([&](const std::vector<chord::fs::monitor::event> events) {
+      std::copy(events.begin(), events.end(), std::ostream_iterator<chord::fs::monitor::event>(std::cout, "\n"));
+      callback_invoked = true;
+  });
+  sleep();
+
+  const auto sub_dir = tmpDir.add_dir();
+  const auto sub_sub_dir = sub_dir.add_dir();
+
+  sleep();
+  mon.stop();
+
+  ASSERT_FALSE(callback_invoked);
 }
 
 TEST(monitor, remove_file) {
@@ -86,6 +111,8 @@ TEST(monitor, remove_file) {
       callback_invoked = true;
       cv.notify_one();
   });
+  sleep();
+
   file.remove();
 
   std::unique_lock<std::timed_mutex> lock(mtx, 5s);
@@ -104,6 +131,8 @@ TEST(monitor, filter_file) {
       std::copy(events.begin(), events.end(), std::ostream_iterator<chord::fs::monitor::event>(std::cout, "\n"));
       callback_invoked = true;
   });
+  sleep();
+
   mon.add_filter({tmpDir.path / "foo", 3}); // create, update, remove
   const auto file = tmpDir.add_file("foo");
 
@@ -122,7 +151,8 @@ TEST(monitor, filter_file_by_flag) {
       std::copy(events.begin(), events.end(), std::ostream_iterator<chord::fs::monitor::event>(std::cout, "\n"));
       callback_invoked = true;
   });
-  //mon.add_filter({tmpDir.path / "foo", 1, chord::fs::monitor::event::flag::CREATED});
+  sleep();
+
   mon.add_filter({tmpDir.path / "foo", 1, chord::fs::monitor::event::flag::UPDATED});
   const auto file = tmpDir.add_file("foo");
 
