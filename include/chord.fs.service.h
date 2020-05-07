@@ -19,6 +19,7 @@ namespace chord { namespace fs { class MetaRequest; } }
 namespace chord { namespace fs { class MetaResponse; } }
 namespace chord { namespace fs { class PutRequest; } }
 namespace chord { namespace fs { class PutResponse; } }
+namespace chord { namespace fs { class monitor; } }
 namespace chord { namespace fs { namespace client { struct options; } } }
 namespace chord { struct Context; }
 namespace spdlog { class logger; }
@@ -50,7 +51,7 @@ class Service final : public chord::fs::Filesystem::Service {
   bool file_hashes_equal(grpc::ServerContext*, grpc::ServerReader<PutRequest>*);
 
  public:
-  explicit Service(Context &context, ChordFacade* chord, IMetadataManager* metadata_mgr);
+  explicit Service(Context &context, ChordFacade* chord, IMetadataManager* metadata_mgr, chord::fs::monitor* = nullptr);
 
   grpc::Status put(grpc::ServerContext *context,
                    grpc::ServerReader<chord::fs::PutRequest> *reader,
@@ -72,6 +73,7 @@ class Service final : public chord::fs::Filesystem::Service {
   Context &context;
   ChordFacade *chord;
   IMetadataManager* metadata_mgr;
+  chord::fs::monitor* monitor;
   ClientFactory make_client;
   std::shared_ptr<spdlog::logger> logger;
 };

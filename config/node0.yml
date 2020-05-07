@@ -15,7 +15,8 @@ stabilize_ms: 10000
 check_ms: 10000
 
 ## replication / striping
-replication-count: 1
+#replication-count: 1
+replication-count: -1
 
 #uuid: "0"
 uuid: "0"

@@ -70,7 +70,7 @@ struct Metadata {
     // replication 
     {
       const auto repl = metadata.replication;
-      if(repl == Replication::ALL)
+      if(repl.count == Replication::ALL.count)
         os << std::left << std::setw(5) << "∞";
       else 
         //os << std::left << std::setw(6) << repl.index+1 << '/' << repl.count;

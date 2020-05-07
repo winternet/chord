@@ -57,7 +57,7 @@ class Scheduler : public AbstractScheduler {
         thread(new std::thread([this] {
                                  //--- setup time
                                  using namespace std::chrono_literals;
-                                 //std::this_thread::sleep_for(2s);
+                                 std::this_thread::sleep_for(100ms);
                                  //--- start loop
                                  loop();
                                }

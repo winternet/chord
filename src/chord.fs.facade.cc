@@ -35,21 +35,21 @@ Facade::Facade(Context& context, ChordFacade* chord)
     : context{context},
       chord{chord},
       metadata_mgr{make_unique<chord::fs::MetadataManager>(context)},
-      fs_client{make_unique<fs::Client>(context, chord, metadata_mgr.get())},
-      fs_service{make_unique<fs::Service>(context, chord, metadata_mgr.get())},
       monitor{make_unique<fs::monitor>(context)},
+      fs_client{make_unique<fs::Client>(context, chord, metadata_mgr.get())},
+      fs_service{make_unique<fs::Service>(context, chord, metadata_mgr.get(), monitor.get())},
       logger{context.logging.factory().get_or_create(logger_name)}
 {
   monitor->events().connect(this, &Facade::on_fs_event);
 }
 
-Facade::Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service, fs::IMetadataManager* metadata_mgr)
+Facade::Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service, fs::IMetadataManager* metadata_mgr, chord::fs::monitor* monitor)
   : context{context},
     chord{nullptr},
     metadata_mgr{metadata_mgr},
+    monitor{monitor},
     fs_client{fs_client},
     fs_service{fs_service},
-    monitor{nullptr},
     logger{context.logging.factory().get_or_create(logger_name)}
 {}
 
@@ -66,6 +66,20 @@ void Facade::on_fs_event(std::vector<chord::fs::monitor::event> events) {
   }), events.end());
   std::for_each(events.begin(), events.end(), [&](const auto& e) {
       logger->info("received (filtered) event at {}", e);
+  });
+  std::for_each(events.begin(), events.end(), [&](const auto& e) {
+      const auto flgs = e.flags;
+      const auto target = uri{"chord", path{e.path} - context.data_directory};
+
+      const auto updated = std::any_of(flgs.begin(), flgs.end(), [](const auto& f) { return f == chord::fs::monitor::event::flag::UPDATED; });
+      const auto removed = std::any_of(flgs.begin(), flgs.end(), [](const auto& f) { return f == chord::fs::monitor::event::flag::REMOVED; });
+
+      if(updated) {
+        this->put(path{e.path}, target, Replication{context.replication_cnt});
+      }
+      //if(removed) {
+      //  this->del(target);
+      //}
   });
 }
 

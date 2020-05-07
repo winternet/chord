@@ -40,9 +40,9 @@ public:
   const Context& context;
   chord::ChordFacade* chord;
   std::unique_ptr<chord::fs::IMetadataManager> metadata_mgr;
+  std::unique_ptr<chord::fs::monitor> monitor;
   std::unique_ptr<Client> fs_client;
   std::unique_ptr<Service> fs_service;
-  std::unique_ptr<chord::fs::monitor> monitor;
   std::shared_ptr<spdlog::logger> logger;
 
  private:
@@ -58,7 +58,7 @@ public:
  public:
   Facade(Context& context, ChordFacade* chord);
 
-  Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service, fs::IMetadataManager*);
+  Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service, fs::IMetadataManager*, chord::fs::monitor* = nullptr);
 
   ::grpc::Service* grpc_service();
 

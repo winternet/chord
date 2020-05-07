@@ -12,6 +12,7 @@
 #include <grpcpp/impl/codegen/sync_stream.h>
 
 #include "chord.fs.common.h"
+#include "chord.fs.monitor.h"
 #include "chord.context.h"
 #include "chord.crypto.h"
 #include "chord.exception.h"
@@ -49,10 +50,11 @@ using namespace chord;
 namespace chord {
 namespace fs {
 
-Service::Service(Context &context, ChordFacade* chord, IMetadataManager* metadata_mgr)
+Service::Service(Context &context, ChordFacade* chord, IMetadataManager* metadata_mgr, chord::fs::monitor* monitor)
     : context{context},
       chord{chord},
       metadata_mgr{metadata_mgr},
+      monitor{monitor},
       make_client {[this]{
         return chord::fs::Client(this->context, this->chord, this->metadata_mgr);
       }},
@@ -231,23 +233,25 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 
   // open - if needed (file hashes do not equal)
   PutRequest req;
-  if (!file_hashes_equal(serverContext, reader) && reader->Read(&req)) {
-
+  try {
+    // create parent path
     data /= uri.path().parent_path();
-
     if (!file::exists(data)) {
       logger->trace("[put] creating directories for {}", data);
       file::create_directories(data);
     }
-
     data /= uri.path().filename();
-    logger->trace("trying to put {}", data);
 
-    crypto::sha256_hasher hasher;
-    try {
-      ofstream file;
-      file.exceptions(ifstream::failbit | ifstream::badbit);
-      file.open(data, fstream::binary);
+    if(monitor) monitor->add_filter({data, 100, chord::fs::monitor::event::flag::UPDATED});
+
+    ofstream file;
+    file.exceptions(ifstream::failbit | ifstream::badbit);
+    file.open(data, fstream::binary);
+
+    if (!file_hashes_equal(serverContext, reader) && reader->Read(&req)) {
+      logger->trace("[put] {}", data);
+
+      crypto::sha256_hasher hasher;
 
       // write
       do {
@@ -256,17 +260,17 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
         hasher(data, len);
         file.write(data, static_cast<std::streamsize>(len));
       } while (reader->Read(&req));
-
-    } catch (const ios_base::failure &error) {
-      logger->error("failed to open file {}, reason: {}", data, error.what());
-      return Status::CANCELLED;
     }
+  } catch (const ios_base::failure &error) {
+    logger->error("[put] {}, reason: {}", data, error.what());
+    //TODO
+    return Status::CANCELLED;
   }
 
   // add local metadata
   auto meta = MetadataBuilder::for_path(context, uri.path(), options.replication);
   metadata_mgr->add(uri, meta);
-  
+
 
   // trigger recursive metadata replication for parent
   if(options.replication.index == 0) {
