@@ -35,6 +35,10 @@ bool file::remove(const std::string &path) {
   return fs::remove({path});
 }
 
+void file::rename(const std::string &from, const std::string& to) {
+  return fs::rename({from}, {to});
+}
+
 bool file::remove_all(const std::string &path) {
   return fs::remove_all({path});
 }

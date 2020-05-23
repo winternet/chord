@@ -45,6 +45,16 @@ void monitor::stop() const {
 
 void monitor::add_filter(const event::filter& f) {
   _filters.push_back(f);
+  _filters_cow.push_back(f);
+}
+
+void monitor::remove_filter(const event::filter& f) {
+  //TODO check whether removing the first matching filter makes sense in all cases 
+  //     or whether the filter needs to be more specific (e.g. uuid)
+  const auto iter = std::find(_filters.begin(), _filters.end(), f);
+  if(iter != _filters.end()) {
+    _filters.erase(iter);
+  }
 }
 
 std::vector<monitor::event::filter> monitor::filters() const {

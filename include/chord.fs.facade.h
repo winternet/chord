@@ -55,6 +55,7 @@ public:
   grpc::Status rebalance_metadata(const uri&, const bool=false);
 
   void on_fs_event(const std::vector<chord::fs::monitor::event> events);
+  grpc::Status handle_fs_update(const chord::fs::monitor::event&);
  public:
   Facade(Context& context, ChordFacade* chord);
 

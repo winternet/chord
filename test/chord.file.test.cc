@@ -85,3 +85,17 @@ TEST(chord_file, files_equal) {
   ASSERT_FALSE(chord::file::files_equal(path("__not_existant1__"), path("__not_existant2__")));
   ASSERT_FALSE(chord::file::files_equal(path("."), path(".")));
 }
+
+TEST(chord_file, rename) {
+  TmpDir fromDir;
+  TmpDir toDir;
+  const auto file = "file.txt";
+  {
+    TmpFile tmpFile(fromDir.path /file);
+    ASSERT_TRUE(chord::file::exists(fromDir.path/file));
+
+    chord::file::rename(tmpFile.path, toDir.path/file);
+    ASSERT_TRUE(chord::file::exists(toDir.path/file));
+    ASSERT_FALSE(chord::file::exists(fromDir.path/file));
+  }
+}

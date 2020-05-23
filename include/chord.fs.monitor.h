@@ -63,19 +63,22 @@ public:
 
     struct filter {
       chord::path path;
-      int counter{1};
       std::optional<event::flag> flag;
 
       filter(const chord::path& path) : path{path} {}
-      filter(const chord::path& path, int counter) : path{path}, counter{counter}, flag{} {}
-      filter(const chord::path& path, int counter, const event::flag& flag) : path{path}, counter{counter}, flag{flag} {}
+      filter(const chord::path& path, const event::flag& flag): path{path}, flag{flag} {}
 
       filter(const filter&) = default;
       filter& operator=(filter other) {
         std::swap(path, other.path);
-        std::swap(counter, other.counter);
         if(other.flag) flag.emplace(*other.flag);
         return *this;
+      }
+      bool operator==(const filter& other) const {
+        return path == other.path; // && flag == other.flag && counter == other.flag;
+      }
+      bool operator!=(const filter& other) const {
+        return !(*this == other);
       }
     };
 
@@ -84,6 +87,21 @@ public:
     std::time_t time;
 
     friend std::ostream& operator<<(std::ostream&, const event&);
+  };
+
+  struct lock {
+    monitor* _monitor;
+    event::filter _filter;
+
+    lock(const lock&) = delete;
+    lock& operator=(const lock&) = delete;
+
+    lock(monitor* mon, const event::filter& fil) : _monitor{mon}, _filter{fil} {
+      if(_monitor) _monitor->add_filter(_filter);
+    }
+    ~lock() {
+      if(_monitor) _monitor->remove_filter(_filter);
+    }
   };
 
   using event_t = signal<void(std::vector<event>)>;
@@ -101,6 +119,7 @@ private:
 
   std::vector<event::filter> _filters;
   std::vector<event> _events;
+  std::vector<event::filter> _filters_cow;
 
   void fire_events() {
     std::lock_guard<std::mutex> lock(_mutex);
@@ -146,7 +165,7 @@ private:
       });
 
     const auto rem_begin = std::remove_if(mapped_events.begin(), mapped_events.end(), [&](const auto& e) {
-        return std::any_of(_filters.begin(), _filters.end(), [&](auto& f) {
+        return std::any_of(_filters_cow.begin(), _filters_cow.end(), [&](auto& f) {
             const bool filter_has_flag = f.flag.has_value();
             bool flag_matches = filter_has_flag;
             if(flag_matches) {
@@ -154,12 +173,14 @@ private:
               flag_matches = std::any_of(event_flags.cbegin(), event_flags.cend(), [&](const auto& fi) { return fi == *f.flag; });
             }
             bool filter_matches = f.path == e.path && (!filter_has_flag || flag_matches);
-            return filter_matches && f.counter-- > 0;
+            return filter_matches;
         });
     });
 
+    _filters_cow = _filters;
+
     // cleanup filters
-    _filters.erase(std::remove_if(_filters.begin(), _filters.end(), [](const auto& f) {return f.counter <= 0;}), _filters.end());
+    //_filters.erase(std::remove_if(_filters.begin(), _filters.end(), [](const auto& f) {return f.counter <= 0;}), _filters.end());
     // remove filtered events
     mapped_events.erase(rem_begin, mapped_events.end());
     
@@ -186,6 +207,7 @@ public:
 
   void stop() const;
   void add_filter(const event::filter&);
+  void remove_filter(const event::filter&);
   std::vector<event::filter> filters() const;
 
   friend std::ostream& operator<<(std::ostream&, const monitor::event&);

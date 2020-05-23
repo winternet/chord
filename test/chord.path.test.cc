@@ -65,6 +65,8 @@ TEST(chord_path, path_minus_operator) {
   ASSERT_EQ("/folder/sub/bar.ext", path{"/folder/sub/subsub/bar.ext"} - path{"/subsub"});
   ASSERT_EQ("/subsub/bar.ext", path{"/folder/sub/subsub/bar.ext"} - path{"folder/sub"});
   ASSERT_EQ("/etc/TZ", path{"/etc/TZ"} - path{"/"});
+  ASSERT_EQ("/foo/bar.txt", path{"./data0/foo/bar.txt"} - path{"data0"});
+  ASSERT_EQ(".journal0/foo/bar.txt", path{".journal0"} / (path{"./data0/foo/bar.txt"} - path{"data0"}));
 }
 
 TEST(chord_path, path_less_operator) {

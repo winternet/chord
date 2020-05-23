@@ -65,22 +65,45 @@ void Facade::on_fs_event(std::vector<chord::fs::monitor::event> events) {
       return removed && not_exists;
   }), events.end());
   std::for_each(events.begin(), events.end(), [&](const auto& e) {
-      logger->info("received (filtered) event at {}", e);
+      logger->info("received event at {}", e);
   });
   std::for_each(events.begin(), events.end(), [&](const auto& e) {
       const auto flgs = e.flags;
-      const auto target = uri{"chord", path{e.path} - context.data_directory};
 
       const auto updated = std::any_of(flgs.begin(), flgs.end(), [](const auto& f) { return f == chord::fs::monitor::event::flag::UPDATED; });
       const auto removed = std::any_of(flgs.begin(), flgs.end(), [](const auto& f) { return f == chord::fs::monitor::event::flag::REMOVED; });
 
       if(updated) {
-        this->put(path{e.path}, target, Replication{context.replication_cnt});
+        handle_fs_update(e);
       }
       //if(removed) {
       //  this->del(target);
       //}
   });
+}
+
+Status Facade::handle_fs_update(const chord::fs::monitor::event& event) {
+  auto journal_path = context.meta_directory / "journal";
+  if(!chord::file::exists(journal_path))
+    chord::file::create_directories(journal_path);
+  const auto event_path = path{event.path};
+  const auto relative_path = event_path - context.data_directory;
+
+  journal_path = journal_path / relative_path;
+  //const auto lock = monitor::lock(monitor.get(), {event_path, chord::fs::monitor::event::flag::UPDATED});
+  const auto lock = monitor::lock(monitor.get(), {event_path});
+
+  // move file to journal_path
+  chord::file::rename(event_path, journal_path);
+
+  const auto target = uri{"chord", relative_path};
+  const auto status = this->put(journal_path, target, Replication{context.replication_cnt});
+  if(status.ok()) {
+    logger->info("successfully put after fs_event, removing {}", journal_path);
+    chord::file::remove(journal_path);
+  }
+  //TODO handle failures
+  return status;
 }
 
 bool Facade::is_directory(const chord::uri& target) {
@@ -160,6 +183,7 @@ Status Facade::put_file(const path& source, const chord::uri& target, Replicatio
   //  return Status(StatusCode::FAILED_PRECONDITION, "replication count above "+to_string(Replication::MAX_REPL_CNT)+" is not allowed");
   //}
 
+  const auto data = context.data_directory / target.path();
   return fs_client->put(target, source, client::options{repl});
 }
 
@@ -252,6 +276,11 @@ void Facade::on_predecessor_update(const chord::node from_node, const chord::nod
  */
 void Facade::on_leave(const chord::node predecessor, const chord::node successor) {
   logger->debug("[on_leave] node leaving: informing predecessor {}", predecessor);
+  if(predecessor == context.node()) {
+    logger->debug("[on_leave] node leaving - no node left but self - aborting.");
+    return;
+  }
+
   const map<uri, set<Metadata>> metadata = metadata_mgr->get_all();
   rebalance(metadata, RebalanceEvent::LEAVE);
 }

@@ -133,7 +133,7 @@ TEST(monitor, filter_file) {
   });
   sleep();
 
-  mon.add_filter({tmpDir.path / "foo", 3}); // create, update, remove
+  mon.add_filter({tmpDir.path / "foo"}); // create, update, remove
   const auto file = tmpDir.add_file("foo");
 
   sleep();
@@ -153,7 +153,7 @@ TEST(monitor, filter_file_by_flag) {
   });
   sleep();
 
-  mon.add_filter({tmpDir.path / "foo", 1, chord::fs::monitor::event::flag::UPDATED});
+  mon.add_filter({tmpDir.path / "foo", chord::fs::monitor::event::flag::UPDATED});
   const auto file = tmpDir.add_file("foo");
 
   sleep();

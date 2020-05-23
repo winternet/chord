@@ -12,6 +12,8 @@ namespace file {
 
   bool remove(const std::string &path);
 
+  void rename(const std::string &from, const std::string &to);
+
   bool remove_all(const std::string &path);
 
   bool create_file(const std::string &path);

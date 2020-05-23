@@ -242,16 +242,18 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     }
     data /= uri.path().filename();
 
-    if(monitor) monitor->add_filter({data, 100, chord::fs::monitor::event::flag::UPDATED});
+    const auto lock = monitor::lock(monitor, {data, chord::fs::monitor::event::flag::UPDATED});
 
-    ofstream file;
-    file.exceptions(ifstream::failbit | ifstream::badbit);
-    file.open(data, fstream::binary);
+    const auto file_exists = file::exists(data);
 
     if (!file_hashes_equal(serverContext, reader) && reader->Read(&req)) {
       logger->trace("[put] {}", data);
 
       crypto::sha256_hasher hasher;
+
+      ofstream file;
+      file.exceptions(ifstream::failbit | ifstream::badbit);
+      file.open(data, fstream::binary);
 
       // write
       do {
@@ -260,6 +262,10 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
         hasher(data, len);
         file.write(data, static_cast<std::streamsize>(len));
       } while (reader->Read(&req));
+
+    } else if(!file_exists) {
+      // empty file was put
+      chord::file::create_file(data);
     }
   } catch (const ios_base::failure &error) {
     logger->error("[put] {}, reason: {}", data, error.what());
@@ -270,7 +276,6 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   // add local metadata
   auto meta = MetadataBuilder::for_path(context, uri.path(), options.replication);
   metadata_mgr->add(uri, meta);
-
 
   // trigger recursive metadata replication for parent
   if(options.replication.index == 0) {
