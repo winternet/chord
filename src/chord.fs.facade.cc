@@ -84,6 +84,9 @@ void Facade::on_fs_event(std::vector<chord::fs::monitor::event> events) {
 }
 
 Status Facade::handle_fs_remove(const chord::fs::monitor::event& event) {
+  const auto event_path = path{event.path};
+
+  return del(chord::uri{"chord", event_path}, true);
   return Status::OK;
 }
 

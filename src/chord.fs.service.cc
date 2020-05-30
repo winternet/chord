@@ -376,13 +376,14 @@ Status Service::handle_del_dir(ServerContext *serverContext, const chord::fs::De
   const auto uri = chord::uri::from(req->uri());
   auto data = context.data_directory / uri.path();
 
-  if(!file::exists(data)) {
-    return Status(StatusCode::NOT_FOUND, fmt::format("failed to delete {}: directory not found.", to_string(uri)));
-  }
+  //if(!file::exists(data)) {
+  //  return Status(StatusCode::NOT_FOUND, fmt::format("failed to delete {}: directory not found.", to_string(uri)));
+  //}
 
-  const auto is_empty = file::is_empty(data);
+  const auto exists = file::exists(data);
+  const auto is_empty = exists && file::is_empty(data);
 
-  if(file::is_directory(data) && !is_empty && !req->recursive()) {
+  if(exists && file::is_directory(data) && !is_empty && !req->recursive()) {
     return Status{StatusCode::FAILED_PRECONDITION, fmt::format("failed to delete {}: directory not empty - missing recursive flag?", to_string(uri))};
   }
 
@@ -391,7 +392,7 @@ Status Service::handle_del_dir(ServerContext *serverContext, const chord::fs::De
   options.source = src;
 
   // handle recursive delete
-  if(!is_empty && req->recursive()) {
+  if(!exists || (!is_empty && req->recursive())) {
     // remove local metadata of directory
     const auto metadata = metadata_mgr->get(uri);
 
@@ -408,12 +409,14 @@ Status Service::handle_del_dir(ServerContext *serverContext, const chord::fs::De
   }
 
   // after all contents have been deleted - check emptyness again
-  if(!file::is_empty(data)) {
+  if(exists && !file::is_empty(data)) {
     return Status(StatusCode::ABORTED, fmt::format("failed to delete {}: directory not empty", to_string(uri)));
   }
 
   // beg: handle local
-  file::remove(data);
+  if(exists) {
+    file::remove(data);
+  }
   const auto deleted_metadata = metadata_mgr->del(uri);
   // end: handle local
 
