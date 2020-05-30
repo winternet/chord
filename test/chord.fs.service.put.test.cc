@@ -141,7 +141,9 @@ TEST_F(FilesystemServicePutTest, put_replication_2) {
     EXPECT_CALL(*self->metadata_mgr, exists(target_uri))
       .WillOnce(Return(false)) // no metadata available
       .WillOnce(Return(true)); // metadata has been added meanwhile
-    
+    EXPECT_CALL(*self->metadata_mgr, get(target_uri))
+      .WillOnce(Return(std::set<Metadata>{metadata_file})); // meanwhile added metadata
+
     EXPECT_CALL(*self->metadata_mgr, add(target_uri, std::set<Metadata>{metadata_file}))
       .WillOnce(Return(true));
     EXPECT_CALL(*self->metadata_mgr, add(root_uri, std::set<Metadata>{metadata_dir, metadata_file}))

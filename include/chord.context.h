@@ -47,6 +47,8 @@ struct Context {
 
   void set_uuid(const uuid_t uuid);
 
+  chord::path journal_directory() const { return meta_directory / "journal"; }
+
   Context set_router(chord::Router *router);
 
   /**

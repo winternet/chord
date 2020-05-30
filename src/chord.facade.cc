@@ -121,10 +121,12 @@ void ChordFacade::join() {
     return;
   }
 
+  // assertion: router->successor() and router->predecessor() are set
   logger->info("successfully joined ring via {} - notifying predecessor {}.", context.join_addr, router->predecessor()->endpoint);
   const auto status_pred = client->notify(*router->predecessor(), *router->successor(), context.node());
   logger->info("successfully joined ring via {} - notifying successor {}.", context.join_addr, router->successor()->endpoint);
   const auto status_succ = client->notify(*router->successor(), *router->predecessor(), context.node());
+
   if(!status_pred.ok() || !status_succ.ok()) {
     return join_failed(status_pred.ok() ? status_succ : status_pred);
   }

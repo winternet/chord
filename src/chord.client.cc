@@ -64,7 +64,7 @@ Status Client::inform_successor_about_leave() {
   const auto successor_node = router->successor();
   const auto predecessor_node = router->predecessor();
 
-  if(successor_node == context.node()) {
+  if(!successor_node || successor_node == context.node()) {
     logger->info("[leave] no successor - shutting down");
     return Status(grpc::StatusCode::NOT_FOUND, "no successor found.");
   }
@@ -87,7 +87,7 @@ Status Client::inform_successor_about_leave() {
 
 //! TODO merge with inform successor about leave
 Status Client::inform_predecessor_about_leave() {
-  const auto successor_node = router->successor();
+  //const auto successor_node = router->successor();
   const auto predecessor_node = router->predecessor();
 
   if(!predecessor_node) {
@@ -207,7 +207,7 @@ void Client::stabilize() {
     logger->trace("received stabilize response with predecessor {}", pred);
 
     const uuid_t self(context.uuid());
-    const uuid_t succ(router->successor()->uuid);
+    const uuid_t succ(successor->uuid); //router->successor()->uuid); TODO do we really need to re-fetch the successor from router?
     if(uuid::between(self, pred.uuid, succ)) {
       router->update(pred);
       //router->set_successor(0, pred);
@@ -244,17 +244,19 @@ Status Client::notify(const node& target, const node& old_node, const node& new_
 Status Client::notify() {
 
   // get successor
-  const auto n = router->successor();
-  const auto successor = n->uuid;
-  const auto endpoint = n->endpoint;
+  const auto successor = router->successor();
+  if(!successor || successor == context.node()) {
+    logger->warn("[notify] no successor to notify - aborting.");
+    return Status::OK;
+  }
 
   ClientContext clientContext;
   NotifyRequest req = make_request<NotifyRequest>(context);
   NotifyResponse res;
 
-  logger->trace("calling notify on address {}@{}", successor, endpoint);
+  logger->trace("calling notify on address {}", successor);
 
-  return make_stub(endpoint)->notify(&clientContext, req, &res);
+  return make_stub(successor->endpoint)->notify(&clientContext, req, &res);
 }
 
 Status Client::ping(const endpoint& endpoint) {

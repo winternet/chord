@@ -91,8 +91,8 @@ TEST(ServiceTest, join) {
   ASSERT_FALSE(router.has_successor());
   ASSERT_FALSE(router.has_predecessor());
 
-  //ASSERT_FALSE(successor);
-  ASSERT_EQ(successor, context.node());
+  ASSERT_FALSE(successor);
+  //ASSERT_EQ(successor, context.node());
   ASSERT_FALSE(predecessor);
 
   //--- response

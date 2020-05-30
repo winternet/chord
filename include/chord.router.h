@@ -98,6 +98,7 @@ public:
   std::ostream& print(std::ostream&) const;
 
   optional<node> successor() const;
+  node successor_or_self() const;
 
   optional<node> predecessor() const;
 

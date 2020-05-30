@@ -46,16 +46,19 @@ public:
   std::shared_ptr<spdlog::logger> logger;
 
  private:
+  grpc::Status put_file_journal(const chord::path& source);
   grpc::Status put_file(const chord::path& source, const chord::uri& target, Replication repl = Replication());
   grpc::Status get_file(const chord::uri& source, const chord::path& target);
   bool is_directory(const chord::uri& target);
   grpc::Status get_and_integrate(const chord::fs::MetaResponse& metadata);
   grpc::Status get_shallow_copies(const chord::node& leaving_node);
   void rebalance(const std::map<chord::uri, std::set<fs::Metadata>>&, const RebalanceEvent event);
+  void initialize(const std::map<chord::uri, std::set<fs::Metadata>>&);
   grpc::Status rebalance_metadata(const uri&, const bool=false);
 
   void on_fs_event(const std::vector<chord::fs::monitor::event> events);
   grpc::Status handle_fs_update(const chord::fs::monitor::event&);
+  grpc::Status handle_fs_remove(const chord::fs::monitor::event&);
  public:
   Facade(Context& context, ChordFacade* chord);
 

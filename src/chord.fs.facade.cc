@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <string>
 #include <utility>
+#include <filesystem>
 #include <fstream>
 
 #include <grpcpp/impl/codegen/status_code_enum.h>
@@ -76,34 +77,19 @@ void Facade::on_fs_event(std::vector<chord::fs::monitor::event> events) {
       if(updated) {
         handle_fs_update(e);
       }
-      //if(removed) {
-      //  this->del(target);
-      //}
+      if(removed) {
+        handle_fs_remove(e);
+      }
   });
 }
 
+Status Facade::handle_fs_remove(const chord::fs::monitor::event& event) {
+  return Status::OK;
+}
+
 Status Facade::handle_fs_update(const chord::fs::monitor::event& event) {
-  auto journal_path = context.meta_directory / "journal";
-  if(!chord::file::exists(journal_path))
-    chord::file::create_directories(journal_path);
   const auto event_path = path{event.path};
-  const auto relative_path = event_path - context.data_directory;
-
-  journal_path = journal_path / relative_path;
-  //const auto lock = monitor::lock(monitor.get(), {event_path, chord::fs::monitor::event::flag::UPDATED});
-  const auto lock = monitor::lock(monitor.get(), {event_path});
-
-  // move file to journal_path
-  chord::file::rename(event_path, journal_path);
-
-  const auto target = uri{"chord", relative_path};
-  const auto status = this->put(journal_path, target, Replication{context.replication_cnt});
-  if(status.ok()) {
-    logger->info("successfully put after fs_event, removing {}", journal_path);
-    chord::file::remove(journal_path);
-  }
-  //TODO handle failures
-  return status;
+  return put_file_journal(event_path);
 }
 
 bool Facade::is_directory(const chord::uri& target) {
@@ -238,7 +224,7 @@ void Facade::rebalance(const map<uri, set<Metadata>>& metadata, const RebalanceE
     if(fs::is_directory(metadata_set) || is_shallow_copy || is_shallow_copyable) {
       rebalance_metadata(uri, is_shallow_copyable);
     } else {
-      logger->info("trying to rebalance file {}", local_path);
+      logger->info("[rebalance] trying to rebalance file {}", local_path);
       auto metadata = *metadata_set.begin();
       client::options options;
       metadata.replication.index=0;
@@ -258,17 +244,71 @@ void Facade::rebalance(const map<uri, set<Metadata>>& metadata, const RebalanceE
 /**
  * CALLBACKS
  */
-// called form within the node that joined the ring
+// called from within the node that joined the ring
 void Facade::on_join(const chord::node new_successor) {
   logger->info("[on_join] joined chord ring: new_successor {}", new_successor);
+  const map<uri, set<Metadata>> metadata = metadata_mgr->get_all();
+  initialize(metadata);
 }
 
+/**
+ * put a file by moving it to <journal> and put from there
+ */
+Status Facade::put_file_journal(const path& data_path) {
+  auto journal_path = context.journal_directory();
+
+  if(!chord::file::exists(journal_path))
+    chord::file::create_directories(journal_path);
+
+  const auto relative_path = data_path - context.data_directory;
+
+  journal_path = journal_path / relative_path;
+  const auto lock = monitor::lock(monitor.get(), {data_path});
+
+  // move file to journal_path
+  chord::file::rename(data_path, journal_path);
+
+  const auto target = uri{"chord", relative_path};
+  const auto status = this->put(journal_path, target, Replication{context.replication_cnt});
+  if(status.ok()) {
+    logger->info("successfully put after fs_event, removing {}", journal_path);
+    chord::file::remove(journal_path);
+  }
+  //TODO handle failures
+  return status;
+}
+
+void Facade::initialize(const std::map<chord::uri, std::set<fs::Metadata>>& metadata) {
+  namespace fs = std::filesystem;
+
+  logger->info("[initialize] matching data against metadata");
+  if(!file::exists(context.data_directory)) return;
+
+  for(const auto& entry : fs::recursive_directory_iterator(context.data_directory.string())) {
+    const auto pth = path{entry.path().string()};
+    if(!file::is_regular_file(pth)) continue;
+
+    const auto relative_path = pth - context.data_directory;
+    const auto uri = chord::uri{"chord", relative_path};
+    logger->trace("[initialize] checking: {}", uri);
+    if(metadata.find(uri) == metadata.cend()) {
+      logger->trace("[initialize] meanwhile created: {}", uri);
+      const auto status = put_file_journal(pth);
+      if(!status.ok()) {
+        logger->error("[initialize] failed to put {} - backup in <metadata>/journal", relative_path);
+      }
+    }
+  }
+}
 
 //called from within the node preceding the joining node
 void Facade::on_predecessor_update(const chord::node from_node, const chord::node to_node) {
   logger->info("[on_predecessor_update] predecessor updated: replacing {}, with {}", from_node, to_node);
   const map<uri, set<Metadata>> metadata = metadata_mgr->get_all();
   rebalance(metadata, RebalanceEvent::PREDECESSOR_UPDATE);
+  if(from_node == context.node() && to_node != context.node()) {
+    initialize(metadata);
+  }
 }
 
 /**

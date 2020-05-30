@@ -67,12 +67,16 @@ uuid Router::calc_successor_uuid_for_index(const size_t i) const {
   return Router::calc_successor_uuid_for_index(context.uuid(), i);
 }
 
+node Router::successor_or_self() const {
+  return successor().value_or(context.node());
+}
+
 optional<node> Router::successor() const {
   std::lock_guard<mutex_t> lock(mtx);
   auto succ = successors.front();
   if(succ.valid()) return succ.node();
-  //return {};
-  return context.node();
+  return {};
+  //return context.node();
 }
 
 void Router::update(const std::set<chord::node>& nodes) {

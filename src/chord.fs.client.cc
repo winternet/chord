@@ -108,7 +108,8 @@ Status Client::put(const chord::node& node, const chord::uri &uri, istream &istr
     if(fs::is_regular_file(metadata_set)) {
       ContextMetadata::add(clientContext, metadata_set.begin()->file_hash);
     } else {
-      logger->warn("failed to handle metadata for uri {}: multiple entries ({})", uri, metadata_set.size());
+      logger->warn("[put] failed to handle metadata for uri {}: multiple entries ({}) - aborting.", uri, metadata_set.size());
+      return Status::CANCELLED;
     }
   }
 
@@ -121,7 +122,7 @@ Status Client::put(const chord::node& node, const chord::uri &uri, istream &istr
   const bool file_hash_equal = ContextMetadata::file_hash_equal_from(clientContext);
 
   if(file_hash_equal) {
-    logger->info("file hash equals - skip upload.");
+    logger->info("[put] file hash equals - skip upload.");
   }
 
   for(size_t read=0, offset=0; !file_hash_equal && istream && (read = static_cast<size_t>(istream.readsome(buffer.data(), len))) > 0;) {
@@ -145,7 +146,7 @@ Status Client::put(const chord::node& node, const chord::uri &uri, istream &istr
 Status Client::put(const chord::uri &uri, istream &istream, const client::options& options) {
   const auto hash = chord::crypto::sha256(uri);
   const auto node = chord->successor(hash);
-  logger->trace("put {} ({})", uri, hash);
+  logger->trace("[put] {} ({})", uri, hash);
   return put(node, uri, istream, options);
 }
 
@@ -155,7 +156,7 @@ grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, cons
   const auto meta_uri = uri::builder{uri.scheme(), path}.build();
   const auto hash = chord::crypto::sha256(meta_uri);
 
-  logger->trace("meta {} ({})", meta_uri, hash);
+  logger->trace("[meta] {} ({})", meta_uri, hash);
 
   ClientContext clientContext;
   init_context(clientContext, options);
@@ -227,7 +228,7 @@ Status Client::del(const chord::node& node, const chord::uri &uri, const bool re
   const auto hash = chord::crypto::sha256(uri);
   const auto endpoint = node.endpoint;
 
-  logger->trace("del {} ({}) from {}", uri, hash, endpoint);
+  logger->trace("[del] {} ({}) from {}", uri, hash, endpoint);
 
   ClientContext clientContext;
   init_context(clientContext, options);
@@ -256,7 +257,7 @@ grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata, co
   const auto hash = chord::crypto::sha256(meta_uri);
   const auto endpoint = chord->successor(hash).endpoint;
 
-  logger->trace("dir {} ({})", meta_uri, hash);
+  logger->trace("[dir] {} ({})", meta_uri, hash);
 
   ClientContext clientContext;
   init_context(clientContext, options);
@@ -295,7 +296,7 @@ Status Client::get(const chord::uri& uri, const chord::node& node, const chord::
 Status Client::get(const chord::uri &uri, const chord::node& node, std::ostream &ostream) {
   const auto hash = chord::crypto::sha256(uri);
 
-  logger->trace("get {} ({})", uri, hash);
+  logger->trace("[get] {} ({})", uri, hash);
 
   ClientContext clientContext;
   GetResponse res;

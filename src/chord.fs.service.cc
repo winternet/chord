@@ -161,7 +161,7 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
       const auto status = make_client().meta(node, uri, Client::Action::ADD, new_metadata, options);
 
       if(!is_successful(status)) {
-        logger->warn("Failed to add {} ({}) to {}", uri, max_repl, node);
+        logger->warn("[meta][add] failed to add {} ({}) to {}", uri, max_repl, node);
       }
     }
   }
@@ -309,7 +309,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     const auto hash = chord::crypto::sha256(uri);
     const auto next = chord->successor();
     if(next != chord->successor(hash)) {
-      logger->trace("deletion of file from successor needed.");
+      logger->trace("[put] deletion of file from successor needed.");
       make_client().del(next, uri, false, options);
     }
   }
@@ -396,12 +396,12 @@ Status Service::handle_del_dir(ServerContext *serverContext, const chord::fs::De
     const auto metadata = metadata_mgr->get(uri);
 
     // handle possibly remote metadata of sub-uris
-    for(const auto m:metadata) {
+    for(const auto& m:metadata) {
       if(m.name == ".") continue;
       const auto sub_uri = chord::uri(uri.scheme(), uri.path() / m.name);
       const auto status = make_client().del(sub_uri, req->recursive(), options);
       if(!status.ok()) {
-        logger->error("failed to delete directory: {} {}", status.error_message(), status.error_details());
+        logger->error("[del][dir] failed to delete directory: {} {}", status.error_message(), status.error_details());
         return status;
       }
     }
@@ -502,9 +502,9 @@ Status Service::get_from_reference_or_replication(const chord::uri& uri) {
         const auto node_ref = *m.node_ref;
         status = make_client().get(uri, node_ref, data);
         if(!status.ok()) {
-          logger->warn("failed to get from referenced node - trying to get replication.");
+          logger->warn("[get] failed to get from referenced node - trying to get replication.");
         } else {
-          logger->trace("successfully received file - reset node ref.");
+          logger->trace("[get] successfully received file - reset node ref.");
           m.node_ref = {};
           m.file_hash = crypto::sha256(data);
           std::set<Metadata> metadata = {m};
@@ -514,7 +514,7 @@ Status Service::get_from_reference_or_replication(const chord::uri& uri) {
           return make_client().del(node_ref, uri);
         }
       } catch (const ios_base::failure &error) {
-        logger->error("failed to open file {}, reason: {}", data, error.what());
+        logger->error("[get] failed to open file {}, reason: {}", data, error.what());
         return Status::CANCELLED;
       }
     }
@@ -524,11 +524,11 @@ Status Service::get_from_reference_or_replication(const chord::uri& uri) {
         const auto successor = chord->successor();
         status = make_client().get(uri, successor, data);
         if(!status.ok()) {
-          logger->warn("failed to get from referenced node - trying to get replication.");
+          logger->warn("[get] failed to get from referenced node - trying to get replication.");
         }
         return status;
       } catch (const ios_base::failure &error) {
-        logger->error("failed to open file {}, reason: {}", data, error.what());
+        logger->error("[get] failed to open file {}, reason: {}", data, error.what());
         return Status::CANCELLED;
       }
     }
@@ -550,21 +550,21 @@ Status Service::get([[maybe_unused]] ServerContext *serverContext, const GetRequ
   data /= uri.path();
   // try to get file
   if (!file::exists(data)) {
-    logger->debug("file does not exist, trying to restore from metadata...");
+    logger->debug("[get] file does not exist, trying to restore from metadata...");
     const auto status = get_from_reference_or_replication(uri);
     if(!status.ok()) {
       return status;
     }
   } else if (!file::is_regular_file(data)) {
-    logger->error("requested file is not a regular file - aborting.");
+    logger->error("[get] requested file is not a regular file - aborting.");
     return Status::CANCELLED;
   }
 
-  logger->trace("trying to get {}", data);
+  logger->trace("[get] trying to get {}", data);
   try {
     file.open(data, fstream::binary);
   } catch (const ios_base::failure &error) {
-    logger->error("failed to open file {}, reason: {}", data, error.what());
+    logger->error("[get] failed to open file {}, reason: {}", data, error.what());
     return Status::CANCELLED;
   }
 
@@ -588,7 +588,7 @@ Status Service::get([[maybe_unused]] ServerContext *serverContext, const GetRequ
     offset += read;
 
     if (!writer->Write(res)) {
-      throw__exception("broken stream.");
+      throw__exception("[get] broken stream.");
     }
 
   } while (read > 0);

@@ -124,19 +124,18 @@ Status Service::successor([[maybe_unused]] ServerContext *serverContext, const S
   uuid_t id{req->id()};
   uuid_t self{context.uuid()};
 
-  auto successor = router->successor();
-  while(successor && !client->ping(successor->endpoint).ok()) {
-    router->remove(*successor);
-    successor = router->successor();
+  auto successor = router->successor_or_self();
+
+  while(!client->ping(successor.endpoint).ok()) {
+    router->remove(successor);
+    successor = router->successor_or_self();
   }
 
-  if(id == self || uuid::between(self, id, successor->uuid)) {
-    logger->trace("[successor] the requested id {} lies between self {} and my successor {}, returning successor", id.string(), self.string(), successor->uuid);
+  if(id == self || uuid::between(self, id, successor.uuid)) {
+    logger->trace("[successor] the requested id {} lies between self {} and my successor {}, returning successor", id.string(), self.string(), successor.uuid);
 
     //--- router entry
-    RouterEntry entry;
-    entry.set_uuid(successor->uuid);
-    entry.set_endpoint(successor->endpoint);
+    RouterEntry entry = make_entry(successor);
 
     res->mutable_successor()->CopyFrom(entry);
     
@@ -202,20 +201,21 @@ Status Service::notify([[maybe_unused]] ServerContext *serverContext, const Noti
   auto changed_predecessor = false;
 
   if(source == context.node()) {
-    logger->warn("Error notifying: Unable to notify self.");
+    logger->warn("[notify] received notify from self - aborting.");
     return Status::CANCELLED;
   }
 
   // initializing ring
   if(!predecessor) {
-    router->update(source);
     changed_predecessor = true;
-  } else if(uuid::between(predecessor->uuid, context.uuid(), source.uuid)) {
-    router->update(source);
-  } else if(uuid::between(source.uuid, context.uuid(), successor->uuid)) {
+  //TODO this branch is useless but prevents invocation of following cond..
+  //} else if(uuid::between(predecessor->uuid, context.uuid(), source.uuid)) {
+  } else if(predecessor && predecessor != source 
+      && uuid::between(source.uuid, context.uuid(), successor->uuid)) {
     changed_predecessor = true;
-    router->update(source);
   }
+  // update router
+  router->update(source);
 
   if(req->has_old_node() && req->has_new_node()) {
     const auto old_node_ = make_node(req->old_node());
