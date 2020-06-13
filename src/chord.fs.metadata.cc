@@ -65,8 +65,16 @@ std::set<Metadata> create_directory(const std::set<Metadata>& metadata, const st
   return {meta_dir};
 }
 
+bool is_directory(const Metadata& metadata) {
+  return metadata.name == "." && metadata.file_type == type::directory;
+}
+
 bool is_directory(const std::set<Metadata>& metadata) {
-  return std::any_of(begin(metadata), end(metadata), [&](const Metadata& m) { return m.name == "." && m.file_type == type::directory; });
+  return std::any_of(begin(metadata), end(metadata), [&](const Metadata& m) { return is_directory(m); });
+}
+
+bool is_empty(const std::set<Metadata>& metadata) {
+  return metadata.size() == 1 && is_directory(metadata);
 }
 
 bool is_shallow_copy(const std::set<Metadata>& metadata, const Context& context) {

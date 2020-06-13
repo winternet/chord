@@ -45,6 +45,8 @@ class Service final : public chord::fs::Filesystem::Service {
   grpc::Status handle_meta_dir(grpc::ServerContext*,const MetaRequest*, MetaResponse*);
   grpc::Status handle_del_file(grpc::ServerContext*,const DelRequest*);
   grpc::Status handle_del_dir(grpc::ServerContext*,const DelRequest*);
+  grpc::Status handle_del_recursive(grpc::ServerContext*, const DelRequest*);
+  client::options init_source(const client::options&) const;
 
   fs::client::options update_source(fs::client::options) const;
   grpc::Status is_valid(grpc::ServerContext*, const RequestType);

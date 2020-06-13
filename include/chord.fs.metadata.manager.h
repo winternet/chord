@@ -74,6 +74,9 @@ class MetadataManager : public IMetadataManager {
   MetadataManager(const MetadataManager&) = delete;
 
   std::set<Metadata> del(const chord::uri& directory) override {
+    //never remove the root
+    if(directory.path().parent_path().empty()) return {};
+
     std::set<Metadata> retVal = get(directory);
     __del(directory);
     return retVal;
@@ -98,7 +101,7 @@ class MetadataManager : public IMetadataManager {
       current.erase(m.name);
     }
 
-    if(current.empty() && removeIfEmpty) {
+    if(is_empty(extract_metadata_set(current)) && removeIfEmpty) {
       __del(directory);
     } else {
       value = serialize(current);

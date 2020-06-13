@@ -97,16 +97,20 @@ TEST_F(FilesystemServiceDelTest, del_file) {
   Metadata metadata("file", "", "", perms::all, type::regular, {}, {}, {});
   EXPECT_CALL(*self->metadata_mgr, get(target_uri))
     .WillOnce(Return(std::set<Metadata>{metadata}));
-
+  EXPECT_CALL(*self->metadata_mgr, exists(target_uri))
+    .WillOnce(Return(true));
   EXPECT_CALL(*self->metadata_mgr, del(target_uri))
     .WillOnce(Return(std::set<Metadata>{metadata}));
 
   //--- delete folder
   Metadata metadata_dir(".", "", "", perms::none, type::directory, {}, {}, {});
   EXPECT_CALL(*self->metadata_mgr, get(root_uri))
-    .WillOnce(Return(std::set<Metadata>{metadata_dir}));  // within del
+    .WillOnce(Return(std::set<Metadata>{metadata_dir}))  // within del
+    .WillOnce(Return(std::set<Metadata>{metadata_dir})); // within del_handle_recursive
     //.WillOnce(Return(std::set<Metadata>{metadata_dir}))  // within handle_del_dir
     //.WillOnce(Return(std::set<Metadata>()));             // forwarded delete -> not_found
+  EXPECT_CALL(*self->metadata_mgr, del(root_uri, std::set<Metadata>{metadata}, false))
+    .WillOnce(Return(std::set<Metadata>{}));
   EXPECT_CALL(*self->metadata_mgr, del(root_uri))
     .WillOnce(Return(std::set<Metadata>{metadata}));
 

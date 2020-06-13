@@ -228,7 +228,7 @@ Status Client::del(const chord::node& node, const chord::uri &uri, const bool re
   const auto hash = chord::crypto::sha256(uri);
   const auto endpoint = node.endpoint;
 
-  logger->trace("[del] {} ({}) from {}", uri, hash, endpoint);
+  logger->trace("[del] {} ({}) -> {}", uri, hash, endpoint);
 
   ClientContext clientContext;
   init_context(clientContext, options);

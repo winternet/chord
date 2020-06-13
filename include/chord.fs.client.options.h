@@ -22,8 +22,10 @@ namespace client {
 
     void clear_source();
   };
-  options clear_source(options);
-  options update_source(options, const Context&);
+
+  options clear_source(const options&);
+  options init_source(const options&, const Context&);
+
 } // namespace client
 } // namespace fs
 } // namespace chord

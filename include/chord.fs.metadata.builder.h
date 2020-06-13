@@ -41,6 +41,18 @@ struct MetadataBuilder {
     return ret;
   }
 
+  static Metadata directory(const path& directory) {
+    return {
+        directory.filename(),
+        "",
+        "",
+        perms::all,
+        type::directory,
+        chord::optional<chord::uuid>{},
+        {},
+        {}};
+  }
+
   /**
    * Get metadata from existing local path
    *

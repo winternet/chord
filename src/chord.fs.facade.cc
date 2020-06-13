@@ -87,7 +87,6 @@ Status Facade::handle_fs_remove(const chord::fs::monitor::event& event) {
   const auto event_path = path{event.path};
 
   return del(chord::uri{"chord", event_path}, true);
-  return Status::OK;
 }
 
 Status Facade::handle_fs_update(const chord::fs::monitor::event& event) {
@@ -101,7 +100,7 @@ bool Facade::is_directory(const chord::uri& target) {
   // XXX here be dragons: what if target is indeed an directory but currently does not exist?
   if(status.error_code() == StatusCode::NOT_FOUND)
     return false;
-  else if (!status.ok()) throw__fs_exception("failed to dir " + to_string(target) + ": "+ status.error_message());
+  else if (!status.ok()) throw__fs_exception("failed to dir " + to_string(target) + ": "+ utils::to_string(status));
   return chord::fs::is_directory(metadata);
 }
 
@@ -226,7 +225,7 @@ void Facade::rebalance(const map<uri, set<Metadata>>& metadata, const RebalanceE
     // handle metadata only
     if(fs::is_directory(metadata_set) || is_shallow_copy || is_shallow_copyable) {
       rebalance_metadata(uri, is_shallow_copyable);
-    } else {
+    } else if(file::exists(local_path)){
       logger->info("[rebalance] trying to rebalance file {}", local_path);
       auto metadata = *metadata_set.begin();
       client::options options;
@@ -285,6 +284,25 @@ void Facade::initialize(const std::map<chord::uri, std::set<fs::Metadata>>& meta
   namespace fs = std::filesystem;
 
   logger->info("[initialize] matching data against metadata");
+  for(auto& [uri, metadata_set] : metadata) {
+    if(is_shallow_copy(metadata_set, context)) {
+      logger->info("[initialize] ignore shallow copy: {}", uri);
+      //TODO check whether the node is still reachable?
+      continue;
+    }
+    const auto data = context.data_directory / uri.path();
+    if(!file::exists(data)) {
+      logger->info("[initialize] tracking {}", uri);
+      std::set<Metadata> metadata;
+      // check for shallow copies
+      const auto status = fs_client->dir(uri, metadata);
+      if(status.error_code() == StatusCode::NOT_FOUND || !is_shallow_copy(metadata, context)) {
+        logger->info("[initialize] tracking status: {}, is_shallow_copy: {}", status.ok(), is_shallow_copy(metadata, context));
+        del(uri, true);
+      }
+    }
+  }
+
   if(!file::exists(context.data_directory)) return;
 
   for(const auto& entry : fs::recursive_directory_iterator(context.data_directory.string())) {

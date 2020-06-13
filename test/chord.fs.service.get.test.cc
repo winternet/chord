@@ -95,6 +95,7 @@ TEST_F(FilesystemServiceGetTest, get_from_node_reference) {
   const endpoint source_endpoint("0.0.0.0:50051");
   MockPeer source_peer(source_endpoint, source_data_directory);
 
+  const auto root_uri = uri("chord:///");
   const auto source_uri = uri("chord:///file");
   const auto source_file = source_data_directory.add_file("file");
   const auto source_file_backup = source_data_directory.path / "file.backup";
@@ -113,10 +114,19 @@ TEST_F(FilesystemServiceGetTest, get_from_node_reference) {
     .WillOnce(Return(std::set<Metadata>{metadata}));
 
   // source peer has itself set as node_ref
-  EXPECT_CALL(*source_peer.metadata_mgr, get(source_uri))
-    .WillOnce(Return(std::set<Metadata>{metadata}));
-  EXPECT_CALL(*source_peer.metadata_mgr, del(source_uri))
-    .WillOnce(Return(std::set<Metadata>{metadata}));
+  EXPECT_CALL(*source_peer.metadata_mgr, exists(source_uri))
+    .WillOnce(Return(false));
+//  EXPECT_CALL(*source_peer.metadata_mgr, get(source_uri))
+//    .WillOnce(Return(std::set<Metadata>{metadata}))
+//    .WillOnce(Return(std::set<Metadata>{metadata}));
+///  EXPECT_CALL(*source_peer.metadata_mgr, get(root_uri))
+///    .WillOnce(Return(std::set<Metadata>{metadata}));
+
+///  EXPECT_CALL(*source_peer.metadata_mgr, del(source_uri))
+///    .WillOnce(Return(std::set<Metadata>{metadata}));
+
+//  EXPECT_CALL(*source_peer.metadata_mgr, del(source_uri, std::set<Metadata>{metadata}, false))
+//    .WillOnce(Return(std::set<Metadata>{metadata}));
 
   // delete the node_ref and update the file hash
   metadata = {"file", "", "", perms::all, type::regular, crypto::sha256(source_file.path), {}};
