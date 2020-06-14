@@ -248,7 +248,7 @@ void Service::fix_fingers(size_t index) {
   try {
     const auto succ = make_node(successor(fix));
     logger->trace("fixing finger for {}. received successor {}", fix, succ);
-    if( succ.uuid == context.uuid() ) {
+    if( succ == context.node() ) {
       router->remove(fix);
       return;
     } 

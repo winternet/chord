@@ -49,16 +49,26 @@ Client::Client(const Context &context, Router *router)
     : context{context},
       router{router},
       make_stub{//--- default stub factory
-                [](const endpoint& endpoint) {
-                  return Chord::NewStub(grpc::CreateChannel(
-                      endpoint, grpc::InsecureChannelCredentials()));
+                [&](const endpoint& endpoint) {
+                  grpc::ChannelArguments arguments;
+                  arguments.SetInt(GRPC_ARG_KEEPALIVE_TIMEOUT_MS, context.client_timeout_ms);
+                  arguments.SetInt(GRPC_ARG_KEEPALIVE_TIME_MS, context.client_timeout_ms);
+
+                  auto channel = grpc::CreateCustomChannel(endpoint, grpc::InsecureChannelCredentials(), arguments);
+                  //auto channel = grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials());
+                  return Chord::NewStub(channel);
                 }},
       logger{context.logging.factory().get_or_create(logger_name)} {}
 
 Client::Client(const Context &context, Router *router, StubFactory make_stub)
     : context{context}, router{router}, make_stub{make_stub}, logger{context.logging.factory().get_or_create(logger_name)} {}
 
-//! TODO merge with inform predecessor about leave
+void Client::init_context([[maybe_unused]] ClientContext& client_context) {
+  // left blank intentionally
+  //std::chrono::system_clock::time_point deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(context.client_timeout_ms);
+  //client_context.set_deadline(deadline);
+}
+
 Status Client::inform_successor_about_leave() {
   // get successor
   const auto successor_node = router->successor();
@@ -71,6 +81,7 @@ Status Client::inform_successor_about_leave() {
 
   // inform successor
   ClientContext clientContext;
+  init_context(clientContext);
   LeaveRequest req;
   LeaveResponse res;
 
@@ -97,6 +108,7 @@ Status Client::inform_predecessor_about_leave() {
 
   // inform predecessor
   ClientContext clientContext;
+  init_context(clientContext);
   LeaveRequest req = make_request<LeaveRequest>(context);
   LeaveResponse res;
 
@@ -123,7 +135,8 @@ void Client::leave() {
 }
 
 signal<void(const node)>& Client::on_predecessor_fail() {
-  return event_predecessor_fail;
+  //return event_predecessor_fail;
+  return router->on_predecessor_fail();
 }
 signal<void(const node)>& Client::on_successor_fail() {
   return event_successor_fail;
@@ -157,6 +170,7 @@ Status Client::join(const endpoint& addr) {
 
 Status Client::join(const JoinRequest *req, JoinResponse *res) {
   ClientContext clientContext;
+  init_context(clientContext);
   return join(&clientContext, req, res);
 }
 
@@ -179,6 +193,7 @@ Status Client::join(ClientContext *clientContext, const JoinRequest *req, JoinRe
 
 void Client::stabilize() {
   ClientContext clientContext;
+  init_context(clientContext);
   StabilizeRequest req = make_request<StabilizeRequest>(context);
   StabilizeResponse res;
 
@@ -226,6 +241,7 @@ Status Client::notify(const node& target, const node& old_node, const node& new_
   const auto endpoint = target.endpoint;
 
   ClientContext clientContext;
+  init_context(clientContext);
   NotifyRequest req = make_request<NotifyRequest>(context);
   NotifyResponse res;
 
@@ -251,6 +267,7 @@ Status Client::notify() {
   }
 
   ClientContext clientContext;
+  init_context(clientContext);
   NotifyRequest req = make_request<NotifyRequest>(context);
   NotifyResponse res;
 
@@ -261,6 +278,7 @@ Status Client::notify() {
 
 Status Client::ping(const endpoint& endpoint) {
   ClientContext clientContext;
+  init_context(clientContext);
   PingRequest req = make_request<PingRequest>(context);
   PingResponse res;
 
@@ -329,7 +347,8 @@ void Client::check() {
   if (!status.ok()) {
     logger->warn("[check] predecessor failed.");
     router->remove(*predecessor);
-    event_predecessor_fail(*predecessor);
+    //we format the router's event
+    //event_predecessor_fail(*predecessor);
   } else if(!res.has_header()) {
     logger->error("[check] returned without header, should remove endpoint {}@{}?", *predecessor, endpoint);
   }

@@ -35,6 +35,7 @@ struct Context {
   //--- scheduling
   size_t stabilize_period_ms{10000};
   size_t check_period_ms{10000};
+  int client_timeout_ms{4000};
 
   //--- replication / striping
   std::uint32_t replication_cnt{1}; //default replication factor if not overriden
