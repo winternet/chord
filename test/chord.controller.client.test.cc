@@ -58,7 +58,7 @@ TEST(chord_controller_client, control) {
           Return(Status::OK)));
 
   std::string req{"dir chord:///folder"};
-  client.control(req);
+  client.control("localhost:50050", req);
 
   ASSERT_EQ(req, captured_request.command());
 }
@@ -83,5 +83,5 @@ TEST(chord_controller_client, control_with_exception) {
           SetArgPointee<2>(mocked_response),
           Return(Status::CANCELLED)));
 
-  ASSERT_THROW(client.control("dir chord:///folder"), chord::exception);
+  ASSERT_THROW(client.control("localhost:50050", "dir chord:///folder"), chord::exception);
 }

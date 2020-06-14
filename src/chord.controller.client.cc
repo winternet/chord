@@ -37,7 +37,7 @@ Client::Client(ControlStubFactory make_stub)
     : make_stub{make_stub} {
 }
 
-void Client::control(const string &command) {
+void Client::control(const endpoint& address, const string &command) {
   ClientContext clientContext;
   ControlRequest req;
   ControlResponse res;
@@ -47,7 +47,7 @@ void Client::control(const string &command) {
 
   req.set_command(command);
   //TODO make configurable (at least port)
-  auto status = make_stub("127.0.0.1:50050")->control(&clientContext, req, &res);
+  auto status = make_stub(address)->control(&clientContext, req, &res);
 
   if (!status.ok()) {
     logger->debug("received error: {} {}", status.error_message(), status.error_details());

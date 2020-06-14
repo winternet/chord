@@ -23,7 +23,7 @@ class Client {
 
   explicit Client(ControlStubFactory factory);
 
-  void control(const std::string &command);
+  void control(const endpoint&, const std::string&);
 
 };
 } //namespace controller

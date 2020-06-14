@@ -36,6 +36,7 @@ Context parse_program_options(int ac, char *av[]) {
   po::options_description global("[program options]");
 
   Context context;
+  endpoint control_address;
 
   global.add_options()
     ("help,h", "produce help message")
@@ -45,7 +46,8 @@ Context parse_program_options(int ac, char *av[]) {
     ("no-controller,n", "do not start the controller.")
     ("uuid,u,id", po::value<uuid>(), "client uuid.")
     ("advertise", po::value<endpoint>(&(context.advertise_addr)), "advertise address that is publicly promoted on the ring.")
-    ("bind", po::value<endpoint>(&(context.bind_addr)), "the bind address.");
+    ("bind", po::value<endpoint>(&(context.bind_addr)), "the bind address.")
+    ("address,a", po::value<endpoint>(&control_address)->default_value(context.bind_addr), "address to control.");
 
   po::variables_map vm;
   po::parsed_options parsed = po::command_line_parser(ac, av)
@@ -79,7 +81,7 @@ Context parse_program_options(int ac, char *av[]) {
         cmd == "del" || cmd == "rm") {
       stringstream ss;
       for (const auto &c : commands) ss << c << " ";
-      controlClient.control(ss.str());
+      controlClient.control(control_address, ss.str());
     }
 
     exit(0);
