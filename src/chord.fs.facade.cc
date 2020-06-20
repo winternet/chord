@@ -203,7 +203,8 @@ Status Facade::rebalance_metadata(const uri& uri, const bool shallow_copy) {
     }
 
     const auto status = fs_client->meta(uri, Client::Action::ADD, metadata_deleted);
-    if(!status.ok()) {
+    if(!is_successful(status)) {
+    //if(!status.ok()) {
       logger->warn("failed to add metadata for {} - restoring local metadata.", uri);
       metadata_mgr->add(uri, metadata_deleted);
       //TODO abort? error is likely to be persistent...
@@ -243,15 +244,6 @@ void Facade::rebalance(const map<uri, set<Metadata>>& metadata, const RebalanceE
   }
 }
 
-/**
- * CALLBACKS
- */
-// called from within the node that joined the ring
-void Facade::on_join(const chord::node new_successor) {
-  logger->info("[on_join] joined chord ring: new_successor {}", new_successor);
-  const map<uri, set<Metadata>> metadata = metadata_mgr->get_all();
-  initialize(metadata);
-}
 
 /**
  * put a file by moving it to <journal> and put from there
@@ -285,6 +277,7 @@ void Facade::initialize(const std::map<chord::uri, std::set<fs::Metadata>>& meta
 
   logger->info("[initialize] matching data against metadata");
   for(auto& [uri, metadata_set] : metadata) {
+    logger->info("[initialize] handling metadata {}", uri);
     if(is_shallow_copy(metadata_set, context)) {
       logger->info("[initialize] ignore shallow copy: {}", uri);
       //TODO check whether the node is still reachable?
@@ -322,7 +315,18 @@ void Facade::initialize(const std::map<chord::uri, std::set<fs::Metadata>>& meta
   }
 }
 
-//called from within the node preceding the joining node
+/**
+ * CALLBACKS
+ */
+// called from within the node that joined the ring
+void Facade::on_join(const chord::node new_successor) {
+  logger->info("[on_join] joined chord ring: new_successor {}", new_successor);
+  const map<uri, set<Metadata>> metadata = metadata_mgr->get_all();
+  rebalance(metadata, RebalanceEvent::JOIN);
+  initialize(metadata);
+}
+
+// called from within the node preceding the joining node
 void Facade::on_predecessor_update(const chord::node from_node, const chord::node to_node) {
   logger->info("[on_predecessor_update] predecessor updated: replacing {}, with {}", from_node, to_node);
   const map<uri, set<Metadata>> metadata = metadata_mgr->get_all();
@@ -332,9 +336,7 @@ void Facade::on_predecessor_update(const chord::node from_node, const chord::nod
   }
 }
 
-/**
- * called from the leaving node
- */
+// called from the leaving node
 void Facade::on_leave(const chord::node predecessor, const chord::node successor) {
   logger->debug("[on_leave] node leaving: informing predecessor {}", predecessor);
   if(predecessor == context.node()) {
@@ -346,13 +348,13 @@ void Facade::on_leave(const chord::node predecessor, const chord::node successor
   rebalance(metadata, RebalanceEvent::LEAVE);
 }
 
-void Facade::on_predecessor_fail(const chord::node predecessor) {
+void Facade::on_predecessor_fail([[maybe_unused]] const chord::node predecessor) {
   logger->warn("[on_predecessor_fail] detected predecessor failed");
   const map<uri, set<Metadata>> metadata = metadata_mgr->get_replicated(1);
   rebalance(metadata, RebalanceEvent::PREDECESSOR_FAIL);
 }
 
-void Facade::on_successor_fail(const chord::node successor) {
+void Facade::on_successor_fail([[maybe_unused]] const chord::node successor) {
   logger->warn("[on_successor_fail] detected successor failed.");
 }
 

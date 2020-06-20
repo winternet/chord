@@ -31,6 +31,7 @@ class Facade : public IFacade {
 
 public:
   enum class RebalanceEvent {
+    JOIN,
     PREDECESSOR_FAIL,
     PREDECESSOR_UPDATE,
     LEAVE
@@ -52,6 +53,7 @@ public:
   bool is_directory(const chord::uri& target);
   grpc::Status get_and_integrate(const chord::fs::MetaResponse& metadata);
   grpc::Status get_shallow_copies(const chord::node& leaving_node);
+
   void rebalance(const std::map<chord::uri, std::set<fs::Metadata>>&, const RebalanceEvent event);
   void initialize(const std::map<chord::uri, std::set<fs::Metadata>>&);
   grpc::Status rebalance_metadata(const uri&, const bool=false);
