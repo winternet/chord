@@ -178,7 +178,8 @@ Status Service::leave([[maybe_unused]] ServerContext *serverContext, const Leave
 
   logger->trace("[leave] received leaving node {}", leaving_node);
 
-  router->remove(leaving_node);
+  // no need to signal fails of predecessor
+  router->remove(leaving_node, false);
   for(auto entry:req->entries()) {
     router->update(make_node(entry));
   }

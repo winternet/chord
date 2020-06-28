@@ -89,6 +89,8 @@ class uri {
   chord::path _path;
 
  public:
+  explicit uri() = default;
+
   explicit uri(const std::string& str);
 
   uri(const std::string scheme, const chord::path path);
@@ -128,6 +130,8 @@ class uri {
   operator std::string() const;
 
   bool operator<(const uri &uri) const;
+  
+  bool operator>(const uri &uri) const;
 
   bool operator==(const uri &uri) const;
 

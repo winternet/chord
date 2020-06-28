@@ -113,7 +113,7 @@ bool Router::update(const chord::node& insert) {
   return changed;
 }
 
-bool Router::remove(const chord::uuid& uuid) {
+bool Router::remove(const chord::uuid& uuid, const bool signal) {
   std::lock_guard<mutex_t> lock(mtx);
   bool changed = false;
   auto replacement = successors.rbegin();
@@ -160,14 +160,16 @@ bool Router::remove(const chord::uuid& uuid) {
   }
 
   // emit events after fixing / replacing failed node
-  if(successor_failed) event_successor_fail(*successor_failed);
-  if(predecessor_failed) event_predecessor_fail(*predecessor_failed);
+  if(signal) {
+    if(successor_failed) event_successor_fail(*successor_failed);
+    if(predecessor_failed) event_predecessor_fail(*predecessor_failed);
+  }
 
   return changed;
 }
 
-bool Router::remove(const chord::node& node) {
-  return remove(node.uuid);
+bool Router::remove(const chord::node& node, const bool signal) {
+  return remove(node.uuid, signal);
 }
 
 optional<node> Router::predecessor() const {

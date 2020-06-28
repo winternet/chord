@@ -88,8 +88,8 @@ public:
 
   void update(const std::set<chord::node>&);
   bool update(const node&);
-  bool remove(const node&);
-  bool remove(const uuid&);
+  bool remove(const node&, const bool signal=true);
+  bool remove(const uuid&, const bool signal=true);
 
   uuid get(const size_t) const;
   std::set<node> get() const;

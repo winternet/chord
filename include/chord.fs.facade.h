@@ -54,8 +54,8 @@ public:
   grpc::Status get_and_integrate(const chord::fs::MetaResponse& metadata);
   grpc::Status get_shallow_copies(const chord::node& leaving_node);
 
-  void rebalance(const std::map<chord::uri, std::set<fs::Metadata>>&, const RebalanceEvent event);
-  void initialize(const std::map<chord::uri, std::set<fs::Metadata>>&);
+  void rebalance(const IMetadataManager::uri_meta_map_desc&, const RebalanceEvent event);
+  void initialize(const IMetadataManager::uri_meta_map_desc&);
   grpc::Status rebalance_metadata(const uri&, const bool=false);
 
   void on_fs_event(const std::vector<chord::fs::monitor::event> events);

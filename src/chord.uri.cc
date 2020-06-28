@@ -290,6 +290,10 @@ bool uri::operator<(const uri &uri) const {
     return to_string(*this) < to_string(uri);
 }
 
+bool uri::operator>(const uri &uri) const {
+    return to_string(*this) > to_string(uri);
+}
+
 bool uri::operator==(const uri &uri) const {
     return to_string(*this) == to_string(uri);
 }

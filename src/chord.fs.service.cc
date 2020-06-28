@@ -24,6 +24,7 @@
 #include "chord.fs.metadata.h"
 #include "chord.fs.metadata.manager.h"
 #include "chord.fs.replication.h"
+#include "chord.fs.util.h"
 #include "chord.fs.type.h"
 #include "chord.log.factory.h"
 #include "chord.log.h"
@@ -136,6 +137,18 @@ Status Service::handle_meta_del(ServerContext *serverContext, const MetaRequest 
 Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest *req) {
   const auto uri = uri::from(req->uri());
   auto metadata = MetadataBuilder::from(req);
+
+  // regular file is not shallow copyable because it already exists (locally)
+  if(is_regular_file(metadata) 
+      && is_shallow_copy(metadata, context) 
+      && metadata_mgr->exists(uri)) {
+    const auto existing = metadata_mgr->get(uri);
+    const auto same = std::equal(metadata.begin(), metadata.end(), existing.begin(), existing.end(), [&](const auto& lhs, const auto& rhs) {return lhs.compare_basic(rhs);});
+    if(same) {
+      const auto message = "received request from self.";
+      return Status{StatusCode::ALREADY_EXISTS, message};
+    }
+  }
 
   const auto added = metadata_mgr->add(uri, metadata);
 
@@ -341,8 +354,9 @@ Status Service::handle_del_file(ServerContext *serverContext, const chord::fs::D
 
   // handle local file
   if(file::exists(data)) {
-    const auto lock = monitor::lock(monitor, {data, chord::fs::monitor::event::flag::REMOVED});
-    file::remove(data);
+    //const auto lock = monitor::lock(monitor, {data, chord::fs::monitor::event::flag::REMOVED});
+    fs::util::remove(uri, context, monitor);
+    //file::remove(data);
   }
 
   // beg: handle replica

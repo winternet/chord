@@ -21,9 +21,19 @@ Metadata::Metadata(std::string name, std::string owner, std::string group, perms
 bool Metadata::operator<(const Metadata &other) const { 
   return name < other.name; 
 }
-bool Metadata::operator==(const Metadata &other) const { 
+bool Metadata::compare_basic(const Metadata &other) const {
   return name == other.name 
-    && file_type == other.file_type 
+    && file_type == other.file_type
+    && file_hash == other.file_hash;
+    //&& owner == other.owner 
+    //&& group == other.group
+    //&& node_ref == other.node_ref
+    //&& replication == other.replication;
+    //&& file_hash == other.file_hash; 
+}
+
+bool Metadata::operator==(const Metadata &other) const { 
+  return compare_basic(other)
     //&& owner == other.owner 
     //&& group == other.group
     && node_ref == other.node_ref
@@ -90,6 +100,15 @@ bool is_shallow_copyable(const std::set<Metadata>& metadata, const Context& cont
 
 bool is_regular_file(const std::set<Metadata>& metadata) {
   return metadata.size() == 1 && metadata.begin()->file_type == type::regular;
+}
+
+std::set<Metadata> set_node_ref(const std::set<Metadata>& metadata, const Context& context) {
+  std::set<Metadata> ret;
+  std::transform(metadata.begin(), metadata.end(), std::inserter(ret, ret.begin()), [&](auto meta) { 
+      meta.node_ref = context.node();
+      return meta;
+  });
+  return ret;
 }
 
 std::set<Metadata> clear_hashes(std::set<Metadata> metadata) {

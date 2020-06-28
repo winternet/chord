@@ -39,7 +39,12 @@ struct TmpDir final {
     return TmpFile(path/filename);
   }
 
+  TmpDir add_dir(const std::string& directory) const {
+    return TmpDir(path/directory);
+  }
+
   ~TmpDir() {
+    if(!chord::file::exists(path)) return;
     logger->info("removing temporary directory {}.", path);
     chord::file::remove_all(path);
   }

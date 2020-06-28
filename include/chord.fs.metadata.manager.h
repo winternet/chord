@@ -24,6 +24,7 @@ class MetadataManager : public IMetadataManager {
   std::unique_ptr<rocksdb::DB> db;
   std::shared_ptr<spdlog::logger> logger;
 
+
   void check_status(const rocksdb::Status &status) {
     if(status.ok()) return;
 
@@ -165,8 +166,9 @@ class MetadataManager : public IMetadataManager {
     return added;
   }
 
-  std::map<chord::uri, std::set<Metadata> > get_all() override {
-    std::map<chord::uri, std::set<Metadata> > ret;
+  uri_meta_map_desc get_all() override {
+    // needed to first delete the file, then the directory
+    uri_meta_map_desc ret;
     std::unique_ptr<rocksdb::Iterator> it{db->NewIterator(rocksdb::ReadOptions())};
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
       const std::string& _path = it->key().ToString();
@@ -187,8 +189,8 @@ class MetadataManager : public IMetadataManager {
    *   1) use an 'index' or
    *   2) save hash to Metadata (deserialization needed)
    */
-  std::map<chord::uri, std::set<Metadata> > get(const chord::uuid& from, const chord::uuid& to) override {
-    std::map<chord::uri, std::set<Metadata> > ret;
+  uri_meta_map_desc get(const chord::uuid& from, const chord::uuid& to) override {
+    uri_meta_map_desc ret;
     std::unique_ptr<rocksdb::Iterator> it{db->NewIterator(rocksdb::ReadOptions())};
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
       const std::string& _path = it->key().ToString();
@@ -221,8 +223,8 @@ class MetadataManager : public IMetadataManager {
   //TODO write unit tests
   //TODO check whether to return only leaf nodes
   //TODO 
-  std::map<chord::uri, std::set<Metadata>> get_shallow_copies(const chord::node& node) override {
-    std::map<chord::uri, std::set<Metadata>> ret;
+  IMetadataManager::uri_meta_map_desc get_shallow_copies(const chord::node& node) override {
+    IMetadataManager::uri_meta_map_desc ret;
     std::unique_ptr<rocksdb::Iterator> it{db->NewIterator(rocksdb::ReadOptions())};
 
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
@@ -238,8 +240,8 @@ class MetadataManager : public IMetadataManager {
     return ret;
   }
 
-  std::map<chord::uri, std::set<Metadata>> get_replicated(const std::uint32_t min_idx) override {
-    std::map<chord::uri, std::set<Metadata>> ret;
+  IMetadataManager::uri_meta_map_desc get_replicated(const std::uint32_t min_idx) override {
+    IMetadataManager::uri_meta_map_desc ret;
     std::unique_ptr<rocksdb::Iterator> it{db->NewIterator(rocksdb::ReadOptions())};
 
     for(it->SeekToFirst(); it->Valid(); it->Next()) {

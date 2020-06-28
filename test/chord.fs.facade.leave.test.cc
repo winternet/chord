@@ -86,7 +86,8 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_local_files) {
   const auto target_uri = uri("chord:///file");
   const auto source_file = self->data_directory.add_file("file");
 
-  map<uri, set<Metadata>> files;
+  //map<uri, set<Metadata>> files;
+  IMetadataManager::uri_meta_map_desc files;
   Metadata metadata_file("file", "", "", perms::all, type::regular, crypto::sha256(source_file.path), {}, Replication());
   set<Metadata> metadata_set{metadata_file};
   files[target_uri] = metadata_set;
@@ -133,7 +134,6 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_node_reference) {
   const auto target_uri = uri("chord:///file");
   const auto source_file = source_directory.add_file("file");
 
-  map<uri, set<Metadata>> empty;
   const auto successor = make_entry(self->context.node());
   EXPECT_CALL(*peer_2.service, successor(_))
     .WillRepeatedly(Return(successor));
@@ -141,7 +141,8 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_node_reference) {
     .WillRepeatedly(Return(successor));
 
   //TODO add test for directory handling
-  map<uri, set<Metadata>> shallow_copies;
+  IMetadataManager::uri_meta_map_desc shallow_copies;
+  //map<uri, set<Metadata>> shallow_copies;
   Metadata metadata_dir(".", "", "", perms::none, type::directory, crypto::sha256(source_file.path.parent_path()), {}, Replication());
   Metadata metadata_file("file", "", "", perms::all, type::regular, crypto::sha256(source_file.path), self->context.node(), Replication());
 
