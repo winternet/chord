@@ -57,8 +57,13 @@ Peer::Peer(Context ctx)
   chord->on_successor_fail().connect(fs, &chord::fs::Facade::on_successor_fail);
 }
 
+Peer::~Peer() {
+  logger->trace("[~]");
+  stop();
+}
+
 void Peer::start() {
-  shutdown_handler = make_unique<chord::ShutdownHandler>(shared_from_this());
+  shutdown_handler = make_unique<chord::ShutdownHandler>(this);
   logger->trace("peer with client-id {}", context.uuid());
 
   start_server();

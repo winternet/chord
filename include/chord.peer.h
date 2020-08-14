@@ -15,7 +15,7 @@ namespace chord {
 class Peer : public std::enable_shared_from_this<Peer> {
   static constexpr auto logger_name = "chord.peer";
 
- private:
+ protected:
   chord::Context context;
 
   //--- chord facade
@@ -39,6 +39,7 @@ class Peer : public std::enable_shared_from_this<Peer> {
   Peer &operator=(const Peer &) = delete;  // disable assignment
 
   explicit Peer(chord::Context context);
+  ~Peer();
 
   void start();
   void stop();

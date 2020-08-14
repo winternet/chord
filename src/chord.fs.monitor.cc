@@ -35,8 +35,8 @@ monitor::monitor(const chord::Context& context)
 monitor::~monitor() {
   stop();
   _scheduler.shutdown();
-  if(_monitor) delete _monitor;
   _thread.join();
+  if(_monitor) delete _monitor;
 }
 
 void monitor::stop() const {

@@ -55,6 +55,11 @@ Facade::Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service,
     logger{context.logging.factory().get_or_create(logger_name)}
 {}
 
+Facade::~Facade() {
+  logger->trace("[~]");
+  //if(monitor) monitor->stop();
+}
+
 ::grpc::Service* Facade::grpc_service() {
   return fs_service.get();
 }
@@ -347,6 +352,7 @@ void Facade::on_leave(const chord::node predecessor, const chord::node successor
   logger->debug("[on_leave] node leaving: informing predecessor {}", predecessor);
   if(predecessor == context.node()) {
     logger->debug("[on_leave] node leaving - no node left but self - aborting.");
+    monitor->stop();
     return;
   }
 

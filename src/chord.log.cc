@@ -59,6 +59,8 @@ bool Sink::operator<(const Sink& other) const {
 }
 
 std::shared_ptr<spdlog::logger> get_or_create(std::string name) {
+  static std::mutex mtx;
+  std::unique_lock<std::mutex> lck(mtx);
   auto logger = spdlog::get(name);
   if(!logger) {
     logger = spdlog::stdout_color_mt(name);

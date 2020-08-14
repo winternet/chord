@@ -16,7 +16,11 @@ std::atomic<int> ShutdownHandler::invocation_cnt {0};
 
 ShutdownHandler::ShutdownHandler() : ShutdownHandler(nullptr) {}
 
-ShutdownHandler::ShutdownHandler(std::shared_ptr<Peer> peer) 
+ShutdownHandler::~ShutdownHandler() {
+  logger->trace("~");
+}
+
+ShutdownHandler::ShutdownHandler(Peer* peer) 
   : peer{peer}
   , logger{log::get_or_create(logger_name)}
 {}
@@ -40,6 +44,7 @@ void ShutdownHandler::handle_stop([[maybe_unused]] const boost::system::error_co
   ShutdownHandler force;
 
   peer->stop();
+
   logger->info("stopped peer - exiting.");
 }
 

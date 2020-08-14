@@ -25,7 +25,7 @@ struct TmpFile final {
     if(!path.parent_path().empty() && !chord::file::exists(path.parent_path())) {
       throw std::runtime_error("Parent path of \'"+path.string()+"\' does not exist - aborting.");
     }
-    logger->info("creating temporary file {}.", path);
+    logger->info("creating temporary file {}", path);
     std::ofstream file(path);
     file << chord::uuid::random().string();
     file.close();
@@ -38,7 +38,7 @@ struct TmpFile final {
   void remove() const {
     if(!chord::file::exists(path)) return;
 
-    logger->info("removing temporary file {}.", path);
+    logger->info("removing temporary file {}", path);
     chord::file::remove(path);
   }
 

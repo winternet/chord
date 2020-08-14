@@ -53,6 +53,12 @@ Client::Client(const Context &context, Router *router)
                   grpc::ChannelArguments arguments;
                   arguments.SetInt(GRPC_ARG_KEEPALIVE_TIMEOUT_MS, context.client_timeout_ms);
                   arguments.SetInt(GRPC_ARG_KEEPALIVE_TIME_MS, context.client_timeout_ms);
+                  //arguments.SetInt(GRPC_ARG_KEEPALIVE_PERMIT_WITHOUT_CALLS, 1);
+                  //arguments.SetInt(GRPC_ARG_HTTP2_MAX_PINGS_WITHOUT_DATA, 0);
+                  //// max time for a connection attempt
+                  //arguments.SetInt(GRPC_ARG_MIN_RECONNECT_BACKOFF_MS, 1000);
+                  //// max time between reconnect attempts
+                  //arguments.SetInt(GRPC_ARG_MAX_RECONNECT_BACKOFF_MS, 1000);
 
                   auto channel = grpc::CreateCustomChannel(endpoint, grpc::InsecureChannelCredentials(), arguments);
                   //auto channel = grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials());

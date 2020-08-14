@@ -66,6 +66,8 @@ public:
 
   Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service, fs::IMetadataManager*, chord::fs::monitor* = nullptr);
 
+  ~Facade();
+
   ::grpc::Service* grpc_service();
 
   grpc::Status put(const chord::path& source, const chord::uri& target, Replication repl = Replication()) override;

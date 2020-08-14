@@ -73,6 +73,11 @@ class MetadataManager : public IMetadataManager {
       { initialize(); }
 
   MetadataManager(const MetadataManager&) = delete;
+  
+  ~MetadataManager() {
+    logger->debug("[~] closing metadata database.");
+    if(db) db->Close();
+  }
 
   std::set<Metadata> del(const chord::uri& directory) override {
     //never remove the root

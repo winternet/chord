@@ -19,11 +19,13 @@ struct TmpDir final {
 
   TmpDir() : TmpDir(chord::path{chord::uuid::random().string()}) {}
 
+  explicit TmpDir(const std::string& p) : TmpDir(chord::path{p}) {}
+
   explicit TmpDir(const chord::path& p) : path{p}, logger{log::get_or_create(logger_name)} {
-    if(chord::file::exists(path)) {
+    if(chord::file::exists(path) && !chord::file::is_directory(path)) {
       throw std::runtime_error("Path \'" + path.string() + "\' already exists - aborting.");
     }
-    logger->info("creating temporary directory {}.", path);
+    logger->info("creating temporary directory {}", path);
     chord::file::create_directories(path);
   }
 
@@ -45,7 +47,7 @@ struct TmpDir final {
 
   ~TmpDir() {
     if(!chord::file::exists(path)) return;
-    logger->info("removing temporary directory {}.", path);
+    logger->info("removing temporary directory {}", path);
     chord::file::remove_all(path);
   }
 

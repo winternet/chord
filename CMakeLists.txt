@@ -21,6 +21,7 @@ set(ProtoPath "${CMAKE_CURRENT_SOURCE_DIR}/proto")
 set(ProtoGenerateTargetPath "./gen")
 
 option(chord_BUILD_TESTS "build unit tests" OFF)
+option(chord_BUILD_INTEGRATION_TESTS "build integration tests" OFF)
 option(chord_USE_CCACHE "use ccache for subsequent builds" ON)
 
 if(CMAKE_COMPILER_IS_GNUCC)
@@ -171,4 +172,11 @@ add_dependencies(${PROJECT_NAME}++ signals)
 #
 if(chord_BUILD_TESTS)
   include(tests)
+endif()
+
+#
+# integration tests
+#
+if(chord_BUILD_INTEGRATION_TESTS)
+  include(integration_tests)
 endif()

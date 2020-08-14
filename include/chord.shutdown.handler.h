@@ -17,12 +17,13 @@ class ShutdownHandler: public AbstractShutdownHandler {
   static std::atomic<int> invocation_cnt;
 
   private:
-    std::shared_ptr<Peer> peer;
+    Peer* peer;
     std::shared_ptr<spdlog::logger> logger;
 
   public:
    ShutdownHandler();
-   ShutdownHandler(std::shared_ptr<Peer>);
+   ShutdownHandler(Peer*);
+   ~ShutdownHandler();
 
   private:
    void handle_stop(const boost::system::error_code& error, int signal);
