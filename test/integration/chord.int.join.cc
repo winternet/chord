@@ -13,11 +13,13 @@ using namespace chord;
 
 class JoinTest : public ::testing::Test {
   protected:
-    std::shared_ptr<spdlog::logger> logger;
     const chord::path base_dir{"./integration_test_base_dir"};
     const std::string bind_addr{"127.0.0.1:"};
+    chord::test::TmpDir base{base_dir};
+
     std::vector<chord::Peer*> peers;
     std::vector<std::thread> threads;
+    std::shared_ptr<spdlog::logger> logger;
 
     chord::IntPeer* make_peer(const Context& context) {
       const auto peer = test::make_peer(context);
@@ -38,7 +40,6 @@ class JoinTest : public ::testing::Test {
 };
 
 TEST_F(JoinTest, bootstrap) {
-  const auto base = test::TmpDir(base_dir);
   const auto data0 = base.add_dir("data0");
   const auto meta0 = base.add_dir("meta0");
   const auto port = 50050;
@@ -48,8 +49,6 @@ TEST_F(JoinTest, bootstrap) {
 }
 
 TEST_F(JoinTest, join) {
-  const auto base = test::TmpDir(base_dir);
-
   const auto data0 = base.add_dir("data0");
   const auto meta0 = base.add_dir("meta0");
   const auto port0 = 50050;
