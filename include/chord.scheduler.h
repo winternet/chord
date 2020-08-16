@@ -115,7 +115,7 @@ class Scheduler : public AbstractScheduler {
   void loop() {
     while (!stop) {
       auto now = std::chrono::system_clock::now();
-      while (!tasks.empty() && tasks.top().time <= now) {
+      while (!tasks.empty() && tasks.top().time <= now && !stop) {
         function_timer f = tasks.top();
         f.get();
         tasks.pop();
