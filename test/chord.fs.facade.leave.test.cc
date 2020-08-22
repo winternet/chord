@@ -40,6 +40,8 @@
 
 using std::make_unique;
 using std::unique_ptr;
+using std::make_shared;
+using std::shared_ptr;
 using std::map;
 using std::set;
 
@@ -67,28 +69,25 @@ using namespace chord::test;
 class FilesystemFacadeLeaveTest : public ::testing::Test {
   protected:
     void SetUp() override {
-      self = make_unique<MockPeer>("0.0.0.0:50050", data_directory);
+      self = make_unique<MockPeer>("0.0.0.0:50050", make_shared<TmpDir>());
     }
 
-    TmpDir data_directory;
     unique_ptr<MockPeer> self;
 };
 
 // self leaves the cluster
 TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_local_files) {
 
-  TmpDir data_directory_2;
-  const endpoint source_endpoint_2("0.0.0.0:50051");
-  MockPeer peer_2(source_endpoint_2, data_directory_2);
+  MockPeer peer_2(endpoint{"0.0.0.0:50051"}, make_shared<TmpDir>());
 
-  TmpDir source_directory;
+  const auto source_directory = std::make_shared<TmpDir>();
 
   const auto target_uri = uri("chord:///file");
-  const auto source_file = self->data_directory.add_file("file");
+  const auto source_file = self->data_directory->add_file("file");
 
   //map<uri, set<Metadata>> files;
   IMetadataManager::uri_meta_map_desc files;
-  Metadata metadata_file("file", "", "", perms::all, type::regular, crypto::sha256(source_file.path), {}, Replication());
+  Metadata metadata_file("file", "", "", perms::all, type::regular, crypto::sha256(source_file->path), {}, Replication());
   set<Metadata> metadata_set{metadata_file};
   files[target_uri] = metadata_set;
 
@@ -118,21 +117,18 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_local_files) {
 
   const auto target_file = peer_2.context.data_directory / target_uri.path().filename();
   ASSERT_TRUE(chord::file::file_size(target_file) > 0);
-  ASSERT_TRUE(chord::file::files_equal(source_file.path, target_file));
+  ASSERT_TRUE(chord::file::files_equal(source_file->path, target_file));
 }
 
 //peer2 leaves the cluster
 TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_node_reference) {
 
-  TmpDir data_directory_2;
-  const endpoint source_endpoint_2("0.0.0.0:50051");
-  MockPeer peer_2(source_endpoint_2, data_directory_2);
-
-  TmpDir source_directory;
+  MockPeer peer_2(endpoint{"0.0.0.0:50051"}, make_shared<TmpDir>());
+  const auto source_directory = std::make_shared<TmpDir>();
 
   const auto root_uri = uri("chord:///");
   const auto target_uri = uri("chord:///file");
-  const auto source_file = source_directory.add_file("file");
+  const auto source_file = source_directory->add_file("file");
 
   const auto successor = make_entry(self->context.node());
   EXPECT_CALL(*peer_2.service, successor(_))
@@ -143,8 +139,8 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_node_reference) {
   //TODO add test for directory handling
   IMetadataManager::uri_meta_map_desc shallow_copies;
   //map<uri, set<Metadata>> shallow_copies;
-  Metadata metadata_dir(".", "", "", perms::none, type::directory, crypto::sha256(source_file.path.parent_path()), {}, Replication());
-  Metadata metadata_file("file", "", "", perms::all, type::regular, crypto::sha256(source_file.path), self->context.node(), Replication());
+  Metadata metadata_dir(".", "", "", perms::none, type::directory, crypto::sha256(source_file->path.parent_path()), {}, Replication());
+  Metadata metadata_file("file", "", "", perms::all, type::regular, crypto::sha256(source_file->path), self->context.node(), Replication());
 
   shallow_copies[target_uri] = {metadata_file};
   shallow_copies[root_uri] = {metadata_dir, metadata_file};

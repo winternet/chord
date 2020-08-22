@@ -40,6 +40,8 @@
 
 using std::make_unique;
 using std::unique_ptr;
+using std::make_shared;
+using std::shared_ptr;
 
 using chord::common::Header;
 using chord::common::RouterEntry;
@@ -67,10 +69,9 @@ using namespace chord::test;
 class FilesystemServiceDelTest : public ::testing::Test {
   protected:
     void SetUp() override {
-      self = make_unique<MockPeer>("0.0.0.0:50050", data_directory);
+      self = make_unique<MockPeer>("0.0.0.0:50050", make_shared<TmpDir>());
     }
 
-    TmpDir data_directory;
     unique_ptr<MockPeer> self;
 };
 

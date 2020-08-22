@@ -64,7 +64,7 @@ TEST(monitor, create_file) {
   cv.wait(lock, [&]{return callback_invoked;});
   
   ASSERT_TRUE(callback_invoked);
-  holder.remove();
+  //holder.remove();
 }
 
 TEST(monitor, create_directories) {
@@ -82,7 +82,7 @@ TEST(monitor, create_directories) {
   sleep();
 
   const auto sub_dir = tmpDir.add_dir();
-  const auto sub_sub_dir = sub_dir.add_dir();
+  const auto sub_sub_dir = sub_dir->add_dir();
 
   sleep();
   mon.stop();
@@ -113,7 +113,7 @@ TEST(monitor, remove_file) {
   });
   sleep();
 
-  file.remove();
+  file->remove();
 
   std::unique_lock<std::timed_mutex> lock(mtx, 5s);
   cv.wait(lock, [&]{return callback_invoked;});

@@ -42,6 +42,8 @@
 using std::make_unique;
 using std::unique_ptr;
 using std::make_pair;
+using std::make_shared;
+using std::shared_ptr;
 
 using chord::common::Header;
 using chord::common::RouterEntry;
@@ -66,10 +68,9 @@ using namespace chord::test;
 class FilesystemServiceGetTest : public ::testing::Test {
   protected:
     void SetUp() override {
-      self = make_unique<MockPeer>("0.0.0.0:50050", data_directory);
+      self = make_unique<MockPeer>("0.0.0.0:50050", make_shared<TmpDir>());
     }
 
-    TmpDir data_directory;
     unique_ptr<MockPeer> self;
 };
 
@@ -91,15 +92,15 @@ TEST_F(FilesystemServiceGetTest, get) {
 }
 
 TEST_F(FilesystemServiceGetTest, get_from_node_reference) {
-  TmpDir source_data_directory;
+  const auto source_data_directory = make_shared<TmpDir>();
   const endpoint source_endpoint("0.0.0.0:50051");
   MockPeer source_peer(source_endpoint, source_data_directory);
 
   const auto root_uri = uri("chord:///");
   const auto source_uri = uri("chord:///file");
-  const auto source_file = source_data_directory.add_file("file");
-  const auto source_file_backup = source_data_directory.path / "file.backup";
-  file::copy_file(source_file.path, source_file_backup);
+  const auto source_file = source_data_directory->add_file("file");
+  const auto source_file_backup = source_data_directory->path / "file.backup";
+  file::copy_file(source_file->path, source_file_backup);
 
   // connect the two nodes, first successor call will return self
   EXPECT_CALL(*self->service, successor(_))
@@ -129,7 +130,7 @@ TEST_F(FilesystemServiceGetTest, get_from_node_reference) {
 //    .WillOnce(Return(std::set<Metadata>{metadata}));
 
   // delete the node_ref and update the file hash
-  metadata = {"file", "", "", perms::all, type::regular, crypto::sha256(source_file.path), {}};
+  metadata = {"file", "", "", perms::all, type::regular, crypto::sha256(source_file->path), {}};
   // update node_ref - file has been downloaded
   std::set<Metadata> metadata_set{metadata};
   EXPECT_CALL(*self->metadata_mgr, add(source_uri, metadata_set))
@@ -148,16 +149,15 @@ TEST_F(FilesystemServiceGetTest, get_from_node_reference) {
   ASSERT_TRUE(chord::file::files_equal(source_file_backup, target_file));
 
   // original file has been removed
-  ASSERT_FALSE(chord::file::exists(source_file.path));
+  ASSERT_FALSE(chord::file::exists(source_file->path));
 }
 
 TEST_F(FilesystemServiceGetTest, get_from_replication) {
-  TmpDir source_data_directory;
-  const endpoint source_endpoint("0.0.0.0:50051");
-  MockPeer source_peer(source_endpoint, source_data_directory);
+  const auto source_data_directory = make_shared<TmpDir>();
+  MockPeer source_peer(endpoint{"0.0.0.0:50051"}, source_data_directory);
 
   const auto source_uri = uri("chord:///file");
-  const auto source_file = source_data_directory.add_file("file");
+  const auto source_file = source_data_directory->add_file("file");
 
   // connect the two nodes, first successor call will return self
   EXPECT_CALL(*self->service, successor(_))
@@ -177,24 +177,22 @@ TEST_F(FilesystemServiceGetTest, get_from_replication) {
 
   ASSERT_TRUE(status.ok());
   ASSERT_TRUE(chord::file::file_size(target_file) > 0);
-  ASSERT_TRUE(chord::file::files_equal(source_file.path, target_file));
+  ASSERT_TRUE(chord::file::files_equal(source_file->path, target_file));
   // copied file to local data_directory
-  ASSERT_TRUE(chord::file::files_equal(source_file.path, self->context.data_directory / "file"));
+  ASSERT_TRUE(chord::file::files_equal(source_file->path, self->context.data_directory / "file"));
 }
 
 TEST_F(FilesystemServiceGetTest, get_from_replication_propagates) {
   // peer holding the last replication
-  TmpDir source_data_directory;
-  const endpoint source_endpoint("0.0.0.0:50052");
-  MockPeer source_peer(source_endpoint, source_data_directory);
+  const auto source_data_directory = make_shared<TmpDir>();
+  MockPeer source_peer(endpoint{"0.0.0.0:50052"}, source_data_directory);
 
   // peer just to hop-over
-  TmpDir middle_data_directory;
-  const endpoint middle_endpoint("0.0.0.0:50051");
-  MockPeer middle_peer(middle_endpoint, middle_data_directory);
+  const auto middle_data_directory = make_shared<TmpDir>();
+  MockPeer middle_peer(endpoint{"0.0.0.0:50051"}, middle_data_directory);
 
   const auto source_uri = uri("chord:///file");
-  const auto source_file = source_data_directory.add_file("file");
+  const auto source_file = source_data_directory->add_file("file");
 
   // connect the two nodes, first successor call will return self
   EXPECT_CALL(*self->service, successor(_))
@@ -220,8 +218,8 @@ TEST_F(FilesystemServiceGetTest, get_from_replication_propagates) {
 
   ASSERT_TRUE(status.ok());
   ASSERT_TRUE(chord::file::file_size(target_file) > 0);
-  ASSERT_TRUE(chord::file::files_equal(source_file.path, target_file));
+  ASSERT_TRUE(chord::file::files_equal(source_file->path, target_file));
   // copied file to local data_directories (middle/self)
-  ASSERT_TRUE(chord::file::files_equal(source_file.path, self->context.data_directory / "file"));
-  ASSERT_TRUE(chord::file::files_equal(source_file.path, middle_peer.context.data_directory / "file"));
+  ASSERT_TRUE(chord::file::files_equal(source_file->path, self->context.data_directory / "file"));
+  ASSERT_TRUE(chord::file::files_equal(source_file->path, middle_peer.context.data_directory / "file"));
 }

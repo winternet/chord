@@ -40,6 +40,8 @@
 
 using std::make_unique;
 using std::unique_ptr;
+using std::make_shared;
+using std::shared_ptr;
 
 using chord::common::Header;
 using chord::common::RouterEntry;
@@ -65,10 +67,9 @@ using namespace chord::test;
 class FilesystemServicePutTest : public ::testing::Test {
   protected:
     void SetUp() override {
-      self = make_unique<MockPeer>("0.0.0.0:50050", data_directory);
+      self = make_unique<MockPeer>("0.0.0.0:50050", make_shared<TmpDir>());
     }
 
-    TmpDir data_directory;
     unique_ptr<MockPeer> self;
 };
 
@@ -86,7 +87,7 @@ TEST_F(FilesystemServicePutTest, put) {
   EXPECT_CALL(*self->metadata_mgr, exists(target_uri))
     .WillOnce(Return(false));
 
-  Metadata metadata_file("file", "", "", perms::all, type::regular, crypto::sha256(source_file.path), {}, Replication());
+  Metadata metadata_file("file", "", "", perms::all, type::regular, crypto::sha256(source_file->path), {}, Replication());
   std::set<Metadata> metadata_set{metadata_file};
   EXPECT_CALL(*self->metadata_mgr, add(target_uri, metadata_set))
     .WillOnce(Return(true));
@@ -96,18 +97,18 @@ TEST_F(FilesystemServicePutTest, put) {
   EXPECT_CALL(*self->metadata_mgr, add(uri(target_uri.scheme(), target_uri.path().parent_path()), metadata_set_dir))
     .WillOnce(Return(true));
 
-  const auto status = self->fs_client->put(target_uri, source_file, {});
+  const auto status = self->fs_client->put(target_uri, *source_file, {});
 
-  const auto target_file = self->data_directory.path / target_uri.path();
+  const auto target_file = self->data_directory->path / target_uri.path();
   ASSERT_TRUE(status.ok());
   ASSERT_TRUE(chord::file::file_size(target_file) > 0);
-  ASSERT_TRUE(chord::file::files_equal(source_file.path, target_file));
+  ASSERT_TRUE(chord::file::files_equal(source_file->path, target_file));
 }
 
 TEST_F(FilesystemServicePutTest, put_replication_2) {
   TmpDir source_directory;
 
-  TmpDir data_directory_2;
+  const auto data_directory_2 = std::make_shared<TmpDir>();
   const endpoint source_endpoint_2("0.0.0.0:50051");
   MockPeer peer_2(source_endpoint_2, data_directory_2);
 
@@ -135,7 +136,7 @@ TEST_F(FilesystemServicePutTest, put_replication_2) {
   // setup expectations for self
   {
     Metadata metadata_dir{".", "", "", perms::none, type::directory, {}, {}, Replication(0,2)};
-    Metadata metadata_file{"file", "", "", perms::all, type::regular, crypto::sha256(source_file.path), {}, Replication(0,2)};
+    Metadata metadata_file{"file", "", "", perms::all, type::regular, crypto::sha256(source_file->path), {}, Replication(0,2)};
 
     // self peer metadata
     EXPECT_CALL(*self->metadata_mgr, exists(target_uri))
@@ -154,7 +155,7 @@ TEST_F(FilesystemServicePutTest, put_replication_2) {
   // setup expectations for second-node
   {
   Metadata metadata_dir{".", "", "", perms::none, type::directory, {}, {}, Replication(1,2)};
-  Metadata metadata_file{"file", "", "", perms::all, type::regular, crypto::sha256(source_file.path), {}, Replication(1,2)};
+  Metadata metadata_file{"file", "", "", perms::all, type::regular, crypto::sha256(source_file->path), {}, Replication(1,2)};
 
   EXPECT_CALL(*peer_2.metadata_mgr, add(target_uri, std::set<Metadata>{metadata_file}))
     .WillOnce(Return(true));
@@ -162,13 +163,13 @@ TEST_F(FilesystemServicePutTest, put_replication_2) {
     .WillOnce(Return(true));
   }
 
-  const auto status = self->fs_client->put(target_uri, source_file, client::options{Replication(2)});
+  const auto status = self->fs_client->put(target_uri, *source_file, client::options{Replication(2)});
 
   ASSERT_TRUE(status.ok());
-  const auto target_file = self->data_directory.path / target_uri.path();
+  const auto target_file = self->data_directory->path / target_uri.path();
   ASSERT_TRUE(chord::file::file_size(target_file) > 0);
-  ASSERT_TRUE(chord::file::files_equal(source_file.path, target_file));
-  const auto target_file_2 = peer_2.data_directory.path / target_uri.path();
+  ASSERT_TRUE(chord::file::files_equal(source_file->path, target_file));
+  const auto target_file_2 = peer_2.data_directory->path / target_uri.path();
   ASSERT_TRUE(chord::file::file_size(target_file_2) > 0);
-  ASSERT_TRUE(chord::file::files_equal(source_file.path, target_file_2));
+  ASSERT_TRUE(chord::file::files_equal(source_file->path, target_file_2));
 }

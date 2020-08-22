@@ -72,5 +72,4 @@ TEST_F(JoinTest, join) {
   ASSERT_EQ(successor_of_0, ctxt1.node());
   ASSERT_EQ(successor_of_1, ctxt0.node());
 
-
 }

@@ -16,31 +16,43 @@ using chord::test::TmpDir;
 using chord::common::Header;
 using chord::common::RouterEntry;
 
+const std::string IntContext::bind_addr = "127.0.0.1";
+
+IntContext::IntContext(int idx, TmpDir& base_dir) :
+  index{idx},
+  data{base_dir.add_dir("data" + std::to_string(idx))},
+  meta{base_dir.add_dir("meta" + std::to_string(idx))}
+{
+  const auto port = 50050+idx;
+  context = test::make_context({"0"}, {bind_addr+":"+std::to_string(port)}, data, meta);
+}
+
+
 chord::IntPeer* make_peer(const Context& context) {
   return new chord::IntPeer(context);
   //return std::make_shared<chord::IntPeer>(context);
 }
 
-Context make_context(const uuid self, const TmpDir& data_directory) {
+Context make_context(const uuid self, const std::shared_ptr<TmpDir> data_directory) {
   Context context = Context();
   context.set_uuid(self);
-  context.data_directory = data_directory;
+  context.data_directory = data_directory->path;
   return context;
 }
 
-Context make_context(const uuid self, const TmpDir& data_directory, const TmpDir& meta_directory) {
+Context make_context(const uuid self, const std::shared_ptr<TmpDir> data_directory, const std::shared_ptr<TmpDir> meta_directory) {
   return make_context(self, endpoint(), data_directory, meta_directory);
 }
 
-Context make_context(const uuid self, const endpoint bind_addr, const TmpDir& data_directory, const TmpDir& meta_directory) {
+Context make_context(const uuid self, const endpoint bind_addr, const std::shared_ptr<TmpDir> data_directory, const std::shared_ptr<TmpDir> meta_directory) {
   return make_context(self, bind_addr, data_directory, meta_directory, endpoint(), true);
 }
 
-Context make_context(const uuid self, const endpoint bind_addr, const TmpDir& data_directory, const TmpDir& meta_directory, const endpoint join_addr, const bool bootstrap) {
+Context make_context(const uuid self, const endpoint bind_addr, const std::shared_ptr<TmpDir> data_directory, const std::shared_ptr<TmpDir> meta_directory, const endpoint join_addr, const bool bootstrap) {
   Context context = Context();
   context.set_uuid(self);
-  context.data_directory = data_directory;
-  context.meta_directory = meta_directory;
+  context.data_directory = data_directory->path;
+  context.meta_directory = meta_directory->path;
   context.bind_addr = bind_addr;
   context.advertise_addr = bind_addr;
   context.join_addr = join_addr;

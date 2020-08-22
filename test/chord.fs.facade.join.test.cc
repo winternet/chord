@@ -40,6 +40,7 @@
 
 using std::make_unique;
 using std::unique_ptr;
+using std::shared_ptr;
 using std::map;
 using std::set;
 
@@ -68,10 +69,9 @@ using namespace chord::test;
 class FilesystemFacadeJoinTest : public ::testing::Test {
   protected:
     void SetUp() override {
-      self = make_unique<MockPeer>("0.0.0.0:50050", data_directory);
+      self = make_unique<MockPeer>("0.0.0.0:50050", std::make_shared<TmpDir>());
     }
 
-    TmpDir data_directory;
     unique_ptr<MockPeer> self;
 };
 
@@ -84,21 +84,21 @@ class FilesystemFacadeJoinTest : public ::testing::Test {
  */
 TEST_F(FilesystemFacadeJoinTest, on_join__handle_local_files__shallow_copies) {
 
-  TmpDir data_directory_2;
+  const auto data_directory_2 = std::make_shared<TmpDir>();
   const endpoint source_endpoint_2("0.0.0.0:50051");
   MockPeer peer_2(source_endpoint_2, data_directory_2);
 
   TmpDir source_directory;
 
   const auto target_uri = uri("chord:///file");
-  const auto source_file = data_directory_2.add_file("file");
+  const auto source_file = data_directory_2->add_file("file");
 
-  const auto sub_folder = data_directory_2.add_dir("sub");
-  const auto subfile_1 = sub_folder.add_file("subfile_1");
-  const auto subfile_2 = sub_folder.add_file("subfile_2");
+  const auto sub_folder = data_directory_2->add_dir("sub");
+  const auto subfile_1 = sub_folder->add_file("subfile_1");
+  const auto subfile_2 = sub_folder->add_file("subfile_2");
 
-  const auto subsub_folder = sub_folder.add_dir("subsub");
-  const auto subsub_file = subsub_folder.add_file("subsubfile");
+  const auto subsub_folder = sub_folder->add_dir("subsub");
+  const auto subsub_file = subsub_folder->add_file("subsubfile");
 
   IMetadataManager::uri_meta_map_desc metadata;
   metadata[uri("chord:///")].insert({".", "", "", perms::all, type::directory, {}, {}, Replication()});

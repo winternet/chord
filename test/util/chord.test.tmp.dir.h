@@ -29,20 +29,20 @@ struct TmpDir final {
     chord::file::create_directories(path);
   }
 
-  TmpFile add_file() const {
-    return TmpFile(path/chord::path{chord::uuid::random().string()});
+  std::shared_ptr<TmpFile> add_file() const {
+    return std::make_shared<TmpFile>(path/chord::path{chord::uuid::random().string()});
   }
 
-  TmpDir add_dir() const {
-    return TmpDir(path/chord::path{chord::uuid::random().string()});
+  std::shared_ptr<TmpDir> add_dir() const {
+    return std::make_shared<TmpDir>(path/chord::path{chord::uuid::random().string()});
   }
 
-  TmpFile add_file(const std::string& filename) const {
-    return TmpFile(path/filename);
+  std::shared_ptr<TmpFile> add_file(const std::string& filename) const {
+    return std::make_shared<TmpFile>(path/filename);
   }
 
-  TmpDir add_dir(const std::string& directory) const {
-    return TmpDir(path/directory);
+  std::shared_ptr<TmpDir> add_dir(const std::string& directory) const {
+    return std::make_shared<TmpDir>(path/directory);
   }
 
   ~TmpDir() {

@@ -31,7 +31,7 @@ namespace chord {
 
 class MockPeer final {
 public:
-  explicit MockPeer(const endpoint& endpoint, const TmpDir& data_directory)
+  explicit MockPeer(const endpoint& endpoint, const std::shared_ptr<TmpDir> data_directory)
     : data_directory(data_directory) {
       context = make_context(chord::uuid::random(), data_directory);
       context.bind_addr = endpoint;
@@ -72,8 +72,8 @@ public:
   std::unique_ptr<Server> server;
 
   // directories
-  TmpDir meta_directory;
-  const TmpDir& data_directory;
+  std::shared_ptr<TmpDir> meta_directory;
+  std::shared_ptr<TmpDir> data_directory;
 };
 
 } // namespace chord
