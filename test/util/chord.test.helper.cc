@@ -4,6 +4,7 @@
 #include "chord.context.h"
 #include "chord.uuid.h"
 #include "chord.node.h"
+#include "chord.path.h"
 #include "chord_common.pb.h"
 #include "chord.types.h"
 #include "chord.test.tmp.dir.h"

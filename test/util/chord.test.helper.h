@@ -11,7 +11,7 @@ namespace chord { struct Context; }
 namespace chord { struct node; }
 namespace chord { namespace common { class RouterEntry; } }
 namespace chord { namespace common { class Header; } }
-namespace chord { namespace test { class TmpDir; } }
+namespace chord { namespace test { struct TmpDir; } }
 
 namespace chord {
 namespace test {
@@ -44,6 +44,16 @@ chord::common::RouterEntry make_entry(const uuid &id, const chord::endpoint& add
 chord::common::Header make_header(const uuid &id, const chord::endpoint &addr);
 
 chord::common::Header make_header(const uuid &id, const char* addr);
+
+template<typename TMP>
+chord::path p(std::shared_ptr<TMP> t) {
+  return t->path;
+}
+
+template<typename TMP>
+chord::path fn(std::shared_ptr<TMP> t) {
+  return p(t).filename();
+}
 
 } // namespace test
 } // namespace chord
