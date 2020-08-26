@@ -42,6 +42,19 @@ void Peer::start_server() {
   server->Wait();
 }
 
+void Peer::init() {
+  const auto fs = filesystem.get();
+  chord->on_join().connect(fs, &chord::fs::Facade::on_join);
+  chord->on_leave().connect(fs, &chord::fs::Facade::on_leave);
+  chord->on_predecessor_update().connect(fs, &chord::fs::Facade::on_predecessor_update);
+  chord->on_predecessor_fail().connect(fs, &chord::fs::Facade::on_predecessor_fail);
+  chord->on_successor_fail().connect(fs, &chord::fs::Facade::on_successor_fail);
+}
+
+Peer::Peer()
+      : logger{context.logging.factory().get_or_create(Peer::logger_name)}
+{ }
+
 Peer::Peer(Context ctx)
     : context{ctx},
       chord{make_unique<chord::ChordFacade>(context)},
@@ -49,12 +62,7 @@ Peer::Peer(Context ctx)
       controller{make_unique<controller::Service>(context, filesystem.get())},
       logger{context.logging.factory().get_or_create(Peer::logger_name)}
 {
-  const auto fs = filesystem.get();
-  chord->on_join().connect(fs, &chord::fs::Facade::on_join);
-  chord->on_leave().connect(fs, &chord::fs::Facade::on_leave);
-  chord->on_predecessor_update().connect(fs, &chord::fs::Facade::on_predecessor_update);
-  chord->on_predecessor_fail().connect(fs, &chord::fs::Facade::on_predecessor_fail);
-  chord->on_successor_fail().connect(fs, &chord::fs::Facade::on_successor_fail);
+  init();
 }
 
 Peer::~Peer() {

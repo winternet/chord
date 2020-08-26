@@ -37,7 +37,7 @@ public:
     LEAVE
   };
 
- private:
+ protected:
   const Context& context;
   chord::ChordFacade* chord;
   std::unique_ptr<chord::fs::IMetadataManager> metadata_mgr;

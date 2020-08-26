@@ -34,6 +34,10 @@ class Peer : public std::enable_shared_from_this<Peer> {
 
   void start_server();
 
+  Peer();
+
+  void init();
+
  public:
   Peer(const Peer &) = delete;             // disable copying
   Peer &operator=(const Peer &) = delete;  // disable assignment

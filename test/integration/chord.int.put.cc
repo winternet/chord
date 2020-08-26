@@ -6,41 +6,22 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "chord.int.test.h"
 #include "../util/chord.test.tmp.dir.h"
 #include "../util/chord.test.helper.h"
 
 using namespace std;
-
 using namespace chord;
+
 using chord::test::p;
 using chord::test::fn;
 
-class PutTest : public ::testing::Test {
-  protected:
-    const chord::path base_dir{"./integration_test_base_dir"};
-    const std::string bind_addr{"127.0.0.1:"};
-    chord::test::TmpDir base{base_dir};
+class PutTest : public chord::test::IntegrationTest {
 
-    std::vector<chord::Peer*> peers;
-    std::vector<std::thread> threads;
-    std::shared_ptr<spdlog::logger> logger;
-
-    chord::IntPeer* make_peer(const Context& context) {
-      const auto peer = test::make_peer(context);
-      peers.push_back(peer);
-      threads.push_back(test::detatch(peer));
-      return peer;
-    }
-
-    void SetUp() {
+    void SetUp() override {
       logger = chord::log::get_or_create("int.test.put");
     }
 
-    void TearDown() {
-      logger->debug("[tear down] cleaning up {} peers on {} threads.", peers.size(), threads.size());
-      for(auto* p:peers) delete p;
-      for(auto& t:threads) t.join();
-    }
 };
 
 std::string put(const path& src, const path& dst) {

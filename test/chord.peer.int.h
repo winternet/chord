@@ -13,11 +13,28 @@ namespace chord {
  */
 class IntPeer : public Peer {
  public:
+   class IntFsFacade : public chord::fs::Facade {
+     public:
+      IntFsFacade(Context& context, ChordFacade* chord)
+        : chord::fs::Facade(context, chord){}
+
+       chord::fs::IMetadataManager* get_metadata_manager() {
+         return chord::fs::Facade::metadata_mgr.get();
+       }
+   };
+ public:
    chord::ChordFacade* get_chord() const { return chord.get(); }
    chord::fs::Facade* get_filesystem() const { return filesystem.get(); };
    const chord::Context& get_context() const { return context; };
+   chord::fs::IMetadataManager* get_metadata_manager() const { return static_cast<IntFsFacade*>(filesystem.get())->get_metadata_manager(); }
 
-   IntPeer(const Context& context) : Peer(context) {}
+   IntPeer(Context ctxt) : Peer() {
+         this->context = ctxt;
+         this->chord = std::make_unique<chord::ChordFacade>(context);
+         this->filesystem = std::make_unique<IntFsFacade>(context, chord.get());
+         this->controller = std::make_unique<controller::Service>(context, filesystem.get());
+         init();
+     }
 };
 
 }  // namespace chord
