@@ -7,18 +7,19 @@
 #include "chord.log.h"
 #include "chord.uuid.h"
 
+#include "chord.test.tmp.base.h"
+
 namespace chord {
 namespace test {
 
-struct TmpFile final {
-  static constexpr auto logger_name = "chord.test.tmp.file";
+struct TmpFile final : public TmpBase {
 
-  const chord::path path;
+  static constexpr auto logger_name = "chord.test.tmp.file";
   std::shared_ptr<spdlog::logger> logger;
 
   TmpFile() : TmpFile(chord::path{chord::uuid::random().string()}) {}
 
-  TmpFile(const chord::path& p) : path{p}, logger{log::get_or_create(logger_name)} {
+  TmpFile(const chord::path& p) : TmpBase(p), logger{log::get_or_create(logger_name)} {
     if(chord::file::exists(path)) {
       throw std::runtime_error("Path \'" + path.string() + "\' already exists - aborting.");
     }

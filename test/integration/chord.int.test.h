@@ -35,6 +35,10 @@ class IntegrationTest : public ::testing::Test {
       return peer;
     }
 
+    virtual void sleep() const {
+      std::this_thread::sleep_for(10ms);
+    }
+
     void TearDown() override {
       logger->debug("[tear down] cleaning up {} peers on {} threads.", peers.size(), threads.size());
       for(auto* p:peers) delete p;

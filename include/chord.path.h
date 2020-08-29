@@ -4,6 +4,7 @@
 #include <experimental/filesystem>
 #include <set>
 #include <string>
+#include <string_view>
 
 namespace chord {
 
@@ -46,7 +47,7 @@ class path {
 
   path operator/(const path& p) const;
 
-  path operator/(const std::string& p) const;
+  path operator/(const std::string_view p) const;
 
   bool operator==(const path &p) const;
 

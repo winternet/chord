@@ -1,27 +1,31 @@
 #pragma once
-#include <exception>
 #include <memory>
+#include <exception>
+#include <string_view>
+
 #include "chord.file.h"
 #include "chord.path.h"
 #include "chord.log.h"
 #include "chord.uuid.h"
 #include "chord.test.tmp.file.h"
+#include "chord.test.tmp.base.h"
 
 namespace chord {
 namespace test {
 
-struct TmpDir final {
+struct TmpDir final : public TmpBase {
 
+private:
   static constexpr auto logger_name = "chord.test.tmp.dir";
-
-  const chord::path path;
   std::shared_ptr<spdlog::logger> logger;
 
+  mutable std::vector<std::shared_ptr<TmpBase>> contents;
+
+public:
   TmpDir() : TmpDir(chord::path{chord::uuid::random().string()}) {}
 
   explicit TmpDir(const std::string& p) : TmpDir(chord::path{p}) {}
-
-  explicit TmpDir(const chord::path& p) : path{p}, logger{log::get_or_create(logger_name)} {
+  explicit TmpDir(const chord::path& p) : TmpBase(p), logger{log::get_or_create(logger_name)} {
     if(chord::file::exists(path) && !chord::file::is_directory(path)) {
       throw std::runtime_error("Path \'" + path.string() + "\' already exists - aborting.");
     }
@@ -30,19 +34,27 @@ struct TmpDir final {
   }
 
   std::shared_ptr<TmpFile> add_file() const {
-    return std::make_shared<TmpFile>(path/chord::path{chord::uuid::random().string()});
+    auto file = std::make_shared<TmpFile>(path/chord::path{chord::uuid::random().string()});
+    contents.push_back(file);
+    return file;
   }
 
   std::shared_ptr<TmpDir> add_dir() const {
-    return std::make_shared<TmpDir>(path/chord::path{chord::uuid::random().string()});
+    auto dir = std::make_shared<TmpDir>(path/chord::path{chord::uuid::random().string()});
+    contents.push_back(dir);
+    return dir;
   }
 
-  std::shared_ptr<TmpFile> add_file(const std::string& filename) const {
-    return std::make_shared<TmpFile>(path/filename);
+  std::shared_ptr<TmpFile> add_file(const std::string_view filename) const {
+    const auto file = std::make_shared<TmpFile>(path/filename);
+    contents.push_back(file);
+    return file;
   }
 
-  std::shared_ptr<TmpDir> add_dir(const std::string& directory) const {
-    return std::make_shared<TmpDir>(path/directory);
+  std::shared_ptr<TmpDir> add_dir(const std::string_view directory) const {
+    auto dir = std::make_shared<TmpDir>(path/directory);
+    contents.push_back(dir);
+    return dir;
   }
 
   ~TmpDir() {

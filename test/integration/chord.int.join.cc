@@ -13,9 +13,6 @@
 using namespace std;
 using namespace chord;
 
-using chord::test::p;
-using chord::test::fn;
-
 class JoinTest : public chord::test::IntegrationTest {
   protected:
     void SetUp() override {
@@ -28,7 +25,9 @@ TEST_F(JoinTest, bootstrap) {
   const auto meta0 = base.add_dir("meta0");
   const auto port = 50050;
   const auto peer = make_peer(test::make_context({"0"}, {bind_addr+std::to_string(port)}, data0, meta0));
-  std::this_thread::sleep_for(1s);
+
+  //sleep();
+
   peer->stop();
 }
 
@@ -45,7 +44,7 @@ TEST_F(JoinTest, join) {
   const auto ctxt1 = test::make_context({"8"}, {bind_addr+std::to_string(port1)}, data1, meta1, ctxt0.advertise_addr, false);
   const auto peer1 = make_peer(ctxt1);
 
-  std::this_thread::sleep_for(1s);
+  //sleep();
 
   const auto successor_of_0 = peer0->get_chord()->successor();
   const auto successor_of_1 = peer1->get_chord()->successor();
