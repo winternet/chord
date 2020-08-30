@@ -50,7 +50,7 @@ TEST_F(JoinTest, join) {
   const auto successor_of_1 = peer1->get_chord()->successor();
 
   logger->info("peer0's ({}) successor {}", ctxt0.node(), successor_of_0);
-  logger->info("peer1's ({}) successor {}", ctxt1.node(), successor_of_0);
+  logger->info("peer1's ({}) successor {}", ctxt1.node(), successor_of_1);
 
   ASSERT_EQ(successor_of_0, ctxt1.node());
   ASSERT_EQ(successor_of_1, ctxt0.node());

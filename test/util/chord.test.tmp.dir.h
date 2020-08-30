@@ -46,7 +46,7 @@ public:
   }
 
   std::shared_ptr<TmpFile> add_file(const std::string_view filename) const {
-    const auto file = std::make_shared<TmpFile>(path/filename);
+    auto file = std::make_shared<TmpFile>(path/filename);
     contents.push_back(file);
     return file;
   }

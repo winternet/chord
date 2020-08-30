@@ -17,7 +17,7 @@ class ConcurrentQueue {
     void push(const T& val) {
       lock_guard_t lock(mtx);
       q.push(val);
-      lock.unlock();
+      //lock.unlock();
       cond.notify_one();
     }
 

@@ -42,7 +42,7 @@ class queue {
   void push(const T &item) {
     std::unique_lock<std::mutex> lock(mutex);
     queue_.push(item);
-    lock.unlock();
+    //lock.unlock();
     condition.notify_one();
   }
 };

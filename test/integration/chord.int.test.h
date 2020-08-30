@@ -21,10 +21,11 @@ namespace test {
 class IntegrationTest : public ::testing::Test {
   protected:
     const chord::path base_dir{"./integration_test_base_dir"};
-    const std::string bind_addr{"127.0.0.1:"};
-    chord::test::TmpDir base{base_dir};
 
-    std::vector<chord::Peer*> peers;
+    const std::string bind_addr{"127.0.0.1:"};
+    TmpDir base{base_dir};
+
+    std::vector<IntPeer*> peers;
     std::vector<std::thread> threads;
     std::shared_ptr<spdlog::logger> logger;
 
@@ -36,7 +37,12 @@ class IntegrationTest : public ::testing::Test {
     }
 
     virtual void sleep() const {
-      std::this_thread::sleep_for(10ms);
+      std::this_thread::sleep_for(100ms);
+    }
+
+    template<typename Rep, typename Period>
+    void sleep(const std::chrono::duration<Rep, Period>& duration) const {
+      std::this_thread::sleep_for(duration);
     }
 
     void TearDown() override {
