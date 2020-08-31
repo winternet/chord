@@ -71,8 +71,8 @@ Client::Client(const Context &context, Router *router, StubFactory make_stub)
 
 void Client::init_context([[maybe_unused]] ClientContext& client_context) {
   // left blank intentionally
-  //std::chrono::system_clock::time_point deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(context.client_timeout_ms);
-  //client_context.set_deadline(deadline);
+  std::chrono::system_clock::time_point deadline = std::chrono::system_clock::now() + std::chrono::seconds(60); //std::chrono::milliseconds(context.client_timeout_ms);
+  client_context.set_deadline(deadline);
 }
 
 Status Client::inform_successor_about_leave() {

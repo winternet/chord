@@ -188,7 +188,7 @@ TEST_F(PutTest, nodes_2__repl_2__folder__height_1) {
  *             └── subsubfile0.md
  * 
  */
-TEST_F(PutTest, nodes_2__repl_2__folder__height_3) {
+TEST_F(PutTest, nodes_2__repl_1__folder__height_3) {
   const auto root_uri = uri{"chord:///"};
   const auto source0 = base.add_dir("source0");
   const auto file0 = source0->add_file("file0.md");
@@ -228,5 +228,82 @@ TEST_F(PutTest, nodes_2__repl_2__folder__height_3) {
     assert_equal(peer1, file1,    uri{"chord:///source0/file1.md"});
     assert_equal(peer1, subfile1, uri{"chord:///source0/subdir/subfile1.md"});
     ASSERT_TRUE(metadata_mgr->exists(uri{"chord:///source0/subdir"}));
+  }
+}
+
+/**
+ * PUT [replication: 2]
+ * source0/
+ * ├── file0.md
+ * ├── file1.md
+ * └── subdir
+ *     ├── subfile0.md
+ *     ├── subfile1.md
+ *     └── subsubdir
+ *         └── subsubfile0.md
+ * 
+ * EXPECTED
+ * data0
+ * ├── file0.md
+ * ├── file1.md
+ * └── subdir
+ *     ├── subfile0.md
+ *     ├── subfile1.md
+ *     └── subsubdir
+ *         └── subsubfile0.md
+ * data1
+ * ├── file0.md
+ * ├── file1.md
+ * └── subdir
+ *     ├── subfile0.md
+ *     ├── subfile1.md
+ *     └── subsubdir
+ *         └── subsubfile0.md
+ */
+TEST_F(PutTest, nodes_3__repl_3__folder__height_3) {
+  const auto root_uri = uri{"chord:///"};
+  const auto source0 = base.add_dir("source0");
+  const auto file0 = source0->add_file("file0.md");
+  const auto file1 = source0->add_file("file1.md");
+
+  const auto subdir = source0->add_dir("subdir");
+  const auto subfile0 = subdir->add_file("subfile0.md");
+  const auto subfile1 = subdir->add_file("subfile1.md");
+
+  const auto subsubdir = subdir->add_dir("subsubdir");
+  const auto subsubfile0 = subsubdir->add_file("subsubfile0.md");
+
+  const auto data0 = base.add_dir("data0");
+  const auto ctxt0 = test::make_context({"0"}, 
+      {bind_addr+"50050"}, data0, base.add_dir("meta0"));
+  const auto peer0 = make_peer(ctxt0);
+  ASSERT_TRUE(file::is_empty(data0->path));
+
+  const auto data1 = base.add_dir("data1");
+  const auto ctxt1 = test::make_context({"28948022309329048855892746252171976963317496166410141009864396001978282409984"}, 
+      {bind_addr+"50051"}, data1, base.add_dir("meta1"), ctxt0.advertise_addr, false);
+  const auto peer1 = make_peer(ctxt1);
+  ASSERT_TRUE(file::is_empty(data1->path));
+
+  const auto data2 = base.add_dir("data2");
+  const auto ctxt2 = test::make_context({"28948022309329048855892746252171976963317496166410141009864396001978282409984"}, 
+      {bind_addr+"50052"}, data2, base.add_dir("meta2"), ctxt0.advertise_addr, false);
+  const auto peer2 = make_peer(ctxt2);
+  ASSERT_TRUE(file::is_empty(data2->path));
+
+  put(peer0, 3, source0, root_uri);
+
+  ASSERT_EQ(peers.size(), 3);
+  for(const auto peer:peers)
+  {
+    const auto metadata_mgr = peer->get_metadata_manager();
+    assert_equal(peer, file0,       uri{"chord:///source0/file0.md"});
+    assert_equal(peer, file1,       uri{"chord:///source0/file1.md"});
+    assert_equal(peer, subfile0,    uri{"chord:///source0/subdir/subfile0.md"});
+    assert_equal(peer, subfile1,    uri{"chord:///source0/subdir/subfile1.md"});
+    assert_equal(peer, subsubfile0, uri{"chord:///source0/subdir/subsubdir/subsubfile0.md"});
+    ASSERT_TRUE(metadata_mgr->exists(uri{"chord:///source0"}));
+    ASSERT_TRUE(metadata_mgr->exists(uri{"chord:///source0/subdir"}));
+    ASSERT_TRUE(metadata_mgr->exists(uri{"chord:///source0/subdir/subsubdir"}));
   }
 }
