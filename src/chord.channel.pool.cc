@@ -3,24 +3,11 @@
 #include <grpcpp/channel.h>
 #include <grpcpp/create_channel.h>
 #include <grpcpp/security/credentials.h>
-#include <grpcpp/completion_queue.h>
-
-#include <algorithm>
-#include <set>
-#include <array>
-#include <iterator>
-#include <ostream>
-#include <memory>
-#include <string>
-#include <thread>
 
 #include "chord.context.h"
 #include "chord.log.factory.h"
 #include "chord.log.h"
-#include "chord.node.h"
 #include "chord.types.h"
-#include "chord.optional.h"
-#include "chord.uuid.h"
 
 namespace chord {
 

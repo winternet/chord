@@ -1,9 +1,7 @@
 #include "chord.peer.h"
 
 #include <stdexcept>
-#include <memory>
-#include <thread>
-
+#include <memory> 
 #include <grpcpp/security/server_credentials.h>
 #include <grpc++/server.h>
 #include <grpc++/server_builder.h>

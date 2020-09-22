@@ -46,7 +46,7 @@ class Peer {
   Peer &operator=(const Peer &) = delete;  // disable assignment
 
   explicit Peer(chord::Context context);
-  ~Peer();
+  virtual ~Peer();
 
   void start();
   void stop();

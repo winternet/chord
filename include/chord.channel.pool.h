@@ -1,21 +1,12 @@
 #pragma once
 #include <cstddef>
-#include <array>
-#include <iosfwd>
-#include <map>
-#include <set>
 #include <memory>
-#include <future>
 #include <mutex>
 #include <grpcpp/channel.h>
 #include <grpcpp/completion_queue.h>
 
-#include "chord.signal.h"
 #include "chord.router.h"
 #include "chord.types.h"
-#include "chord.optional.h"
-#include "chord.node.h"
-#include "chord.uuid.h"
 #include "chord.lru.cache.h"
 
 namespace chord { struct Context; }
