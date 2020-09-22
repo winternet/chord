@@ -22,10 +22,10 @@ using chord::common::make_node;
 
 namespace chord {
 
-ChordFacade::ChordFacade(Context& ctx)
+ChordFacade::ChordFacade(Context& ctx, ChannelPool* channel_pool)
     : context{ctx},
       router{make_unique<Router>(context)},
-      client{make_unique<Client>(context, router.get())},
+      client{make_unique<Client>(context, router.get(), channel_pool)},
       service{make_unique<Service>(context, router.get(), client.get())},
       scheduler{make_unique<Scheduler>()},
       logger{ctx.logging.factory().get_or_create(logger_name)}

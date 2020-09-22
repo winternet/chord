@@ -37,13 +37,14 @@ public:
       context.bind_addr = endpoint;
       context.advertise_addr = endpoint;
       router = new chord::Router(context);
+      channel_pool = std::make_unique<chord::ChannelPool>(context);
       client = new MockClient();
       service = new MockService();
       chord_facade = std::make_unique<chord::ChordFacade>(context, router, client, service);
       //--- fs
       metadata_mgr = new chord::fs::MockMetadataManager;
-      fs_service = new fs::Service(context, chord_facade.get(), metadata_mgr);
-      fs_client = new fs::Client(context, chord_facade.get(), metadata_mgr);
+      fs_client = new fs::Client(context, chord_facade.get(), metadata_mgr, channel_pool.get());
+      fs_service = new fs::Service(context, chord_facade.get(), metadata_mgr, fs_client);
       fs_facade = std::make_unique<chord::fs::Facade>(context, fs_client, fs_service, metadata_mgr);
 
       ServerBuilder builder;
@@ -58,6 +59,7 @@ public:
 
   //--- chord
   chord::Context context;
+  std::unique_ptr<chord::ChannelPool> channel_pool;
   chord::Router* router;
   chord::MockClient* client;
   chord::MockService* service;

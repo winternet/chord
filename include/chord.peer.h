@@ -7,16 +7,19 @@
 #include "chord.facade.h"
 #include "chord.fs.facade.h"
 #include "chord.shutdown.handler.h"
+#include "chord.channel.pool.h"
 
 namespace spdlog { class logger; }
 
 namespace chord {
 
-class Peer : public std::enable_shared_from_this<Peer> {
+class Peer {
   static constexpr auto logger_name = "chord.peer";
 
  protected:
   chord::Context context;
+
+  std::unique_ptr<chord::ChannelPool> channel_pool;
 
   //--- chord facade
   std::unique_ptr<chord::ChordFacade> chord;

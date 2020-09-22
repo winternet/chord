@@ -10,6 +10,7 @@
 #include "chord_fs.grpc.pb.h"
 
 namespace chord { class ChordFacade; }
+namespace chord { class ChannelPool; }
 namespace chord { namespace fs { class Client; } }
 namespace chord { namespace fs { class DelRequest; } }
 namespace chord { namespace fs { class DelResponse; } }
@@ -27,7 +28,7 @@ namespace spdlog { class logger; }
 namespace chord {
 namespace fs {
 
-using ClientFactory = std::function<chord::fs::Client()>;
+using ClientFactory = std::function<chord::fs::Client*()>;
 
 class Service final : public chord::fs::Filesystem::Service {
   static constexpr auto logger_name = "chord.fs.service";
@@ -53,7 +54,7 @@ class Service final : public chord::fs::Filesystem::Service {
   bool file_hashes_equal(grpc::ServerContext*, grpc::ServerReader<PutRequest>*);
 
  public:
-  explicit Service(Context &context, ChordFacade* chord, IMetadataManager* metadata_mgr, chord::fs::monitor* = nullptr);
+  explicit Service(Context &context, ChordFacade* chord, IMetadataManager* metadata_mgr, Client* client, chord::fs::monitor* = nullptr);
 
   grpc::Status put(grpc::ServerContext *context,
                    grpc::ServerReader<chord::fs::PutRequest> *reader,
@@ -74,6 +75,7 @@ class Service final : public chord::fs::Filesystem::Service {
  private:
   Context &context;
   ChordFacade *chord;
+  fs::Client *client;
   IMetadataManager* metadata_mgr;
   chord::fs::monitor* monitor;
   ClientFactory make_client;

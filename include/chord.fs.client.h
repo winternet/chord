@@ -16,6 +16,7 @@
 
 namespace chord { class path; }
 namespace chord { class ChordFacade; }
+namespace chord { class ChannelPool; }
 namespace chord { namespace fs { class DelRequest; } }
 namespace chord { namespace fs { class MetaRequest; } }
 namespace chord { namespace fs { struct Metadata; } }
@@ -41,6 +42,7 @@ class Client {
 
   Context &context;
   chord::ChordFacade* chord;
+  chord::ChannelPool* channel_pool;
   chord::fs::IMetadataManager* metadata_mgr;
 
   StubFactory make_stub;
@@ -49,7 +51,7 @@ class Client {
   void init_context(grpc::ClientContext&, const client::options&);
 
  public:
-  Client(Context &context, chord::ChordFacade* chord, chord::fs::IMetadataManager* metadata_mgr);
+  Client(Context &context, chord::ChordFacade* chord, chord::fs::IMetadataManager* metadata_mgr, ChannelPool* channel_pool);
 
   Client(Context &context, chord::ChordFacade* chord, StubFactory factory);
 

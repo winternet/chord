@@ -16,6 +16,7 @@
 #include "chord.node.h"
 #include "chord.shutdown.handler.h"
 #include "chord.uuid.h"
+#include "chord.channel.pool.h"
 #include <libfswatch/c++/monitor_factory.hpp>
 
 using grpc::ServerBuilder;
@@ -57,8 +58,9 @@ Peer::Peer()
 
 Peer::Peer(Context ctx)
     : context{ctx},
-      chord{make_unique<chord::ChordFacade>(context)},
-      filesystem{make_unique<chord::fs::Facade>(context, chord.get())},
+      channel_pool{make_unique<chord::ChannelPool>(context)},
+      chord{make_unique<chord::ChordFacade>(context, channel_pool.get())},
+      filesystem{make_unique<chord::fs::Facade>(context, chord.get(), channel_pool.get())},
       controller{make_unique<controller::Service>(context, filesystem.get())},
       logger{context.logging.factory().get_or_create(Peer::logger_name)}
 {

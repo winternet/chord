@@ -15,6 +15,7 @@
 
 namespace chord { class path; }
 namespace chord { class ChordFacade; }
+namespace chord { class ChannelPool; }
 namespace chord { namespace fs { class MetaResponse; } }
 namespace chord { struct Context; }
 namespace chord { struct node; }
@@ -40,6 +41,7 @@ public:
  protected:
   const Context& context;
   chord::ChordFacade* chord;
+  chord::ChannelPool* channel_pool;
   std::unique_ptr<chord::fs::IMetadataManager> metadata_mgr;
   std::unique_ptr<chord::fs::monitor> monitor;
   std::unique_ptr<Client> fs_client;
@@ -62,7 +64,7 @@ public:
   grpc::Status handle_fs_update(const chord::fs::monitor::event&);
   grpc::Status handle_fs_remove(const chord::fs::monitor::event&);
  public:
-  Facade(Context& context, ChordFacade* chord);
+  Facade(Context& context, ChordFacade* chord, ChannelPool*);
 
   Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service, fs::IMetadataManager*, chord::fs::monitor* = nullptr);
 

@@ -17,6 +17,7 @@ namespace chord { class SuccessorRequest; }
 namespace chord { class SuccessorResponse; }
 namespace chord { struct Context; }
 namespace chord { struct Router; }
+namespace chord { struct ChannelPool; }
 namespace chord { struct node; }
 namespace spdlog { class logger; }
 
@@ -31,6 +32,7 @@ class Client : public IClient {
  private:
   const Context &context;
   Router *router;
+  ChannelPool *channel_pool;
 
   StubFactory make_stub;
 
@@ -45,9 +47,9 @@ class Client : public IClient {
   void init_context(grpc::ClientContext&);
 
  public:
-  Client(const Context &context, Router *router);
+  Client(const Context &context, Router *router, ChannelPool*);
 
-  Client(const Context &context, Router *router, StubFactory factory);
+  Client(const Context &context, Router *router, ChannelPool*, StubFactory factory);
 
   void leave() override;
 

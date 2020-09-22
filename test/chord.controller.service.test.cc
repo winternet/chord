@@ -6,6 +6,7 @@
 #include "chord.client.h"                // for Client
 #include "chord.router.h"                // for Router
 #include "chord.service.h"               // for Service
+#include "chord.channel.pool.h"
 #include "chord.context.h"
 #include "chord.path.h"
 #include "chord.uri.h"
@@ -43,7 +44,8 @@ class ControllerServiceTest : public ::testing::Test {
     void SetUp() override {
       ctxt = make_context(5);
       router = new chord::Router(ctxt);
-      client = new chord::Client(ctxt, router);
+      channel_pool = std::make_unique<chord::ChannelPool>(ctxt);
+      client = new chord::Client(ctxt, router, channel_pool.get());
       service= new chord::Service(ctxt, router, client);
       chord_facade = std::make_unique<chord::ChordFacade>(ctxt, router, client, service);
       ctrl_service = std::make_unique<chord::controller::Service>(ctxt, &fs_facade);
@@ -51,6 +53,7 @@ class ControllerServiceTest : public ::testing::Test {
 
     chord::Context ctxt;
     chord::Router* router;
+    std::unique_ptr<chord::ChannelPool> channel_pool;
     chord::Client* client;
     chord::Service* service;
     std::unique_ptr<chord::ChordFacade> chord_facade;

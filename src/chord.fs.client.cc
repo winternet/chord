@@ -47,9 +47,10 @@ using namespace chord::file;
 namespace chord {
 namespace fs {
 
-Client::Client(Context &context, ChordFacade *chord, IMetadataManager* metadata_mgr)
+Client::Client(Context &context, ChordFacade *chord, IMetadataManager* metadata_mgr, ChannelPool* channel_pool)
     : context{context},
       chord{chord},
+      channel_pool{channel_pool},
       metadata_mgr{metadata_mgr},
       make_stub{//--- default stub factory
                 [](const endpoint& endpoint) {

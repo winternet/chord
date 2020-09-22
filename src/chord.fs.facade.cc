@@ -33,13 +33,13 @@ namespace fs {
 using grpc::Status;
 using grpc::StatusCode;
 
-Facade::Facade(Context& context, ChordFacade* chord)
+Facade::Facade(Context& context, ChordFacade* chord, ChannelPool* channel_pool)
     : context{context},
       chord{chord},
       metadata_mgr{make_unique<chord::fs::MetadataManager>(context)},
       monitor{make_unique<fs::monitor>(context)},
-      fs_client{make_unique<fs::Client>(context, chord, metadata_mgr.get())},
-      fs_service{make_unique<fs::Service>(context, chord, metadata_mgr.get(), monitor.get())},
+      fs_client{make_unique<fs::Client>(context, chord, metadata_mgr.get(), channel_pool)},
+      fs_service{make_unique<fs::Service>(context, chord, metadata_mgr.get(), fs_client.get(), monitor.get())},
       logger{context.logging.factory().get_or_create(logger_name)}
 {
   monitor->events().connect(this, &Facade::on_fs_event);

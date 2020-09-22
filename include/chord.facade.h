@@ -12,6 +12,7 @@
 #include "chord.signal.h"
 
 namespace chord { struct Context; }
+namespace chord { class ChannelPool; }
 namespace grpc { class Service; }
 namespace spdlog { class logger; }  // lines 14-14
 
@@ -51,7 +52,7 @@ public:
   ChordFacade(const ChordFacade &) = delete;             // disable copying
   ChordFacade &operator=(const ChordFacade &) = delete;  // disable assignment
 
-  explicit ChordFacade(Context& context);
+  explicit ChordFacade(Context& context, ChannelPool* channel_pool);
   explicit ChordFacade(Context& ctx, Router* router, IClient* client, IService* service);
 
   void start();

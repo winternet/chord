@@ -15,8 +15,8 @@ class IntPeer : public Peer {
  public:
    class IntFsFacade : public chord::fs::Facade {
      public:
-      IntFsFacade(Context& context, ChordFacade* chord)
-        : chord::fs::Facade(context, chord){}
+      IntFsFacade(Context& context, ChordFacade* chord, ChannelPool* channel_pool)
+        : chord::fs::Facade(context, chord, channel_pool){}
 
        chord::fs::IMetadataManager* get_metadata_manager() {
          return chord::fs::Facade::metadata_mgr.get();
@@ -30,8 +30,9 @@ class IntPeer : public Peer {
 
    IntPeer(Context ctxt) : Peer() {
          this->context = ctxt;
-         this->chord = std::make_unique<chord::ChordFacade>(context);
-         this->filesystem = std::make_unique<IntFsFacade>(context, chord.get());
+         this->channel_pool = std::make_unique<chord::ChannelPool>(context);
+         this->chord = std::make_unique<chord::ChordFacade>(context, channel_pool.get());
+         this->filesystem = std::make_unique<IntFsFacade>(context, chord.get(), channel_pool.get());
          this->controller = std::make_unique<controller::Service>(context, filesystem.get());
          init();
      }

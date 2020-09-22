@@ -326,6 +326,7 @@ class MockStub : public chord::Chord::StubInterface {
 TEST(ServiceTest, successor_two_nodes_modulo) {
   Context context = make_context(5);
   Router router(context);
+  ChannelPool channel_pool(context);
 
   router.update({0, "0.0.0.0:50050"});
 
@@ -348,7 +349,7 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
     return stub;
   };
 
-  Client client(context, &router, stub_factory);
+  Client client(context, &router, &channel_pool, stub_factory);
   Service service(context, &router, &client);
 
   ServerContext serverContext;

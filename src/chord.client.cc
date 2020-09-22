@@ -3,6 +3,7 @@
 #include <memory>
 #include <fstream>
 #include <string>
+#include <utility>
 
 #include <grpcpp/channel.h>
 #include <grpcpp/create_channel.h>
@@ -18,6 +19,7 @@
 #include "chord.log.h"
 #include "chord.node.h"
 #include "chord.router.h"
+#include "chord.channel.pool.h"
 #include "chord.uuid.h"
 
 using grpc::Channel;
@@ -45,29 +47,16 @@ using chord::Chord;
 using namespace std;
 
 namespace chord {
-Client::Client(const Context &context, Router *router)
+Client::Client(const Context &context, Router *router, ChannelPool* channel_pool)
     : context{context},
       router{router},
+      channel_pool{channel_pool},
       make_stub{//--- default stub factory
-                [&](const endpoint& endpoint) {
-                  grpc::ChannelArguments arguments;
-                  arguments.SetInt(GRPC_ARG_KEEPALIVE_TIMEOUT_MS, context.client_timeout_ms);
-                  arguments.SetInt(GRPC_ARG_KEEPALIVE_TIME_MS, context.client_timeout_ms);
-                  //arguments.SetInt(GRPC_ARG_KEEPALIVE_PERMIT_WITHOUT_CALLS, 1);
-                  //arguments.SetInt(GRPC_ARG_HTTP2_MAX_PINGS_WITHOUT_DATA, 0);
-                  //// max time for a connection attempt
-                  //arguments.SetInt(GRPC_ARG_MIN_RECONNECT_BACKOFF_MS, 1000);
-                  //// max time between reconnect attempts
-                  //arguments.SetInt(GRPC_ARG_MAX_RECONNECT_BACKOFF_MS, 1000);
-
-                  auto channel = grpc::CreateCustomChannel(endpoint, grpc::InsecureChannelCredentials(), arguments);
-                  //auto channel = grpc::CreateChannel(endpoint, grpc::InsecureChannelCredentials());
-                  return Chord::NewStub(channel);
-                }},
+                [&, channel_pool](const endpoint endpoint) { return Chord::NewStub(channel_pool->get(endpoint)); }},
       logger{context.logging.factory().get_or_create(logger_name)} {}
 
-Client::Client(const Context &context, Router *router, StubFactory make_stub)
-    : context{context}, router{router}, make_stub{make_stub}, logger{context.logging.factory().get_or_create(logger_name)} {}
+Client::Client(const Context &context, Router *router, ChannelPool* channel_pool, StubFactory make_stub)
+    : context{context}, router{router}, channel_pool{channel_pool}, make_stub{make_stub}, logger{context.logging.factory().get_or_create(logger_name)} {}
 
 void Client::init_context([[maybe_unused]] ClientContext& client_context) {
   // left blank intentionally
