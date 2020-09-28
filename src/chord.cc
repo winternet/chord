@@ -22,7 +22,6 @@ using chord::uuid;
 using std::cerr;
 using std::cout;
 using std::endl;
-using std::make_shared;
 using std::string;
 using std::stringstream;
 using std::vector;
@@ -132,7 +131,7 @@ int main(int argc, char *argv[]) {
   auto context = parse_program_options(argc, argv);
 
   //--- start peer
-  auto peer = make_shared<chord::Peer>(context);
+  auto peer = std::make_unique<chord::Peer>(context);
 
   peer->start();
 
