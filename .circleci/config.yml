@@ -42,7 +42,8 @@ jobs:
             git clone -b $VERSION_GRPC https://github.com/grpc/grpc
             cd grpc
             git submodule update --init
-            make -j4 CFLAGS='-Wno-error -Wno-expansion-to-defined' && make install CFLAGS='-Wno-error -Wno-expansion-to-defined'
+            mkdir -p cmake/build && cd cmake/build && cmake ../.. && make -j4
+            # make -j4 CFLAGS='-Wno-error -Wno-expansion-to-defined' && make install CFLAGS='-Wno-error -Wno-expansion-to-defined'
             ldconfig
       
       - run:
