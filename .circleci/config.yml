@@ -10,8 +10,8 @@ jobs:
     docker:
       - image: ubuntu:20.04
     environment:
-      VERSION_GRPC: v1.27.3
-      VERSION_PROTOBUF: v3.11.4
+      VERSION_GRPC: v1.32.0
+      VERSION_PROTOBUF: v3.13.0
       DEBIAN_FRONTEND: noninteractive
     steps:
       - checkout

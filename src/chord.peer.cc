@@ -38,7 +38,9 @@ void Peer::start_server() {
   // initialize || join
   chord->start();
 
+  logger->error("PEER calling server->Wait()");
   server->Wait();
+  logger->error("PEER after server->Wait()");
 }
 
 void Peer::init() {
@@ -80,7 +82,9 @@ void Peer::start() {
 
 void Peer::stop() {
   chord->stop();
+  logger->error("PEER calling server->Shutdown()");
   server->Shutdown();
+  logger->error("PEER after server->Shutdown()");
 }
 
 } //namespace chord
