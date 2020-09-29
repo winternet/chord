@@ -24,14 +24,18 @@ RUN apt-get update \
 #
 # install grpc
 #
-RUN git clone -b v1.27.3 https://github.com/grpc/grpc /opt/grpc && cd /opt/grpc \
+RUN git clone -b v1.32.0 https://github.com/grpc/grpc /opt/grpc && cd /opt/grpc \
     && git submodule update --init \
-    && make -j$(nproc) CFLAGS='-Wno-error -Wno-expansion-to-defined' && make install CFLAGS='-Wno-error -Wno-expansion-to-defined'
+    && mkdir -p cmake/build \
+    && cd cmake/build \
+    && cmake ../.. -DBUILD_SHARED_LIBS=ON  -DgRPC_INSTALL=ON \
+    && make -j$(nproc) && make install \
+    && ldconfig
 
 #
 # install protobuf
 #
-RUN git clone -b v3.11.4 https://github.com/google/protobuf.git /opt/protobuf && cd /opt/protobuf/cmake \
+RUN git clone -b v3.13.0 https://github.com/google/protobuf.git /opt/protobuf && cd /opt/protobuf/cmake \
     $$ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/libfswatch" \
     && mkdir build && cd build \
     && cmake .. -DCMAKE_BUILD_TYPE=Release \
