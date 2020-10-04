@@ -31,6 +31,7 @@ namespace po = boost::program_options;
 Context parse_program_options(int ac, char *av[]) {
   auto logger = chord::log::get_or_create("chord.cc");
   spdlog::set_level(spdlog::level::trace);
+  spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%t] [%l] [%n] %v");
 
   po::options_description global("[program options]");
 

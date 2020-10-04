@@ -148,7 +148,7 @@ TEST_F(PutTest, nodes_2__repl_2__folder__height_1) {
   const auto data1 = base.add_dir("data1");
   const auto ctxt1 = test::make_context({"28948022309329048855892746252171976963317496166410141009864396001978282409984"}, 
       {bind_addr+"50051"}, data1, base.add_dir("meta1"), ctxt0.advertise_addr, false);
-  const auto peer1 = make_peer(ctxt1);
+  const auto peer1 [[maybe_unused]] = make_peer(ctxt1);
   ASSERT_TRUE(file::is_empty(data1->path));
 
   put(peer0, 2, source0, root_uri);
@@ -276,19 +276,19 @@ TEST_F(PutTest, nodes_3__repl_3__folder__height_3) {
   const auto data0 = base.add_dir("data0");
   const auto ctxt0 = test::make_context({"0"}, 
       {bind_addr+"50050"}, data0, base.add_dir("meta0"));
-  const auto peer0 = make_peer(ctxt0);
+  const auto peer0 [[maybe_unused]] = make_peer(ctxt0);
   ASSERT_TRUE(file::is_empty(data0->path));
 
   const auto data1 = base.add_dir("data1");
   const auto ctxt1 = test::make_context({"8"}, 
       {bind_addr+"50051"}, data1, base.add_dir("meta1"), ctxt0.advertise_addr, false);
-  const auto peer1 = make_peer(ctxt1);
+  const auto peer1 [[maybe_unused]] = make_peer(ctxt1);
   ASSERT_TRUE(file::is_empty(data1->path));
 
   const auto data2 = base.add_dir("data2");
   const auto ctxt2 = test::make_context({"512"}, 
       {bind_addr+"50052"}, data2, base.add_dir("meta2"), ctxt0.advertise_addr, false);
-  const auto peer2 = make_peer(ctxt2);
+  const auto peer2 [[maybe_unused]] = make_peer(ctxt2);
   ASSERT_TRUE(file::is_empty(data2->path));
 
   put(peer0, 3, source0, root_uri);

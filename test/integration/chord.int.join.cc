@@ -21,14 +21,11 @@ class JoinTest : public chord::test::IntegrationTest {
 };
 
 TEST_F(JoinTest, bootstrap) {
+  spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%t] [%l] [%n] %v");
   const auto data0 = base.add_dir("data0");
   const auto meta0 = base.add_dir("meta0");
   const auto port = 50050;
-  const auto peer = make_peer(test::make_context({"0"}, {bind_addr+std::to_string(port)}, data0, meta0));
-
-  //sleep();
-
-  peer->stop();
+  const auto peer [[maybe_unused]] = make_peer(test::make_context({"0"}, {bind_addr+std::to_string(port)}, data0, meta0));
 }
 
 TEST_F(JoinTest, join) {

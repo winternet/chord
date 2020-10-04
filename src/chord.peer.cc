@@ -38,9 +38,8 @@ void Peer::start_server() {
   // initialize || join
   chord->start();
 
-  logger->error("PEER calling server->Wait()");
   server->Wait();
-  logger->error("PEER after server->Wait()");
+  exit.set_value();
 }
 
 void Peer::init() {
@@ -81,10 +80,12 @@ void Peer::start() {
 }
 
 void Peer::stop() {
+  if(stopped.test_and_set()) {
+    return;
+  }
   chord->stop();
-  logger->error("PEER calling server->Shutdown()");
   server->Shutdown();
-  logger->error("PEER after server->Shutdown()");
+  exit.get_future().wait();
 }
 
 } //namespace chord

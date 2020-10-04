@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <atomic>
+#include <future>
 #include <grpc++/server.h>
 #include "chord.context.h"
 #include "chord.controller.service.h"
@@ -15,6 +17,10 @@ namespace chord {
 
 class Peer {
   static constexpr auto logger_name = "chord.peer";
+private:
+
+  std::atomic_flag stopped{false};
+  std::promise<void> exit;
 
  protected:
   chord::Context context;
