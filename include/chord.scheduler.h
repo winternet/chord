@@ -1,11 +1,9 @@
 #pragma once
 
 #include <atomic>
-#include <variant>
 #include <cassert>
 #include <chrono>
 #include <functional>
-#include <spdlog/spdlog.h>
 #include <future>
 #include <memory>
 #include <queue>

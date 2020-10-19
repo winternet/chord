@@ -27,7 +27,7 @@ ChordFacade::ChordFacade(Context& ctx, ChannelPool* channel_pool)
       router{make_unique<Router>(context)},
       client{make_unique<Client>(context, router.get(), channel_pool)},
       service{make_unique<Service>(context, router.get(), client.get())},
-      scheduler{make_shared<Scheduler>()},
+      scheduler{make_unique<Scheduler>()},
       logger{ctx.logging.factory().get_or_create(logger_name)}
       {}
 
@@ -39,7 +39,7 @@ ChordFacade::ChordFacade(Context& ctx, Router* router, IClient* client, IService
       router{router},
       client{client},
       service{service},
-      scheduler{make_shared<Scheduler>()},
+      scheduler{make_unique<Scheduler>()},
       logger{ctx.logging.factory().get_or_create(logger_name)}
       {}
 
