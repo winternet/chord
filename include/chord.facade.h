@@ -36,7 +36,7 @@ public:
   std::unique_ptr<chord::IClient> client;
   std::unique_ptr<chord::IService> service;
 
-  std::unique_ptr<AbstractScheduler> scheduler;
+  std::shared_ptr<AbstractScheduler> scheduler;
 
   std::shared_ptr<spdlog::logger> logger;
 

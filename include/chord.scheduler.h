@@ -1,9 +1,11 @@
 #pragma once
 
 #include <atomic>
+#include <variant>
 #include <cassert>
 #include <chrono>
 #include <functional>
+#include <spdlog/spdlog.h>
 #include <future>
 #include <memory>
 #include <queue>
@@ -14,24 +16,30 @@
 
 namespace chord {
 
+class Scheduler;
 struct function_timer {
+  private:
+    using clock = std::chrono::system_clock;
+    using time_point = clock::time_point;
+    using duration = clock::duration;
+  public:
+
+  time_point  time;
+
   std::function<void()> func;
-  std::chrono::system_clock::time_point time;
 
   function_timer() = default;
 
-  function_timer(std::function<void()> &&f, const std::chrono::system_clock::time_point &t)
-      : func(f), time(t) {}
+  function_timer(const time_point &t, std::function<void()> &&f)
+      : time(t), func(f) {}
 
-  //Note: we want our priority_queue to be ordered in terms of
-  //smallest time to largest, hence the > in operator<. This isn't good
-  //practice - it should be a separate struct -  but I've done this for brevity.
   bool operator<(const function_timer &rhs) const {
-    return time > rhs.time;
+    return time < rhs.time;
   }
 
-  void get() {
-    func();
+  // sort from smallest time to largest
+  bool operator>(const function_timer &rhs) const {
+    return time > rhs.time;
   }
 
   void operator()() {
@@ -42,50 +50,61 @@ struct function_timer {
 
 class Scheduler : public AbstractScheduler {
  private:
-  std::atomic<bool> stop;
-  std::unique_ptr<std::thread> thread;
-  std::priority_queue<function_timer> tasks;
+  using clock = std::chrono::system_clock;
+  using time_point = clock::time_point;
+  using duration = clock::duration;
+
+  bool stop {false};
+  bool task {false};
+  std::condition_variable task_cv;
+  std::condition_variable queue_cv;
+  std::mutex mtx;
+
+  std::vector<std::thread> threads;
+  std::priority_queue<function_timer, std::vector<function_timer>, std::greater<function_timer> > tasks;
+
+  void _shutdown() {
+    // must be protected by mutex
+    stop = true;
+    queue_cv.notify_all();
+    task_cv.notify_one();
+  }
+
 
  public:
-
+  Scheduler(const Scheduler &rhs) = delete;
   Scheduler &operator=(const Scheduler &rhs) = delete;
 
-  Scheduler(const Scheduler &rhs) = delete;
+  Scheduler(size_t pool_size) {
+    for(size_t i=0; i < pool_size; ++i) {
+      threads.emplace_back([this]{ loop(); });
+    }
+  }
 
-  Scheduler()
-      : stop{false},
-        thread(new std::thread([this] {
-                                 //--- setup time
-                                 using namespace std::chrono_literals;
-                                 std::this_thread::sleep_for(100ms);
-                                 //--- start loop
-                                 loop();
-                               }
-        )) {}
+  Scheduler() : Scheduler(2) {
+  }
 
   virtual ~Scheduler() {
-    stop = true;
-    thread->join();
+    {
+      std::unique_lock<std::mutex> lck(mtx);
+      _shutdown();
+    }
+    for(auto& t : threads) t.join();
   }
 
   void shutdown() override {
-    stop = true;
+    {
+      std::unique_lock<std::mutex> lck(mtx);
+      _shutdown();
+    }
   }
 
-  void schedule(const std::chrono::system_clock::time_point &time, std::function<void()> &&func) override {
-    std::function<void()> threadFunc = [func]() {
-      std::thread t(func);
-      t.detach();
-    };
-    tasks.push(function_timer(std::move(threadFunc), time));
+  void schedule(const time_point &time, std::function<void()> &&func) override {
+    schedule_intern(time, std::move(func));
   }
 
-  void schedule(const std::chrono::system_clock::duration &interval, std::function<void()> func) override {
-    std::function<void()> threadFunc = [func]() {
-      std::thread t(func);
-      t.detach();
-    };
-    this->scheduleIntern(interval, threadFunc);
+  void schedule(const duration &interval, std::function<void()> &&func) override {
+    schedule_intern(interval, std::move(func));
   }
 
   //in format "%s %M %H %d %m %Y" "sec min hour date month year"
@@ -93,40 +112,60 @@ class Scheduler : public AbstractScheduler {
     if (time.find('*')==std::string::npos && time.find('/')==std::string::npos) {
       std::tm tm = {};
       strptime(time.c_str(), "%s %M %H %d %m %Y", &tm);
-      auto tp = std::chrono::system_clock::from_time_t(std::mktime(&tm));
-      if (tp > std::chrono::system_clock::now())
-        scheduleIntern(tp, std::move(func));
+      auto tp = clock::from_time_t(std::mktime(&tm));
+      if (tp > clock::now())
+        schedule_intern(tp, std::move(func));
     }
   }
 
  private:
-  void scheduleIntern(const std::chrono::system_clock::time_point &time, std::function<void()> &&func) {
-    tasks.push(function_timer(std::move(func), time));
+  void schedule_intern(const time_point& time, std::function<void()> &&func) {
+    std::unique_lock<std::mutex> lck(mtx);
+    tasks.emplace(time, std::move(func));
+    queue_cv.notify_one();
   }
 
-  void scheduleIntern(std::chrono::system_clock::duration interval, std::function<void()> func) {
-    std::function<void()> waitFunc = [this, interval, func]() {
+  void schedule_intern(const duration& interval, std::function<void()> &&func) {
+    std::unique_lock<std::mutex> lck(mtx);
+    std::function<void()> wrapper = [this, interval, func]() mutable {
       func();
-      this->scheduleIntern(interval, func);
+      this->schedule_intern(clock::now() + interval, std::move(func));
     };
-    scheduleIntern(std::chrono::system_clock::now() + interval, std::move(waitFunc));
+    tasks.emplace(clock::now() + interval, std::move(wrapper));
+    queue_cv.notify_one();
+  }
+
+  bool is_runnable() {
+    if(stop) return true;
+    if(tasks.empty()) return false;
+    return tasks.top().time <= clock::now();
   }
 
   void loop() {
-    while (!stop) {
-      auto now = std::chrono::system_clock::now();
-      while (!tasks.empty() && tasks.top().time <= now && !stop) {
-        function_timer f = tasks.top();
-        f.get();
-        tasks.pop();
-      }
+    using namespace std;
 
-      if (tasks.empty()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //TODO: move to for loop init
+    std::unique_lock<std::mutex> lck(mtx);
+    while (!stop) {
+      if(is_runnable()) {
+        auto func = tasks.top();
+        tasks.pop();
+
+        if(this->task) task_cv.notify_one();
+        else           queue_cv.notify_one();
+
+        lck.unlock();
+        func();
+        lck.lock();
+      } else if (!tasks.empty() && !task) {
+        task = true;
+        task_cv.wait_until(lck, tasks.top().time, [this]{ return is_runnable(); });
+        task = false;
       } else {
-        std::this_thread::sleep_for(tasks.top().time - std::chrono::system_clock::now());
+        queue_cv.wait(lck);
       }
     }
+    lck.unlock();
   }
 };
 
