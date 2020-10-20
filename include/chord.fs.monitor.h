@@ -214,8 +214,9 @@ public:
 
 };
 
+std::ostream& operator<<(std::ostream&, const chord::fs::monitor::event::flag&);
+
 } //namespace fs
 } //namespace chord
 
-std::ostream& operator<<(std::ostream&, const chord::fs::monitor::event::flag&);
 

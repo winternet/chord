@@ -70,11 +70,12 @@ std::ostream& operator<<(std::ostream& os, const monitor::event& event) {
   return os << "| -> " << event.path;
 }
 
+std::ostream& operator<<(std::ostream&os, const chord::fs::monitor::event::flag& flag) {
+  return os << flag.name();
+}
+
 } //namespace fs
 } //namespace chord
 
 
-std::ostream& operator<<(std::ostream&os, const chord::fs::monitor::event::flag& flag) {
-  return os << flag.name();
-}
 
