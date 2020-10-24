@@ -307,3 +307,34 @@ TEST_F(PutTest, nodes_3__repl_3__folder__height_3) {
     ASSERT_TRUE(metadata_mgr->exists(uri{"chord:///source0/subdir/subsubdir"}));
   }
 }
+
+TEST_F(PutTest, nodes_1__repl_1__file_1__file_monitor) {
+  const auto source0 = base.add_dir("source0");
+  const auto file0 = source0->add_file("file0");
+
+  const auto data0 = base.add_dir("data0");
+  const auto meta0 = base.add_dir("meta0");
+  const auto port = 50050;
+  const auto peer = make_peer(test::make_context({"0"}, {bind_addr+std::to_string(port)}, data0, meta0));
+  const auto root_uri = uri{"chord:///"};
+
+  ASSERT_TRUE(file::is_empty(data0->path));
+
+  // copy file to data folder
+  chord::file::copy_file(*file0, data0->path / file0->path.filename());
+
+  std::mutex mtx;
+  std::condition_variable cv;
+  std::unique_lock<std::mutex> lck(mtx);
+
+  const auto mon = peer->get_monitor();
+  mon->events().connect([&](const std::vector<chord::fs::monitor::event> events) {
+      for(const auto& e:events) {
+        logger->info("received event: {}", e);
+      }
+      cv.notify_one();
+  });
+  cv.wait_for(lck, 2s);
+
+  assert_equal(peer, file0, uri{"chord:///file0"});
+}

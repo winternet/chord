@@ -32,7 +32,7 @@ class IntegrationTest : public ::testing::Test {
     chord::IntPeer* make_peer(const Context& context) {
       const auto peer = test::make_peer(context);
       peers.push_back(peer);
-      threads.push_back(test::detatch(peer));
+      threads.push_back(test::start_thread(peer));
       return peer;
     }
 

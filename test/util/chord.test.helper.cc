@@ -61,7 +61,7 @@ Context make_context(const uuid self, const endpoint bind_addr, const std::share
   return context;
 }
 
-std::thread detatch(chord::Peer* peer, bool wait) {
+std::thread start_thread(chord::Peer* peer, bool wait) {
   using namespace std::chrono_literals;
   std::thread t(&chord::Peer::start, peer);
   if(wait) std::this_thread::sleep_for(100ms);

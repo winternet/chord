@@ -29,6 +29,10 @@ struct TmpBase {
     chord::file::remove_all(path);
   }
 
+  inline operator std::string() const {
+    return path.string();
+  }
+
   inline operator chord::path() const {
     return path;
   }

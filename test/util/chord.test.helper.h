@@ -36,7 +36,7 @@ Context make_context(const uuid self, const std::shared_ptr<TmpDir> data_directo
 Context make_context(const uuid self, const std::shared_ptr<TmpDir> data_directory);
 Context make_context(const uuid self);
 
-std::thread detatch(chord::Peer* peer, bool wait=true);
+std::thread start_thread(chord::Peer* peer, bool wait=true);
 
 chord::common::RouterEntry make_entry(const chord::node& n);
 chord::common::RouterEntry make_entry(const uuid &id, const chord::endpoint& addr);

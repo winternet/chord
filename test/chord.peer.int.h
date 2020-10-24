@@ -21,10 +21,15 @@ class IntPeer : public Peer {
        chord::fs::IMetadataManager* get_metadata_manager() {
          return chord::fs::Facade::metadata_mgr.get();
        }
+
+       chord::fs::monitor* get_monitor() {
+         return chord::fs::Facade::monitor.get();
+       }
    };
  public:
    chord::ChordFacade* get_chord() const { return chord.get(); }
-   chord::fs::Facade* get_filesystem() const { return filesystem.get(); };
+   chord::fs::Facade* get_filesystem() const { return filesystem.get(); }
+   chord::fs::monitor* get_monitor() const { return static_cast<IntFsFacade*>(filesystem.get())->get_monitor(); }
    const chord::Context& get_context() const { return context; };
    chord::fs::IMetadataManager* get_metadata_manager() const { return static_cast<IntFsFacade*>(filesystem.get())->get_metadata_manager(); }
 
