@@ -266,7 +266,7 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
     }
     data /= uri.path().filename();
 
-    const auto lock = monitor::lock(monitor, {data, chord::fs::monitor::event::flag::UPDATED});
+    const auto lock = monitor::lock(monitor, {data, chord::fs::monitor::event::flag::CREATED});
 
     const auto file_exists = file::exists(data);
 

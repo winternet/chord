@@ -77,8 +77,8 @@ void Facade::on_fs_event(std::vector<chord::fs::monitor::event> events) {
   std::for_each(events.begin(), events.end(), [&](const auto& e) {
       const auto flgs = e.flags;
 
-      const auto updated = std::any_of(flgs.begin(), flgs.end(), [](const auto& f) { return f == chord::fs::monitor::event::flag::UPDATED; });
-      const auto removed = std::any_of(flgs.begin(), flgs.end(), [](const auto& f) { return f == chord::fs::monitor::event::flag::REMOVED; });
+      const auto updated = std::any_of(flgs.begin(), flgs.end(), [](const auto& f) { return f == monitor::event::flag::UPDATED || f == monitor::event::flag::CREATED; });
+      const auto removed = std::any_of(flgs.begin(), flgs.end(), [](const auto& f) { return f == monitor::event::flag::REMOVED; });
 
       if(updated) {
         handle_fs_update(e);
@@ -271,6 +271,10 @@ Status Facade::put_file_journal(const path& data_path) {
   const auto lock = monitor::lock(monitor.get(), {data_path});
 
   // move file to journal_path
+  const auto parent_path = journal_path - journal_path.filename();
+  if(!file::exists(parent_path)) {
+    file::create_directories(parent_path);
+  }
   chord::file::rename(data_path, journal_path);
 
   const auto target = uri{"chord", relative_path};

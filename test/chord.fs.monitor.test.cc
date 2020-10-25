@@ -3,6 +3,7 @@
 #include <iterator>
 #include <condition_variable>
 #include <mutex>
+#include <atomic>
 
 #include "chord.context.h"
 #include "chord.fs.monitor.h"
@@ -20,11 +21,8 @@ using ::testing::IsEmpty;
 
 using namespace std::literals::chrono_literals;
 
-//class MonitorTest : public ::testing::Test {
-//  protected:
-//    void SetUp() override {
-//    }
-//};
+
+static constexpr auto DEFAULT_DURATION = 1.2s;
 
 void sleep() {
   using namespace std::chrono_literals;
@@ -40,31 +38,29 @@ chord::Context make_context(const chord::path& data_dir) {
 TEST(monitor, create_file) {
   const TmpDir tmpDir;
   chord::fs::monitor mon(make_context(tmpDir.path));
-  bool callback_invoked = false;
 
-  std::timed_mutex mtx;
-  std::condition_variable_any cv;
+  std::mutex mtx;
+  std::condition_variable cv;
+
+  bool callback_invoked = false;
 
   mon.events().connect([&](const std::vector<chord::fs::monitor::event> events) {
       std::copy(events.begin(), events.end(), std::ostream_iterator<chord::fs::monitor::event>(std::cout, "\n"));
 
-      ASSERT_GE(events.size(), 1);
-      const auto ev = events.at(0);
-      //note that the most recent flag we receive is updated not created
-      ASSERT_THAT(ev.flags, Contains(chord::fs::monitor::event::flag::UPDATED));
-      std::unique_lock<std::timed_mutex> lck(mtx, 5s);
+      ASSERT_EQ(events.size(), 1);
+      ASSERT_THAT(events.at(0).flags, Contains(chord::fs::monitor::event::flag::CREATED));
+
+      std::unique_lock<std::mutex> lck(mtx);
       callback_invoked = true;
       cv.notify_one();
   });
-  sleep();
 
   const auto holder = tmpDir.add_file("foo");
 
-  std::unique_lock<std::timed_mutex> lock(mtx, 5s);
-  cv.wait(lock, [&]{return callback_invoked;});
+  std::unique_lock<std::mutex> lck(mtx);
+  cv.wait_for(lck, DEFAULT_DURATION, [&]{return callback_invoked;});
   
   ASSERT_TRUE(callback_invoked);
-  //holder.remove();
 }
 
 TEST(monitor, create_directories) {
@@ -72,19 +68,22 @@ TEST(monitor, create_directories) {
   chord::fs::monitor mon(make_context(tmpDir.path));
   bool callback_invoked = false;
 
-  std::timed_mutex mtx;
-  std::condition_variable_any cv;
+  std::mutex mtx;
+  std::condition_variable cv;
 
   mon.events().connect([&](const std::vector<chord::fs::monitor::event> events) {
       std::copy(events.begin(), events.end(), std::ostream_iterator<chord::fs::monitor::event>(std::cout, "\n"));
+      std::unique_lock<std::mutex> lck(mtx);
       callback_invoked = true;
+      cv.notify_one();
   });
-  sleep();
 
   const auto sub_dir = tmpDir.add_dir();
   const auto sub_sub_dir = sub_dir->add_dir();
 
-  sleep();
+  std::unique_lock<std::mutex> lck(mtx);
+  cv.wait_for(lck, DEFAULT_DURATION, [&]{return callback_invoked;});
+
   mon.stop();
 
   ASSERT_FALSE(callback_invoked);
@@ -96,27 +95,24 @@ TEST(monitor, remove_file) {
 
   chord::fs::monitor mon(make_context(tmpDir.path));
 
-  std::timed_mutex mtx;
-  std::condition_variable_any cv;
+  std::mutex mtx;
+  std::condition_variable cv;
   bool callback_invoked = false;
 
   mon.events().connect([&](const std::vector<chord::fs::monitor::event> events) {
       std::copy(events.begin(), events.end(), std::ostream_iterator<chord::fs::monitor::event>(std::cout, "\n"));
 
-      ASSERT_GE(events.size(), 1);
-      const auto ev = events.at(0);
-      ASSERT_THAT(ev.flags, Contains(chord::fs::monitor::event::flag::REMOVED));
-      //std::lock_guard<std::timed_mutex> lck(mtx);
-      std::unique_lock<std::timed_mutex> lck(mtx, 5s);
+      ASSERT_EQ(events.size(), 1);
+      ASSERT_THAT(events.at(0).flags, Contains(chord::fs::monitor::event::flag::REMOVED));
+      std::unique_lock<std::mutex> lck(mtx);
       callback_invoked = true;
       cv.notify_one();
   });
-  sleep();
 
   file->remove();
 
-  std::unique_lock<std::timed_mutex> lock(mtx, 5s);
-  cv.wait(lock, [&]{return callback_invoked;});
+  std::unique_lock<std::mutex> lck(mtx);
+  cv.wait_for(lck, DEFAULT_DURATION, [&]{return callback_invoked;});
   
   ASSERT_TRUE(callback_invoked);
 }
@@ -131,15 +127,10 @@ TEST(monitor, filter_file) {
       std::copy(events.begin(), events.end(), std::ostream_iterator<chord::fs::monitor::event>(std::cout, "\n"));
       callback_invoked = true;
   });
-  sleep();
 
   mon.add_filter({tmpDir.path / "foo"}); // create, update, remove
   const auto file = tmpDir.add_file("foo");
 
-  sleep();
-  mon.stop();
-
-  //ASSERT_THAT(mon.filters(), IsEmpty());
   ASSERT_FALSE(callback_invoked);
 }
 
@@ -151,14 +142,45 @@ TEST(monitor, filter_file_by_flag) {
       std::copy(events.begin(), events.end(), std::ostream_iterator<chord::fs::monitor::event>(std::cout, "\n"));
       callback_invoked = true;
   });
-  sleep();
 
   mon.add_filter({tmpDir.path / "foo", chord::fs::monitor::event::flag::UPDATED});
   const auto file = tmpDir.add_file("foo");
 
-  sleep();
-  mon.stop();
-  
-  //ASSERT_THAT(mon.filters(), IsEmpty());
   ASSERT_FALSE(callback_invoked);
+}
+
+TEST(monitor, directories) {
+  const TmpDir base;
+
+  chord::fs::monitor mon(make_context(base.path));
+
+  const auto source0 = base.add_dir("source0");
+  const auto file0 = source0->add_file("file0.md");
+  const auto file1 = source0->add_file("file1.md");
+
+  const auto subdir = source0->add_dir("subdir");
+  const auto subfile0 = subdir->add_file("subfile0.md");
+  const auto subfile1 = subdir->add_file("subfile1.md");
+
+  const auto subsubdir = subdir->add_dir("subsubdir");
+  const auto subsubfile0 = subsubdir->add_file("subsubfile0.md");
+
+
+  std::mutex mtx;
+  std::unique_lock<std::mutex> lck(mtx);
+  std::condition_variable cv;
+
+  std::atomic<size_t> counter = 5;
+
+  mon.events().connect([&]([[maybe_unused]] const std::vector<chord::fs::monitor::event> events) {
+      std::copy(events.begin(), events.end(), std::ostream_iterator<chord::fs::monitor::event>(std::cout, "\n"));
+      counter -= events.size();
+      if(counter == 0) cv.notify_one();
+  });
+
+  cv.wait_for(lck, DEFAULT_DURATION, [&]{return counter == 0;});
+
+  ASSERT_EQ(counter, 0);
+
+  mon.stop();
 }

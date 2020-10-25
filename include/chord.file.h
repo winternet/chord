@@ -18,6 +18,8 @@ namespace file {
 
   bool create_file(const std::string &path);
 
+  void copy(const std::string &from, const std::string& to);
+
   bool copy_file(const std::string &from, const std::string& to);
 
   bool is_empty(const std::string& path);

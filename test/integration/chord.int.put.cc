@@ -56,6 +56,7 @@ TEST_F(PutTest, nodes_1__repl_1__file_1) {
   put(peer, 1, file0, root_uri);
 
   assert_equal(peer, file0, uri{"chord:///file0"});
+  //std::this_thread::sleep_for(5s);
 }
 
 TEST_F(PutTest, nodes_1__repl_1__folder) {
@@ -326,15 +327,95 @@ TEST_F(PutTest, nodes_1__repl_1__file_1__file_monitor) {
   std::mutex mtx;
   std::condition_variable cv;
   std::unique_lock<std::mutex> lck(mtx);
+  bool callback_invoked = false;
 
   const auto mon = peer->get_monitor();
   mon->events().connect([&](const std::vector<chord::fs::monitor::event> events) {
       for(const auto& e:events) {
         logger->info("received event: {}", e);
       }
+      callback_invoked = true;
       cv.notify_one();
   });
-  cv.wait_for(lck, 2s);
+  cv.wait_for(lck, 2s, [&](){return callback_invoked;});
+
+  ASSERT_TRUE(callback_invoked);
+
+  //std::this_thread::sleep_for(20s);
 
   assert_equal(peer, file0, uri{"chord:///file0"});
+}
+
+
+TEST_F(PutTest, nodes_3__repl_3__file_3__file_monitor) {
+  const auto root_uri = uri{"chord:///"};
+  const auto source0 = base.add_dir("source0");
+  const auto file0 = source0->add_file("file0.md");
+  const auto file1 = source0->add_file("file1.md");
+
+  const auto subdir = source0->add_dir("subdir");
+  const auto subfile0 = subdir->add_file("subfile0.md");
+  const auto subfile1 = subdir->add_file("subfile1.md");
+
+  const auto subsubdir = subdir->add_dir("subsubdir");
+  const auto subsubfile0 = subsubdir->add_file("subsubfile0.md");
+
+  const auto data0 = base.add_dir("data0");
+  auto ctxt0 = test::make_context({"0"}, 
+      {bind_addr+"50050"}, data0, base.add_dir("meta0"));
+  ctxt0.replication_cnt = -1;
+  const auto peer0 [[maybe_unused]] = make_peer(ctxt0);
+  ASSERT_TRUE(file::is_empty(data0->path));
+
+  const auto data1 = base.add_dir("data1");
+  const auto ctxt1 = test::make_context({"8"}, 
+      {bind_addr+"50051"}, data1, base.add_dir("meta1"), ctxt0.advertise_addr, false);
+  const auto peer1 [[maybe_unused]] = make_peer(ctxt1);
+  ASSERT_TRUE(file::is_empty(data1->path));
+
+  const auto data2 = base.add_dir("data2");
+  const auto ctxt2 = test::make_context({"512"}, 
+      {bind_addr+"50052"}, data2, base.add_dir("meta2"), ctxt0.advertise_addr, false);
+  const auto peer2 [[maybe_unused]] = make_peer(ctxt2);
+  ASSERT_TRUE(file::is_empty(data2->path));
+
+
+  for(const auto& peer : peers) {
+    const auto ctxt = peer->get_context();
+    ASSERT_TRUE(file::is_empty(ctxt.data_directory));
+  }
+  
+  chord::file::copy(source0->path, data0->path);
+
+  // wait until the last node of the ring received all files.
+  {
+    std::mutex mtx;
+    std::condition_variable cv;
+    std::unique_lock<std::mutex> lck(mtx);
+    std::atomic<size_t> counter = 5;
+
+    const auto mon = peer2->get_monitor();
+    mon->events().connect([&](const std::vector<chord::fs::monitor::event> events) {
+        for(const auto& e:events) {
+          logger->info("received event: {}", e);
+        }
+        counter -= events.size();
+        if(counter == 0) cv.notify_one();
+    });
+    cv.wait_for(lck, 10s, [&](){ return counter==0; });
+  }
+ 
+  ASSERT_EQ(peers.size(), 3);
+  for(const auto peer:peers)
+  {
+    const auto metadata_mgr = peer->get_metadata_manager();
+    assert_equal(peer, file0,       uri{"chord:///file0.md"});
+    assert_equal(peer, file1,       uri{"chord:///file1.md"});
+    assert_equal(peer, subfile0,    uri{"chord:///subdir/subfile0.md"});
+    assert_equal(peer, subfile1,    uri{"chord:///subdir/subfile1.md"});
+    assert_equal(peer, subsubfile0, uri{"chord:///subdir/subsubdir/subsubfile0.md"});
+    ASSERT_TRUE(metadata_mgr->exists(uri{"chord:///"}));
+    ASSERT_TRUE(metadata_mgr->exists(uri{"chord:///subdir"}));
+    ASSERT_TRUE(metadata_mgr->exists(uri{"chord:///subdir/subsubdir"}));
+  }
 }

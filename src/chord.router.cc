@@ -29,7 +29,7 @@ Router::~Router() {
 }
 
 void Router::init() {
-  std::lock_guard<mutex_t> lock(mtx);
+  std::scoped_lock<mutex_t> lock(mtx);
   for(size_t idx=0; idx < BITS; ++idx) {
     const auto finger = calc_successor_uuid_for_index(idx);
     successors[idx] = {finger, {}};
@@ -37,7 +37,7 @@ void Router::init() {
 }
 
 void Router::cleanup() {
-  std::lock_guard<mutex_t> lock(mtx);
+  std::scoped_lock<mutex_t> lock(mtx);
   _predecessor.reset();
   init();
 }
@@ -47,12 +47,12 @@ void Router::reset() {
 }
 
 bool Router::has_successor() const {
-  std::lock_guard<mutex_t> lock(mtx);
+  std::scoped_lock<mutex_t> lock(mtx);
   return successors.front().valid();
 }
 
 bool Router::has_predecessor() const {
-  std::lock_guard<mutex_t> lock(mtx);
+  std::scoped_lock<mutex_t> lock(mtx);
   return _predecessor.has_value();
 }
 
@@ -72,7 +72,7 @@ node Router::successor_or_self() const {
 }
 
 optional<node> Router::successor() const {
-  std::lock_guard<mutex_t> lock(mtx);
+  std::scoped_lock<mutex_t> lock(mtx);
   auto succ = successors.front();
   if(succ.valid()) return succ.node();
   return {};
@@ -80,12 +80,12 @@ optional<node> Router::successor() const {
 }
 
 void Router::update(const std::set<chord::node>& nodes) {
-  std::lock_guard<mutex_t> lock(mtx);
+  std::scoped_lock<mutex_t> lock(mtx);
   std::for_each(nodes.begin(), nodes.end(), [this](const chord::node& n){this->update(n);});
 }
 
 bool Router::update(const chord::node& insert) {
-  //std::lock_guard<mutex_t> lock(mtx);
+  //std::scoped_lock<mutex_t> lock(mtx);
   bool changed = false;
 
   if(insert == context.node()) return false;
@@ -114,7 +114,7 @@ bool Router::update(const chord::node& insert) {
 }
 
 bool Router::remove(const chord::uuid& uuid, const bool signal) {
-  std::lock_guard<mutex_t> lock(mtx);
+  std::scoped_lock<mutex_t> lock(mtx);
   bool changed = false;
   auto replacement = successors.rbegin();
 
@@ -173,12 +173,12 @@ bool Router::remove(const chord::node& node, const bool signal) {
 }
 
 optional<node> Router::predecessor() const {
-  std::lock_guard<mutex_t> lock(mtx);
+  std::scoped_lock<mutex_t> lock(mtx);
   return _predecessor;
 }
 
 std::vector<node> Router::closest_preceding_nodes(const uuid& uuid) {
-  std::lock_guard<mutex_t> lock(mtx);
+  std::scoped_lock<mutex_t> lock(mtx);
   std::vector<node> ret;
 
   for(auto it=std::crbegin(successors); it != crend(successors); ++it) {
@@ -198,14 +198,14 @@ optional<node> Router::closest_preceding_node(const uuid_t &uuid) {
 }
 
 uuid Router::get(const size_t index) const {
-  std::lock_guard<mutex_t> lock(mtx);
+  std::scoped_lock<mutex_t> lock(mtx);
   auto it = successors.begin();
   std::advance(it, index);
   return it->uuid;
 }
 
 std::set<node> Router::get() const {
-  std::lock_guard<mutex_t> lock(mtx);
+  std::scoped_lock<mutex_t> lock(mtx);
   std::set<node> ret;
   for(const auto entry:successors) {
     if(entry.valid()) ret.insert(entry.node());

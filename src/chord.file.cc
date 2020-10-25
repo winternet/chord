@@ -43,6 +43,10 @@ bool file::remove_all(const std::string &path) {
   return fs::remove_all({path});
 }
 
+void file::copy(const std::string &from, const std::string& to) {
+  fs::copy(from, to, fs::copy_options::recursive);
+}
+
 bool file::copy_file(const std::string &from, const std::string& to) {
   return fs::copy_file(from, to);
 }
