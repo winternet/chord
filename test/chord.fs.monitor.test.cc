@@ -22,7 +22,7 @@ using ::testing::IsEmpty;
 using namespace std::literals::chrono_literals;
 
 
-static constexpr auto DEFAULT_DURATION = 1.2s;
+static constexpr auto DEFAULT_DURATION = 5s;
 
 void sleep() {
   using namespace std::chrono_literals;
