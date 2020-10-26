@@ -125,7 +125,7 @@ std::experimental::optional<std::string> file::attr(const std::string &path, con
 bool file::attr(const std::string &path, const std::string &name, const std::string &value) {
   using namespace std::string_literals;
   const auto err = ::setxattr(path.c_str(), name.c_str(), value.data(), value.size(), 0);
-  if (err == static_cast<decltype(err)>(-1))
+  if (err == std::numeric_limits<decltype(err)>::max())
     throw__exception("failed to set xattr"s + strerror(errno));
 
   return true;

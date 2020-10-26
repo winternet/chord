@@ -10,9 +10,6 @@
 #include "util/chord.test.tmp.file.h"
 #include "util/chord.test.tmp.dir.h"
 
-//TODO remove
-#include <libfswatch/c++/monitor.hpp>
-
 using chord::test::TmpFile;
 using chord::test::TmpDir;
 
@@ -22,11 +19,11 @@ using ::testing::IsEmpty;
 using namespace std::literals::chrono_literals;
 
 
-static constexpr auto DEFAULT_DURATION = 10s;
+static constexpr auto DEFAULT_DURATION = 5s;
 
 void sleep() {
   using namespace std::chrono_literals;
-  std::this_thread::sleep_for(350ms);
+  std::this_thread::sleep_for(125ms);
 }
 
 chord::Context make_context(const chord::path& data_dir) {
@@ -41,7 +38,6 @@ TEST(monitor, create_file) {
 
   std::mutex mtx;
   std::condition_variable cv;
-
   bool callback_invoked = false;
 
   mon.events().connect([&](const std::vector<chord::fs::monitor::event> events) {
@@ -66,13 +62,14 @@ TEST(monitor, create_file) {
 TEST(monitor, create_directories) {
   const TmpDir tmpDir;
   chord::fs::monitor mon(make_context(tmpDir.path));
-  bool callback_invoked = false;
 
   std::mutex mtx;
   std::condition_variable cv;
+  bool callback_invoked = false;
 
   mon.events().connect([&](const std::vector<chord::fs::monitor::event> events) {
       std::copy(events.begin(), events.end(), std::ostream_iterator<chord::fs::monitor::event>(std::cout, "\n"));
+
       std::unique_lock<std::mutex> lck(mtx);
       callback_invoked = true;
       cv.notify_one();
@@ -95,28 +92,23 @@ TEST(monitor, remove_file) {
 
   chord::fs::monitor mon(make_context(tmpDir.path));
 
-  std::this_thread::sleep_for(2s);
-
   std::mutex mtx;
   std::condition_variable cv;
   bool callback_invoked = false;
-
-  std::this_thread::sleep_for(2s);
 
   mon.events().connect([&](const std::vector<chord::fs::monitor::event> events) {
       std::copy(events.begin(), events.end(), std::ostream_iterator<chord::fs::monitor::event>(std::cout, "\n"));
 
       ASSERT_EQ(events.size(), 1);
       ASSERT_THAT(events.at(0).flags, Contains(chord::fs::monitor::event::flag::REMOVED));
+
       std::unique_lock<std::mutex> lck(mtx);
       callback_invoked = true;
       cv.notify_one();
   });
-  std::this_thread::sleep_for(2s);
 
   file->remove();
 
-  std::this_thread::sleep_for(2s);
   std::unique_lock<std::mutex> lck(mtx);
   cv.wait_for(lck, DEFAULT_DURATION, [&]{return callback_invoked;});
   
@@ -173,17 +165,20 @@ TEST(monitor, directories) {
 
 
   std::mutex mtx;
-  std::unique_lock<std::mutex> lck(mtx);
   std::condition_variable cv;
-
   std::atomic<size_t> counter = 5;
 
   mon.events().connect([&]([[maybe_unused]] const std::vector<chord::fs::monitor::event> events) {
       std::copy(events.begin(), events.end(), std::ostream_iterator<chord::fs::monitor::event>(std::cout, "\n"));
       counter -= events.size();
-      if(counter == 0) cv.notify_one();
+
+      if(counter == 0) {
+        std::unique_lock<std::mutex> lck(mtx);
+        cv.notify_one();
+      }
   });
 
+  std::unique_lock<std::mutex> lck(mtx);
   cv.wait_for(lck, DEFAULT_DURATION, [&]{return counter == 0;});
 
   ASSERT_EQ(counter, 0);

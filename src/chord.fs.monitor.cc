@@ -29,7 +29,10 @@ monitor::monitor(const chord::Context& context)
     _monitor->add_event_type_filter(fsw_event_type_filter{flag.mapped_type()});
   }
 
-  _thread = std::thread{&fsw::monitor::start,std::ref(_monitor)};
+  using namespace std::chrono_literals;
+  _thread = std::thread{&fsw::monitor::start, std::ref(_monitor)};
+  while(!_monitor->is_running())
+    std::this_thread::sleep_for(125ms);
 }
 
 monitor::~monitor() {
