@@ -22,7 +22,7 @@ using ::testing::IsEmpty;
 using namespace std::literals::chrono_literals;
 
 
-static constexpr auto DEFAULT_DURATION = 20s;
+static constexpr auto DEFAULT_DURATION = 10s;
 
 void sleep() {
   using namespace std::chrono_literals;
@@ -95,9 +95,13 @@ TEST(monitor, remove_file) {
 
   chord::fs::monitor mon(make_context(tmpDir.path));
 
+  std::this_thread::sleep_for(2s);
+
   std::mutex mtx;
   std::condition_variable cv;
   bool callback_invoked = false;
+
+  std::this_thread::sleep_for(2s);
 
   mon.events().connect([&](const std::vector<chord::fs::monitor::event> events) {
       std::copy(events.begin(), events.end(), std::ostream_iterator<chord::fs::monitor::event>(std::cout, "\n"));
@@ -108,9 +112,11 @@ TEST(monitor, remove_file) {
       callback_invoked = true;
       cv.notify_one();
   });
+  std::this_thread::sleep_for(2s);
 
   file->remove();
 
+  std::this_thread::sleep_for(2s);
   std::unique_lock<std::mutex> lck(mtx);
   cv.wait_for(lck, DEFAULT_DURATION, [&]{return callback_invoked;});
   
