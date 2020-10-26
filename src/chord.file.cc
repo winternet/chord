@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <iterator>
 #include <fstream>
+#include <limits>
 #include <experimental/filesystem>
 
 #include "chord.exception.h"
@@ -94,7 +95,7 @@ bool file::create_directories(const std::string &path) {
 
 bool file::has_attr(const std::string &path, const std::string &name) {
   const auto read = ::getxattr(path.c_str(), name.c_str(), nullptr, 0);
-  if (read == static_cast<decltype(read)>(-1)) return false;
+  if (read == std::numeric_limits<decltype(read)>::max()) return false;
 
   return true;
 }
@@ -103,7 +104,7 @@ bool file::has_attr(const std::string &path, const std::string &name) {
 std::experimental::optional<std::string> file::attr(const std::string &path, const std::string &name) {
   using namespace std::string_literals;
   auto read = ::getxattr(path.c_str(), name.c_str(), nullptr, 0);
-  if (read==static_cast<decltype(read)>(-1)) return {};
+  if (read == std::numeric_limits<decltype(read)>::max()) return {};
 
 #if __cplusplus >= 201703L
   std::string value; value.resize(read);
@@ -114,7 +115,7 @@ std::experimental::optional<std::string> file::attr(const std::string &path, con
   std::string value(buffer, read);
   delete[] buffer;
 #endif
-  if (read == static_cast<decltype(read)>(-1))
+  if (read == std::numeric_limits<decltype(read)>::max())
     throw__exception("failed to get xattr"s + strerror(errno));
 
   return value;
@@ -133,7 +134,7 @@ bool file::attr(const std::string &path, const std::string &name, const std::str
 bool file::attr_remove(const std::string &path, const std::string &name) {
   using namespace std::string_literals;
   const auto err = ::removexattr(path.c_str(), name.c_str());
-  if (err==static_cast<decltype(err)>(-1)) return false;
+  if (err == std::numeric_limits<decltype(err)>::max()) return false;
 
   return true;
 }
