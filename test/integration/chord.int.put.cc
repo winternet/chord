@@ -22,25 +22,8 @@ class PutTest : public chord::test::IntegrationTest {
   }
 
 public:
-    void assert_equal(const IntPeer* peer, std::shared_ptr<chord::test::TmpBase> source, const uri& target_uri) const {
-      const auto metadata_mgr = peer->get_metadata_manager();
-      const auto target_path = peer->get_context().data_directory/target_uri.path();
-
-      ASSERT_TRUE(file::files_equal(p(source), target_path)) << "source[" << source->path << "] vs [" << target_path << "]";
-      ASSERT_TRUE(metadata_mgr->exists(target_uri));
-    }
 
 };
-
-std::string put(const path& src, const path& dst) {
-  return "put " + src.string() + " " + to_string(uri{"chord", dst});
-}
-
-template<typename TMP>
-void put(chord::IntPeer* peer, int replication, const std::shared_ptr<TMP> src, const chord::uri& dst) {
-  controller::Client ctrl_client;
-  ctrl_client.control(peer->get_context().advertise_addr, "put --repl "+std::to_string(replication)+" "+(src->path.string())+" "+std::string(dst));
-}
 
 TEST_F(PutTest, nodes_1__repl_1__file_1) {
   const auto source0 = base.add_dir("source0");
@@ -55,8 +38,7 @@ TEST_F(PutTest, nodes_1__repl_1__file_1) {
   ASSERT_TRUE(file::is_empty(data0->path));
   put(peer, 1, file0, root_uri);
 
-  assert_equal(peer, file0, uri{"chord:///file0"});
-  //std::this_thread::sleep_for(5s);
+  assert_equal(peer, file0, uri{"chord:///file0"}, true);
 }
 
 TEST_F(PutTest, nodes_1__repl_1__folder) {
@@ -77,8 +59,8 @@ TEST_F(PutTest, nodes_1__repl_1__folder) {
   ASSERT_TRUE(metadata_mgr->exists(root_uri));
   ASSERT_TRUE(metadata_mgr->exists(uri{"chord:///source0"}));
 
-  assert_equal(peer, file0, uri{"chord:///source0/file0.md"});
-  assert_equal(peer, file1, uri{"chord:///source0/file1.md"});
+  assert_equal(peer, file0, uri{"chord:///source0/file0.md"}, true);
+  assert_equal(peer, file1, uri{"chord:///source0/file1.md"}, true);
 }
 
 /**
