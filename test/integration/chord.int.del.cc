@@ -26,7 +26,7 @@ public:
 
 };
 
-TEST_F(DelTest, nodes_1__repl_1__file_1) {
+TEST_F(DISABLED_DelTest, nodes_1__repl_1__file_1) {
   const auto source0 = base.add_dir("source0");
   const auto file0 = source0->add_file("file0");
 
