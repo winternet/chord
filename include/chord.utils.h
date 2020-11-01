@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <map>
 #include <string>
 #include <functional>
@@ -32,6 +33,13 @@ namespace utils {
       }
     }
     return retVal;
+  }
+
+  template <class T, class Comp, class Alloc, class Predicate>
+  void erase_if(std::set<T, Comp, Alloc>& s, Predicate pred) {
+    for(auto it=s.begin(); it != s.end();)
+      if(pred(*it)) it = s.erase(it);
+      else ++it;
   }
 
 }  // namespace utils

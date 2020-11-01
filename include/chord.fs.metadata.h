@@ -130,6 +130,7 @@ bool is_shallow_copy(const std::set<Metadata>&, const Context&);
 bool is_shallow_copyable(const std::set<Metadata>& metadata, const Context&);
 std::set<Metadata> clear_hashes(std::set<Metadata>);
 std::set<Metadata> set_node_ref(const std::set<Metadata>& metadata, const Context&);
+std::set<Metadata> increase_replication_and_clean(const std::set<Metadata>& metadata);
 
 }  // namespace fs
 }  // namespace chord

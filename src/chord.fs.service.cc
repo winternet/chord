@@ -92,32 +92,19 @@ Status Service::handle_meta_dir([[maybe_unused]] ServerContext *serverContext, c
 
 Status Service::handle_meta_del(ServerContext *serverContext, const MetaRequest *req) {
   const auto uri = uri::from(req->uri());
-  auto metadata = MetadataBuilder::from(req);
 
-  auto deleted_metadata = metadata_mgr->del(uri, metadata);
+  auto deleted_metadata = metadata_mgr->del(uri, MetadataBuilder::from(req));
   const auto options = ContextMetadata::from(serverContext);
 
   /**
    * increase and check replication
    * remove metadata or propagate deletion
    */
-  {
-    for(auto it = deleted_metadata.begin(); it != deleted_metadata.end(); ++it) {
-      auto node = deleted_metadata.extract(it);
-      if(!node) continue;
-      auto& repl = node.value().replication;
-      if(repl) {
-        ++repl;
-      }
-      deleted_metadata.insert(std::move(node));
-      if(!repl)
-        deleted_metadata.erase(it);
-    }
-  }
+  std::set<Metadata> metadata = chord::fs::increase_replication_and_clean(deleted_metadata);
 
-  if(!is_empty(deleted_metadata)) {
+  if(!is_empty(metadata)) {
     const auto node = chord->successor();
-    const auto status = make_client()->meta(node, uri, Client::Action::DEL, deleted_metadata, init_source(options));
+    const auto status = make_client()->meta(node, uri, Client::Action::DEL, metadata, init_source(options));
   }
 
   /**
@@ -166,19 +153,7 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
 
   // handle replication
   {
-    std::set<Metadata> new_metadata;
-    // remove metadata
-    std::copy_if(metadata.begin(), metadata.end(), std::inserter(new_metadata, new_metadata.begin()), [&](const Metadata& meta) {
-        if(!meta.replication) return false;
-        return meta.replication.has_next();
-    });
-    //update replication
-    for(auto it = new_metadata.begin(); it != new_metadata.end(); ++it) {
-      auto node = new_metadata.extract(it);
-      if(!node) continue;
-      node.value().replication++;
-      new_metadata.insert(std::move(node));
-    }
+    std::set<Metadata> new_metadata = chord::fs::increase_replication_and_clean(metadata);
 
     if(!new_metadata.empty()) {
       const auto node = chord->successor();

@@ -1,5 +1,6 @@
 #include "chord.fs.metadata.h"
 #include "chord.context.h"
+#include "chord.utils.h"
 
 using std::begin;
 using std::end;
@@ -118,6 +119,13 @@ std::set<Metadata> clear_hashes(std::set<Metadata> metadata) {
       return m;
   });
   return retVal;
+}
+
+std::set<Metadata> increase_replication_and_clean(const std::set<Metadata>& metadata) {
+  std::set<Metadata> next_repl;
+  std::transform(metadata.begin(), metadata.end(), std::inserter(next_repl, next_repl.begin()), [](Metadata m) { ++m.replication; return m; });
+  chord::utils::erase_if(next_repl, [](const Metadata& m) {return !m.replication;});
+  return next_repl;
 }
 
 
