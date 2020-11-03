@@ -46,28 +46,29 @@ TEST_F(DelTest, nodes_1__repl_1__file_1) {
   assert_deleted(peer, target_uri, true);
 }
 
-//TEST_F(PutTest, nodes_1__repl_1__folder) {
-//  const auto source0 = base.add_dir("source0");
-//  const auto file0 = source0->add_file("file0.md");
-//  const auto file1 = source0->add_file("file1.md");
-//
-//  const auto data0 = base.add_dir("data0");
-//  const auto meta0 = base.add_dir("meta0");
-//  const auto port = 50050;
-//  const auto peer = make_peer(test::make_context({"0"}, {bind_addr+std::to_string(port)}, data0, meta0));
-//  const auto metadata_mgr = peer->get_metadata_manager();
-//  const auto root_uri = uri{"chord:///"};
-//
-//  ASSERT_TRUE(file::is_empty(data0->path));
-//  put(peer, 1, source0, root_uri);
-//
-//  ASSERT_TRUE(metadata_mgr->exists(root_uri));
-//  ASSERT_TRUE(metadata_mgr->exists(uri{"chord:///source0"}));
-//
-//  assert_equal(peer, file0, uri{"chord:///source0/file0.md"});
-//  assert_equal(peer, file1, uri{"chord:///source0/file1.md"});
-//}
-//
+TEST_F(DelTest, nodes_1__repl_1__folder) {
+  const auto source0 = base.add_dir("source0");
+  const auto folder = source0->add_dir("folder");
+  const auto file0 = folder->add_file("file0.md");
+  const auto file1 = folder->add_file("file1.md");
+
+  const auto data0 = base.add_dir("data0");
+  const auto meta0 = base.add_dir("meta0");
+  const auto port = 50050;
+  const auto peer = make_peer(test::make_context({"0"}, {bind_addr+std::to_string(port)}, data0, meta0));
+  const auto root_uri = uri{"chord:///"};
+
+  ASSERT_TRUE(file::is_empty(data0->path));
+  put(peer, 1, folder, root_uri);
+
+  assert_equal(peer, file0, uri{"chord:///folder/file0.md"}, true);
+  assert_equal(peer, file1, uri{"chord:///folder/file1.md"}, true);
+
+  const auto target_uri = uri{"chord:///folder"};
+  del(peer, target_uri, true);
+  assert_deleted(peer, target_uri, true);
+}
+
 ///**
 // * PUT [replication: 1]
 // * source0

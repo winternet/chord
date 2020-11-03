@@ -9,9 +9,9 @@ std::string put(const path& src, const path& dst) {
   return "put " + src.string() + " " + to_string(uri{"chord", dst});
 }
 
-void del(chord::IntPeer* peer, const chord::uri& dst) {
+void del(chord::IntPeer* peer, const chord::uri& dst, bool recursive) {
   controller::Client ctrl_client;
-  ctrl_client.control(peer->get_context().advertise_addr, "del "+std::string(dst));
+  ctrl_client.control(peer->get_context().advertise_addr, "del "s + (recursive ? "--recursive ":"") + std::string(dst));
 }
 
 void IntegrationTest::assert_equal(const IntPeer* peer, std::shared_ptr<chord::test::TmpBase> source, const uri& target_uri, const bool check_parent) const {

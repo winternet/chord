@@ -92,7 +92,7 @@ void put(chord::IntPeer* peer, int replication, const std::shared_ptr<TMP> src, 
   ctrl_client.control(peer->get_context().advertise_addr, "put --repl "+std::to_string(replication)+" "+(src->path.string())+" "+std::string(dst));
 }
 
-void del(chord::IntPeer* peer, const chord::uri& dst);
+void del(chord::IntPeer* peer, const chord::uri& dst, bool recursive=false);
 
 } // namespace test
 } // namespace chord
