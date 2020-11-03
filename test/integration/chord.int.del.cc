@@ -69,45 +69,50 @@ TEST_F(DelTest, nodes_1__repl_1__folder) {
   assert_deleted(peer, target_uri, true);
 }
 
-///**
-// * PUT [replication: 1]
-// * source0
-// * ├── file0
-// * └── file1
-// * 
-// * EXPECTED
-// * data0
-// * └── file0
-// * data1
-// * └── file1
-// */
-//TEST_F(PutTest,  nodes_2__repl_1__folder__height_1) {
-//  const auto root_uri = uri{"chord:///"};
-//  const auto source0 = base.add_dir("source0");
-//  const auto file0 = source0->add_file("file0.md");
-//  const auto file1 = source0->add_file("file1.md");
-//
-//  const auto data0 = base.add_dir("data0");
-//  const auto ctxt0 = test::make_context({"0"}, 
-//      {bind_addr+"50050"}, data0, base.add_dir("meta0"));
-//  const auto peer0 = make_peer(ctxt0);
-//  ASSERT_TRUE(file::is_empty(data0->path));
-//
-//  const auto data1 = base.add_dir("data1");
-//  const auto ctxt1 = test::make_context({"28948022309329048855892746252171976963317496166410141009864396001978282409984"}, 
-//      {bind_addr+"50051"}, data1, base.add_dir("meta1"), ctxt0.advertise_addr, false);
-//  const auto peer1 = make_peer(ctxt1);
-//  ASSERT_TRUE(file::is_empty(data1->path));
-//
-//  put(peer0, 1, source0, root_uri);
-//
-//  // file0 -> peer0 
-//  // file1 -> peer1
-//  assert_equal(peer0, file0, uri{"chord:///source0/file0.md"});
-//  assert_equal(peer1, file1, uri{"chord:///source0/file1.md"});
-//  peer0->get_metadata_manager()->exists(uri{"chord:///source0"});
-//}
-//
+/**
+ * PUT [replication: 1]
+ * source0
+ * ├── file0
+ * └── file1
+ * 
+ * EXPECTED
+ * data0
+ * └── file0
+ * data1
+ * └── file1
+ */
+TEST_F(DelTest,  nodes_2__repl_1__folder__height_1) {
+  const auto root_uri = uri{"chord:///"};
+  const auto source0 = base.add_dir("source0");
+  const auto file0 = source0->add_file("file0.md");
+  const auto file1 = source0->add_file("file1.md");
+
+  const auto data0 = base.add_dir("data0");
+  const auto ctxt0 = test::make_context({"0"}, 
+      {bind_addr+"50050"}, data0, base.add_dir("meta0"));
+  const auto peer0 = make_peer(ctxt0);
+  ASSERT_TRUE(file::is_empty(data0->path));
+
+  const auto data1 = base.add_dir("data1");
+  const auto ctxt1 = test::make_context({"28948022309329048855892746252171976963317496166410141009864396001978282409984"}, 
+      {bind_addr+"50051"}, data1, base.add_dir("meta1"), ctxt0.advertise_addr, false);
+  const auto peer1 = make_peer(ctxt1);
+  ASSERT_TRUE(file::is_empty(data1->path));
+
+  put(peer0, 1, source0, root_uri);
+
+  // file0 -> peer0 
+  // file1 -> peer1
+  assert_equal(peer0, file0, uri{"chord:///source0/file0.md"});
+  assert_equal(peer1, file1, uri{"chord:///source0/file1.md"});
+  peer0->get_metadata_manager()->exists(uri{"chord:///source0"});
+
+  uri target_uri{"chord:///source0/file0.md"};
+  del(peer0, target_uri);
+  assert_deleted(peer0, target_uri, true);
+  assert_deleted(peer1, target_uri, true);
+}
+
 ///**
 // * PUT [replication: 2]
 // * source0
