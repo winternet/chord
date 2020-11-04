@@ -75,7 +75,6 @@ class Client {
 
   //TODO remove metadata for DEL / DIR
   grpc::Status meta(const chord::uri&, const Action&, std::set<Metadata>&, const client::options& options = {});
-  grpc::Status meta(const chord::uri&, const Action&, const client::options& options = {});
 
   // called internally by the chord.fs.service
   grpc::Status meta(const chord::node&, const chord::uri&, const Action&, std::set<Metadata>&, const client::options& options = {});

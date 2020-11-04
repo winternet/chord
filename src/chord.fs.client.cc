@@ -210,13 +210,6 @@ grpc::Status Client::meta(const chord::uri &uri, const Action &action, std::set<
   return meta(node, uri, action, m, options);
 }
 
-grpc::Status Client::meta(const chord::uri &uri, const Action &action, const client::options& options) {
-  std::set<Metadata> m;
-  const auto hash = chord::crypto::sha256(uri);
-  const auto node = chord->successor(hash);
-  return meta(node, uri, action, m, options);
-}
-
 Status Client::del(const chord::node& node, const DelRequest* req, const client::options& options) {
   const auto endpoint = node.endpoint;
   ClientContext clientContext;
