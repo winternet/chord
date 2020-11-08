@@ -1,4 +1,3 @@
-#set(CMAKE_CXX_COMPILER      "/usr/bin/clang++")
 
 cmake_minimum_required(VERSION 3.8)
 # Clear VERSION variables when no VERSION is given to project()
@@ -19,6 +18,8 @@ option(GRPC_ALLOW_EXCEPTIONS "allow grpc exceptions" OFF)
 
 set(ProtoPath "${CMAKE_CURRENT_SOURCE_DIR}/proto")
 set(ProtoGenerateTargetPath "./gen")
+
+option(chord_BUILD_FUSE_ADAPTER "build fuse adapter" ON)
 
 option(chord_BUILD_TESTS "build unit tests" OFF)
 option(chord_BUILD_INTEGRATION_TESTS "build integration tests" OFF)
@@ -103,6 +104,7 @@ find_package(RocksDB REQUIRED)
 find_package(YamlCpp REQUIRED)
 find_package(FsWatch REQUIRED)
 
+
 #
 # generate messages and services
 #
@@ -166,6 +168,13 @@ target_link_libraries(${PROJECT_NAME}
 #
 add_dependencies(${PROJECT_NAME}++ spdlog)
 add_dependencies(${PROJECT_NAME}++ signals)
+
+#
+# fuse adapter
+#
+if(chord_BUILD_FUSE_ADAPTER)
+  include(fuse_adapter)
+endif()
 
 #
 # tests
