@@ -33,7 +33,9 @@ jobs:
                        libboost-thread-dev \
                        libboost-program-options-dev \
                        libssl-dev \
-                       fswatch
+                       fswatch \
+                       fuse3 \
+                       pkg-config
 
       - run:
           name: Install grpc
@@ -134,14 +136,6 @@ jobs:
 
 workflows:
   version: 2
-  nightly:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - master
   build-master:
     jobs:
       - build:

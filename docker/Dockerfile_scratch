@@ -19,7 +19,9 @@ RUN apt-get update \
             libboost-thread-dev \
             libboost-program-options-dev \
             libssl-dev \
-            fswatch
+            fswatch \
+            fuse3 \
+            pkg-config
 
 #
 # install grpc
