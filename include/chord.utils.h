@@ -2,9 +2,11 @@
 
 #include <set>
 #include <map>
+#include <vector>
 #include <string>
 #include <functional>
 #include "chord.types.h"
+#include "chord.context.h"
 
 namespace grpc {
   class Status;
@@ -41,6 +43,20 @@ namespace utils {
       if(pred(*it)) it = s.erase(it);
       else ++it;
   }
+
+
+  /**
+   * parsing program options
+   */
+  struct Options {
+
+    Context context;
+
+    // controller
+    endpoint address;
+    std::vector<std::string> commands;
+  };
+  Options parse_program_options(int ac, char *av[]);
 
 }  // namespace utils
 }  // namespace chord
