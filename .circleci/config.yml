@@ -34,7 +34,7 @@ jobs:
                        libboost-program-options-dev \
                        libssl-dev \
                        fswatch \
-                       fuse3 \
+                       libfuse3-dev \
                        pkg-config
 
       - run:
