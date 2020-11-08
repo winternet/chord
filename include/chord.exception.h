@@ -37,10 +37,10 @@ class grpc_exception : public exception {
  private:
   grpc::Status status;
  public:
-  explicit grpc_exception(const grpc::Status status)
+  explicit grpc_exception(const grpc::Status& status)
       : exception(status.error_message()), status(std::move(status)) {}
 
-  explicit grpc_exception(const grpc::Status t_status, std::string t_file, size_t t_line)
+  explicit grpc_exception(const grpc::Status& t_status, std::string t_file, size_t t_line)
       : exception{t_status.error_message(), std::move(t_file), t_line}, status{std::move(t_status)} {}
 
 };

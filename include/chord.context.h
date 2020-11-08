@@ -44,7 +44,7 @@ struct Context {
   log::Logging logging;
 
   inline const uuid_t &uuid() const { return _uuid; }
-  inline const chord::node node() const { return {_uuid, advertise_addr}; }
+  inline chord::node node() const { return {_uuid, advertise_addr}; }
 
   void set_uuid(const uuid_t uuid);
 
