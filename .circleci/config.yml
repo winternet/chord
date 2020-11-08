@@ -139,14 +139,18 @@ workflows:
       - build:
           filters:
             branches:
-              only: master
+              only: 
+                - master
+                - feature/fuse
       - docker-build:
           context: docker-context
           requires:
             - build
           filters:
             branches:
-              only: master
+              only:
+                - master
+                - feature/fuse
       - docker-publish-latest:
           context: docker-context
           requires:
@@ -154,7 +158,9 @@ workflows:
             - docker-build
           filters:
             branches:
-              only: master
+              only:
+                - master
+                - feature/fuse
       - docker-publish-tag:
           context: docker-context
           requires:
