@@ -4,6 +4,7 @@
 #include <string>
 
 #include "Fuse-impl.h"
+#include "chord.utils.h"
 
 namespace chord {
 namespace fuse {
@@ -11,6 +12,24 @@ namespace fuse {
 static const std::string root_path = "/";
 static const std::string hello_str = "Hello World!\n";
 static const std::string hello_path = "/hello";
+
+
+Adapter::Adapter(int argc, char* argv[]) {
+  // note that argv contains arguments for fuse, might not work at all
+  const auto options = chord::utils::parse_program_options(argc, argv);
+  const auto context = options.context;
+
+
+  logger = chord::log::get_or_create(logger_name);
+
+  peer = std::make_unique<chord::Peer>(options.context);
+  peer_thread = std::thread(&chord::Peer::start, peer.get());
+}
+
+Adapter::~Adapter() {
+  peer_thread.join();
+  //fuse_unmount(Fusepp::Fuse)
+}
 
 int Adapter::getattr(const char *path, struct stat *stbuf, struct fuse_file_info *)
 {

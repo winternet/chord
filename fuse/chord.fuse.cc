@@ -4,7 +4,7 @@ int main(int argc, char *argv[])
 {
   using namespace chord::fuse;
 
-  Adapter adapter;
+  Adapter adapter(argc, argv);
 
   int status = adapter.run(argc, argv);
 

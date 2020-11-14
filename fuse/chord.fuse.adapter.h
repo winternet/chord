@@ -1,4 +1,6 @@
 #pragma once
+#include <thread>
+#include <memory>
 
 #include "Fuse.h"
 #include "Fuse-impl.h"
@@ -8,12 +10,18 @@
 namespace chord {
 namespace fuse {
 
-class Adapter : public Fusepp::Fuse<Adapter>
-{
-public:
-  Adapter() {}
+class Adapter : public Fusepp::Fuse<Adapter> {
+private:
+  static constexpr auto logger_name = "chord.fuse.adapter";
 
-  ~Adapter() {}
+  std::thread peer_thread;
+  std::unique_ptr<chord::Peer> peer;
+  std::shared_ptr<spdlog::logger> logger;
+
+public:
+  Adapter(int argc, char* arv[]);
+
+  virtual ~Adapter();
 
   static int getattr (const char *, struct stat *, struct fuse_file_info *);
 
