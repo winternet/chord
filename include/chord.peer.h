@@ -56,6 +56,8 @@ private:
 
   void start();
   void stop();
+
+  chord::fs::Facade* get_filesystem() { return filesystem.get(); }
 };
 
 }  // namespace chord

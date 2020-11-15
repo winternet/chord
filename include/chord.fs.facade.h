@@ -76,7 +76,7 @@ public:
 
   grpc::Status get(const chord::uri& source, const chord::path& target) override;
 
-  grpc::Status dir(const chord::uri& uri, std::iostream& iostream) override;
+  grpc::Status dir(const chord::uri& uri, std::ostream& ostream) override;
 
   grpc::Status del(const chord::uri& uri, const bool recursive=false) override;
 

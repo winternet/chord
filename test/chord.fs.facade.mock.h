@@ -20,7 +20,7 @@ class MockFacade : public IFacade {
 
   MOCK_METHOD2(get, grpc::Status(const chord::uri&, const chord::path&));
 
-  MOCK_METHOD2(dir, grpc::Status(const chord::uri&, std::iostream&));
+  MOCK_METHOD2(dir, grpc::Status(const chord::uri&, std::ostream&));
 
   MOCK_METHOD2(del, grpc::Status(const chord::uri&, const bool));
 };

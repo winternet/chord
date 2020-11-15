@@ -19,7 +19,7 @@ class IFacade {
 
   virtual grpc::Status get(const chord::uri& source, const chord::path& target) =0;
 
-  virtual grpc::Status dir(const chord::uri& uri, std::iostream& iostream) =0;
+  virtual grpc::Status dir(const chord::uri& uri, std::ostream& ostream) =0;
 
   virtual grpc::Status del(const chord::uri& uri, const bool recursive=false) =0;
 
