@@ -27,8 +27,9 @@ Adapter::Adapter(int argc, char* argv[]) {
 }
 
 Adapter::~Adapter() {
+  peer.reset();
   peer_thread.join();
-  //fuse_unmount(Fusepp::Fuse)
+  //fuse_unmount(fuse*)
 }
 
 int Adapter::getattr(const char *path, struct stat *stbuf, struct fuse_file_info *)
