@@ -18,10 +18,16 @@ private:
   std::unique_ptr<chord::Peer> peer;
   std::shared_ptr<spdlog::logger> logger;
 
+  chord::fs::Facade* filesystem() {
+    return peer->get_filesystem();
+  }
+
 public:
   Adapter(int argc, char* arv[]);
 
   virtual ~Adapter();
+
+  //static chord::Peer* peer();
 
   static int getattr (const char *, struct stat *, struct fuse_file_info *);
 

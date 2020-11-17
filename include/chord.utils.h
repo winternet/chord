@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include "chord.uri.h"
+#include "chord.path.h"
 #include "chord.types.h"
 #include "chord.context.h"
 
@@ -14,6 +16,9 @@ namespace grpc {
 
 namespace chord {
 namespace utils {
+
+  uri as_uri(const char*);
+  uri as_uri(const path&);
 
   std::string to_string(const grpc::Status& status);
 
@@ -44,7 +49,6 @@ namespace utils {
       else ++it;
   }
 
-
   /**
    * parsing program options
    */
@@ -56,6 +60,7 @@ namespace utils {
     endpoint address;
     std::vector<std::string> commands;
   };
+
   Options parse_program_options(int ac, char *av[]);
 
 }  // namespace utils

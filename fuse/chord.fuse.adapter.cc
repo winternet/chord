@@ -1,10 +1,12 @@
 #include "chord.fuse.adapter.h"
 
-#include <iostream>
+#include <set>
 #include <string>
+#include <iostream>
 
 #include "Fuse-impl.h"
 #include "chord.utils.h"
+#include "chord.fs.metadata.h"
 
 namespace chord {
 namespace fuse {
@@ -19,21 +21,24 @@ Adapter::Adapter(int argc, char* argv[]) {
   const auto options = chord::utils::parse_program_options(argc, argv);
   const auto context = options.context;
 
-
   logger = chord::log::get_or_create(logger_name);
 
-  peer = std::make_unique<chord::Peer>(options.context);
-  peer_thread = std::thread(&chord::Peer::start, peer.get());
+  //peer = std::make_unique<chord::Peer>(options.context);
+  //peer_thread = std::thread(&chord::Peer::start, peer.get());
 }
 
 Adapter::~Adapter() {
-  peer.reset();
-  peer_thread.join();
+  logger->info("~");
+  //peer.reset();
+  //peer_thread.join();
   //fuse_unmount(fuse*)
 }
 
 int Adapter::getattr(const char *path, struct stat *stbuf, struct fuse_file_info *)
 {
+  std::set<fs::Metadata> metadata;
+  const auto status = this_()->filesystem()->dir(utils::as_uri(path), metadata);
+
 	int res = 0;
 
 	memset(stbuf, 0, sizeof(struct stat));

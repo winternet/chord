@@ -1,3 +1,5 @@
+#include <array>
+
 #include "chord.utils.h"
 #include "chord.context.h"
 #include "chord.context.manager.h"
@@ -8,10 +10,17 @@
 namespace chord {
 namespace utils {
 
-  std::string to_string(const grpc::Status& status) {
-    return status.error_message() + " ("+status.error_details()+")";
-  }
+std::string to_string(const grpc::Status& status) {
+  return status.error_message() + " ("+status.error_details()+")";
+}
 
+uri as_uri(const char* p) {
+  return as_uri(path{p});
+}
+
+uri as_uri(const path& p) {
+  return {"chord", p};
+}
 
 Options parse_program_options(int ac, char *av[]) {
   using std::string;

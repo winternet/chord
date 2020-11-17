@@ -158,9 +158,13 @@ Status Facade::get(const chord::uri &source, const chord::path& target) {
   return Status::OK;
 }
 
+Status Facade::dir(const chord::uri &uri, std::set<Metadata> &metadata) {
+  return fs_client->dir(uri, metadata);
+}
+
 Status Facade::dir(const chord::uri &uri, ostream &os) {
   std::set<Metadata> metadata;
-  const auto status = fs_client->dir(uri, metadata);
+  const auto status = dir(uri, metadata);
   if(status.ok()) {
     os << metadata;
   }

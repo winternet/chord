@@ -30,6 +30,8 @@ using chord::fs::Replication;
 
 using ::testing::Return;
 using ::testing::_;
+using ::testing::An;
+using ::testing::Matcher;
 using ::testing::Invoke;
 using ::testing::SaveArg;
 using ::testing::SaveArgPointee;
@@ -110,7 +112,7 @@ TEST_F(ControllerServiceTest, dir_empty_request) {
 TEST_F(ControllerServiceTest, dir_request) {
   req.set_command("dir chord:///first");
 
-  EXPECT_CALL(fs_facade, dir(Eq(uri{"chord:///first"}), _));
+  EXPECT_CALL(fs_facade, dir(Eq(uri{"chord:///first"}), An<std::ostream&>()));
 
   const auto status = ctrl_service->control(nullptr, &req, &res);
   ASSERT_TRUE(status.ok());
