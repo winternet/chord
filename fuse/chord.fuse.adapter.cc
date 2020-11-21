@@ -7,6 +7,7 @@
 #include "Fuse-impl.h"
 #include "chord.utils.h"
 #include "chord.fs.metadata.h"
+#include "chord.fuse.utils.h"
 
 namespace chord {
 namespace fuse {
@@ -53,11 +54,14 @@ int Adapter::getattr(const char *path, [[maybe_unused]]struct stat *stbuf, [[may
 	memset(stbuf, 0, sizeof(struct stat));
 
   std::set<fs::Metadata> metadata;
-  const auto status = this_()->filesystem()->dir(utils::as_uri(path), metadata);
+  const auto status = this_()->filesystem()->dir(chord::utils::as_uri(path), metadata);
+  const auto succ = utils::set_stat(metadata, stbuf);
 
-  if(!status.ok()) {
+  if(!status.ok() || !succ) {
     return -ENOENT;
   }
+
+  return res;
 
 
 	if (path == root_path) {

@@ -110,7 +110,7 @@ TEST_F(FilesystemServiceGetTest, get_from_node_reference) {
     .WillRepeatedly(Return(make_entry(self->context.node())));
 
   // reference source peer
-  Metadata metadata("file", "", "", perms::all, type::regular, {}, source_peer.context.node());
+  Metadata metadata("file", "", "", perms::all, type::regular, 33, {}, source_peer.context.node());
   EXPECT_CALL(*self->metadata_mgr, get(source_uri))
     .WillOnce(Return(std::set<Metadata>{metadata}));
 
@@ -130,7 +130,7 @@ TEST_F(FilesystemServiceGetTest, get_from_node_reference) {
 //    .WillOnce(Return(std::set<Metadata>{metadata}));
 
   // delete the node_ref and update the file hash
-  metadata = {"file", "", "", perms::all, type::regular, crypto::sha256(source_file->path), {}};
+  metadata = {"file", "", "", perms::all, type::regular, file::file_size(source_file->path), crypto::sha256(source_file->path), {}};
   // update node_ref - file has been downloaded
   std::set<Metadata> metadata_set{metadata};
   EXPECT_CALL(*self->metadata_mgr, add(source_uri, metadata_set))
@@ -167,7 +167,7 @@ TEST_F(FilesystemServiceGetTest, get_from_replication) {
     .WillRepeatedly(Return(make_entry(self->context.node())));
 
   // reference source peer
-  Metadata metadata("file", "", "", perms::all, type::regular, {}, {}, Replication(2));
+  Metadata metadata("file", "", "", perms::all, type::regular, 33, {}, {}, Replication(2));
   EXPECT_CALL(*self->metadata_mgr, get(source_uri))
     .WillOnce(Return(std::set<Metadata>{metadata}));
 
@@ -204,7 +204,7 @@ TEST_F(FilesystemServiceGetTest, get_from_replication_propagates) {
     .WillRepeatedly(Return(make_entry(self->context.node())));
 
   // self peer metadata
-  Metadata metadata("file", "", "", perms::all, type::regular, {}, {}, Replication(0,2));
+  Metadata metadata("file", "", "", perms::all, type::regular, 33, {}, {}, Replication(0,2));
   EXPECT_CALL(*self->metadata_mgr, get(source_uri))
     .WillOnce(Return(std::set<Metadata>{metadata}));
 

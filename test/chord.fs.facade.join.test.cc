@@ -101,22 +101,22 @@ TEST_F(FilesystemFacadeJoinTest, on_join__handle_local_files__shallow_copies) {
   const auto subsub_file = subsub_folder->add_file("subsubfile");
 
   IMetadataManager::uri_meta_map_desc metadata;
-  metadata[uri("chord:///")].insert({".", "", "", perms::all, type::directory, {}, {}, Replication()});
-  metadata[uri("chord:///")].insert({"file", "", "", perms::all, type::regular, {}, {}, Replication()});
-  metadata[uri("chord:///")].insert({"sub", "", "", perms::all, type::directory, {}, {}, Replication()});
-  metadata[uri("chord:///file")].insert({"file", "", "", perms::all, type::regular, {}, {}, Replication()});
+  metadata[uri("chord:///")].insert({".", "", "", perms::all, type::directory});
+  metadata[uri("chord:///")].insert({"file", "", "", perms::all, 33});
+  metadata[uri("chord:///")].insert({"sub", "", "", perms::all, type::directory });
+  metadata[uri("chord:///file")].insert({"file", "", "", perms::all, type::regular, 33});
 
-  metadata[uri("chord:///sub")].insert({".", "", "", perms::all, type::directory, {}, {}, Replication()});
-  metadata[uri("chord:///sub")].insert({"subsub", "", "", perms::all, type::directory, {}, {}, Replication()});
-  metadata[uri("chord:///sub")].insert({"subfile_1", "", "", perms::all, type::regular, {}, {}, Replication()});
-  metadata[uri("chord:///sub")].insert({"subfile_2", "", "", perms::all, type::regular, {}, {}, Replication()});
-  metadata[uri("chord:///sub/subfile_1")].insert({"subfile_1", "", "", perms::all, type::regular, {}, {}, Replication()});
-  metadata[uri("chord:///sub/subfile_2")].insert({"subfile_2", "", "", perms::all, type::regular, {}, {}, Replication()});
+  metadata[uri("chord:///sub")].insert({".", "", "", perms::all, type::directory});
+  metadata[uri("chord:///sub")].insert({"subsub", "", "", perms::all, type::directory});
+  metadata[uri("chord:///sub")].insert({"subfile_1", "", "", perms::all, type::regular, 33});
+  metadata[uri("chord:///sub")].insert({"subfile_2", "", "", perms::all, type::regular, 33});
+  metadata[uri("chord:///sub/subfile_1")].insert({"subfile_1", "", "", perms::all, type::regular, 33});
+  metadata[uri("chord:///sub/subfile_2")].insert({"subfile_2", "", "", perms::all, type::regular, 33});
 
-  metadata[uri("chord:///sub/subsub")].insert({".", "", "", perms::all, type::directory, {}, {}, Replication()});
-  metadata[uri("chord:///sub/subsub")].insert({"subsubfile", "", "", perms::all, type::regular, {}, {}, Replication()});
+  metadata[uri("chord:///sub/subsub")].insert({".", "", "", perms::all, type::directory});
+  metadata[uri("chord:///sub/subsub")].insert({"subsubfile", "", "", perms::all, type::regular, 33});
 
-  metadata[uri("chord:///sub/subsub/subsubfile")].insert({"subsubfile", "", "", perms::all, type::regular, {}, {}, Replication()});
+  metadata[uri("chord:///sub/subsub/subsubfile")].insert({"subsubfile", "", "", perms::all, type::regular, 33});
 
   // take self out of the ring, peer_2's successor is peer_2 (self 'already' left)
   EXPECT_CALL(*peer_2.service, successor(_))

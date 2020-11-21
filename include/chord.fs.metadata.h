@@ -30,11 +30,14 @@ namespace fs {
 struct Metadata {
   friend class boost::serialization::access;
 
+  using size = std::uint64_t;
+
   std::string name;
   std::string owner;
   std::string group;
   perms permissions;
   type file_type;
+  size file_size;
 
   // file hash
   chord::optional<chord::uuid> file_hash;
@@ -47,7 +50,10 @@ struct Metadata {
 
   /** needed for (de-) serialization **/
   Metadata() = default;
-  Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, chord::optional<chord::uuid> file_hash={}, chord::optional<chord::node> node_ref={}, chord::fs::Replication replication={});
+  Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, size file_size=0, chord::optional<chord::uuid> file_hash={}, chord::optional<chord::node> node_ref={}, chord::fs::Replication replication={});
+
+  Metadata(std::string name, std::string owner, std::string group, perms permissions, size file_size, chord::optional<chord::uuid> file_hash={}, chord::optional<chord::node> node_ref={}, chord::fs::Replication replication={});
+  Metadata(std::string name, perms permissions, size file_size, chord::optional<chord::uuid> file_hash={}, chord::optional<chord::node> node_ref={}, chord::fs::Replication replication={});
 
   bool operator<(const Metadata &other) const;
   bool operator==(const Metadata &other) const;
@@ -115,7 +121,7 @@ template<class Archive>
 void Metadata::serialize(Archive & ar, const unsigned int version)
 {
   (void)version;
-  ar & name & file_type & owner & group & permissions & node_ref & replication & file_hash;
+  ar & name & file_type & file_size & owner & group & permissions & node_ref & replication & file_hash;
 }
 
 Replication max_replication(const std::set<Metadata>&);

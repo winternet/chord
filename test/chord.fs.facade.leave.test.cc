@@ -87,7 +87,7 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_local_files) {
 
   //map<uri, set<Metadata>> files;
   IMetadataManager::uri_meta_map_desc files;
-  Metadata metadata_file("file", "", "", perms::all, type::regular, crypto::sha256(source_file->path), {}, Replication());
+  Metadata metadata_file("file", perms::all, file::file_size(source_file->path), crypto::sha256(source_file->path), {}, Replication());
   set<Metadata> metadata_set{metadata_file};
   files[target_uri] = metadata_set;
 
@@ -139,8 +139,8 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_node_reference) {
   //TODO add test for directory handling
   IMetadataManager::uri_meta_map_desc shallow_copies;
   //map<uri, set<Metadata>> shallow_copies;
-  Metadata metadata_dir(".", "", "", perms::none, type::directory, crypto::sha256(source_file->path.parent_path()), {}, Replication());
-  Metadata metadata_file("file", "", "", perms::all, type::regular, crypto::sha256(source_file->path), self->context.node(), Replication());
+  Metadata metadata_dir(".", "", "", perms::none, type::directory, 0,crypto::sha256(source_file->path.parent_path()), {}, Replication());
+  Metadata metadata_file("file", perms::all, file::file_size(source_file->path), crypto::sha256(source_file->path), self->context.node(), Replication());
 
   shallow_copies[target_uri] = {metadata_file};
   shallow_copies[root_uri] = {metadata_dir, metadata_file};

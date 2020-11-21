@@ -33,9 +33,9 @@ TEST(chord_metadata, output_empty_directory) {
 
 TEST(chord_metadata, output_directory) {
   set<Metadata> contents(
-      {{"/", "usr", "grp", perms::all, type::directory, {}, {}, Replication::ALL},
-       {"foo", "usr", "grp", perms::owner_all, type::regular, {}, {}, Replication::ALL},
-       {"bar", "usr2", "grp", perms::owner_all | perms::group_read, type::regular, {}, {}, Replication::ALL}});
+      {{"/", "usr", "grp", perms::all, type::directory, 0, {}, {}, Replication::ALL},
+       {"foo", "usr", "grp", perms::owner_all, type::regular, 33, {}, {}, Replication::ALL},
+       {"bar", "usr2", "grp", perms::owner_all | perms::group_read, type::regular, 33, {}, {}, Replication::ALL}});
 
   stringstream ss;
   ss << contents;
@@ -54,8 +54,8 @@ TEST(chord_metadata, create_directory_blank) {
 
 TEST(chord_metadata, create_directory) {
   std::set<Metadata> contents = {
-    Metadata("name1", "", "", perms::all, type::regular, {}, {}, Replication(0,3)),
-    Metadata("name2", "", "", perms::all, type::regular, {}, {}, Replication(2,5))
+    Metadata("name1", perms::all, 7, {}, {}, Replication(0,3)),
+    Metadata("name2", perms::all, 7, {}, {}, Replication(2,5))
   };
   const auto meta = create_directory(contents);
   ASSERT_EQ(meta.name, ".");

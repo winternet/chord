@@ -47,10 +47,7 @@ struct MetadataBuilder {
         "",
         "",
         perms::all,
-        type::directory,
-        chord::optional<chord::uuid>{},
-        {},
-        {}};
+        type::directory};
   }
 
   /**
@@ -70,6 +67,7 @@ struct MetadataBuilder {
                   "",  // group
                   perms::all,
                   file::is_directory(local_path) ? type::directory : type::regular,
+                  file::file_size(local_path),
                   file::is_regular_file(local_path) ? chord::optional<chord::uuid>{chord::crypto::sha256(istream)} : chord::optional<chord::uuid>{},
                   {},
                   repl};
@@ -93,6 +91,7 @@ struct MetadataBuilder {
                   "",  // group
                   static_cast<perms>(item.permissions()),
                   static_cast<type>(item.type()), 
+                  item.size(),
                   !item.file_hash().empty() ? chord::optional<chord::uuid>{item.file_hash()} : chord::optional<chord::uuid>{},
                   item.has_node_ref() ? chord::common::make_node(item.node_ref()) : chord::optional<chord::node>{},
                   repl};
@@ -147,6 +146,7 @@ struct MetadataBuilder {
       chord::fs::Data* data = response.add_metadata();
       data->set_filename(m.name);
       data->set_type(value_of(m.file_type));
+      data->set_size(m.file_size);
       data->set_permissions(value_of(m.permissions));
       if(m.file_hash) {
         data->set_file_hash(m.file_hash.value().string());
