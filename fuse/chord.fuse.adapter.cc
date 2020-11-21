@@ -23,25 +23,43 @@ Adapter::Adapter(int argc, char* argv[]) {
 
   logger = chord::log::get_or_create(logger_name);
 
-  //peer = std::make_unique<chord::Peer>(options.context);
-  //peer_thread = std::thread(&chord::Peer::start, peer.get());
+  peer = std::make_unique<chord::Peer>(options.context);
 }
 
 Adapter::~Adapter() {
-  logger->info("~");
-  //peer.reset();
-  //peer_thread.join();
-  //fuse_unmount(fuse*)
+  logger->info("~Adapter");
 }
 
-int Adapter::getattr(const char *path, struct stat *stbuf, struct fuse_file_info *)
+void Adapter::destroy([[maybe_unused]]void* private_data) {
+   this_()->peer.reset();
+   this_()->peer_thread.join();
+  //if(Adapter* adapter = reinterpret_cast<Adapter*>(private_data)) {
+  //  adapter->logger->info("[destroy] resetting peer, joining thread.");
+  //  adapter->peer.reset();
+  //  adapter->peer_thread.join();
+  //}
+}
+
+void* Adapter::init([[maybe_unused]]struct fuse_conn_info *conn, [[maybe_unused]]struct fuse_config *cfg) {
+  //logger->info("init");
+  auto* peer = this_()->peer.get();
+  this_()->peer_thread = std::thread(&chord::Peer::start, peer);
+  return this_();
+}
+
+int Adapter::getattr(const char *path, [[maybe_unused]]struct stat *stbuf, [[maybe_unused]]struct fuse_file_info *)
 {
+	int res = 0;
+	memset(stbuf, 0, sizeof(struct stat));
+
   std::set<fs::Metadata> metadata;
   const auto status = this_()->filesystem()->dir(utils::as_uri(path), metadata);
 
-	int res = 0;
+  if(!status.ok()) {
+    return -ENOENT;
+  }
 
-	memset(stbuf, 0, sizeof(struct stat));
+
 	if (path == root_path) {
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;

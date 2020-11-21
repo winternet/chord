@@ -84,7 +84,7 @@ void Peer::stop() {
     return;
   }
   chord->stop();
-  server->Shutdown();
+  if(server) server->Shutdown();
   exit.get_future().wait();
 }
 

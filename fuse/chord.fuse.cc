@@ -49,7 +49,6 @@ int main(int argc, char *argv[])
   Adapter adapter(chord_argc, chord_args);
   delete[] chord_args;
 
-
   auto** fuse_args = new char*[argc];
   auto fuse_argc = fuse_arguments(argc, argv, fuse_args);
   int status = adapter.run(fuse_argc, fuse_args);

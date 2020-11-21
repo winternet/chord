@@ -28,6 +28,8 @@ public:
   virtual ~Adapter();
 
   //static chord::Peer* peer();
+  static void* init(struct fuse_conn_info *conn, struct fuse_config *cfg);
+  static void destroy(void*);
 
   static int getattr (const char *, struct stat *, struct fuse_file_info *);
 
