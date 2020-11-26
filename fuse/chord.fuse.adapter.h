@@ -6,6 +6,7 @@
 #include "Fuse-impl.h"
 
 #include "chord.peer.h"
+#include "chord.utils.h"
 
 namespace chord {
 namespace fuse {
@@ -14,18 +15,22 @@ class Adapter : public Fusepp::Fuse<Adapter> {
 private:
   static constexpr auto logger_name = "chord.fuse.adapter";
 
+  int argc;
+  char** argv;
+
+  chord::utils::Options options;
   std::thread peer_thread;
   std::unique_ptr<chord::Peer> peer;
   std::shared_ptr<spdlog::logger> logger;
 
   chord::fs::Facade* filesystem() {
-    return peer->get_filesystem();
+    return this_()->peer->get_filesystem();
   }
 
 public:
   Adapter(int argc, char* arv[]);
 
-  virtual ~Adapter();
+  virtual ~Adapter() = default;
 
   //static chord::Peer* peer();
   static void* init(struct fuse_conn_info *conn, struct fuse_config *cfg);
