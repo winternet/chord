@@ -39,6 +39,7 @@ Options parse_program_options(int ac, char *av[]) {
     ("config,c", po::value<string>(), "path to the yaml configuration file.")
     ("join,j", po::value<endpoint>(&(options.context.join_addr)), "join to an existing address.")
     ("bootstrap,b", "bootstrap peer to create a new chord ring.")
+    ("monitor,m", po::value<bool>(&options.context.monitor), "monitor the data folder using fswatch (default=false).")
     ("no-controller,n", "do not start the controller.")
     ("uuid,u,id", po::value<uuid>(), "client uuid.")
     ("advertise", po::value<endpoint>(&(options.context.advertise_addr)), "advertise address that is publicly promoted on the ring.")

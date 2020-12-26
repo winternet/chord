@@ -37,12 +37,14 @@ Facade::Facade(Context& context, ChordFacade* chord, ChannelPool* channel_pool)
     : context{context},
       chord{chord},
       metadata_mgr{make_unique<chord::fs::MetadataManager>(context)},
-      monitor{make_unique<fs::monitor>(context)},
+      monitor{context.monitor ? make_unique<fs::monitor>(context) : nullptr},
       fs_client{make_unique<fs::Client>(context, chord, metadata_mgr.get(), channel_pool)},
       fs_service{make_unique<fs::Service>(context, chord, metadata_mgr.get(), fs_client.get(), monitor.get())},
       logger{context.logging.factory().get_or_create(logger_name)}
 {
-  monitor->events().connect(this, &Facade::on_fs_event);
+  if(monitor) {
+    monitor->events().connect(this, &Facade::on_fs_event);
+  }
 }
 
 Facade::Facade(Context& context, fs::Client* fs_client, fs::Service* fs_service, fs::IMetadataManager* metadata_mgr, chord::fs::monitor* monitor)
@@ -360,7 +362,9 @@ void Facade::on_leave(const chord::node predecessor, const chord::node successor
   logger->debug("[on_leave] node leaving: informing predecessor {}", predecessor);
   if(predecessor == context.node()) {
     logger->debug("[on_leave] node leaving - no node left but self - aborting.");
-    monitor->stop();
+    if(monitor) {
+      monitor->stop();
+    }
     return;
   }
 

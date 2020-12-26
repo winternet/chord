@@ -1,1 +1,9 @@
-C++ version of <a href="https://github.com/libfuse/libfuse">FUSE: Filesystem in Userspace</a> -  example/hello.c 
+FUSE - Filesystem Adapter
+=========================
+
+Usage
+-----
+
+bash sh/fuse_up.sh
+bash sh/fuse_down.sh
+

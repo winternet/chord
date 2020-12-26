@@ -48,8 +48,8 @@ void file::copy(const std::string &from, const std::string& to) {
   fs::copy(from, to, fs::copy_options::recursive);
 }
 
-bool file::copy_file(const std::string &from, const std::string& to) {
-  return fs::copy_file(from, to);
+bool file::copy_file(const std::string &from, const std::string& to, bool overwrite) {
+  return fs::copy_file(from, to, overwrite ? fs::copy_options::overwrite_existing : fs::copy_options::none);
 }
 
 bool file::create_file(const std::string &path) {

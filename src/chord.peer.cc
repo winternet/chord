@@ -72,7 +72,8 @@ Peer::~Peer() {
 }
 
 void Peer::start() {
-  shutdown_handler = make_unique<chord::ShutdownHandler>(this);
+  if(context.register_shutdown_handler)
+    shutdown_handler = make_unique<chord::ShutdownHandler>(this);
   logger->trace("peer with client-id {}", context.uuid());
 
   start_server();

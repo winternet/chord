@@ -1,6 +1,9 @@
 version: 1
 
+register_shutdown_handler: Yes
+
 ##data
+monitor: Yes
 data-directory: "./data1"
 meta-directory: "./meta1"
 

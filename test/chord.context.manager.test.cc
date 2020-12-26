@@ -37,6 +37,8 @@ TEST(chord_context_manager, parse_valid_config) {
       ## details
       stabilize-ms: 5000
       check-ms: 5000
+      monitor: true
+      register_shutdown_handler: true
       logging:
         level: debug
         formatters:
@@ -66,6 +68,8 @@ TEST(chord_context_manager, parse_valid_config) {
   ASSERT_EQ(context.join_addr, "127.0.0.1:50051");
   ASSERT_EQ(context.advertise_addr, "127.0.0.1:50050");
   ASSERT_EQ(context.stabilize_period_ms, 5000);
+  ASSERT_EQ(context.monitor, true);
+  ASSERT_EQ(context.register_shutdown_handler, true);
   ASSERT_EQ(context.check_period_ms, 5000);
   ASSERT_EQ(context.uuid(), 1234567890);
   auto formatters = context.logging.formatters;

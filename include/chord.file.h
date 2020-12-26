@@ -20,7 +20,7 @@ namespace file {
 
   void copy(const std::string &from, const std::string& to);
 
-  bool copy_file(const std::string &from, const std::string& to);
+  bool copy_file(const std::string &from, const std::string& to, const bool overwrite=false);
 
   bool is_empty(const std::string& path);
 

@@ -29,6 +29,18 @@ bool remove(const chord::uri& uri, const Context& context, bool delete_empty) {
   return remove(uri, context, nullptr, delete_empty);
 }
 
+path as_journal_path(const Context& context, const path& path) {
+  const auto parent_path = context.journal_directory() / path.parent_path();
+  if(!file::exists(parent_path)) {
+    file::create_directories(parent_path);
+  }
+  return parent_path / path.filename();
+}
+
+path as_journal_path(const Context& context, const uri& uri) {
+  return as_journal_path(context, uri.path());
+}
+
 } // namespace util
 } // namespace fs
 } // namespace chord

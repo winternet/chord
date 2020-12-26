@@ -24,6 +24,9 @@ struct Context {
   //--- program options
   bool bootstrap{false};
   bool no_controller{false};
+  bool register_shutdown_handler{false};
+  //--- paths / monitoring
+  bool monitor{false};
   chord::path data_directory{"./data"};
   chord::path meta_directory{"./metadata"};
   chord::path config{"./config.yml"};

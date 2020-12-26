@@ -52,6 +52,7 @@ Context make_context(const uuid self, const endpoint bind_addr, const std::share
 Context make_context(const uuid self, const endpoint bind_addr, const std::shared_ptr<TmpDir> data_directory, const std::shared_ptr<TmpDir> meta_directory, const endpoint join_addr, const bool bootstrap) {
   Context context = Context();
   context.set_uuid(self);
+  context.monitor = true;
   context.data_directory = data_directory->path;
   context.meta_directory = meta_directory->path;
   context.bind_addr = bind_addr;

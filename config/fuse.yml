@@ -1,26 +1,28 @@
 version: 1
 
-register_shutdown_handler: Yes
+register_shutdown_handler: No
 
 ##data
-monitor: Yes
-data-directory: "./data3"
-meta-directory: "./meta3"
+monitor: No
+data-directory: "/tmp/data0"
+meta-directory: "/tmp/meta0"
 
 ##networking
-bind-addr: "0.0.0.0:50053"
+bind-addr: "0.0.0.0:50050"
 join-addr: "0.0.0.0:50051"
-bootstrap: No
-no-controller: Yes
+bootstrap: Yes
+no-controller: No
 
 ## details
 stabilize_ms: 10000
 check_ms: 10000
 
-#uuid: "999999999999999999995555555555555555"
-#uuid: "20"
-uuid: "86844066927987146567678238756515930889952488499230423029593188005934847229952"
+## replication / striping
+#replication-count: 1
+replication-count: -1
 
+#uuid: "0"
+uuid: "0"
 
 logging:
   level: trace
@@ -29,7 +31,7 @@ logging:
       type: "console"
     FILE_SINK:
       type: "file-rotating"
-      path: "logs/chord3.log"
+      path: "/tmp/logs/chord0.log"
   loggers:
     CHORD_LOG:
       sinks: [FILE_SINK]
