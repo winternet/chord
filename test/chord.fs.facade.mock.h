@@ -17,9 +17,12 @@ class MockFacade : public IFacade {
  public:
   virtual ~MockFacade() = default;
 
-  MOCK_METHOD3(put, grpc::Status(const chord::path&, const chord::uri&, Replication repl));
+  MOCK_METHOD3(put, grpc::Status(const chord::path&, const chord::uri&, Replication));
 
   MOCK_METHOD2(get, grpc::Status(const chord::uri&, const chord::path&));
+
+  MOCK_METHOD2(mkdir, grpc::Status(const chord::uri&, Replication));
+  MOCK_METHOD1(exists, grpc::Status(const chord::uri&));
 
   MOCK_METHOD2(dir, grpc::Status(const chord::uri&, std::set<Metadata>&));
   MOCK_METHOD2(dir, grpc::Status(const chord::uri&, std::ostream&));

@@ -72,9 +72,13 @@ public:
 
   ::grpc::Service* grpc_service();
 
+  grpc::Status mkdir(const chord::uri& target, Replication repl = Replication()) override;
+
   grpc::Status put(const chord::path& source, const chord::uri& target, Replication repl = Replication()) override;
 
   grpc::Status get(const chord::uri& source, const chord::path& target) override;
+
+  grpc::Status exists(const chord::uri& uri) override;
 
   grpc::Status dir(const chord::uri& uri, std::set<Metadata>&) override;
 

@@ -61,6 +61,8 @@ Status Service::parse_command(const ControlRequest* req, ControlResponse* res) {
   const string& cmd = token.at(0);
   if (cmd == "put") {
     return handle_put(token, res);
+  } else if(cmd == "mkdir") {
+    return handle_mkdir(token, res);
   } else if (cmd == "get") {
     return handle_get(token, res);
   } else if (cmd == "dir" || cmd == "ls" || cmd == "ll") {
@@ -111,6 +113,38 @@ Status Service::handle_del(const vector<string>& token, ControlResponse* res) {
   return Status::OK;
 }
 
+Status Service::handle_mkdir(const vector<string>& token, ControlResponse* res) {
+  //TODO: merge with handle_put
+  //TODO: handle with parents (-p) ?
+  // BEG: parse (~>method)
+  po::variables_map vm;
+  po::positional_options_description pos;
+  pos.add("input", -1);
+  po::options_description flags("[mkdir flags]");
+  flags.add_options()
+      ("repl",  po::value<std::uint32_t>()->default_value(context.replication_cnt), "replication count.")
+      ("input", po::value<vector<string> >()->default_value({}, ""), "input to process");
+  po::parsed_options parsed_flags = po::command_line_parser(token)
+    .options(flags)
+    .positional(pos)
+    .allow_unregistered()
+    .run();
+  po::store(parsed_flags, vm);
+  po::notify(vm);
+
+  const auto tokens = vm["input"].as<std::vector<std::string> >();
+  const auto repl = vm["repl"].as<std::uint32_t>();
+  if(tokens.size() < 2) {
+    res->set_result("invalid arguments.");
+    return Status(grpc::StatusCode::INVALID_ARGUMENT, "failed to handle mkdir", "expecting >= 2 arguments");
+  }
+  // END: parse
+  
+  const auto target_it = prev(tokens.end());
+  const uri target(*target_it);
+
+  return filesystem->mkdir(target, fs::Replication{repl});
+}
 
 Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
 
@@ -138,19 +172,16 @@ Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
   }
   // END: parse
 
-  try {
-    const auto target_it = prev(tokens.end());
-    for (auto it = next(tokens.begin()); it != target_it; ++it) {
-      const path source{*it};
-      const uri target(*target_it);
-      // TODO if taget is no directory rename the file
-      //      and put it under that name
-      filesystem->put(source, target, fs::Replication{repl});
-    }
-  } catch (const chord::exception& exception) {
-    logger->error("failed to issue put request: {}", exception.what());
-    return Status(grpc::StatusCode::CANCELLED, "failed to handle put", exception.what());
+  const auto target_it = prev(tokens.end());
+  for (auto it = next(tokens.begin()); it != target_it; ++it) {
+    const path source{*it};
+    const uri target(*target_it);
+    // TODO if taget is no directory rename the file
+    //      and put it under that name
+    const auto status = filesystem->put(source, target, fs::Replication{repl});
+    if(!status.ok()) return status;
   }
+
   return Status::OK;
 }
 
@@ -161,18 +192,14 @@ Status Service::handle_get(const vector<string>& token, ControlResponse* res) {
     return Status(grpc::StatusCode::INVALID_ARGUMENT, "failed to handle get", "expecting >= 3 arguments");
   }
 
-  try {
-    const auto target_it = prev(token.end());
-    for (auto it = next(token.begin()); it != target_it; ++it) {
-      const uri source{*it};
-      const path target{*target_it};
-      // TODO if taget is no directory rename the file
-      //      and put it under that name
-      filesystem->get(source, target);
-    }
-  } catch (const chord::exception& exception) {
-    logger->error("failed to issue get request: {}", exception.what());
-    return Status(grpc::StatusCode::CANCELLED, "failed to handle get, response", exception.what());
+  const auto target_it = prev(token.end());
+  for (auto it = next(token.begin()); it != target_it; ++it) {
+    const uri source{*it};
+    const path target{*target_it};
+    // TODO if taget is no directory rename the file
+    //      and put it under that name
+    const auto status = filesystem->get(source, target);
+    if(!status.ok())  return status;
   }
 
   return Status::OK;

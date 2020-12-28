@@ -27,7 +27,7 @@ MATCHER_P(ParentContains, target_uri, "") {
 
   const auto filename = target_uri.path().filename();
   const auto parent_path = target_uri.path().parent_path();
-  const auto parent_uri = uri{"chord", parent_path};
+  const auto parent_uri = uri{target_uri.scheme(), parent_path};
 
   const auto parent_exists = metadata_mgr->exists(parent_uri);
   if(!parent_exists) {
@@ -81,7 +81,8 @@ class IntegrationTest : public ::testing::Test {
 
     void assert_equal(const IntPeer* peer, std::shared_ptr<chord::test::TmpBase> source, const uri& target_uri, const bool check_parent=false) const;
     void assert_deleted(const IntPeer* peer, const uri& target_uri, const bool check_parent=false) const;
-    void assert_parent_contains(const IntPeer* peer, const uri& target_uri) const;
+
+    void assert_metadata(const IntPeer* peer, const uri& target_uri) const;
 };
 
 std::string put(const path& src, const path& dst);
@@ -92,7 +93,9 @@ void put(chord::IntPeer* peer, int replication, const std::shared_ptr<TMP> src, 
   ctrl_client.control(peer->get_context().advertise_addr, "put --repl "+std::to_string(replication)+" "+(src->path.string())+" "+std::string(dst));
 }
 
-void del(chord::IntPeer* peer, const chord::uri& dst, bool recursive=false);
+grpc::Status mkdir(chord::IntPeer* peer, int replication, const chord::uri& dst);
+
+grpc::Status del(chord::IntPeer* peer, const chord::uri& dst, bool recursive=false);
 
 } // namespace test
 } // namespace chord

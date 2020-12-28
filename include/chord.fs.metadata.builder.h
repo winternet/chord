@@ -6,6 +6,7 @@
 #include "chord.file.h"
 #include "chord.fs.metadata.h"
 #include "chord.path.h"
+#include "chord.uri.h"
 #include "chord.crypto.h"
 #include "chord_fs.pb.h"
 #include "chord.context.h"
@@ -76,6 +77,21 @@ struct MetadataBuilder {
       auto meta = MetadataBuilder::from(context, content, repl);
     }
 
+    return meta;
+  }
+
+  static Metadata directory(const chord::uri& uri, const Replication repl = {}) {
+    Metadata meta{
+      uri.path().filename(),
+        "",
+        "",
+        perms::all,
+        type::directory,
+        0,
+        {},
+        {},
+        repl
+    };
     return meta;
   }
 

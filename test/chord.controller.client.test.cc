@@ -83,5 +83,8 @@ TEST(chord_controller_client, control_with_exception) {
           SetArgPointee<2>(mocked_response),
           Return(Status::CANCELLED)));
 
-  ASSERT_THROW(client.control("localhost:50050", "dir chord:///folder"), chord::exception);
+  const auto status = client.control("localhost:50050", "dir chord:///folder");
+  ASSERT_FALSE(status.ok());
+  ASSERT_EQ(status.error_code(), grpc::StatusCode::CANCELLED);
+  //ASSERT_THROW(client.control("localhost:50050", "dir chord:///folder"), chord::exception);
 }

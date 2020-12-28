@@ -29,8 +29,9 @@ class Service final : public chord::controller::Control::Service {
                        chord::controller::ControlResponse *res) override;
 
  private:
-  grpc::Status parse_command(const chord::controller::ControlRequest *req,
-                             chord::controller::ControlResponse *res);
+  grpc::Status parse_command(const chord::controller::ControlRequest *req, chord::controller::ControlResponse *res);
+
+  grpc::Status handle_mkdir(const std::vector<std::string>& token, ControlResponse* res);
   grpc::Status handle_put(const std::vector<std::string>& token, ControlResponse* res);
   grpc::Status handle_get(const std::vector<std::string>& token, ControlResponse* res);
   grpc::Status handle_dir(const std::vector<std::string>& token, ControlResponse* res);

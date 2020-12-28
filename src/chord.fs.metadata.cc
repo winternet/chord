@@ -37,6 +37,11 @@ Metadata::Metadata(std::string name, std::string owner, std::string group, perms
 bool Metadata::operator<(const Metadata &other) const { 
   return name < other.name; 
 }
+
+bool Metadata::equal_basic(const std::set<Metadata>& lhs, const std::set<Metadata>& rhs) {
+    return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), [&](const auto& lhs, const auto& rhs) {return lhs.compare_basic(rhs);});
+}
+
 bool Metadata::compare_basic(const Metadata &other) const {
   return name == other.name 
     && file_type == other.file_type

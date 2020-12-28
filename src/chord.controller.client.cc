@@ -37,7 +37,7 @@ Client::Client(ControlStubFactory make_stub)
     : make_stub{make_stub} {
 }
 
-void Client::control(const endpoint& address, const string &command) {
+grpc::Status Client::control(const endpoint& address, const string &command) {
   ClientContext clientContext;
   ControlRequest req;
   ControlResponse res;
@@ -49,13 +49,14 @@ void Client::control(const endpoint& address, const string &command) {
   //TODO make configurable (at least port)
   auto status = make_stub(address)->control(&clientContext, req, &res);
 
-  if (!status.ok()) {
-    logger->debug("received error: {} {}", status.error_message(), status.error_details());
-    throw__grpc_exception(status);
+  if(status.ok()) {
+    logger->debug("succeeded with command: {}", command);
+    cout << res.result() << endl;
+  } else {
+    logger->error("received error: {} {}", status.error_message(), status.error_details());
   }
 
-  logger->debug("succeeded with command: {}", command);
-  cout << res.result() << endl;
+  return status;
 
 }
 } //namespace controller

@@ -76,6 +76,7 @@ class FilesystemServicePutTest : public ::testing::Test {
 TEST_F(FilesystemServicePutTest, put) {
   TmpDir source_directory;
 
+  const auto root_uri = uri("chord:///");
   const auto target_uri = uri("chord:///file");
   const auto source_file = source_directory.add_file("file");
 
@@ -85,6 +86,8 @@ TEST_F(FilesystemServicePutTest, put) {
 
   // self peer metadata
   EXPECT_CALL(*self->metadata_mgr, exists(target_uri))
+    .WillOnce(Return(false));
+  EXPECT_CALL(*self->metadata_mgr, exists(root_uri))
     .WillOnce(Return(false));
 
   Metadata metadata_file("file", "", "", perms::all, type::regular, file::file_size(source_file->path), crypto::sha256(source_file->path), {}, Replication());
@@ -139,6 +142,8 @@ TEST_F(FilesystemServicePutTest, put_replication_2) {
     Metadata metadata_file{"file", "", "", perms::all, type::regular, file::file_size(source_file->path), crypto::sha256(source_file->path), {}, Replication(0,2)};
 
     // self peer metadata
+    EXPECT_CALL(*self->metadata_mgr, exists(root_uri))
+      .WillOnce(Return(false));
     EXPECT_CALL(*self->metadata_mgr, exists(target_uri))
       .WillOnce(Return(false)) // no metadata available
       .WillOnce(Return(true)); // metadata has been added meanwhile
@@ -154,13 +159,17 @@ TEST_F(FilesystemServicePutTest, put_replication_2) {
 
   // setup expectations for second-node
   {
-  Metadata metadata_dir{".", "", "", perms::none, type::directory, 0, {}, {}, Replication(1,2)};
-  Metadata metadata_file{"file", "", "", perms::all, type::regular, file::file_size(source_file->path), crypto::sha256(source_file->path), {}, Replication(1,2)};
+    Metadata metadata_dir{".", "", "", perms::none, type::directory, 0, {}, {}, Replication(1,2)};
+    Metadata metadata_file{"file", "", "", perms::all, type::regular, file::file_size(source_file->path), crypto::sha256(source_file->path), {}, Replication(1,2)};
 
-  EXPECT_CALL(*peer_2.metadata_mgr, add(target_uri, std::set<Metadata>{metadata_file}))
-    .WillOnce(Return(true));
-  EXPECT_CALL(*peer_2.metadata_mgr, add(root_uri, std::set<Metadata>{metadata_dir, metadata_file}))
-    .WillOnce(Return(true));
+    EXPECT_CALL(*peer_2.metadata_mgr, exists(root_uri))
+      .WillOnce(Return(false));
+    EXPECT_CALL(*peer_2.metadata_mgr, exists(target_uri))
+      .WillOnce(Return(false));
+    EXPECT_CALL(*peer_2.metadata_mgr, add(target_uri, std::set<Metadata>{metadata_file}))
+      .WillOnce(Return(true));
+    EXPECT_CALL(*peer_2.metadata_mgr, add(root_uri, std::set<Metadata>{metadata_dir, metadata_file}))
+      .WillOnce(Return(true));
   }
 
   const auto status = self->fs_client->put(target_uri, *source_file, client::options{Replication(2)});

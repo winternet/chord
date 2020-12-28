@@ -39,7 +39,10 @@ int main(int argc, char *argv[]) {
         cmd == "del" || cmd == "rm") {
       stringstream ss;
       for (const auto &c : commands) ss << c << " ";
-      controlClient.control(options.address, ss.str());
+      const auto status = controlClient.control(options.address, ss.str());
+      if(!status.ok()) {
+        throw__grpc_exception(status);
+      }
     }
 
     exit(0);

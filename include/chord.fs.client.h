@@ -62,6 +62,9 @@ class Client {
   grpc::Status put(const chord::uri&, std::istream&, const client::options& options = {});
   grpc::Status put(const chord::uri&, const chord::path&, const client::options& options = {});
 
+  grpc::Status mkdir(const chord::uri&, const client::options& options = {});
+  grpc::Status mkdir(const chord::node&, const chord::uri&, const client::options& = {});
+
   grpc::Status get(const chord::uri&, std::ostream&);
   grpc::Status get(const chord::uri&, const chord::path&);
   grpc::Status get(const chord::uri&, const chord::node&, std::ostream&);

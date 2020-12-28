@@ -59,6 +59,8 @@ struct Metadata {
   bool operator==(const Metadata &other) const;
   bool compare_basic(const Metadata &other) const;
 
+  static bool equal_basic(const std::set<Metadata>& lhs, const std::set<Metadata>& rhs);
+
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version);
 

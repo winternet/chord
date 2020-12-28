@@ -124,17 +124,22 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
   const auto uri = uri::from(req->uri());
   auto metadata = MetadataBuilder::from(req);
 
-  // regular file is not shallow copyable because it already exists (locally)
-  if(is_regular_file(metadata) 
-      && is_shallow_copy(metadata, context) 
-      && metadata_mgr->exists(uri)) {
-    const auto existing = metadata_mgr->get(uri);
-    const auto same = std::equal(metadata.begin(), metadata.end(), existing.begin(), existing.end(), [&](const auto& lhs, const auto& rhs) {return lhs.compare_basic(rhs);});
-    if(same) {
-      const auto message = "received request from self.";
-      return Status{StatusCode::ALREADY_EXISTS, message};
-    }
+  if(metadata_mgr->exists(uri) &&
+    Metadata::equal_basic(metadata_mgr->get(uri), metadata)) {
+    return {StatusCode::ALREADY_EXISTS, "metadata already exists."};
   }
+
+  // regular file is not shallow copyable because it already exists (locally)
+  //if(is_regular_file(metadata) 
+  //    && is_shallow_copy(metadata, context) 
+  //    && metadata_mgr->exists(uri)) {
+  //  const auto existing = metadata_mgr->get(uri);
+  //  const auto same = std::equal(metadata.begin(), metadata.end(), existing.begin(), existing.end(), [&](const auto& lhs, const auto& rhs) {return lhs.compare_basic(rhs);});
+  //  if(same) {
+  //    const auto message = "received request from self.";
+  //    return Status{StatusCode::ALREADY_EXISTS, message};
+  //  }
+  //}
 
   const auto added = metadata_mgr->add(uri, metadata);
 
@@ -143,7 +148,7 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
   auto max_repl = max_replication(metadata);
   // update the parent (first node triggers replication)
   const auto parent_path = uri.path().parent_path();
-  if(added && max_repl.index == 0 && !parent_path.empty() && fs::is_directory(metadata)) {
+  if(added && max_repl.index == 0 && !parent_path.empty() /*&& fs::is_directory(metadata)*/) {
     const auto parent_uri = chord::uri{uri.scheme(), parent_path};
     {
       auto meta_dir = create_directory(metadata, uri.path().filename());

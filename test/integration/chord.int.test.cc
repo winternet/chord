@@ -9,9 +9,25 @@ std::string put(const path& src, const path& dst) {
   return "put " + src.string() + " " + to_string(uri{"chord", dst});
 }
 
-void del(chord::IntPeer* peer, const chord::uri& dst, bool recursive) {
+grpc::Status del(chord::IntPeer* peer, const chord::uri& dst, bool recursive) {
   controller::Client ctrl_client;
-  ctrl_client.control(peer->get_context().advertise_addr, "del "s + (recursive ? "--recursive ":"") + std::string(dst));
+  return ctrl_client.control(peer->get_context().advertise_addr, "del "s + (recursive ? "--recursive ":"") + std::string(dst));
+}
+
+grpc::Status mkdir(chord::IntPeer* peer, int replication, const chord::uri& dst) {
+  controller::Client ctrl_client;
+  return ctrl_client.control(peer->get_context().advertise_addr, "mkdir --repl "+std::to_string(replication)+" "+std::string(dst));
+}
+
+void IntegrationTest::assert_metadata(const IntPeer* peer, const uri& target_uri) const {
+  const auto metadata_mgr = peer->get_metadata_manager();
+  ASSERT_TRUE(metadata_mgr->exists(target_uri));
+
+
+  const auto parent_path = target_uri.path().parent_path();
+  if(parent_path.empty()) return;
+
+  ASSERT_THAT(peer, ParentContains(target_uri));
 }
 
 void IntegrationTest::assert_equal(const IntPeer* peer, std::shared_ptr<chord::test::TmpBase> source, const uri& target_uri, const bool check_parent) const {

@@ -112,6 +112,12 @@ bool Facade::is_directory(const chord::uri& target) {
   return chord::fs::is_directory(metadata);
 }
 
+Status Facade::mkdir(const chord::uri& target, Replication repl) {
+  std::set<Metadata> metadata;
+  metadata.insert(MetadataBuilder::directory(target, repl));
+  return fs_client->meta(target, Client::Action::ADD, metadata);
+}
+
 Status Facade::put(const chord::path &source, const chord::uri &target, Replication repl) {
   if (chord::file::is_directory(source)) {
     for(const auto &child : source.recursive_contents()) {
@@ -158,6 +164,11 @@ Status Facade::get(const chord::uri &source, const chord::path& target) {
     }
   }
   return Status::OK;
+}
+
+Status Facade::exists(const chord::uri& uri) {
+  std::set<Metadata> metadata;
+  return dir(uri, metadata);
 }
 
 Status Facade::dir(const chord::uri &uri, std::set<Metadata> &metadata) {
@@ -215,9 +226,11 @@ Status Facade::rebalance_metadata(const uri& uri, const bool shallow_copy) {
     }
 
     const auto status = fs_client->meta(uri, Client::Action::ADD, metadata_deleted);
-    if(shallow_copy && is_regular_file(metadata_deleted) && status.error_code() == StatusCode::ALREADY_EXISTS) {
+    if(status.error_code() == StatusCode::ALREADY_EXISTS) {
+    //if(shallow_copy && is_regular_file(metadata_deleted) && status.error_code() == StatusCode::ALREADY_EXISTS) {
       // metadata already exists on the host - including the local file (!)
-      fs::util::remove(uri, context, monitor.get());
+      if(is_regular_file(metadata_deleted))
+        fs::util::remove(uri, context, monitor.get());
       return Status::OK;
     }
 

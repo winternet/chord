@@ -131,9 +131,8 @@ TEST_F(FilesystemFacadeJoinTest, on_join__handle_local_files__shallow_copies) {
     .WillOnce(Return(metadata));
 
   InSequence in_seq;
-  const auto subsubfile = uri("chord:///sub/subsub/subsubfile");
   for(const auto [uri, set] : metadata) {
-    EXPECT_CALL(*peer_2.metadata_mgr, del(uri)).WillOnce(Return(metadata[uri]));
+    EXPECT_CALL(*peer_2.metadata_mgr, del(uri)).WillOnce(Return(set));
     
     if(is_directory(set)) {
       // we assume the directory metadata is already available on the original node => add(...) returns false
