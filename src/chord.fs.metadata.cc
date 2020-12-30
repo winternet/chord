@@ -1,6 +1,8 @@
 #include "chord.fs.metadata.h"
 #include "chord.context.h"
 #include "chord.utils.h"
+#include "chord.uri.h"
+#include "chord.path.h"
 
 using std::begin;
 using std::end;
@@ -98,6 +100,12 @@ std::set<Metadata> create_directory(const std::set<Metadata>& metadata, const st
 
 bool is_directory(const Metadata& metadata) {
   return metadata.name == "." && metadata.file_type == type::directory;
+}
+
+bool is_mkdir(const uri& uri, const std::set<Metadata>& metadata) {
+  return metadata.size() == 1 
+    && metadata.begin()->file_type == type::directory 
+    && metadata.begin()->name == uri.path().filename();
 }
 
 bool is_directory(const std::set<Metadata>& metadata) {

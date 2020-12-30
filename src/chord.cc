@@ -26,6 +26,7 @@ using std::stringstream;
 using std::vector;
 
 int main(int argc, char *argv[]) {
+  static const auto supported_commands = {"put", "get", "dir", "ls", "ll", "del", "rm", "mkdir"};
   //--- parse program options to context
   //--- or issue client command
   const auto options = chord::utils::parse_program_options(argc, argv);
@@ -35,8 +36,7 @@ int main(int argc, char *argv[]) {
     const auto commands = options.commands;
 
     const string &cmd = commands[0];
-    if (cmd == "put" || cmd == "get" || cmd == "dir" || cmd == "ls" || cmd == "ll" ||
-        cmd == "del" || cmd == "rm") {
+    if(std::count(supported_commands.begin(), supported_commands.end(), cmd)) {
       stringstream ss;
       for (const auto &c : commands) ss << c << " ";
       const auto status = controlClient.control(options.address, ss.str());

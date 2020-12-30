@@ -43,12 +43,9 @@ struct MetadataBuilder {
   }
 
   static Metadata directory(const path& directory) {
-    return {
-        directory.filename(),
-        "",
-        "",
-        perms::all,
-        type::directory};
+    auto metadata = chord::fs::create_directory();
+    metadata.name = directory.filename();
+    return metadata;
   }
 
   /**

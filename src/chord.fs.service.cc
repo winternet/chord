@@ -141,7 +141,7 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
   //  }
   //}
 
-  const auto added = metadata_mgr->add(uri, metadata);
+  const auto added = metadata_mgr->add(uri, is_mkdir(uri, metadata) ? std::set{create_directory(metadata)} : metadata);
 
   const auto options = ContextMetadata::from(serverContext);
 
