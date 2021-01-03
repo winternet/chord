@@ -31,7 +31,7 @@ logging:
       type: "console"
     FILE_SINK:
       type: "file-rotating"
-      path: "/tmp/logs/chord0.log"
+      path: "/tmp/chord_fuse.log"
   loggers:
     CHORD_LOG:
       sinks: [FILE_SINK]
