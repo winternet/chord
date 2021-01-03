@@ -103,23 +103,25 @@ Status Client::put(const chord::node& node, const chord::uri &uri, istream &istr
   init_context(clientContext, options);
   ContextMetadata::add(clientContext, options.replication);
   ContextMetadata::add(clientContext, uri);
+  //TODO before calculating the hash maybe compare file size first
+  ContextMetadata::add(clientContext, istream);
 
-  if(metadata_mgr->exists(uri)) {
-    const auto metadata_set = metadata_mgr->get(uri);
-    if(fs::is_regular_file(metadata_set)) {
-      ContextMetadata::add(clientContext, metadata_set.begin()->file_hash);
-      //FIXME: quick workaround for fuse testing
-      //const auto file_hash = metadata_set.begin()->file_hash;
-      //if(file_hash == chord::crypto::sha256(istream)) {
-      //  ContextMetadata::add(clientContext, file_hash);
-      //}
-      //istream.clear();
-      //istream.seekg(0, std::ios::beg);
-    } else {
-      logger->warn("[put] failed to handle metadata for uri {}: multiple entries ({}) - aborting.", uri, metadata_set.size());
-      return Status::CANCELLED;
-    }
-  }
+  //if(metadata_mgr->exists(uri)) {
+  //  const auto metadata_set = metadata_mgr->get(uri);
+  //  if(fs::is_regular_file(metadata_set)) {
+  //    ContextMetadata::add(clientContext, metadata_set.begin()->file_hash);
+  //    //FIXME: quick workaround for fuse testing
+  //    //const auto file_hash = metadata_set.begin()->file_hash;
+  //    //if(file_hash == chord::crypto::sha256(istream)) {
+  //    //  ContextMetadata::add(clientContext, file_hash);
+  //    //}
+  //    //istream.clear();
+  //    //istream.seekg(0, std::ios::beg);
+  //  } else {
+  //    logger->warn("[put] failed to handle metadata for uri {}: multiple entries ({}) - aborting.", uri, metadata_set.size());
+  //    return Status::CANCELLED;
+  //  }
+  //}
 
   PutResponse res;
 

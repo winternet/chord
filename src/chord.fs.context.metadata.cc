@@ -3,11 +3,13 @@
 #include <grpcpp/impl/codegen/client_context.h>
 #include <grpcpp/impl/codegen/server_context.h>
 #include <string>
+#include <istream>
 #include <cstdlib>
 
 #include "chord.fs.metadata.h"
 #include "chord.fs.replication.h"
 #include "chord.uri.h"
+#include "chord.crypto.h"
 #include "chord.uuid.h"
 #include "chord.optional.h"
 #include "chord.exception.h"
@@ -34,6 +36,11 @@ void ContextMetadata::add(ClientContext& context, const Metadata& metadata) {
 }
 void ContextMetadata::add(grpc::ClientContext& context, const chord::uri& uri) {
   context.AddMetadata(ContextMetadata::uri, to_string(uri));
+}
+void ContextMetadata::add(grpc::ClientContext& context, std::istream& input) {
+  ContextMetadata::add(context, chord::crypto::sha256(input));
+  input.clear();
+  input.seekg(0, std::ios::beg);
 }
 void ContextMetadata::add(grpc::ClientContext& context, const chord::optional<chord::uuid>& hash) {
   if(hash) context.AddMetadata(ContextMetadata::file_hash, *hash);

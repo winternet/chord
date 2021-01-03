@@ -99,8 +99,8 @@ TEST_F(FilesystemFacadeLeaveTest, on_leave__handle_local_files) {
 
   EXPECT_CALL(*self->metadata_mgr, exists(_))
     .WillRepeatedly(Return(true));
-  EXPECT_CALL(*self->metadata_mgr, get(_))
-    .WillOnce(Return(metadata_set));
+  //EXPECT_CALL(*self->metadata_mgr, get(_))
+  //  .WillOnce(Return(metadata_set));
   EXPECT_CALL(*self->metadata_mgr, get_all())
     .WillOnce(Return(files));
 

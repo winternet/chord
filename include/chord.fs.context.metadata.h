@@ -29,6 +29,7 @@ struct ContextMetadata {
   static void add(grpc::ClientContext&, const chord::fs::Metadata&);
   static void add(grpc::ClientContext&, const chord::fs::Replication&);
   static void add(grpc::ClientContext&, const chord::uri&);
+  static void add(grpc::ClientContext&, std::istream&);
   static void add(grpc::ClientContext&, const chord::optional<chord::uuid>&);
   static void add_src(grpc::ClientContext& context);
   static void add_src(grpc::ClientContext&, const chord::uuid&);

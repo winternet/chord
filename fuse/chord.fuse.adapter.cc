@@ -15,11 +15,6 @@ using namespace chord::fs;
 namespace chord {
 namespace fuse {
 
-static const std::string root_path = "/";
-static const std::string hello_str = "Hello World!\n";
-static const std::string hello_path = "/hello";
-
-
 Adapter::Adapter(int argc, char* argv[]): 
   logger{chord::log::get_or_create(logger_name)},
   options{chord::utils::parse_program_options(argc, argv)},
@@ -66,32 +61,24 @@ int Adapter::readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 }
 
 int Adapter::create(const char* path, mode_t mode, struct fuse_file_info* fi) {
-  // only handle files
-  if(!(mode & S_IFREG)) {
-    return -ENOSYS;
-  }
-  
   auto fs = this_()->filesystem();
+  auto logger = this_()->logger;
 
   const auto uri = chord::utils::as_uri(path);
   const auto journal_path = util::as_journal_path(this_()->options.context, uri);
 
-  //TODO move "exist" logic to fs.facade
-  std::set<fs::Metadata> metadata;
-  const auto status = fs->dir(uri, metadata);
-  if(status.error_code() != grpc::StatusCode::NOT_FOUND) {
-    return -EEXIST;
+  //TODO condense this logic and make transactional
+  if(this_()->open_local(journal_path.string().c_str(), fi, mode)) {
+    logger->error("[create] failed to open file locally {}", journal_path);
+    return -EAGAIN;
   }
 
-  if(chord::file::exists(journal_path)) {
-    chord::file::remove(journal_path);
+  const auto status = fs->put(journal_path, uri);
+  if(!status.ok()) {
+    logger->error("failed to put newly created file {} under {}", journal_path, uri);
+    return -EAGAIN;
   }
-
-  if(!chord::file::create_directories(journal_path.parent_path()) && !chord::file::create_file(journal_path)) {
-    return -ENXIO;
-  }
-
-  return this_()->open_local(journal_path.string().c_str(), fi);
+  return 0;
 }
 
 //TODO implement
@@ -104,12 +91,36 @@ int Adapter::utimens(const char* path, const struct timespec tv[2], struct fuse_
 }
 
 int Adapter::mknod(const char *path, mode_t mode, [[maybe_unused]]dev_t dev) {
-  return Adapter::create(path, (mode_t)(mode | S_IFREG), nullptr);
+  return Adapter::create(path, mode, nullptr);
 }
 
-int Adapter::open_local(const char* path, struct fuse_file_info* fi) {
-  const int fd = ::open(path, fi->flags);
+int Adapter::access(const char *path, int mask) {
+  const auto uri = chord::utils::as_uri(path);
+  auto fs = this_()->filesystem();
+  const auto status =  fs->exists(uri).error_code();
+  switch(status) {
+    case grpc::StatusCode::ALREADY_EXISTS:
+    case grpc::StatusCode::OK:
+      return 0;
+    case grpc::StatusCode::NOT_FOUND:
+      return -ENOENT;
+    default:
+      return -EACCES; // permission denied
+  }
+}
+
+int Adapter::mkdir(const char *path, [[maybe_unused]] mode_t mode) {
+  const auto uri = chord::utils::as_uri(path);
+  const auto status = this_()->filesystem()->mkdir(uri);
+  return status.error_code();
+}
+
+int Adapter::open_local(const char* path, struct fuse_file_info* fi, mode_t mode) {
+  auto logger = this_()->logger;
+  logger->info("opening file {}", path);
+  const int fd = ::open(path, fi->flags, mode);
   if(fd < 0) {
+    logger->error("failed to open file {}", std::strerror(errno));
     return -1;
   }
 
@@ -132,18 +143,19 @@ int Adapter::open(const char* path, struct fuse_file_info *fi) {
     }
   }
 
-  return this_()->open_local(journal_path.string().c_str(), fi);
+  return this_()->open_local(journal_path.string().c_str(), fi, 0);
 }
 
 int Adapter::release(const char *path, struct fuse_file_info *fi) {
   this_()->logger->info("release {}", path);
   //FIXME: called once for each file, replace with put
-  const auto succ = Adapter::flush(path, fi);
-  if(succ) {
-    //TODO cleanup recursively
-    const auto journal_path = chord::fs::util::as_journal_path(this_()->options.context, chord::path{path});
-    chord::file::remove(journal_path);
-  }
+  const auto status = Adapter::flush(path, fi);
+  //FIXME cleanup journal
+  //if(status != 0) {
+  //  //TODO cleanup recursively
+  //  const auto journal_path = chord::fs::util::as_journal_path(this_()->options.context, chord::path{path});
+  //  chord::file::remove(journal_path);
+  //}
   //TODO error handling
   return 0;
 }
@@ -167,40 +179,40 @@ int Adapter::write(const char *path, const char *buf, size_t size, off_t offset,
 int Adapter::read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
   this_()->logger->info("read {}", path);
   return ::pread(fi->fh, buf, size, offset);
-  //const auto journal_path = chord::fs::util::as_journal_path(this_()->options.context, chord::path{path});
-
-  //if(!chord::file::exists(journal_path)) {
-  //  //TODO handle issue when open obviously went wrong or file has been deleted meanwhile...
-  //  return -ENOENT;
-  //}
-
-	//size_t len;
-	//len = hello_str.length();
-	//if ((size_t)offset < len) {
-	//	if (offset + size > len)
-	//		size = len - offset;
-	//	memcpy(buf, hello_str.c_str() + offset, size);
-	//} else
-	//	size = 0;
-
-	//return size;
 }
 
 int Adapter::flush(const char *path, struct fuse_file_info* fi) {
-  this_()->logger->info("flush {}", path);
+  auto logger = this_()->logger;
+  auto fs = this_()->filesystem();
+  logger->info("flush {}", path);
+
   const auto uri = chord::utils::as_uri(path);
   const auto journal_path = chord::fs::util::as_journal_path(this_()->options.context, uri);
+  const auto data_path = this_()->options.context.data_directory / chord::path{path};
 
   const auto succ = ::fsync(fi->fh);
-  this_()->logger->info("flush {}, file_size {}", path, chord::file::file_size(journal_path));
+  logger->info("flush {}, file_size {}", path, chord::file::file_size(journal_path));
 
-  chord::file::copy_file(journal_path, this_()->options.context.data_directory / chord::path{path}, true);
-
-  const auto status = this_()->filesystem()->put(journal_path, uri);
+  const auto status = fs->put(journal_path, uri);
   if(!status.ok()) {
+    logger->error("failed to put {} to {}", journal_path, uri);
     return -EAGAIN;
   }
   return succ;
+}
+
+int Adapter::rmdir(const char* path) {
+  return Adapter::unlink(path);
+}
+
+int Adapter::unlink(const char* path) {
+  auto fs = this_()->filesystem();
+  auto logger = this_()->logger;
+
+  const auto uri = chord::utils::as_uri(path);
+  const auto status = fs->del(uri);
+  if(status.ok()) return 0;
+  return -ENOENT;
 }
 
 } // namespace fuse

@@ -24,7 +24,7 @@ private:
     return this_()->peer->get_filesystem();
   }
 
-  int open_local(const char*, struct fuse_file_info*);
+  int open_local(const char*, struct fuse_file_info*, mode_t);
 
 public:
   Adapter(int argc, char* arv[]);
@@ -46,8 +46,10 @@ public:
                      enum fuse_readdir_flags);
   
   static int mknod(const char*, mode_t, dev_t);
+  static int mkdir(const char *, mode_t);
   static int create(const char*, mode_t, struct fuse_file_info*);
 
+  static int access(const char *path, int);
   static int open(const char*, struct fuse_file_info*);
   static int release(const char*, struct fuse_file_info*);
 
@@ -55,6 +57,9 @@ public:
   static int write(const char*, const char *buf, size_t size, off_t offset, struct fuse_file_info*);
   static int truncate(const char*, off_t offset, struct fuse_file_info*);
   static int flush(const char*, struct fuse_file_info*);
+
+  static int rmdir(const char*);
+  static int unlink(const char*);
 };
 
 } // namespace fuse
