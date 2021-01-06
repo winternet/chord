@@ -160,6 +160,41 @@ Status Client::put(const chord::uri &uri, istream &istream, const client::option
   return put(node, uri, istream, options);
 }
 
+Status Client::mov(const chord::uri& src, const chord::uri& dst) {
+  if(src == dst) return Status::OK;
+
+  const auto hash = chord::crypto::sha256(src);
+  const auto node = chord->successor(hash);
+  return mov(node, src, dst);
+}
+
+Status Client::mov(const chord::node& node, const chord::uri& src, const chord::uri& dst, const client::options& options) {
+  return meta(node, src, Client::Action::MOV, dst, options);
+}
+
+grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, const Action &action, const chord::uri& dst, const client::options& options) {
+  logger->trace("[meta] {} -> {}", uri, dst);
+
+  ClientContext clientContext;
+  init_context(clientContext, options);
+  MetaResponse res;
+  MetaRequest req;
+
+  switch(action) {
+    case Action::MOV:
+      req.set_action(fs::Action::MOV);
+      break;
+    default:
+      return grpc::Status::CANCELLED;
+  }
+
+  req.set_uri_dst(dst);
+
+  const auto status = make_stub(target.endpoint)->meta(&clientContext, req, &res);
+
+  return status;
+}
+
 grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, const Action &action, set<Metadata>& metadata, const client::options& options) {
   //--- find responsible node for uri.path()
   const auto path = uri.path().canonical();
@@ -206,6 +241,8 @@ grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, cons
       break;
     case Action::DIR:
       return dir(uri, metadata, options);
+    default:
+      return Status::CANCELLED;
   }
 
   const auto status = make_stub(target.endpoint)->meta(&clientContext, req, &res);
@@ -281,6 +318,23 @@ grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata, co
 
   return status;
 }
+
+//Status Client::mov(const chord::uri& src, const chord::uri& dst) {
+//  const auto hash = chord::crypto::sha256(src);
+//  const auto node = chord->successor(hash);
+//  return mov(node, src, dst);
+//}
+//
+//Status Client::mov(const chord::node& node, const chord::uri& src, const chord::uri& dst, const client::options& options) {
+//  logger->trace("[mov] {} -> {}", src, dst);
+//
+//  ClientContext clientContext;
+//  init_context(clientContext, options);
+//  MovResponse res;
+//  MovRequest req;
+//
+//  return Status::OK;
+//}
 
 Status Client::get(const chord::uri& uri, const chord::path& path) {
   std::ofstream ofile;

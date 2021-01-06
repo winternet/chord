@@ -35,7 +35,7 @@ using StubFactory = std::function<std::unique_ptr<chord::fs::Filesystem::StubInt
 
 class Client {
  public:
-  enum class Action { ADD, DEL, DIR };
+  enum class Action { ADD, DEL, DIR, MOV };
 
  private:
   static constexpr auto logger_name = "chord.fs.client";
@@ -50,19 +50,21 @@ class Client {
 
   void init_context(grpc::ClientContext&, const client::options&);
 
+  grpc::Status meta(const chord::node&, const chord::uri &, const Action &, const chord::uri&, const client::options& = {});
+
  public:
   Client(Context &context, chord::ChordFacade* chord, chord::fs::IMetadataManager* metadata_mgr, ChannelPool* channel_pool);
 
   Client(Context &context, chord::ChordFacade* chord, StubFactory factory);
 
   // called internally by the chord.fs.service
-  grpc::Status put(const chord::node&, const chord::uri&, std::istream&, const client::options& options = {});
-  grpc::Status put(const chord::node&, const chord::uri&, const chord::path&, const client::options& options = {});
+  grpc::Status put(const chord::node&, const chord::uri&, std::istream&, const client::options& = {});
+  grpc::Status put(const chord::node&, const chord::uri&, const chord::path&, const client::options& = {});
 
-  grpc::Status put(const chord::uri&, std::istream&, const client::options& options = {});
-  grpc::Status put(const chord::uri&, const chord::path&, const client::options& options = {});
+  grpc::Status put(const chord::uri&, std::istream&, const client::options& = {});
+  grpc::Status put(const chord::uri&, const chord::path&, const client::options& = {});
 
-  grpc::Status mkdir(const chord::uri&, const client::options& options = {});
+  grpc::Status mkdir(const chord::uri&, const client::options& = {});
   grpc::Status mkdir(const chord::node&, const chord::uri&, const client::options& = {});
 
   grpc::Status get(const chord::uri&, std::ostream&);
@@ -70,17 +72,20 @@ class Client {
   grpc::Status get(const chord::uri&, const chord::node&, std::ostream&);
   grpc::Status get(const chord::uri&, const chord::node&, const chord::path&);
 
-  grpc::Status del(const chord::uri&, const bool recursive=false, const client::options& options = {});
-  grpc::Status del(const chord::node&, const chord::uri&, const bool recursive=false, const client::options& options = {});
+  grpc::Status del(const chord::uri&, const bool recursive=false, const client::options& = {});
+  grpc::Status del(const chord::node&, const chord::uri&, const bool recursive=false, const client::options& = {});
   grpc::Status del(const chord::node&, const DelRequest*, const client::options& options = {});
 
-  grpc::Status dir(const chord::uri&, std::set<Metadata>&, const client::options& options = {});
+  grpc::Status mov(const chord::uri&, const chord::uri&);
+  grpc::Status mov(const chord::node&, const chord::uri&, const chord::uri&, const client::options& = {});
+
+  grpc::Status dir(const chord::uri&, std::set<Metadata>&, const client::options& = {});
 
   //TODO remove metadata for DEL / DIR
   grpc::Status meta(const chord::uri&, const Action&, std::set<Metadata>&, const client::options& options = {});
 
   // called internally by the chord.fs.service
-  grpc::Status meta(const chord::node&, const chord::uri&, const Action&, std::set<Metadata>&, const client::options& options = {});
+  grpc::Status meta(const chord::node&, const chord::uri&, const Action&, std::set<Metadata>&, const client::options& = {});
 
 };
 

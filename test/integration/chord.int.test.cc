@@ -1,12 +1,13 @@
 #include "chord.int.test.h"
 #include "chord.fs.metadata.h"
+#include "chord.utils.h"
 
 namespace chord {
 namespace test {
 
 
 std::string put(const path& src, const path& dst) {
-  return "put " + src.string() + " " + to_string(uri{"chord", dst});
+  return "put " + src.string() + " " + to_string(chord::utils::as_uri(dst));
 }
 
 grpc::Status del(chord::IntPeer* peer, const chord::uri& dst, bool recursive) {

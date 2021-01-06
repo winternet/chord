@@ -21,6 +21,7 @@ class IFacade {
 
   virtual grpc::Status mkdir(const chord::uri&, Replication) =0;
   virtual grpc::Status exists(const chord::uri& uri) =0;
+  virtual grpc::Status move(const chord::uri& source, const chord::uri& target, const bool force=false) =0;
 
   virtual grpc::Status dir(const chord::uri& uri, std::set<Metadata>&) =0;
   virtual grpc::Status dir(const chord::uri& uri, std::ostream& ostream) =0;

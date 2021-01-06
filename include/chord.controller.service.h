@@ -31,11 +31,12 @@ class Service final : public chord::controller::Control::Service {
  private:
   grpc::Status parse_command(const chord::controller::ControlRequest *req, chord::controller::ControlResponse *res);
 
-  grpc::Status handle_mkdir(const std::vector<std::string>& token, ControlResponse* res);
-  grpc::Status handle_put(const std::vector<std::string>& token, ControlResponse* res);
-  grpc::Status handle_get(const std::vector<std::string>& token, ControlResponse* res);
-  grpc::Status handle_dir(const std::vector<std::string>& token, ControlResponse* res);
-  grpc::Status handle_del(const std::vector<std::string>& token, ControlResponse* res);
+  grpc::Status handle_mkdir(const std::vector<std::string>&, ControlResponse*);
+  grpc::Status handle_put(const std::vector<std::string>&, ControlResponse*);
+  grpc::Status handle_get(const std::vector<std::string>&, ControlResponse*);
+  grpc::Status handle_dir(const std::vector<std::string>&, ControlResponse*);
+  grpc::Status handle_del(const std::vector<std::string>&, ControlResponse*);
+  grpc::Status handle_mov(const std::vector<std::string>&, ControlResponse*);
 
   grpc::Status send_file(const path, const chord::uri);
 

@@ -76,6 +76,8 @@ public:
 
   grpc::Status put(const chord::path& source, const chord::uri& target, Replication repl = Replication()) override;
 
+  grpc::Status move(const chord::uri& source, const chord::uri& target, const bool force=false)  override;
+
   grpc::Status get(const chord::uri& source, const chord::path& target) override;
 
   grpc::Status exists(const chord::uri& uri) override;

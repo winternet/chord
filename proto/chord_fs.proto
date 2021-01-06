@@ -55,6 +55,7 @@ enum Action {
   ADD = 0;
   DEL = 1;
   DIR = 2;
+  MOV = 3;
 }
 
 message Data {
@@ -92,6 +93,7 @@ message MetaRequest {
   string uri = 2;
   Action action = 3;
 
+  string uri_dst = 5; // Action::MOV
   repeated Data metadata = 4;
 }
 

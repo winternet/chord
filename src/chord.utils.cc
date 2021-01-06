@@ -22,6 +22,10 @@ uri as_uri(const path& p) {
   return {"chord", p};
 }
 
+uri as_uri(const std::string& p) {
+  return as_uri(p.c_str());
+}
+
 Options parse_program_options(int ac, char *av[]) {
   using std::string;
   namespace po = boost::program_options;

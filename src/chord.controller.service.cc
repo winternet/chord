@@ -69,6 +69,8 @@ Status Service::parse_command(const ControlRequest* req, ControlResponse* res) {
     return handle_dir(token, res);
   } else if (cmd == "del" || cmd == "rm") {
     return handle_del(token, res);
+  } else if (cmd == "mov" || cmd == "mv") {
+    return handle_mov(token, res);
   }
 
   res->set_result("unknown error.");
@@ -110,6 +112,43 @@ Status Service::handle_del(const vector<string>& token, ControlResponse* res) {
       return status;
     }
   }
+  return Status::OK;
+}
+
+Status Service::handle_mov(const vector<string>& token, ControlResponse* res) {
+  // BEG: parse (~>method)
+  po::variables_map vm;
+  po::positional_options_description pos;
+  pos.add("input", -1);
+  po::options_description flags("[mov flags]");
+  flags.add_options()
+      ("force,f", "overwrite existing files")
+      ("input", po::value<vector<string> >()->default_value({}, ""), "input to process");
+  po::parsed_options parsed_flags = po::command_line_parser(token)
+    .options(flags)
+    .positional(pos)
+    .allow_unregistered()
+    .run();
+  po::store(parsed_flags, vm);
+  po::notify(vm);
+
+  const auto tokens = vm["input"].as<std::vector<std::string> >();
+  const bool force = vm.count("force");
+  if(tokens.size() < 3) {
+    res->set_result("invalid arguments.");
+    return Status(grpc::StatusCode::INVALID_ARGUMENT, "failed to handle mov", "expecting >= 3 arguments");
+  }
+  // END: parse
+
+  const auto target_it = prev(tokens.end());
+  for (auto it = next(tokens.begin()); it != target_it; ++it) {
+    const uri source{*it};
+    const uri target(*target_it);
+    // TODO return error on more than one iteration (i.e. more than one source)
+    const auto status = filesystem->move(source, target);
+    if(!status.ok()) return status;
+  }
+
   return Status::OK;
 }
 

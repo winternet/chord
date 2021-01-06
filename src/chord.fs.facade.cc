@@ -70,7 +70,7 @@ void Facade::on_fs_event(std::vector<chord::fs::monitor::event> events) {
   events.erase(std::remove_if(events.begin(), events.end(), [&](auto& event) {
       const auto flgs = event.flags;
       const auto removed = std::any_of(flgs.begin(), flgs.end(), [](const auto& f) { return f == monitor::event::flag::REMOVED; });
-      const auto not_exists = !metadata_mgr->exists(uri{"chord", path{event.path}-context.data_directory});
+      const auto not_exists = !metadata_mgr->exists(chord::utils::as_uri(path{event.path}-context.data_directory));
       return removed && not_exists;
   }), events.end());
   std::for_each(events.begin(), events.end(), [&](const auto& e) {
@@ -94,7 +94,7 @@ void Facade::on_fs_event(std::vector<chord::fs::monitor::event> events) {
 Status Facade::handle_fs_remove(const chord::fs::monitor::event& event) {
   const auto event_path = path{event.path};
 
-  return del(chord::uri{"chord", event_path}, true);
+  return del(chord::utils::as_uri(event_path), true);
 }
 
 Status Facade::handle_fs_update(const chord::fs::monitor::event& event) {
@@ -198,6 +198,19 @@ Status Facade::put_file(const path& source, const chord::uri& target, Replicatio
   return fs_client->put(target, source, client::options{repl});
 }
 
+Status Facade::move(const chord::uri& source, const chord::uri& target, const bool force) {
+  std::set<Metadata> metadata;
+  const auto status = fs_client->dir(source, metadata);
+  if(!status.ok()) return status;
+
+  //---
+  auto m = *metadata.begin();
+  m.name = target.path().filename();
+  //---
+  fs_client->meta(source, Client::Action::MOV, metadata);
+  return Status::OK;
+}
+
 Status Facade::get_file(const chord::uri& source, const chord::path& target) {
   try {
     // assert target path exists
@@ -296,7 +309,7 @@ Status Facade::put_file_journal(const path& data_path) {
   }
   chord::file::rename(data_path, journal_path);
 
-  const auto target = uri{"chord", relative_path};
+  const auto target = chord::utils::as_uri(relative_path);
   const auto status = this->put(journal_path, target, Replication{context.replication_cnt});
   if(status.ok()) {
     logger->info("successfully put after fs_event, removing {}", journal_path);
@@ -337,7 +350,7 @@ void Facade::initialize(const IMetadataManager::uri_meta_map_desc& metadata) {
     if(!file::is_regular_file(pth)) continue;
 
     const auto relative_path = pth - context.data_directory;
-    const auto uri = chord::uri{"chord", relative_path};
+    const auto uri = chord::utils::as_uri(relative_path);
     logger->trace("[initialize] checking: {}", uri);
     if(metadata.find(uri) == metadata.cend()) {
       logger->trace("[initialize] meanwhile created: {}", uri);

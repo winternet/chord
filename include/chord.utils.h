@@ -17,6 +17,7 @@ namespace grpc {
 namespace chord {
 namespace utils {
 
+  uri as_uri(const std::string&);
   uri as_uri(const char*);
   uri as_uri(const path&);
 

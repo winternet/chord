@@ -11,6 +11,7 @@
 #include "chord.fs.metadata.h"
 #include "chord.i.fs.metadata.manager.h"
 #include "chord.uri.h"
+#include "chord.utils.h"
 #include "chord.log.h"
 
 namespace chord {
@@ -58,7 +59,7 @@ class MetadataManager : public IMetadataManager {
     db.reset(db_tmp);
 
     // make root
-    add(uri{"chord:///"}, {{".", "", "", perms::all, type::directory}});
+    add(chord::utils::as_uri("/"), {{".", "", "", perms::all, type::directory}});
   }
 
   void __del(const chord::uri& uri) {
@@ -178,7 +179,7 @@ class MetadataManager : public IMetadataManager {
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
       const std::string& _path = it->key().ToString();
 
-      const chord::uri uri("chord", {_path});
+      const auto uri = chord::utils::as_uri(_path);
       const auto map = deserialize(it->value().ToString());
       ret[uri] = extract_metadata_set(map);
     }
@@ -200,8 +201,8 @@ class MetadataManager : public IMetadataManager {
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
       const std::string& _path = it->key().ToString();
 
-      const chord::uri uri("chord", {_path});
-      const chord::uuid hash = chord::crypto::sha256(uri);
+      const auto uri = chord::utils::as_uri(_path);
+      const auto hash = chord::crypto::sha256(uri);
 
       if(uuid::between(from, hash, to)) {
         const auto map = deserialize(it->value().ToString());
@@ -235,7 +236,7 @@ class MetadataManager : public IMetadataManager {
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
       const std::string& path = it->key().ToString();
       const auto map = deserialize(it->value().ToString());
-      const chord::uri uri("chord", {path});
+      const auto uri = chord::utils::as_uri(path);
       for(const auto& [_, meta] : map) {
         if(meta.node_ref && meta.node_ref == node) {
           ret[uri].insert(meta);
@@ -252,7 +253,7 @@ class MetadataManager : public IMetadataManager {
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
       const std::string& path = it->key().ToString();
       const auto map = deserialize(it->value().ToString());
-      const chord::uri uri("chord", {path});
+      const auto uri = chord::utils::as_uri(path);
       for(const auto& [_, meta] : map) {
         if(meta.file_type != type::directory && meta.replication.count > 1 && meta.replication.index >= min_idx) {
           ret[uri].insert(meta);

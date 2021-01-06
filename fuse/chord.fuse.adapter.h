@@ -48,18 +48,19 @@ public:
   static int mknod(const char*, mode_t, dev_t);
   static int mkdir(const char *, mode_t);
   static int create(const char*, mode_t, struct fuse_file_info*);
+  static int truncate(const char*, off_t offset, struct fuse_file_info*);
 
   static int access(const char *path, int);
   static int open(const char*, struct fuse_file_info*);
-  static int release(const char*, struct fuse_file_info*);
 
   static int read(const char*, char*, size_t size, off_t offset, struct fuse_file_info*);
   static int write(const char*, const char *buf, size_t size, off_t offset, struct fuse_file_info*);
-  static int truncate(const char*, off_t offset, struct fuse_file_info*);
   static int flush(const char*, struct fuse_file_info*);
 
+  static int rename(const char*, const char*, unsigned int);
   static int rmdir(const char*);
   static int unlink(const char*);
+  static int release(const char*, struct fuse_file_info*);
 };
 
 } // namespace fuse

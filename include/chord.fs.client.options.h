@@ -2,6 +2,7 @@
 
 #include "chord.fs.replication.h"
 #include "chord.uuid.h"
+#include "chord.uri.h"
 #include "chord.context.h"
 #include "chord.optional.h"
 

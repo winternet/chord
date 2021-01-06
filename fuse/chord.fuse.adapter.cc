@@ -109,6 +109,16 @@ int Adapter::access(const char *path, int mask) {
   }
 }
 
+int Adapter::rename(const char* from, const char* to, unsigned int) {
+  auto logger = this_()->logger;
+  auto fs = this_()->filesystem();
+
+  logger->info("rename {} -> {}", from, to);
+  const auto src = chord::utils::as_uri(from);
+  const auto dst = chord::utils::as_uri(to);
+  return 0;
+}
+
 int Adapter::mkdir(const char *path, [[maybe_unused]] mode_t mode) {
   const auto uri = chord::utils::as_uri(path);
   const auto status = this_()->filesystem()->mkdir(uri);
