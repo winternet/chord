@@ -145,7 +145,7 @@ Status Service::handle_mov(const vector<string>& token, ControlResponse* res) {
     const uri source{*it};
     const uri target(*target_it);
     // TODO return error on more than one iteration (i.e. more than one source)
-    const auto status = filesystem->move(source, target);
+    const auto status = filesystem->move(source, target, force);
     if(!status.ok()) return status;
   }
 

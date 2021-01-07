@@ -76,33 +76,6 @@ client::options Service::init_source(const client::options& o) const {
   return chord::fs::client::init_source(o, context);
 }
 
-Status Service::handle_meta_mov([[maybe_unused]] ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
-  const auto uri = uri::from(req->uri());
-  const auto dst = uri::from(req->uri_dst());
-  const auto options = ContextMetadata::from(serverContext);
-
-  // check metadata exists
-  if(!metadata_mgr->exists(uri)) {
-    const auto message = "not found: " + to_string(uri);
-    logger->info(message);
-    return Status{StatusCode::NOT_FOUND, message};
-  }
-  // check file exists
-  auto data = context.data_directory / uri.path();
-  if(!chord::file::exists(data)) {
-    const auto message = "not found: " + to_string(uri);
-    logger->info(message);
-    return Status{StatusCode::NOT_FOUND, message};
-  }
-
-  auto status = make_client()->put(dst, data, options);
-  if(status.ok()) {
-    return make_client()->del(uri);
-  }
-
-  return status;
-}
-
 Status Service::handle_meta_dir([[maybe_unused]] ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
   const auto uri = uri::from(req->uri());
 
@@ -200,6 +173,40 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
   return Status::OK;
 }
 
+Status Service::mov([[maybe_unused]] ServerContext *serverContext, const MovRequest *req, MovResponse *res) {
+  {
+    const auto status = is_valid(serverContext, RequestType::MOV);
+    if(!status.ok()) {
+      return status;
+    }
+  }
+
+  const auto uri = uri::from(req->src());
+  const auto dst = uri::from(req->dst());
+  const auto options = ContextMetadata::from(serverContext);
+
+  // check metadata exists
+  if(!metadata_mgr->exists(uri)) {
+    const auto message = "not found: " + to_string(uri);
+    logger->info(message);
+    return Status{StatusCode::NOT_FOUND, message};
+  }
+  // check file exists
+  auto data = context.data_directory / uri.path();
+  if(!chord::file::exists(data)) {
+    const auto message = "not found: " + to_string(uri);
+    logger->info(message);
+    return Status{StatusCode::NOT_FOUND, message};
+  }
+
+  auto status = make_client()->put(dst, data, options);
+  if(status.ok()) {
+    return make_client()->del(uri);
+  }
+
+  return status;
+}
+
 Status Service::meta([[maybe_unused]] ServerContext *serverContext, const MetaRequest *req, MetaResponse *res) {
 
   // in case controller service queries...
@@ -216,8 +223,6 @@ Status Service::meta([[maybe_unused]] ServerContext *serverContext, const MetaRe
         return handle_meta_del(serverContext, req);
       case DIR:
         return handle_meta_dir(serverContext, req, res);
-      case MOV:
-        return handle_meta_mov(serverContext, req, res);
     }
   } catch(const chord::exception& e) {
     const auto uri = uri::from(req->uri());
@@ -454,8 +459,8 @@ Status Service::handle_del_dir(ServerContext *serverContext, const chord::fs::De
 
     // beg: handle local
     if(file::exists(data) && file::is_empty(data)) {
-      const auto lock = monitor::lock(monitor, {data, chord::fs::monitor::event::flag::REMOVED});
-      file::remove(data);
+      //const auto lock = monitor::lock(monitor, {data, chord::fs::monitor::event::flag::REMOVED});
+      fs::util::remove(uri, context, monitor);
     }
     // end: handle local
 

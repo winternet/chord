@@ -2,10 +2,17 @@
 #include <gmock/gmock.h>
 
 #include "chord.uri.h"
+#include "chord.utils.h"
 #include "chord.exception.h"
 
 using namespace std;
 using namespace chord;
+
+TEST(chord_utils, as_uri) {
+  auto uri =  chord::utils::as_uri("/file0");
+  ASSERT_EQ("chord", uri.scheme());
+  ASSERT_EQ(chord::uri("chord:///file0"), uri);
+}
 
 TEST(chord_uri, parse_url_root) {
   auto uri = chord::uri::from("chord:///");

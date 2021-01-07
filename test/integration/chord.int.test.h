@@ -93,6 +93,8 @@ void put(chord::IntPeer* peer, int replication, const std::shared_ptr<TMP> src, 
   ctrl_client.control(peer->get_context().advertise_addr, "put --repl "+std::to_string(replication)+" "+(src->path.string())+" "+std::string(dst));
 }
 
+grpc::Status mov(chord::IntPeer* peer, const chord::uri& src, const chord::uri& dst, const bool force=false);
+
 grpc::Status mkdir(chord::IntPeer* peer, int replication, const chord::uri& dst);
 
 grpc::Status del(chord::IntPeer* peer, const chord::uri& dst, bool recursive=false);

@@ -10,6 +10,11 @@ std::string put(const path& src, const path& dst) {
   return "put " + src.string() + " " + to_string(chord::utils::as_uri(dst));
 }
 
+grpc::Status mov(chord::IntPeer* peer, const chord::uri& src, const chord::uri& dst, const bool force) {
+  controller::Client ctrl_client;
+  return ctrl_client.control(peer->get_context().advertise_addr, std::string("mov ") + std::string(force ? "-f " : " ") + std::string(src)+" "+std::string(dst));
+}
+
 grpc::Status del(chord::IntPeer* peer, const chord::uri& dst, bool recursive) {
   controller::Client ctrl_client;
   return ctrl_client.control(peer->get_context().advertise_addr, "del "s + (recursive ? "--recursive ":"") + std::string(dst));

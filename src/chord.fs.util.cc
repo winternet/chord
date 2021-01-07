@@ -18,7 +18,7 @@ bool remove(const chord::uri& uri, const Context& context, chord::fs::monitor* m
   auto path = context.data_directory / uri.path();
 
   auto removed = remove(path, monitor);
-  for(auto parent=path.parent_path(); delete_empty && parent > context.data_directory && chord::file::exists(parent) && chord::file::is_empty(parent); parent=parent.parent_path()) {
+  for(auto parent=path.parent_path().canonical(); delete_empty && parent > context.data_directory && chord::file::exists(parent) && chord::file::is_empty(parent); parent=parent.parent_path()) {
     removed |= remove(parent, monitor);
   }
 

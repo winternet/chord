@@ -35,7 +35,7 @@ using StubFactory = std::function<std::unique_ptr<chord::fs::Filesystem::StubInt
 
 class Client {
  public:
-  enum class Action { ADD, DEL, DIR, MOV };
+  enum class Action { ADD, DEL, DIR };
 
  private:
   static constexpr auto logger_name = "chord.fs.client";
@@ -49,8 +49,6 @@ class Client {
   std::shared_ptr<spdlog::logger> logger;
 
   void init_context(grpc::ClientContext&, const client::options&);
-
-  grpc::Status meta(const chord::node&, const chord::uri &, const Action &, const chord::uri&, const client::options& = {});
 
  public:
   Client(Context &context, chord::ChordFacade* chord, chord::fs::IMetadataManager* metadata_mgr, ChannelPool* channel_pool);
@@ -76,7 +74,7 @@ class Client {
   grpc::Status del(const chord::node&, const chord::uri&, const bool recursive=false, const client::options& = {});
   grpc::Status del(const chord::node&, const DelRequest*, const client::options& options = {});
 
-  grpc::Status mov(const chord::uri&, const chord::uri&);
+  grpc::Status mov(const chord::uri&, const chord::uri&, const client::options& = {});
   grpc::Status mov(const chord::node&, const chord::uri&, const chord::uri&, const client::options& = {});
 
   grpc::Status dir(const chord::uri&, std::set<Metadata>&, const client::options& = {});

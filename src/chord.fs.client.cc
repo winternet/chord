@@ -40,6 +40,8 @@ using chord::fs::GetResponse;
 using chord::fs::GetRequest;
 using chord::fs::MetaResponse;
 using chord::fs::MetaRequest;
+using chord::fs::MovResponse;
+using chord::fs::MovRequest;
 
 using namespace std;
 using namespace chord::file;
@@ -160,37 +162,26 @@ Status Client::put(const chord::uri &uri, istream &istream, const client::option
   return put(node, uri, istream, options);
 }
 
-Status Client::mov(const chord::uri& src, const chord::uri& dst) {
+Status Client::mov(const chord::uri& src, const chord::uri& dst, const client::options& options) {
   if(src == dst) return Status::OK;
 
   const auto hash = chord::crypto::sha256(src);
   const auto node = chord->successor(hash);
-  return mov(node, src, dst);
+  return mov(node, src, dst, options);
 }
 
 Status Client::mov(const chord::node& node, const chord::uri& src, const chord::uri& dst, const client::options& options) {
-  return meta(node, src, Client::Action::MOV, dst, options);
-}
-
-grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, const Action &action, const chord::uri& dst, const client::options& options) {
-  logger->trace("[meta] {} -> {}", uri, dst);
+  logger->trace("[mov] {} -> {}", src, dst);
 
   ClientContext clientContext;
   init_context(clientContext, options);
-  MetaResponse res;
-  MetaRequest req;
+  MovResponse res;
+  MovRequest req;
 
-  switch(action) {
-    case Action::MOV:
-      req.set_action(fs::Action::MOV);
-      break;
-    default:
-      return grpc::Status::CANCELLED;
-  }
+  req.set_src(src);
+  req.set_dst(dst);
 
-  req.set_uri_dst(dst);
-
-  const auto status = make_stub(target.endpoint)->meta(&clientContext, req, &res);
+  const auto status = make_stub(node.endpoint)->mov(&clientContext, req, &res);
 
   return status;
 }

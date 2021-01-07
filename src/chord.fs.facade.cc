@@ -207,8 +207,8 @@ Status Facade::move(const chord::uri& source, const chord::uri& target, const bo
   auto m = *metadata.begin();
   m.name = target.path().filename();
   //---
-  fs_client->meta(source, Client::Action::MOV, metadata);
-  return Status::OK;
+  return fs_client->mov(source, target);
+  //return Status::OK;
 }
 
 Status Facade::get_file(const chord::uri& source, const chord::path& target) {

@@ -20,6 +20,8 @@ namespace chord { namespace fs { class MetaRequest; } }
 namespace chord { namespace fs { class MetaResponse; } }
 namespace chord { namespace fs { class PutRequest; } }
 namespace chord { namespace fs { class PutResponse; } }
+namespace chord { namespace fs { class MovRequest; } }
+namespace chord { namespace fs { class MovResponse; } }
 namespace chord { namespace fs { class monitor; } }
 namespace chord { namespace fs { namespace client { struct options; } } }
 namespace chord { struct Context; }
@@ -37,7 +39,8 @@ class Service final : public chord::fs::Filesystem::Service {
     PUT,
     GET,
     DEL,
-    META
+    META,
+    MOV
   };
 
   grpc::Status get_from_reference_or_replication(const chord::uri& uri);
@@ -68,6 +71,8 @@ class Service final : public chord::fs::Filesystem::Service {
   grpc::Status del(grpc::ServerContext *context,
                    const chord::fs::DelRequest *request,
                    chord::fs::DelResponse *response) override;
+
+  grpc::Status mov(grpc::ServerContext*, const MovRequest *, MovResponse *) override;
 
   grpc::Status meta(grpc::ServerContext *serverContext,
                     const chord::fs::MetaRequest *request,

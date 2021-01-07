@@ -14,8 +14,20 @@ service Filesystem {
   rpc put       (stream PutRequest) returns (PutResponse) {}
   rpc get       (GetRequest)        returns (stream GetResponse) {}
   rpc del       (DelRequest)        returns (DelResponse) {}
+  rpc mov       (MovRequest)        returns (MovResponse) {}
   rpc meta      (MetaRequest)       returns (MetaResponse) {}
 }
+
+/**
+ * MOV
+ */
+message MovRequest {
+  string src = 1;
+  string dst = 2;
+
+  bool force = 3;
+}
+message MovResponse { }
 
 /**
  * PUT
@@ -55,7 +67,6 @@ enum Action {
   ADD = 0;
   DEL = 1;
   DIR = 2;
-  MOV = 3;
 }
 
 message Data {
