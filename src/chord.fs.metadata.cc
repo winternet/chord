@@ -10,7 +10,7 @@ using std::end;
 namespace chord {
 namespace fs {
 
-Metadata::Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, size file_size, chord::optional<chord::uuid> file_hash, chord::optional<chord::node> node_ref, chord::fs::Replication replication)
+Metadata::Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, size file_size, std::optional<chord::uuid> file_hash, std::optional<chord::node> node_ref, chord::fs::Replication replication)
   : name{name},
     owner{owner},
     group{group},
@@ -22,10 +22,10 @@ Metadata::Metadata(std::string name, std::string owner, std::string group, perms
     replication{replication}
     {}
 
-Metadata::Metadata(std::string name, perms permissions, size file_size, chord::optional<chord::uuid> file_hash, chord::optional<chord::node> node_ref, chord::fs::Replication replication)
+Metadata::Metadata(std::string name, perms permissions, size file_size, std::optional<chord::uuid> file_hash, std::optional<chord::node> node_ref, chord::fs::Replication replication)
   : Metadata(name, "", "", permissions, type::regular, file_size, file_hash, node_ref, replication) {};
 
-Metadata::Metadata(std::string name, std::string owner, std::string group, perms permissions, size file_size, chord::optional<chord::uuid> file_hash, chord::optional<chord::node> node_ref, chord::fs::Replication replication)
+Metadata::Metadata(std::string name, std::string owner, std::string group, perms permissions, size file_size, std::optional<chord::uuid> file_hash, std::optional<chord::node> node_ref, chord::fs::Replication replication)
   : Metadata(name, owner, group, permissions, type::regular, file_size, file_hash, node_ref, replication) {};
 //name{name},
 //    permissions{permissions},

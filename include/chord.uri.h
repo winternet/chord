@@ -4,8 +4,8 @@
 #include <map>
 #include <regex>
 #include <string>
+#include <optional>
 
-#include "chord.optional.h"
 #include "chord.path.h"
 
 namespace chord {
@@ -17,7 +17,7 @@ class uri {
     std::map<std::string, std::string> _query;
     std::string _scheme, _fragment, _user, _password, _host;
     chord::path _path;
-    optional<int> _port;
+    std::optional<int> _port;
 
    public:
     builder() = default;
@@ -53,7 +53,7 @@ class uri {
    private:
     std::string _host;
     std::string _user, _password;
-    optional<int> _port;
+    std::optional<int> _port;
 
    public:
     explicit authority(std::string host);
@@ -68,7 +68,7 @@ class uri {
 
     const std::string &host() const;
 
-    const optional<int> &port() const;
+    const std::optional<int> &port() const;
 
     void user(std::string user);
 
@@ -82,7 +82,7 @@ class uri {
   };
 
  private:
-  optional<authority> _authority;
+  std::optional<authority> _authority;
   std::map<std::string, std::string> _query;
 
   std::string _scheme, _fragment;
@@ -113,7 +113,7 @@ class uri {
 
   const std::string &scheme() const;
 
-  const optional<uri::authority> &auth() const;
+  const std::optional<uri::authority> &auth() const;
 
   const chord::path &path() const;
 

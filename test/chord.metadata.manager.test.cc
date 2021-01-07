@@ -5,7 +5,6 @@
 #include <iosfwd>
 #include <set>
 #include <string>
-#include "chord.optional.h"
 #include "chord.context.h"
 #include "chord.exception.h"
 #include "chord.file.h"

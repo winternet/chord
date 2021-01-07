@@ -5,13 +5,13 @@
 #include <string>
 #include <istream>
 #include <cstdlib>
+#include <optional>
 
 #include "chord.fs.metadata.h"
 #include "chord.fs.replication.h"
 #include "chord.uri.h"
 #include "chord.crypto.h"
 #include "chord.uuid.h"
-#include "chord.optional.h"
 #include "chord.exception.h"
 
 using grpc::ClientContext;
@@ -42,7 +42,7 @@ void ContextMetadata::add(grpc::ClientContext& context, std::istream& input) {
   input.clear();
   input.seekg(0, std::ios::beg);
 }
-void ContextMetadata::add(grpc::ClientContext& context, const chord::optional<chord::uuid>& hash) {
+void ContextMetadata::add(grpc::ClientContext& context, const std::optional<chord::uuid>& hash) {
   if(hash) context.AddMetadata(ContextMetadata::file_hash, *hash);
 }
 
@@ -63,7 +63,7 @@ void ContextMetadata::add(ClientContext& context, const Replication& repl) {
   context.AddMetadata(ContextMetadata::replication_count, std::to_string(repl.count));
 }
 
-chord::optional<chord::uuid> ContextMetadata::file_hash_from(const grpc::ServerContext* serverContext) {
+std::optional<chord::uuid> ContextMetadata::file_hash_from(const grpc::ServerContext* serverContext) {
   const auto metadata = serverContext->client_metadata();
   if(metadata.count(ContextMetadata::file_hash) > 0) {
     const auto file_hash = metadata.find(ContextMetadata::file_hash)->second;
@@ -95,7 +95,7 @@ Replication ContextMetadata::replication_from(const ServerContext* serverContext
   return repl;
 }
 
-chord::optional<chord::uuid> ContextMetadata::src_from(const grpc::ServerContext* serverContext) {
+std::optional<chord::uuid> ContextMetadata::src_from(const grpc::ServerContext* serverContext) {
   const auto metadata = serverContext->client_metadata();
   if(metadata.count(ContextMetadata::src) == 0) {
     return {};

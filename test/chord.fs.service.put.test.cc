@@ -12,7 +12,6 @@
 #include <grpc++/security/server_credentials.h>
 
 #include "chord_fs.pb.h"
-#include "chord.optional.h"
 #include "chord.client.mock.h"
 #include "chord.context.h"
 #include "chord.crypto.h"

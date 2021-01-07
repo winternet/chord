@@ -1,10 +1,10 @@
 #pragma once
 
 #include <iostream>
+#include <optional>
 
 #include "chord.types.h"
 #include "chord.uuid.h"
-#include "chord.optional.h"
 
 namespace chord {
 struct node {
@@ -36,7 +36,7 @@ struct node {
     return os << n.uuid << "@" << n.endpoint;
   }
 
-  friend std::ostream& operator<<(std::ostream& os, const optional<node>& n) {
+  friend std::ostream& operator<<(std::ostream& os, const std::optional<node>& n) {
     if(n) return os << n->uuid << "@" << n->endpoint;
     return os << "<unknown>";
   }

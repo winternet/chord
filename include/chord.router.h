@@ -6,6 +6,7 @@
 #include <set>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/sequenced_index.hpp>
@@ -13,7 +14,6 @@
 
 #include "chord.signal.h"
 #include "chord.types.h"
-#include "chord.optional.h"
 #include "chord.node.h"
 #include "chord.uuid.h"
 
@@ -33,7 +33,7 @@ public:
 protected:
   struct RouterEntry {
     chord::uuid uuid;
-    optional<chord::node> _node;
+    std::optional<chord::node> _node;
     inline bool valid() const { return _node.has_value(); }
     inline chord::node node() const { return *_node; }
     inline std::ostream& print(std::ostream& os) const {
@@ -65,7 +65,7 @@ private:
 
 protected:
   sequence_map_t successors;
-  optional<node> _predecessor;
+  std::optional<node> _predecessor;
 
 public:
   explicit Router(const chord::Router&) = delete;
@@ -97,13 +97,13 @@ public:
   std::string print() const;
   std::ostream& print(std::ostream&) const;
 
-  optional<node> successor() const;
+  std::optional<node> successor() const;
   node successor_or_self() const;
 
-  optional<node> predecessor() const;
+  std::optional<node> predecessor() const;
 
   std::vector<node> closest_preceding_nodes(const uuid& uuid);
-  optional<node> closest_preceding_node(const uuid& uuid);
+  std::optional<node> closest_preceding_node(const uuid& uuid);
 
   friend std::ostream &operator<<(std::ostream &os, const Router &router);
 

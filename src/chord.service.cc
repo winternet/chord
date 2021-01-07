@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-#include "chord.optional.h"
 #include "chord.pb.h"
 #include "chord.common.h"
 #include "chord.context.h"

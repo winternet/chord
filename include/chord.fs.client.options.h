@@ -1,17 +1,17 @@
 #pragma once
 
+#include <optional>
 #include "chord.fs.replication.h"
 #include "chord.uuid.h"
 #include "chord.uri.h"
 #include "chord.context.h"
-#include "chord.optional.h"
 
 namespace chord {
 namespace fs {
 namespace client {
   struct options {
     Replication replication = Replication::NONE;
-    chord::optional<chord::uuid> source;
+    std::optional<chord::uuid> source;
     union {
       bool recursive = false; // del
       bool rebalance; // put

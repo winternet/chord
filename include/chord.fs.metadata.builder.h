@@ -2,6 +2,7 @@
 
 #include <set>
 #include <fstream>
+#include <optional>
 #include "chord.exception.h"
 #include "chord.file.h"
 #include "chord.fs.metadata.h"
@@ -66,7 +67,7 @@ struct MetadataBuilder {
                   perms::all,
                   file::is_directory(local_path) ? type::directory : type::regular,
                   file::file_size(local_path),
-                  file::is_regular_file(local_path) ? chord::optional<chord::uuid>{chord::crypto::sha256(istream)} : chord::optional<chord::uuid>{},
+                  file::is_regular_file(local_path) ? std::optional<chord::uuid>{chord::crypto::sha256(istream)} : std::optional<chord::uuid>{},
                   {},
                   repl};
 
@@ -105,8 +106,8 @@ struct MetadataBuilder {
                   static_cast<perms>(item.permissions()),
                   static_cast<type>(item.type()), 
                   item.size(),
-                  !item.file_hash().empty() ? chord::optional<chord::uuid>{item.file_hash()} : chord::optional<chord::uuid>{},
-                  item.has_node_ref() ? chord::common::make_node(item.node_ref()) : chord::optional<chord::node>{},
+                  !item.file_hash().empty() ? std::optional<chord::uuid>{item.file_hash()} : std::optional<chord::uuid>{},
+                  item.has_node_ref() ? chord::common::make_node(item.node_ref()) : std::optional<chord::node>{},
                   repl};
 
     return meta;
@@ -125,7 +126,7 @@ struct MetadataBuilder {
     return returnValue;
   }
 
-  static chord::optional<chord::node> make_node(const chord::fs::MetaResponse& res) {
+  static std::optional<chord::node> make_node(const chord::fs::MetaResponse& res) {
     if(res.has_node_ref())
       return {{res.node_ref().uuid(), res.node_ref().endpoint()}};
     return {};

@@ -2,8 +2,8 @@
 
 #include <stdexcept>
 #include <utility>
+#include <optional>
 
-#include "chord.optional.h"
 #include "chord.grpc.pb.h"
 
 #define throw__exception(message) throw chord::exception{message, __FILE__, __LINE__}
@@ -13,8 +13,8 @@
 namespace chord {
 class exception : public std::runtime_error {
   private:
-    chord::optional<std::string> file;
-    chord::optional<size_t> line;
+    std::optional<std::string> file;
+    std::optional<size_t> line;
     std::string msg;
   public:
     // inherit ctors

@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <set>
 #include <string>
+#include <optional>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -18,7 +19,6 @@
 #include "chord.fs.type.h"
 #include "chord.node.h"
 #include "chord.fs.replication.h"
-#include "chord.optional.h"
 #include "chord.optional.serialization.h"
 
 namespace boost { namespace serialization { class access; } }
@@ -42,20 +42,20 @@ struct Metadata {
   size file_size;
 
   // file hash
-  chord::optional<chord::uuid> file_hash;
+  std::optional<chord::uuid> file_hash;
 
   // reference node
-  chord::optional<chord::node> node_ref;
+  std::optional<chord::node> node_ref;
 
   // replication
   chord::fs::Replication replication;
 
   /** needed for (de-) serialization **/
   Metadata() = default;
-  Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, size file_size=0, chord::optional<chord::uuid> file_hash={}, chord::optional<chord::node> node_ref={}, chord::fs::Replication replication={});
+  Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, size file_size=0, std::optional<chord::uuid> file_hash={}, std::optional<chord::node> node_ref={}, chord::fs::Replication replication={});
 
-  Metadata(std::string name, std::string owner, std::string group, perms permissions, size file_size, chord::optional<chord::uuid> file_hash={}, chord::optional<chord::node> node_ref={}, chord::fs::Replication replication={});
-  Metadata(std::string name, perms permissions, size file_size, chord::optional<chord::uuid> file_hash={}, chord::optional<chord::node> node_ref={}, chord::fs::Replication replication={});
+  Metadata(std::string name, std::string owner, std::string group, perms permissions, size file_size, std::optional<chord::uuid> file_hash={}, std::optional<chord::node> node_ref={}, chord::fs::Replication replication={});
+  Metadata(std::string name, perms permissions, size file_size, std::optional<chord::uuid> file_hash={}, std::optional<chord::node> node_ref={}, chord::fs::Replication replication={});
 
   bool operator<(const Metadata &other) const;
   bool operator==(const Metadata &other) const;

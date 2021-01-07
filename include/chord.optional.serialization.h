@@ -14,7 +14,7 @@
 #include <boost/serialization/detail/stack_constructor.hpp>
 #include <boost/serialization/detail/is_default_constructible.hpp>
 #include <boost/serialization/force_include.hpp>
-#include "chord.optional.h"
+#include <optional>
 
 namespace boost { 
 namespace serialization {
@@ -22,7 +22,7 @@ namespace serialization {
 template<class Archive, class T>
 void save(
     Archive & ar, 
-    const chord::optional< T > & t, 
+    const std::optional< T > & t, 
     const unsigned int /*version*/
 ){
     // It is an inherent limitation to the serialization of optional.hpp
@@ -46,7 +46,7 @@ void save(
 template<class Archive, class T>
 void load(
     Archive & ar, 
-    chord::optional< T > & t, 
+    std::optional< T > & t, 
     const unsigned int version
 ){
     bool tflag;
@@ -73,14 +73,14 @@ void load(
 template<class Archive, class T>
 void serialize(
     Archive & ar, 
-    chord::optional< T > & t, 
+    std::optional< T > & t, 
     const unsigned int version
 ){
     boost::serialization::split_free(ar, t, version);
 }
 
 template<class T>
-struct version<chord::optional<T> > {
+struct version<std::optional<T> > {
     BOOST_STATIC_CONSTANT(int, value = 1);
 };
 

@@ -7,13 +7,13 @@
 #include <ostream>
 #include <memory>
 #include <string>
+#include <optional>
 
 #include "chord.context.h"
 #include "chord.log.factory.h"
 #include "chord.log.h"
 #include "chord.node.h"
 #include "chord.types.h"
-#include "chord.optional.h"
 #include "chord.uuid.h"
 
 namespace chord {
@@ -71,7 +71,7 @@ node Router::successor_or_self() const {
   return successor().value_or(context.node());
 }
 
-optional<node> Router::successor() const {
+std::optional<node> Router::successor() const {
   std::scoped_lock<mutex_t> lock(mtx);
   auto succ = successors.front();
   if(succ.valid()) return succ.node();
@@ -90,8 +90,8 @@ bool Router::update(const chord::node& insert) {
 
   if(insert == context.node()) return false;
 
-  optional<node> old_successor;
-  optional<node> old_predecessor;
+  std::optional<node> old_successor;
+  std::optional<node> old_predecessor;
 
   for(auto it=successors.begin(); it != successors.end(); ++it) {
     if(uuid::between(it->uuid, insert.uuid, (it->valid() ? it->node().uuid : context.uuid()))) {
@@ -123,8 +123,8 @@ bool Router::remove(const chord::uuid& uuid, const bool signal) {
     replacement = successors.rend();
 
 
-  optional<node> successor_failed;
-  optional<node> predecessor_failed;
+  std::optional<node> successor_failed;
+  std::optional<node> predecessor_failed;
   {
     auto successor = successors.begin();
     if(successor->valid() && successor->node().uuid == uuid) {
@@ -172,7 +172,7 @@ bool Router::remove(const chord::node& node, const bool signal) {
   return remove(node.uuid, signal);
 }
 
-optional<node> Router::predecessor() const {
+std::optional<node> Router::predecessor() const {
   std::scoped_lock<mutex_t> lock(mtx);
   return _predecessor;
 }
@@ -193,7 +193,7 @@ std::vector<node> Router::closest_preceding_nodes(const uuid& uuid) {
   return ret;
 }
 
-optional<node> Router::closest_preceding_node(const uuid_t &uuid) {
+std::optional<node> Router::closest_preceding_node(const uuid_t &uuid) {
   return closest_preceding_nodes(uuid).front();
 }
 
