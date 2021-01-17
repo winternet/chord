@@ -148,8 +148,7 @@ add_library(${PROJECT_NAME}++ SHARED ${SOURCES} ${SOURCES_GEN} ${ProtoSources} $
 #target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${RocksDB_LIBRARY} ${YAMLCPP_LIBRARY} ${CONAN_LIBS}
   #debug asan
   #general stdc++fs grpc++ grpc ssl crypto)
-conan_target_link_libraries(${PROJECT_NAME}++ ${CONAN_LIBS} 
-  GENERAL stdc++fs)
+conan_target_link_libraries(${PROJECT_NAME}++ ${CONAN_LIBS} GENERAL stdc++fs)
 #target_link_libraries(${PROJECT_NAME}++ --coverage)
 install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 
