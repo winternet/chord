@@ -156,7 +156,7 @@ install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 #
 # compile executable
 # 
-#add_executable(${PROJECT_NAME} src/chord.cc)
+add_executable(${PROJECT_NAME} src/chord.cc)
 
 #
 # libsignals library (CMakeLists-Externals)
@@ -167,19 +167,13 @@ set(signals_INCLUDE_DIR "${EXTERNAL_PROJECTS}/signals/include")
 include_directories(${signals_INCLUDE_DIR})
 
 
-
 #
 # add libraries for executable (chord++)
 #
-#target_link_libraries(${PROJECT_NAME} 
-#  debug asan
-#  general ${PROJECT_NAME}++ ) #${signals_LIBRARY})
+target_link_libraries(${PROJECT_NAME} 
+  debug asan
+  general ${PROJECT_NAME}++ ${signals_LIBRARY})
 
-#
-# add external project dependencies
-#
-#add_dependencies(${PROJECT_NAME}++ spdlog)
-#add_dependencies(${PROJECT_NAME}++ signals)
 
 #
 # fuse adapter
