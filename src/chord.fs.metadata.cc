@@ -94,7 +94,9 @@ Metadata create_directory(const std::set<Metadata>& metadata) {
 
 std::set<Metadata> create_directory(const std::set<Metadata>& metadata, const std::string& folder_name) {
   auto meta_dir = create_directory(metadata);
-  meta_dir.name = folder_name;
+  if(!folder_name.empty()) {
+    meta_dir.name = folder_name;
+  }
   return {meta_dir};
 }
 

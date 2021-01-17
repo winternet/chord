@@ -6,14 +6,14 @@
 #include <iterator>
 #include <fstream>
 #include <limits>
-#include <experimental/filesystem>
+#include <filesystem>
 
 #include "chord.exception.h"
 
 namespace chord {
 
 using namespace std;
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 // wrappers
 bool file::exists(const std::string &path) {
@@ -101,7 +101,7 @@ bool file::has_attr(const std::string &path, const std::string &name) {
 }
 
 /// xattr get
-std::experimental::optional<std::string> file::attr(const std::string &path, const std::string &name) {
+std::optional<std::string> file::attr(const std::string &path, const std::string &name) {
   using namespace std::string_literals;
   auto read = ::getxattr(path.c_str(), name.c_str(), nullptr, 0);
   if (read == std::numeric_limits<decltype(read)>::max()) return {};

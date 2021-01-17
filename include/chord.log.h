@@ -6,7 +6,7 @@
 #include <string>
 
 #include <spdlog/spdlog.h>
-#include <spdlog/fmt/bundled/ostream.h>
+//#include <spdlog/fmt/bundled/ostream.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 

@@ -35,13 +35,13 @@ TEST(chord_path, parent_path) {
   ASSERT_EQ("/folder/subfolder", path{"/folder/subfolder/bar.ext"}.parent_path());
   ASSERT_EQ("/folder/subfolder", path{"/folder/subfolder/"}.parent_path());
   ASSERT_EQ("/folder", path{"/folder/subfolder"}.parent_path());
-  ASSERT_EQ("", path{"/"}.parent_path());
+  ASSERT_EQ("/", path{"/"}.parent_path());
 }
 
 TEST(chord_path, filename) {
   ASSERT_EQ("bar.ext", path{"/folder/subfolder/bar.ext"}.filename());
   ASSERT_EQ("foo", path{"/folder/subfolder/foo"}.filename());
-  ASSERT_EQ(".", path{"/folder/subfolder/"}.filename());
+  ASSERT_EQ("", path{"/folder/subfolder/"}.filename());
 }
 
 TEST(chord_path, extension) {
@@ -105,9 +105,9 @@ TEST(chord_path, greater_equal_operator) {
 }
 
 TEST(chord_path, path_append_slash_operator) {
-  ASSERT_EQ("/folder/sub//subsub/bar.ext", path{"/folder/sub/"} / path{"/subsub/bar.ext"});
+  ASSERT_EQ("/folder/sub/subsub/bar.ext", path{"/folder/sub/"} / path{"/subsub/bar.ext"});
   ASSERT_EQ("/folder/sub/subsub/bar.ext", (path{"/folder/sub/"} / path{"/subsub/bar.ext"}).canonical());
-  ASSERT_EQ("/folder/sub//subsub/bar.ext", path{"/folder/sub/"} / "/subsub/bar.ext");
+  ASSERT_EQ("/folder/sub/subsub/bar.ext", path{"/folder/sub/"} / "/subsub/bar.ext");
   ASSERT_EQ("/folder/sub/subsub/bar.ext", (path{"/folder/sub/"} / "/subsub/bar.ext").canonical());
 }
 

@@ -102,7 +102,7 @@ Status Service::handle_meta_del(ServerContext *serverContext, const MetaRequest 
    */
   std::set<Metadata> metadata = chord::fs::increase_replication_and_clean(deleted_metadata);
 
-  if(!is_empty(metadata)) {
+  if(/*!metadata.empty() && */!is_empty(metadata)) {
     const auto node = chord->successor();
     const auto status = make_client()->meta(node, uri, Client::Action::DEL, metadata, init_source(options));
   }
@@ -148,7 +148,7 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
   auto max_repl = max_replication(metadata);
   // update the parent (first node triggers replication)
   const auto parent_path = uri.path().parent_path();
-  if(added && max_repl.index == 0 && !parent_path.empty() /*&& fs::is_directory(metadata)*/) {
+  if(added && parent_path != uri.path() && max_repl.index == 0 && !parent_path.empty() /*&& fs::is_directory(metadata)*/) {
     const auto parent_uri = chord::uri{uri.scheme(), parent_path};
     {
       auto meta_dir = create_directory(metadata, uri.path().filename());
@@ -472,7 +472,7 @@ Status Service::handle_del_dir(ServerContext *serverContext, const chord::fs::De
     // beg: handle parent
     {
       const auto parent_path = uri.path().parent_path();
-      if(initial_delete && !parent_path.empty()) {
+      if(initial_delete && parent_path != uri.path() && !parent_path.empty()) {
         auto metadata_set = std::set{MetadataBuilder::directory(uri.path())};
         make_client()->meta(chord::uri(uri.scheme(), parent_path), Client::Action::DEL, metadata_set, clear_source(options));
       }

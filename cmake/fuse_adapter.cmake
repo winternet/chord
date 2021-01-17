@@ -1,6 +1,7 @@
 #
 # build the fuse adapter for chord
 #
+include(FindPkgConfig)
 set(CMAKE_CXX_FLAGS "${CMAKE_INCLUDE_DIRS} -D_FILE_OFFSET_BITS=64")
 
 pkg_check_modules(FUSE REQUIRED fuse3)

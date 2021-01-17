@@ -1,5 +1,5 @@
-
-cmake_minimum_required(VERSION 3.8)
+#
+cmake_minimum_required(VERSION 3.8.0)
 # Clear VERSION variables when no VERSION is given to project()
 if (POLICY CMP0048)
   cmake_policy(SET CMP0048 NEW)
@@ -7,6 +7,10 @@ endif (POLICY CMP0048)
 
 set(PROJECT "chord")
 project(${PROJECT} VERSION "0.0.1")
+
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup(TARGETS)
+
 configure_file(${CMAKE_SOURCE_DIR}/cmake/project.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/project.h)
 
 set(Boost_USE_STATIC_LIBS OFF)
@@ -96,20 +100,25 @@ include(clang-tidy)
 #
 # find packages
 #
-find_package(Boost REQUIRED COMPONENTS thread system program_options serialization)
+#find_package(Boost REQUIRED COMPONENTS thread system program_options serialization)
 find_package(Protobuf REQUIRED)
-find_package(Threads REQUIRED)
-find_package(OpenSSL REQUIRED)
-find_package(RocksDB REQUIRED)
-find_package(YamlCpp REQUIRED)
-find_package(FsWatch REQUIRED)
+#find_package(Threads REQUIRED)
+#find_package(OpenSSL REQUIRED)
+#find_package(RocksDB REQUIRED)
+#find_package(YamlCpp REQUIRED)
+#find_package(FsWatch REQUIRED)
 
+set(PROTOBUF_PROTOC_EXECUTABLE ${CONAN_BIN_DIRS_PROTOBUF}/protoc)
+set(GRPC_CPP_PLUGIN ${CONAN_BIN_DIRS_GRPC}/grpc_cpp_plugin)
 
 #
 # generate messages and services
 #
 file(GLOB ProtoFiles "${ProtoPath}/*.proto")
+string(REPLACE ";" "\n--   " PROTO_FILES_OUT "${ProtoFiles}")
+message(STATUS "Found proto files: \n--   ${PROTO_FILES_OUT}")
 protobuf_generate_cpp_with_path(${ProtoGenerateTargetPath} ProtoSources ProtoHeaders ${ProtoFiles})
+
 message(STATUS "Generating protobuf messages")
 protobuf_generate_grpc_cpp_with_path(${ProtoGenerateTargetPath} GrpcSources GrpcHeaders ${ProtoFiles})
 message(STATUS "Generating grpc services")
@@ -129,22 +138,26 @@ include_directories(include)
 # use SYSTEM symbol to suppress warnings within generated code
 include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}/gen")
 
+include_directories(${CONAN_INCLUDE_DIRS})
+
 
 #
 # create shared library chord++
 #
 add_library(${PROJECT_NAME}++ SHARED ${SOURCES} ${SOURCES_GEN} ${ProtoSources} ${ProtoHeaders} ${GrpcSources} ${GrpcHeaders})
-target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${FsWatch_LIBRARY} ${RocksDB_LIBRARY} ${YAMLCPP_LIBRARY}
+#target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${RocksDB_LIBRARY} ${YAMLCPP_LIBRARY} ${CONAN_LIBS}
   #debug asan
-  general stdc++fs grpc++ grpc ssl crypto)
-target_link_libraries(${PROJECT_NAME}++ --coverage)
+  #general stdc++fs grpc++ grpc ssl crypto)
+conan_target_link_libraries(${PROJECT_NAME}++ ${CONAN_LIBS} 
+  GENERAL stdc++fs)
+#target_link_libraries(${PROJECT_NAME}++ --coverage)
 install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 
 
 #
 # compile executable
 # 
-add_executable(${PROJECT_NAME} src/chord.cc)
+#add_executable(${PROJECT_NAME} src/chord.cc)
 
 #
 # libsignals library (CMakeLists-Externals)
@@ -159,15 +172,15 @@ include_directories(${signals_INCLUDE_DIR})
 #
 # add libraries for executable (chord++)
 #
-target_link_libraries(${PROJECT_NAME} 
-  debug asan
-  general ${PROJECT_NAME}++ ${signals_LIBRARY})
+#target_link_libraries(${PROJECT_NAME} 
+#  debug asan
+#  general ${PROJECT_NAME}++ ) #${signals_LIBRARY})
 
 #
 # add external project dependencies
 #
-add_dependencies(${PROJECT_NAME}++ spdlog)
-add_dependencies(${PROJECT_NAME}++ signals)
+#add_dependencies(${PROJECT_NAME}++ spdlog)
+#add_dependencies(${PROJECT_NAME}++ signals)
 
 #
 # fuse adapter

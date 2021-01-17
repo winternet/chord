@@ -7,7 +7,7 @@
 #include "chord.file.h"
 
 using namespace std;
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 namespace chord {
 
@@ -22,7 +22,7 @@ path path::parent_path() const { return path{_path.parent_path()}; }
 
 std::set<path> path::recursive_contents() const {
   std::set<path> files_and_dirs;
-  for (const auto& entity : std::experimental::filesystem::recursive_directory_iterator(_path)) {
+  for (const auto& entity : std::filesystem::recursive_directory_iterator(_path)) {
     files_and_dirs.emplace(entity);
   }
   return files_and_dirs;
@@ -34,7 +34,7 @@ std::set<path> path::contents() const {
     return files_and_dirs;
   }
 
-  for (const auto& entity : std::experimental::filesystem::directory_iterator(_path)) {
+  for (const auto& entity : std::filesystem::directory_iterator(_path)) {
     files_and_dirs.emplace(entity);
   }
 	return files_and_dirs;
@@ -44,7 +44,7 @@ std::string path::string() const { return _path.string(); }
 
 set<path> path::all_paths() const {
   set<path> paths;
-  path current_path;
+  path current_path{"/"};
   for (const auto &dir : canonical()._path) {
     current_path /= dir;
     paths.emplace(current_path);
@@ -53,7 +53,9 @@ set<path> path::all_paths() const {
 }
 
 path path::canonical() const {
-  path result;
+  //return _path;
+  //path result;
+  fs::path result;
   for (const auto &dir : _path) {
     if (dir=="..") {
       result = result.parent_path();
@@ -65,7 +67,8 @@ path path::canonical() const {
       auto str = dir.string();
       auto pos = str.rfind(fs::path::preferred_separator);
       // note: because std::path allows //<part>, we have to remove preceding separators
-      result /= (pos != string::npos) ? path{str.substr(pos)} : dir;
+      result /= dir;
+      //result /= (pos != string::npos) ? path{str.substr(pos)} : dir;
     }
   }
   return result;
@@ -90,14 +93,16 @@ path path::operator-(const path &p) const {
   return path{regex_replace(can_lop.string(), pattern, "")}.canonical();
 }
 
-path path::operator/=(const path &p) { return path{_path /= p._path}; }
+path path::operator/=(const path &p) { return path{_path /= p._path.relative_path()}; }
 
 path path::operator/(const std::string_view p) const {
   return path(_path) / path(p);
 }
-path path::operator/(const path &p) const { return path{_path / p._path}; }
+path path::operator/(const path &p) const { return path{_path / p._path.relative_path()}; }
 
 bool path::operator==(const path &p) const { return _path==p._path; }
+
+bool path::operator!=(const path &p) const { return !(_path==p._path); }
 
 bool path::operator<(const path &p) const {
   return _path < p._path;

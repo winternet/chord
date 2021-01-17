@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <experimental/optional>
+#include <optional>
 #include <string>
 
 namespace chord {
@@ -39,7 +39,7 @@ namespace file {
   uintmax_t file_size(const std::string& path);
 
   /// xattr get
-  std::experimental::optional<std::string> attr(const std::string &path, const std::string &name);
+  std::optional<std::string> attr(const std::string &path, const std::string &name);
 
   /// xattr set
   bool attr(const std::string &path, const std::string &name, const std::string &value);

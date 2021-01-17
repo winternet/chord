@@ -17,7 +17,7 @@ TEST(chord_utils, as_uri) {
 TEST(chord_uri, parse_url_root) {
   auto uri = chord::uri::from("chord:///");
   ASSERT_EQ("chord", uri.scheme());
-  ASSERT_EQ("/", uri.path().filename());
+  ASSERT_EQ("", uri.path().filename());
   chord::uri::from(to_string(uri));
 }
 

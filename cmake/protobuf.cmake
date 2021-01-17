@@ -39,14 +39,17 @@ function(PROTOBUF_GENERATE_CPP_WITH_PATH PATH SRCS HDRS)
 
     execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/${PATH})
 
-    add_custom_command(
-      OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${PATH}/${FIL_WE}.pb.cc"
-             "${CMAKE_CURRENT_BINARY_DIR}/${PATH}/${FIL_WE}.pb.h"
-      COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
-      ARGS --cpp_out  ${CMAKE_CURRENT_BINARY_DIR}/${PATH} ${_protobuf_include_path} ${ABS_FIL}
-      DEPENDS ${ABS_FIL}
-      COMMENT "Running C++ protocol buffer compiler on ${FIL}"
-      VERBATIM )
+
+    #message(STATUS "Using protoc compiler: ${PROTOBUF_PROTOC_EXECUTABLE}")
+    execute_process(COMMAND ${PROTOBUF_PROTOC_EXECUTABLE} --cpp_out ${CMAKE_CURRENT_BINARY_DIR}/${PATH} ${_protobuf_include_path} ${ABS_FIL})
+    #add_custom_command(
+    #  OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${PATH}/${FIL_WE}.pb.cc"
+    #         "${CMAKE_CURRENT_BINARY_DIR}/${PATH}/${FIL_WE}.pb.h"
+    #  COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
+    #  ARGS --cpp_out  ${CMAKE_CURRENT_BINARY_DIR}/${PATH} ${_protobuf_include_path} ${ABS_FIL}
+    #  DEPENDS ${ABS_FIL}
+    #  COMMENT "Running C++ protocol buffer compiler on ${FIL}"
+    #  VERBATIM )
   endforeach()
 
   set_source_files_properties(${${SRCS}} ${${HDRS}} PROPERTIES GENERATED TRUE)

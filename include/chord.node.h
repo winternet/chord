@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <optional>
+#include <fmt/ostream.h>
 
 #include "chord.types.h"
 #include "chord.uuid.h"
@@ -43,3 +44,18 @@ struct node {
 };
 }  // namespace chord
 
+//template<typename T>
+//struct fmt::formatter<std::optional<T>> : fmt::formatter<std::string_view> {
+//  template<typename FormatContext>
+//    auto format(std::optional<T> val, FormatContext& ctxt) {
+//      return "";
+//    }
+//};
+//
+//template<>
+//struct fmt::formatter<chord::node> : fmt::formatter<std::string_view> {
+//  template<typename FormatContext>
+//    auto format(chord::node val, FormatContext& ctxt) {
+//      return "";
+//    }
+//};

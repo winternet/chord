@@ -41,16 +41,17 @@ function(PROTOBUF_GENERATE_GRPC_CPP_WITH_PATH PATH SRCS HDRS)
 
     execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/${PATH})
 
-    add_custom_command(
-      OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${PATH}/${FIL_WE}.grpc.pb.cc"
-             "${CMAKE_CURRENT_BINARY_DIR}/${PATH}/${FIL_WE}.grpc.pb.h"
-      COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
-      ARGS --grpc_out=generate_mock_code=true:${CMAKE_CURRENT_BINARY_DIR}/${PATH}
-           --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
-           ${_protobuf_include_path} ${ABS_FIL}
-      DEPENDS ${ABS_FIL} ${Protobuf_PROTOC_EXECUTABLE}
-      COMMENT "Running gRPC C++ protocol buffer compiler on ${FIL}"
-      VERBATIM)
+    execute_process(COMMAND ${PROTOBUF_PROTOC_EXECUTABLE} --grpc_out=generate_mock_code=true:${CMAKE_CURRENT_BINARY_DIR}/${PATH} --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN} ${_protobuf_include_path} ${ABS_FIL})
+    #add_custom_command(
+    #  OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${PATH}/${FIL_WE}.grpc.pb.cc"
+    #         "${CMAKE_CURRENT_BINARY_DIR}/${PATH}/${FIL_WE}.grpc.pb.h"
+    #  COMMAND ${PROTOBUF_PROTOC_EXECUTABLE}
+    #  ARGS --grpc_out=generate_mock_code=true:${CMAKE_CURRENT_BINARY_DIR}/${PATH}
+    #       --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+    #       ${_protobuf_include_path} ${ABS_FIL}
+    #  DEPENDS ${ABS_FIL} ${Protobuf_PROTOC_EXECUTABLE}
+    #  COMMENT "Running gRPC C++ protocol buffer compiler on ${FIL}"
+    #  VERBATIM)
   endforeach()
 
   set_source_files_properties(${${SRCS}} ${${HDRS}} PROPERTIES GENERATED TRUE)

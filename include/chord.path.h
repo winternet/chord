@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iosfwd>
-#include <experimental/filesystem>
+#include <filesystem>
 #include <set>
 #include <string>
 #include <string_view>
@@ -11,14 +11,14 @@ namespace chord {
 class path {
 
  private:
-  std::experimental::filesystem::path _path;
+  std::filesystem::path _path;
 
  public:
   path() = default;
 
   path(const chord::path &other) = default;
 
-  path(const std::experimental::filesystem::path &path);
+  path(const std::filesystem::path &path);
 
   virtual ~path() = default;
 
@@ -50,6 +50,7 @@ class path {
   path operator/(const std::string_view p) const;
 
   bool operator==(const path &p) const;
+  bool operator!=(const path &p) const;
 
   bool operator<(const path &p) const;
   bool operator<=(const path &p) const;

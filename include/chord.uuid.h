@@ -6,6 +6,7 @@
 #include <random>
 #include <sstream>
 #include <string>
+#include <fmt/ostream.h>
 
 namespace chord {
 class uuid {
