@@ -17,7 +17,7 @@ RUN apt-get update \
 #
 # build project
 #
-RUN git clone https://github.com/winternet/chord.git /opt/chord \
+RUN git clone --branch ${CIRCLE_BRANCH} https://github.com/winternet/chord.git /opt/chord \
     && cd /opt/chord && mkdir build && cd build \
     && conan remote add winternet-conan https://api.bintray.com/conan/winternet/winternet-conan \
     && conan remote add inexor-conan https://api.bintray.com/conan/inexorgame/inexor-conan \
