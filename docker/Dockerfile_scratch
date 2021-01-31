@@ -17,8 +17,7 @@ RUN apt-get update \
 #
 # build project
 #
-RUN git clone --branch ${CIRCLE_BRANCH} https://github.com/winternet/chord.git /opt/chord \
-    && cd /opt/chord && mkdir build && cd build \
+RUN mkdir build && cd build \
     && conan remote add winternet-conan https://api.bintray.com/conan/winternet/winternet-conan \
     && conan remote add inexor-conan https://api.bintray.com/conan/inexorgame/inexor-conan \
     && conan install .. --build=missing -s compiler.libcxx=libstdc++11 \
@@ -33,7 +32,7 @@ RUN git clone --branch ${CIRCLE_BRANCH} https://github.com/winternet/chord.git /
 #
 # create chroot env
 #
-WORKDIR /opt/chord/build
+WORKDIR bin
 RUN mkdir -p ./chroot/bin \
     && cp ./chord ./chroot/bin \
     && ldd ./chord | grep -oP '/[^ ]*' | xargs -I '{}' cp --parents -v '{}' ./chroot/
@@ -43,7 +42,7 @@ RUN mkdir -p ./chroot/bin \
 #
 FROM scratch
 
-COPY --from=build /opt/chord/build/chroot /
+COPY --from=build chroot /
 
 EXPOSE 50050
 
