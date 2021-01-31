@@ -38,33 +38,10 @@ $ apt-get -y install build-essential \
             git \
             cmake \
             autoconf \
-            libtool \
-            libboost-system-dev \
-            libboost-serialization-dev \
-            libleveldb-dev \
-            libyaml-cpp-dev \
-            libgrpc++-dev \
-            libboost-thread-dev \
-            libboost-program-options-dev \
-            libssl-dev
-```
-
-* Install GRPC
-```sh
- $ git clone -b v1.15.1 https://github.com/grpc/grpc /opt/grpc && cd /opt/grpc
- $ git submodule update --init
- $ make -j4 CFLAGS='-Wno-error -Wno-expansion-to-defined' && make install CFLAGS='-Wno-error -Wno-expansion-to-defined'
- $ ldconfig
-```
-
-* Install Protobuf
-```sh
- $ git clone -b v3.6.1 https://github.com/google/protobuf.git /opt/protobuf && cd /opt/protobuf
- $ ./autogen.sh
- $ ./configure
- $ make -j4 && make install
- $ ldconfig
- $ protoc --version
+            pip
+$ pip install conan && source ~/.profile
+$ conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
+$ conan remote add winternet "https://api.bintray.com/conan/winternet/winternet-conan"
 ```
 
 ### Install chord
@@ -72,7 +49,7 @@ $ apt-get -y install build-essential \
 ```sh
  $ git clone https://github.com/winternet/chord.git /opt/chord && cd /opt/chord
  $ mkdir build && cd build
- $ cmake ..
+ $ conan install .. -s compiler.cppstd=17 --build=missing && cmake ..
  $ cmake --build . -- -j4 
 ```
 

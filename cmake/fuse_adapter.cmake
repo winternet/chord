@@ -1,8 +1,11 @@
 #
 # build the fuse adapter for chord
 #
+set(FUSE_TARGET ${PROJECT_NAME}_fuse)
+
 include(FindPkgConfig)
-set(CMAKE_CXX_FLAGS "${CMAKE_INCLUDE_DIRS} -D_FILE_OFFSET_BITS=64")
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
 
 pkg_check_modules(FUSE REQUIRED fuse3)
 if(FUSE_FOUND)
@@ -10,12 +13,11 @@ if(FUSE_FOUND)
 endif()
 
 file(GLOB SOURCES fuse/*.cc)
-add_executable("${PROJECT_NAME}_fuse" ${SOURCES})
 
-target_link_libraries(${PROJECT_NAME}_fuse
+add_executable(${FUSE_TARGET} ${SOURCES})
+
+target_link_libraries(${FUSE_TARGET}
   debug asan
-  general ${PROJECT_NAME}++ ${signals_LIBRARY} ${FUSE_LIBRARIES})
-
-include_directories(${fusepp_INCLUDE_DIR})
-include_directories(${FUSE_INCLUDE_DIRS})
-add_dependencies(${PROJECT_NAME}_fuse fusepp)
+  general ${PROJECT_NAME}++ ${signals_LIBRARY} ${CONAN_LIBS} ${FUSE_LIBRARIES})
+target_include_directories(${FUSE_TARGET} PRIVATE ${FUSE_INCLUDE_DIRS})
+set_target_properties(${FUSE_TARGET} PROPERTIES COMPILE_FLAGS "-D_FILE_OFFSET_BITS=64")

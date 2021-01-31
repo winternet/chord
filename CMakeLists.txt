@@ -1,30 +1,22 @@
-#
-cmake_minimum_required(VERSION 3.8.0)
-# Clear VERSION variables when no VERSION is given to project()
-if (POLICY CMP0048)
-  cmake_policy(SET CMP0048 NEW)
-endif (POLICY CMP0048)
+cmake_minimum_required(VERSION 3.14)
 
 set(PROJECT "chord")
 project(${PROJECT} VERSION "0.0.1")
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(TARGETS)
+conan_basic_setup()
 
 configure_file(${CMAKE_SOURCE_DIR}/cmake/project.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/project.h)
 
-set(Boost_USE_STATIC_LIBS OFF)
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-option(GRPC_ALLOW_EXCEPTIONS "allow grpc exceptions" OFF)
 
 set(ProtoPath "${CMAKE_CURRENT_SOURCE_DIR}/proto")
 set(ProtoGenerateTargetPath "./gen")
 
 option(chord_BUILD_FUSE_ADAPTER "build fuse adapter" ON)
-
 option(chord_BUILD_TESTS "build unit tests" OFF)
 option(chord_BUILD_INTEGRATION_TESTS "build integration tests" OFF)
 option(chord_USE_CCACHE "use ccache for subsequent builds" ON)
@@ -45,17 +37,13 @@ if(CCACHE_FOUND AND chord_USE_CCACHE)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif()
 
-#-Wshadow
-#-Wuseless-cast
 add_compile_options(
-  -fPIC
   -Wall
   -Wextra
   -Wnon-virtual-dtor
   -Wold-style-cast
   -Wunused
   -Woverloaded-virtual
-  #-Wpedantic
   -Wconversion
   -Wmisleading-indentation
   -Wduplicated-cond
@@ -65,9 +53,7 @@ add_compile_options(
   -Wdouble-promotion
   -Wformat=2
 )
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wlifetime)
   add_compile_options(-Weverything)
@@ -82,7 +68,7 @@ endif()
 #
 # external dependencies
 #
-include(CMakeLists-Externals.txt)
+#include(CMakeLists-Externals.txt)
 
 
 #
@@ -97,17 +83,7 @@ include(CTest)
 include(cppcheck)
 include(clang-tidy)
 
-#
-# find packages
-#
-#find_package(Boost REQUIRED COMPONENTS thread system program_options serialization)
-find_package(Protobuf REQUIRED)
-#find_package(Threads REQUIRED)
-#find_package(OpenSSL REQUIRED)
-#find_package(RocksDB REQUIRED)
-#find_package(YamlCpp REQUIRED)
-#find_package(FsWatch REQUIRED)
-
+set(PROTOBUF_GENERATE_CPP_APPEND_PATH ON)
 set(PROTOBUF_PROTOC_EXECUTABLE ${CONAN_BIN_DIRS_PROTOBUF}/protoc)
 set(GRPC_CPP_PLUGIN ${CONAN_BIN_DIRS_GRPC}/grpc_cpp_plugin)
 
@@ -144,13 +120,11 @@ include_directories(${CONAN_INCLUDE_DIRS})
 #
 # create shared library chord++
 #
-add_library(${PROJECT_NAME}++ SHARED ${SOURCES} ${SOURCES_GEN} ${ProtoSources} ${ProtoHeaders} ${GrpcSources} ${GrpcHeaders})
-#target_link_libraries(${PROJECT_NAME}++ ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${RocksDB_LIBRARY} ${YAMLCPP_LIBRARY} ${CONAN_LIBS}
-  #debug asan
-  #general stdc++fs grpc++ grpc ssl crypto)
-conan_target_link_libraries(${PROJECT_NAME}++ ${CONAN_LIBS} GENERAL stdc++fs)
+add_library(${PROJECT_NAME}++ STATIC ${SOURCES} ${SOURCES_GEN} ${ProtoSources} ${ProtoHeaders} ${GrpcSources} ${GrpcHeaders})
+#conan_target_link_libraries(${PROJECT_NAME}++ ${CONAN_LIBS} GENERAL stdc++fs)
+target_link_libraries(${PROJECT_NAME}++ ${CONAN_LIBS} stdc++fs --coverage)
 #target_link_libraries(${PROJECT_NAME}++ --coverage)
-install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
+#install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 
 
 #
@@ -158,13 +132,13 @@ install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 # 
 add_executable(${PROJECT_NAME} src/chord.cc)
 
-#
-# libsignals library (CMakeLists-Externals)
-#
-ExternalProject_Get_Property(signals BINARY_DIR)
-set(signals_LIBRARY "${BINARY_DIR}/libsignals.a")
-set(signals_INCLUDE_DIR "${EXTERNAL_PROJECTS}/signals/include")
-include_directories(${signals_INCLUDE_DIR})
+##
+## libsignals library (CMakeLists-Externals)
+##
+#ExternalProject_Get_Property(signals BINARY_DIR)
+#set(signals_LIBRARY "${BINARY_DIR}/libsignals.a")
+#set(signals_INCLUDE_DIR "${EXTERNAL_PROJECTS}/signals/include")
+#include_directories(${signals_INCLUDE_DIR})
 
 
 #
@@ -172,7 +146,7 @@ include_directories(${signals_INCLUDE_DIR})
 #
 target_link_libraries(${PROJECT_NAME} 
   debug asan
-  general ${PROJECT_NAME}++ ${signals_LIBRARY})
+  general ${PROJECT_NAME}++) # ${signals_LIBRARY})
 
 
 #
