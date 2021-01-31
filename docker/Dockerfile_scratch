@@ -19,9 +19,9 @@ RUN apt-get update \
 #
 RUN git clone https://github.com/winternet/chord.git /opt/chord \
     && cd /opt/chord && mkdir build && cd build \
-    && conan remote add winternet-conan https://api.bintray.com/conan/winternet/winternet-conan
-    && conan remote add inexor-conan https://api.bintray.com/conan/inexorgame/inexor-conan
-    && conan install .. --build=missing
+    && conan remote add winternet-conan https://api.bintray.com/conan/winternet/winternet-conan \
+    && conan remote add inexor-conan https://api.bintray.com/conan/inexorgame/inexor-conan \
+    && conan install .. --build=missing -s compiler.libcxx=libstdc++11 \
     && cmake .. \
         -DBUILD_GMOCK=OFF \
         -DBUILD_TESTING=OFF \

@@ -35,7 +35,7 @@ jobs:
             mkdir build && cd build
             conan remote add winternet-conan https://api.bintray.com/conan/winternet/winternet-conan
             conan remote add inexor-conan https://api.bintray.com/conan/inexorgame/inexor-conan
-            conan install .. --build=missing
+            conan install .. --build=missing -s compiler.libcxx=libstdc++11 
             CXX=g++-9 CC=gcc-9 cmake .. -DENABLE_COVERAGE:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=Release -Dchord_BUILD_TESTS:BOOL=ON -Dchord_USE_CCACHE:BOOL=FALSE -Dchord_BUILD_INTEGRATION_TESTS:BOOL=ON
             cmake --build . -- -j1
       - run:
