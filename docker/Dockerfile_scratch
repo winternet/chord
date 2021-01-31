@@ -7,54 +7,21 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get -y install build-essential \
             git \
-            gdb \
             cmake \
             autoconf \
-            libtool \
-            libboost-system-dev \
-            libboost-serialization-dev \
-            libleveldb-dev \
-            librocksdb-dev \
-            libyaml-cpp-dev \
-            libboost-thread-dev \
-            libboost-program-options-dev \
-            libssl-dev \
-            fswatch \
             libfuse3-dev \
-            pkg-config
-
-#
-# install grpc
-#
-RUN git clone -b v1.32.0 https://github.com/grpc/grpc /opt/grpc && cd /opt/grpc \
-    && git submodule update --init \
-    && mkdir -p cmake/build \
-    && cd cmake/build \
-    && cmake ../.. -DBUILD_SHARED_LIBS=ON  -DgRPC_INSTALL=ON \
-    && make -j$(nproc) && make install \
-    && ldconfig
-
-#
-# install protobuf
-#
-RUN git clone -b v3.13.0 https://github.com/google/protobuf.git /opt/protobuf && cd /opt/protobuf/cmake \
-    $$ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/libfswatch" \
-    && mkdir build && cd build \
-    && cmake .. -DCMAKE_BUILD_TYPE=Release \
-                -Dprotobuf_BUILD_EXAMPLES=OFF \
-                -Dprotobuf_BUILD_SHARED_LIBS=ON \
-                -Dprotobuf_BUILD_TESTS=OFF \
-                -Dprotobuf_MSVC_STATIC_RUNTIME=OFF \
-                -Dprotobuf_WITH_ZLIB=ON \
-                -Dprotobuf_BUILD_PROTOC_BINARIES=ON \
-    && make -j$(nproc) && make install \
-    && ldconfig
+            pkg-config \
+            python3 \
+            python3-pip && pip3 install conan
 
 #
 # build project
 #
 RUN git clone https://github.com/winternet/chord.git /opt/chord \
     && cd /opt/chord && mkdir build && cd build \
+    && conan remote add winternet-conan https://api.bintray.com/conan/winternet/winternet-conan
+    && conan remote add inexor-conan https://api.bintray.com/conan/inexorgame/inexor-conan
+    && conan install .. --build=missing
     && cmake .. \
         -DBUILD_GMOCK=OFF \
         -DBUILD_TESTING=OFF \

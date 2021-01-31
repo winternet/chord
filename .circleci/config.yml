@@ -10,8 +10,6 @@ jobs:
     docker:
       - image: ubuntu:20.04
     environment:
-      VERSION_GRPC: v1.32.0
-      VERSION_PROTOBUF: v3.13.0
       DEBIAN_FRONTEND: noninteractive
     steps:
       - checkout
@@ -24,48 +22,20 @@ jobs:
                        git \
                        cmake \
                        autoconf \
-                       libtool \
-                       libboost-system-dev \
-                       libboost-serialization-dev \
-                       libleveldb-dev \
-                       librocksdb-dev \
-                       libyaml-cpp-dev \
-                       libboost-thread-dev \
-                       libboost-program-options-dev \
-                       libssl-dev \
-                       fswatch \
                        libfuse3-dev \
-                       pkg-config
-
-      - run:
-          name: Install grpc
-          command: |
-            cd $DEPS
-            git clone -b $VERSION_GRPC https://github.com/grpc/grpc
-            cd grpc
-            git submodule update --init
-            mkdir -p cmake/build && cd cmake/build && cmake ../.. -DBUILD_SHARED_LIBS=ON  -DgRPC_INSTALL=ON && make -j4 && make install
-            # make -j4 CFLAGS='-Wno-error -Wno-expansion-to-defined' && make install CFLAGS='-Wno-error -Wno-expansion-to-defined'
-            ldconfig
-      
-      - run:
-          name: Install protobuf
-          command: |
-            cd $DEPS
-            git clone -b $VERSION_PROTOBUF https://github.com/google/protobuf.git protobuf
-            cd protobuf
-            ./autogen.sh
-            ./configure
-            make -j4 && make install
-            ldconfig
-            protoc --version
+                       pkg-config \
+                       python3 \
+                       python3-pip
+            pip3 install conan
 
       - run:
           name: Install chord
           command: |
             export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/libfswatch"
-            mkdir build
-            cd build
+            mkdir build && cd build
+            conan remote add winternet-conan https://api.bintray.com/conan/winternet/winternet-conan
+            conan remote add inexor-conan https://api.bintray.com/conan/inexorgame/inexor-conan
+            conan install .. --build=missing
             CXX=g++-9 CC=gcc-9 cmake .. -DENABLE_COVERAGE:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=Release -Dchord_BUILD_TESTS:BOOL=ON -Dchord_USE_CCACHE:BOOL=FALSE -Dchord_BUILD_INTEGRATION_TESTS:BOOL=ON
             cmake --build . -- -j1
       - run:

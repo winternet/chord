@@ -38,7 +38,8 @@ $ apt-get -y install build-essential \
             git \
             cmake \
             autoconf \
-            pip
+            python3\
+            python3-pip
 $ pip install conan && source ~/.profile
 $ conan remote add inexorgame "https://api.bintray.com/conan/inexorgame/inexor-conan"
 $ conan remote add winternet "https://api.bintray.com/conan/winternet/winternet-conan"
