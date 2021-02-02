@@ -69,6 +69,7 @@ jobs:
           name: Build docker image
           command: |
             docker build -t $IMAGE_NAME:latest -f docker/Dockerfile_scratch .
+            # docker build -t $IMAGE_NAME:latest -f docker/Dockerfile_scratch https://github.com/winternet/chord.git#${CIRCLE_BRANCH}
       - run:
           name: Archive docker image
           command: |
