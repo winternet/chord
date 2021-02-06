@@ -148,6 +148,7 @@ workflows:
                 - main
                 - master
                 - feature/fuse
+                - feature/conan
       - docker-publish-tag:
           context: docker-context
           requires:
