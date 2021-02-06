@@ -125,7 +125,6 @@ workflows:
                 - master
                 - main
                 - feature/fuse
-                - feature/conan
       - docker-build:
           context: docker-context
           requires:
@@ -136,7 +135,6 @@ workflows:
                 - master
                 - main
                 - feature/fuse
-                - feature/conan
       - docker-publish-latest:
           context: docker-context
           requires:
@@ -148,7 +146,6 @@ workflows:
                 - main
                 - master
                 - feature/fuse
-                - feature/conan
       - docker-publish-tag:
           context: docker-context
           requires:
