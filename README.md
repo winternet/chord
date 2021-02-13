@@ -11,6 +11,12 @@ _/        _/    _/  _/    _/  _/        _/    _/
 
 [![Build Status](https://circleci.com/gh/winternet/chord/tree/master.svg?style=shield&circle-token=06884550effac32786aa01b3638bdd15e8baa03b)](https://circleci.com/gh/winternet/chord) [![codecov](https://codecov.io/gh/winternet/chord/branch/master/graph/badge.svg)](https://codecov.io/gh/winternet/chord)
 
+## Overview
+
+This is an experimental distributed peer to peer overlay filesystem based on distributed hashtables (DHTs). The implementation is heavily based on the paper ["Chord: A Scalable Peer-to-peer Lookup Protocol for Internet Applications"](https://pdos.csail.mit.edu/papers/ton:chord/paper-ton.pdf) by Ion Stoica et al. See [Wikipedia](https://en.wikipedia.org/wiki/Chord_(peer-to-peer)) for more information.
+
+![Architevtural Overview] (doc/overview.svg)
+
 ## Installation
 
 The easiest way to get started with chord is using a small docker image (~8 MB) built from scratch provided by the repository `winternet1337/chord`. The images are automatically built and pushed to docker hub after each commit - provided all tests passed successfully. To pull the image issue
