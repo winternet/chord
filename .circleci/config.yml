@@ -116,13 +116,12 @@ jobs:
 
 workflows:
   version: 2
-  build-master:
+  build-main:
     jobs:
       - build:
           filters:
             branches:
               only: 
-                - master
                 - main
                 - feature/fuse
       - docker-build:
@@ -132,7 +131,6 @@ workflows:
           filters:
             branches:
               only:
-                - master
                 - main
                 - feature/fuse
       - docker-publish-latest:
@@ -144,7 +142,6 @@ workflows:
             branches:
               only:
                 - main
-                - master
                 - feature/fuse
       - docker-publish-tag:
           context: docker-context

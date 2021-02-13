@@ -9,7 +9,7 @@ _/        _/    _/  _/    _/  _/        _/    _/
                                                       
 ```
 
-[![Build Status](https://circleci.com/gh/winternet/chord/tree/master.svg?style=shield&circle-token=06884550effac32786aa01b3638bdd15e8baa03b)](https://circleci.com/gh/winternet/chord) [![codecov](https://codecov.io/gh/winternet/chord/branch/master/graph/badge.svg)](https://codecov.io/gh/winternet/chord)
+[![Build Status](https://circleci.com/gh/winternet/chord/tree/main.svg?style=shield&circle-token=06884550effac32786aa01b3638bdd15e8baa03b)](https://circleci.com/gh/winternet/chord) [![codecov](https://codecov.io/gh/winternet/chord/branch/main/graph/badge.svg)](https://codecov.io/gh/winternet/chord)
 
 ## Overview
 
@@ -49,7 +49,7 @@ To configure our node we could pass some of the arguments to the container, howe
 
 ### The node configuration
 
-Sample configurations can be found in the sourcecode repository under the [config](https://github.com/winternet/chord/tree/master/config)-folder. Either use this samples or copy & paste the one below to e.g. /tmp/chord/config/node0.yml:
+Sample configurations can be found in the sourcecode repository under the [config](https://github.com/winternet/chord/tree/main/config)-folder. Either use this samples or copy & paste the one below to e.g. /tmp/chord/config/node0.yml:
 
 ```yaml
 version: 1
