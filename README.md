@@ -15,7 +15,7 @@ _/        _/    _/  _/    _/  _/        _/    _/
 
 This is an experimental distributed peer to peer overlay filesystem based on distributed hashtables (DHTs). The implementation is heavily based on the paper ["Chord: A Scalable Peer-to-peer Lookup Protocol for Internet Applications"](https://pdos.csail.mit.edu/papers/ton:chord/paper-ton.pdf) by Ion Stoica et al. See [Wikipedia](https://en.wikipedia.org/wiki/Chord_(peer-to-peer)) for more information.
 
-![Architectural Overview] (/doc/overview.svg)
+![Architectural Overview](/doc/overview.svg)
 
 ## Installation
 
