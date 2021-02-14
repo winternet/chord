@@ -151,7 +151,7 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
   if(added && parent_path != uri.path() && max_repl.index == 0 && !parent_path.empty() /*&& fs::is_directory(metadata)*/) {
     const auto parent_uri = chord::uri{uri.scheme(), parent_path};
     {
-      auto meta_dir = create_directory(metadata, uri.path().filename());
+      auto meta_dir = std::set{create_directory(metadata, uri.path().filename())};
       make_client()->meta(parent_uri, Client::Action::ADD, meta_dir, options);
     }
   }
@@ -319,7 +319,8 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
   if(options.replication.index == 0) {
     const auto parent_uri = chord::uri{uri.scheme(), uri.path().parent_path()};
     // add directory "." to metadata
-    meta.insert(create_directory(meta));
+    meta.insert(create_directory(meta, "."));
+    meta.insert(create_directory(meta, ".."));
     make_client()->meta(parent_uri, Client::Action::ADD, meta, options);
   }
 

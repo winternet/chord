@@ -64,12 +64,16 @@ bool Metadata::operator==(const Metadata &other) const {
     //&& file_hash == other.file_hash; 
 }
 
-Metadata create_directory() {
+Metadata create_directory(const std::string& name) {
   Metadata meta;
-  meta.name = ".";
+  meta.name = name;
   meta.permissions = perms::none;
   meta.file_type = type::directory;
   return meta;
+}
+
+Metadata create_directory() {
+  return create_directory(".");
 }
 
 Replication max_replication(const std::set<Metadata>& metadata) {
@@ -92,16 +96,14 @@ Metadata create_directory(const std::set<Metadata>& metadata) {
   return meta;
 }
 
-std::set<Metadata> create_directory(const std::set<Metadata>& metadata, const std::string& folder_name) {
+Metadata create_directory(const std::set<Metadata>& metadata, const std::string& name) {
   auto meta_dir = create_directory(metadata);
-  if(!folder_name.empty()) {
-    meta_dir.name = folder_name;
-  }
-  return {meta_dir};
+  meta_dir.name = name;
+  return meta_dir;
 }
 
 bool is_directory(const Metadata& metadata) {
-  return metadata.name == "." && metadata.file_type == type::directory;
+  return (metadata.name == "." || metadata.name == "..") && metadata.file_type == type::directory;
 }
 
 bool is_mkdir(const uri& uri, const std::set<Metadata>& metadata) {
@@ -115,7 +117,8 @@ bool is_directory(const std::set<Metadata>& metadata) {
 }
 
 bool is_empty(const std::set<Metadata>& metadata) {
-  return metadata.size() == 1 && is_directory(metadata);
+  // . and ..
+  return metadata.size() == 2 && is_directory(metadata);
 }
 
 bool is_shallow_copy(const std::set<Metadata>& metadata, const Context& context) {

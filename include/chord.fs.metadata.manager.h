@@ -157,7 +157,8 @@ class MetadataManager : public IMetadataManager {
     // always override "." since replication might have changed
     // do not allow overrides from clients
     if(current.find(".") != current.end()) {
-      current.insert_or_assign(".", create_directory(metadata));
+      current.insert_or_assign(".", create_directory(metadata, "."));
+      current.insert_or_assign("..", create_directory(metadata, ".."));
     }
 
     logger->trace("[ADD] {}", directory);

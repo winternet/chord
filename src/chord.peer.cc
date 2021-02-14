@@ -85,8 +85,10 @@ void Peer::stop() {
     return;
   }
   chord->stop();
-  if(server) server->Shutdown();
-  exit.get_future().wait();
+  if(server) {
+    server->Shutdown();
+    exit.get_future().wait();
+  }
 }
 
 } //namespace chord

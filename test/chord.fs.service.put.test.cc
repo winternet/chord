@@ -94,8 +94,9 @@ TEST_F(FilesystemServicePutTest, put) {
   EXPECT_CALL(*self->metadata_mgr, add(target_uri, metadata_set))
     .WillOnce(Return(true));
 
-  Metadata metadata_dir = {".", "", "", perms::none, type::directory, 0, {}, {}, Replication()};
-  std::set<Metadata> metadata_set_dir{metadata_dir, metadata_file};
+  Metadata metadata_current = {".", "", "", perms::none, type::directory, 0, {}, {}, Replication()};
+  Metadata metadata_parent = {"..", "", "", perms::none, type::directory, 0, {}, {}, Replication()};
+  std::set<Metadata> metadata_set_dir{metadata_current, metadata_parent, metadata_file};
   EXPECT_CALL(*self->metadata_mgr, add(uri(target_uri.scheme(), target_uri.path().parent_path()), metadata_set_dir))
     .WillOnce(Return(true));
 
@@ -137,7 +138,8 @@ TEST_F(FilesystemServicePutTest, put_replication_2) {
 
   // setup expectations for self
   {
-    Metadata metadata_dir{".", "", "", perms::none, type::directory, 0, {}, {}, Replication(0,2)};
+    Metadata metadata_current = {".", "", "", perms::none, type::directory, 0, {}, {}, Replication(0,2)};
+    Metadata metadata_parent = {"..", "", "", perms::none, type::directory, 0, {}, {}, Replication(0,2)};
     Metadata metadata_file{"file", "", "", perms::all, type::regular, file::file_size(source_file->path), crypto::sha256(source_file->path), {}, Replication(0,2)};
 
     // self peer metadata
@@ -151,7 +153,7 @@ TEST_F(FilesystemServicePutTest, put_replication_2) {
 
     EXPECT_CALL(*self->metadata_mgr, add(target_uri, std::set<Metadata>{metadata_file}))
       .WillOnce(Return(true));
-    EXPECT_CALL(*self->metadata_mgr, add(root_uri, std::set<Metadata>{metadata_dir, metadata_file}))
+    EXPECT_CALL(*self->metadata_mgr, add(root_uri, std::set<Metadata>{metadata_current, metadata_parent, metadata_file}))
       .WillOnce(Return(true));
   }
 
@@ -159,6 +161,7 @@ TEST_F(FilesystemServicePutTest, put_replication_2) {
   // setup expectations for second-node
   {
     Metadata metadata_dir{".", "", "", perms::none, type::directory, 0, {}, {}, Replication(1,2)};
+    Metadata metadata_parent{"..", "", "", perms::none, type::directory, 0, {}, {}, Replication(1,2)};
     Metadata metadata_file{"file", "", "", perms::all, type::regular, file::file_size(source_file->path), crypto::sha256(source_file->path), {}, Replication(1,2)};
 
     EXPECT_CALL(*peer_2.metadata_mgr, exists(root_uri))
@@ -167,7 +170,7 @@ TEST_F(FilesystemServicePutTest, put_replication_2) {
       .WillOnce(Return(false));
     EXPECT_CALL(*peer_2.metadata_mgr, add(target_uri, std::set<Metadata>{metadata_file}))
       .WillOnce(Return(true));
-    EXPECT_CALL(*peer_2.metadata_mgr, add(root_uri, std::set<Metadata>{metadata_dir, metadata_file}))
+    EXPECT_CALL(*peer_2.metadata_mgr, add(root_uri, std::set<Metadata>{metadata_dir, metadata_parent, metadata_file}))
       .WillOnce(Return(true));
   }
 

@@ -130,9 +130,9 @@ void Metadata::serialize(Archive & ar, const unsigned int version)
 
 Replication max_replication(const std::set<Metadata>&);
 Metadata create_directory();
+Metadata create_directory(const std::string&);
 Metadata create_directory(const std::set<Metadata>&);
-Metadata create_directory(const chord::path&);
-std::set<Metadata> create_directory(const std::set<Metadata>& metadata, const std::string&);
+Metadata create_directory(const std::set<Metadata>&, const std::string&);
 bool is_mkdir(const uri&, const std::set<Metadata>&);
 bool is_directory(const Metadata&);
 bool is_directory(const std::set<Metadata>&);

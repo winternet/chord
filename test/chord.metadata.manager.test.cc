@@ -59,11 +59,12 @@ TEST(chord_metadata_manager, set_and_get_updates_replication) {
   auto uri = uri::from("chord:/folder");
   fs::Metadata meta_set{"file1", "owner", "group", perms::all, type::regular, 33, {}, {}, Replication(0,4)};
   fs::Metadata meta_root{".", "", "", perms::none, type::directory, 0, {}, {}, Replication(0,4)};
+  fs::Metadata meta_parent{"..", "", "", perms::none, type::directory, 0, {}, {}, Replication(0,4)};
 
-  metadata.add(uri, {meta_root, meta_set});
+  metadata.add(uri, {meta_root, meta_parent, meta_set});
   set<fs::Metadata> meta_get = metadata.get(uri);
 
-  ASSERT_THAT(meta_get, ElementsAre(meta_root, meta_set));
+  ASSERT_THAT(meta_get, ElementsAre(meta_root, meta_parent, meta_set));
 
   // update replication
   meta_set.replication = Replication(0,6);
@@ -72,8 +73,9 @@ TEST(chord_metadata_manager, set_and_get_updates_replication) {
 
   //root's replication is adapted to maximum of all contents
   meta_root.replication = Replication{0,6};
+  meta_parent.replication = Replication{0,6};
 
-  ASSERT_THAT(meta_get, ElementsAre(meta_root, meta_set));
+  ASSERT_THAT(meta_get, ElementsAre(meta_root, meta_parent, meta_set));
 
   // check update of replication explicitly
   const auto repl = std::find_if(meta_get.begin(), meta_get.end(), [](const fs::Metadata& m) { return m.name == "."; })->replication;
