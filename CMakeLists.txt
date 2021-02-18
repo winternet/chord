@@ -154,6 +154,7 @@ target_link_libraries(${PROJECT_NAME}
 #
 if(chord_BUILD_FUSE_ADAPTER)
   include(fuse_adapter)
+  include(fuse_tests)
 endif()
 
 #

@@ -1,0 +1,42 @@
+version: 1
+
+register_shutdown_handler: No
+
+##data
+monitor: No
+data-directory: "/tmp/data0"
+meta-directory: "/tmp/meta0"
+
+##networking
+bind-addr: "0.0.0.0:50050"
+join-addr: "0.0.0.0:50051"
+bootstrap: Yes
+no-controller: No
+
+## details
+stabilize_ms: 10000
+check_ms: 10000
+
+## replication / striping
+#replication-count: 1
+replication-count: -1
+
+#uuid: "0"
+uuid: "0"
+
+logging:
+  level: trace
+  sinks:
+    CONSOLE_SINK:
+      type: "console"
+    FILE_SINK:
+      type: "file-rotating"
+      path: "/tmp/logs/chord0.log"
+  loggers:
+    CHORD_LOG:
+      sinks: [FILE_SINK]
+      filter: "^chord[.](?!fs)"
+    CHORD_FS_LOG:
+      sinks: [CONSOLE_SINK]
+      filter: "^chord[.]fs"
+      level: trace

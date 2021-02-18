@@ -40,7 +40,13 @@ jobs:
             conan remote add winternet-conan https://api.bintray.com/conan/winternet/winternet-conan || true
             conan remote add inexor-conan https://api.bintray.com/conan/inexorgame/inexor-conan || true
             conan install .. --build=missing -s compiler.libcxx=libstdc++11 
-            CXX=g++-9 CC=gcc-9 cmake .. -DENABLE_COVERAGE:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=Release -Dchord_BUILD_TESTS:BOOL=ON -Dchord_USE_CCACHE:BOOL=FALSE -Dchord_BUILD_INTEGRATION_TESTS:BOOL=ON
+            CXX=g++-9 CC=gcc-9 cmake .. \
+              -DENABLE_COVERAGE:BOOL=TRUE \
+              -Dchord_USE_CCACHE:BOOL=FALSE \
+              -DCMAKE_BUILD_TYPE:STRING=Release \
+              -Dchord_BUILD_TESTS:BOOL=ON \
+              -Dchord_BUILD_INTEGRATION_TESTS:BOOL=ON \
+              -Dchord_BUILD_FUSE_ADAPTER:BOOL=ON
             cmake --build . -- -j1
 
       - save_cache:

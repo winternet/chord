@@ -1,8 +1,8 @@
 #!/bin/bash
-echo "• killing chord_fuse"
-killall -9 chord_fuse
+#echo "• killing chord_fuse"
+#killall -9 chord_fuse
 echo "• unmounting"
-fusermount -u ~/Chord
+fusermount -u -z -q ~/Chord
 
 echo "• deleting data0"
 rm -rf ~/workspace/chord/data0
