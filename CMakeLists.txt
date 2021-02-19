@@ -123,7 +123,7 @@ include_directories(${CONAN_INCLUDE_DIRS})
 add_library(${PROJECT_NAME}++ STATIC ${SOURCES} ${SOURCES_GEN} ${ProtoSources} ${ProtoHeaders} ${GrpcSources} ${GrpcHeaders})
 #conan_target_link_libraries(${PROJECT_NAME}++ ${CONAN_LIBS} GENERAL stdc++fs)
 target_link_libraries(${PROJECT_NAME}++ ${CONAN_LIBS} stdc++fs --coverage)
-#target_link_libraries(${PROJECT_NAME}++ --coverage)
+#target_link_libraries(${PROJECT_NAME}++)
 #install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
 
 

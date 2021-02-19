@@ -1,4 +1,6 @@
 # codecov configuration see https://docs.codecov.io/docs/coverage-configuration
+ignore:
+  - "fuse/**"  # fuse can not be tested with coverage
 coverage:
   range: 50..75
   round: down
