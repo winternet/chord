@@ -22,6 +22,7 @@ jobs:
                        git \
                        cmake \
                        autoconf \
+                       fuse \
                        libfuse3-dev \
                        pkg-config \
                        python3 \

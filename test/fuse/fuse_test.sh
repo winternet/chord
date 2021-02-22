@@ -26,7 +26,7 @@ oneTimeTearDown() {
   echo "• unmounting"
   fusermount -u -z -q "$CHORD_FUSE_MOUNTPOINT"
   echo "• deleting mountpoint"
-  rm -r "$CHORD_FUSE_MOUNTPOINT"
+  rm -r "$CHORD_FUSE_MOUNTPOINT" &>/dev/null
 
   # TOOD make data and meta configurable via parameters so that
   # we dont have to rely on a matching/correct $CHORD_FUSE_CONFIG file
@@ -68,7 +68,9 @@ test_touch_empty_file() {
   local FILENAME="empty_file.md"
   local FILE_PATH="$CHORD_FUSE_MOUNTPOINT/$FILENAME"
 
+  assertFalse "file already exists" '[ -f $FILE_PATH ]'
   _ "touch $FILE_PATH" 
+  assertTrue "file does not exists" '[ -f $FILE_PATH ]'
 
   _ "ls $FILE_PATH" RET
   assertContains "$RET" "$FILE_PATH"
@@ -82,19 +84,64 @@ test_touch_file_with_contents() {
   local FILENAME="root.md"
   local FILE_PATH="$CHORD_FUSE_MOUNTPOINT/$FILENAME"
 
-  #_ "echo 'file with contents' > $FILE_PATH" 
-  cd $CHORD_FUSE_MOUNTPOINT
-  echo "file with contents" > "root.md" &
+  assertFalse "file already exists" '[ -f $FILE_PATH ]'
+  echo "file with contents" > $FILE_PATH
+  assertTrue "file does not exists" '[ -f $FILE_PATH ]'
 
-  _ "ls -ls $CHORD_FUSE_MOUNTPOINT" RET
+  _ "ls -al $CHORD_FUSE_MOUNTPOINT" RET
+  assertContains "$RET" "$FILENAME"
+
   _ "ls $FILE_PATH" RET
-  assertContains "$RET" "$FILE_PATH"
+  assertContains "$RET" "$FILENAME"
 
   _ "cat $FILE_PATH" RET
   assertSame "$RET" "file with contents"
 
   _ "ls -al $CHORD_FUSE_MOUNTPOINT" RET
   assertContains "$RET" "$FILENAME"
+}
+
+test_mkdir() {
+  local RET
+  local DIRNAME="folder"
+  local DIR_PATH="$CHORD_FUSE_MOUNTPOINT/$DIRNAME"
+
+  assertFalse "directory already exists" '[ -d $DIR_PATH ]'
+  _ "mkdir $DIR_PATH"
+  assertTrue "directory does not exist" '[ -d $DIR_PATH ]'
+
+  _ "ls -al $CHORD_FUSE_MOUNTPOINT" RET
+  assertContains "$RET" "$DIRNAME"
+
+  _ "ls -al $DIR_PATH" RET
+  assertContains "must contain current folder ." "$RET" "."
+  assertContains "must contain current folder .." "$RET" ".."
+}
+
+test_add_file_to_dir() {
+  local RET
+  local FILENAME="subfile.md"
+  local PARENT_PATH="$CHORD_FUSE_MOUNTPOINT/folder"
+  local FILE_PATH="$PARENT_PATH/$FILENAME"
+
+  assertFalse "file already exists" '[ -f $FILE_PATH ]'
+  _ "touch $FILE_PATH"
+  assertTrue "file does not exist" '[ -f $FILE_PATH ]'
+
+  _ "ls -al $PARENT_PATH" RET
+  assertContains "$RET" "$FILENAME"
+}
+
+test_append_content_to_subfile() {
+  local RET
+  local FILENAME="subfile.md"
+  local PARENT_PATH="$CHORD_FUSE_MOUNTPOINT/folder"
+  local FILE_PATH="$PARENT_PATH/$FILENAME"
+
+  assertTrue "file does not exist" '[ -f $FILE_PATH ]'
+  echo "foobar" > $FILE_PATH
+  _ "cat $FILE_PATH" RET
+  assertSame "$RET" "foobar"
 }
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"

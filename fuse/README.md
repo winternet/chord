@@ -4,6 +4,12 @@ FUSE - Filesystem Adapter
 Usage
 -----
 
-bash sh/fuse_up.sh
-bash sh/fuse_down.sh
+```sh
+CHORD_FUSE=../build/bin/chord_fuse bash ../fuse/sh/fuse_up.sh
+CHORD_FUSE=../build/bin/chord_fuse bash ../fuse/sh/fuse_down.sh
+```
 
+Execute Tests
+-------------
+
+ctest -V -R chord_test_fuse
