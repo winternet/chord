@@ -21,6 +21,7 @@ COPY . /opt/chord
 WORKDIR /opt/chord
 
 RUN rm -rf build && mkdir build && cd build \
+    && conan config set general.revisions_enabled=True \
     && conan remote add winternet-conan-virt https://winternet.jfrog.io/artifactory/api/conan/conan-virt \
     && conan install .. --build=missing -s compiler.libcxx=libstdc++11 \
     && cmake .. \
