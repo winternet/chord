@@ -21,8 +21,7 @@ COPY . /opt/chord
 WORKDIR /opt/chord
 
 RUN rm -rf build && mkdir build && cd build \
-    && conan remote add winternet-conan https://api.bintray.com/conan/winternet/winternet-conan \
-    && conan remote add inexor-conan https://api.bintray.com/conan/inexorgame/inexor-conan \
+    && conan remote add winternet-conan-virt https://winternet.jfrog.io/artifactory/api/conan/conan-virt
     && conan install .. --build=missing -s compiler.libcxx=libstdc++11 \
     && cmake .. \
         -DBUILD_GMOCK=OFF \
