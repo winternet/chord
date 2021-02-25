@@ -7,8 +7,10 @@ executors:
       - image: circleci/buildpack-deps:stretch
 jobs:
   build:
-    docker:
-      - image: ubuntu:20.04
+    machine:
+      image: ubuntu-2004:202101-01
+      #docker:
+      #  - image: ubuntu:20.04
     environment:
       DEBIAN_FRONTEND: noninteractive
     steps:
@@ -58,7 +60,7 @@ jobs:
           name: Run tests
           command: |
             cd build
-            ctest --verbose
+            ctest --verbose #-E chord_test_fuse # docker container would require more privileges
             bash <(curl -s https://codecov.io/bash) -t 8811a299-c05a-4c37-8d1d-c5bac9cca1fe
       - store_test_results:
           path: build/gtest-out
