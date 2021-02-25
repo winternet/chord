@@ -2,14 +2,15 @@
 #set -euo pipefail
 set -eo pipefail
 
-CHORD_FUSE="chord_fuse"
+CHORD_FUSE="./bin/chord_fuse"
 CHORD_FUSE_WORKING_DIR=$(pwd)
 
 if [ -z ${CHORD_FUSE_ADAPTER+$CHORD_FUSE} ]; then
   CHORD_FUSE_ADAPTER="$CHORD_FUSE"
 fi
 
-CHORD_FUSE_CONFIG=fuse.yml
+CHORD_FUSE_CONFIG=../config/fuse.yml
+#CHORD_FUSE_CONFIG=fuse.yml
 CHORD_FUSE_MOUNTPOINT="$CHORD_FUSE_WORKING_DIR/mountpoint" 
 
 oneTimeSetUp() {
@@ -19,6 +20,12 @@ oneTimeSetUp() {
 
   echo "waiting 2s..."
   sleep 2
+
+  if ! pidof $CHORD_FUSE_ADAPTER; then
+    echo "☠ failed to launch adapter - check configuration and output:"
+    $CHORD_FUSE_ADAPTER -d "$CHORD_FUSE_MOUNTPOINT" -- -c $CHORD_FUSE_CONFIG 
+    exit 1
+  fi
 }
 
 oneTimeTearDown() {

@@ -12,6 +12,10 @@
 
 using namespace chord::fs;
 
+#ifdef CHORD_GCOV_FLUSH
+extern "C" void __gcov_flush();
+#endif
+
 namespace chord {
 namespace fuse {
 
@@ -20,6 +24,11 @@ Adapter::Adapter(int argc, char* argv[]):
   options{chord::utils::parse_program_options(argc, argv)},
   peer{std::make_unique<chord::Peer>(options.context)} {}
 
+Adapter::~Adapter() {
+#ifdef CHORD_GCOV_FLUSH
+  ::__gcov_flush();
+#endif
+}
 
 void* Adapter::init([[maybe_unused]]struct fuse_conn_info *conn, [[maybe_unused]]struct fuse_config *cfg) {
   this_()->peer_thread = std::thread(&chord::Peer::start, this_()->peer.get());

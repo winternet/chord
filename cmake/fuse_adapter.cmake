@@ -21,3 +21,7 @@ target_link_libraries(${FUSE_TARGET}
   general ${PROJECT_NAME}++ ${signals_LIBRARY} ${CONAN_LIBS} ${FUSE_LIBRARIES})
 target_include_directories(${FUSE_TARGET} PRIVATE ${FUSE_INCLUDE_DIRS})
 set_target_properties(${FUSE_TARGET} PROPERTIES COMPILE_FLAGS "-D_FILE_OFFSET_BITS=64")
+
+if(CMAKE_COMPILER_IS_GNUCC AND ENABLE_COVERAGE AND chord_BUILD_FUSE_ADAPTER)
+  target_compile_definitions(${FUSE_TARGET} PRIVATE CHORD_GCOV_FLUSH=1)
+endif()

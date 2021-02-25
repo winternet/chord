@@ -29,7 +29,7 @@ private:
 public:
   Adapter(int argc, char* arv[]);
 
-  virtual ~Adapter() = default;
+  virtual ~Adapter();
 
   //static chord::Peer* peer();
   static void* init(struct fuse_conn_info*, struct fuse_config*);

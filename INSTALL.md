@@ -41,6 +41,7 @@ $ apt-get -y install build-essential \
             python3\
             python3-pip
 $ pip install conan && source ~/.profile
+$ conan config set general.revisions_enabled=True
 $ conan remote add winternet-conan-virt https://winternet.jfrog.io/artifactory/api/conan/conan-virt
 ```
 
