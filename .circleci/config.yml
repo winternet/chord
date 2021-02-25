@@ -40,6 +40,7 @@ jobs:
           command: |
             export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/libfswatch"
             mkdir build && cd build
+            conan config set general.revisions_enabled=True
             conan remote add winternet-conan-virt https://winternet.jfrog.io/artifactory/api/conan/conan-virt || true
             conan install .. --build=missing -s compiler.libcxx=libstdc++11 
             CXX=g++-9 CC=gcc-9 cmake .. \
