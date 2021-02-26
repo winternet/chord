@@ -24,17 +24,17 @@ jobs:
                        git \
                        cmake \
                        autoconf \
-                       fuse \
+                       fuse3 \
                        libfuse3-dev \
                        pkg-config \
                        python3 \
                        python3-pip
             pip3 install conan
 
-            #- restore_cache:
-            #    keys:
-            #      - conan-cache-v1--{{ checksum "conanfile.txt" }}
-            #      - conan-cache-v1
+      - restore_cache:
+          keys:
+            - conan-cache-v1--{{ checksum "conanfile.txt" }}
+            - conan-cache-v1
       - run:
           name: Install chord
           command: |
@@ -52,10 +52,10 @@ jobs:
               -Dchord_BUILD_FUSE_ADAPTER:BOOL=ON
             cmake --build . -- -j1
 
-            #- save_cache:
-            #    paths:
-            #      - ~/.conan
-            #    key: conan-cache-v1--{{ checksum "conanfile.txt" }}
+      - save_cache:
+          paths:
+            - ~/.conan
+          key: conan-cache-v1--{{ checksum "conanfile.txt" }}
 
       - run:
           name: Run tests
