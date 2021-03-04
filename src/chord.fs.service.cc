@@ -282,9 +282,12 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
 
     const auto lock = monitor::lock(monitor, {data, chord::fs::monitor::event::flag::CREATED});
 
-    const auto file_exists = file::exists(data);
+    // empty file was put
+    if(!file::exists(data)) {
+      chord::file::create_file(data);
+    }
 
-    if (!file_hashes_equal(serverContext, reader) && reader->Read(&req)) {
+    if (!file_hashes_equal(serverContext, reader)) {
       logger->trace("[put] {}", data);
 
       crypto::sha256_hasher hasher;
@@ -294,17 +297,17 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
       file.open(data, fstream::binary);
 
       // write
-      do {
+      if(!reader->Read(&req)) {
+        chord::file::resize_file(data);
+      } else do {
         const auto data = req.data().data();
         const auto len = req.size();
         hasher(data, len);
         file.write(data, static_cast<std::streamsize>(len));
       } while (reader->Read(&req));
 
-    } else if(!file_exists) {
-      // empty file was put
-      chord::file::create_file(data);
     }
+
   } catch (const ios_base::failure &error) {
     logger->error("[put] {}, reason: {}", data, error.what());
     //TODO

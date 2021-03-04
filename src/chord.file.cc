@@ -52,6 +52,14 @@ bool file::copy_file(const std::string &from, const std::string& to, bool overwr
   return fs::copy_file(from, to, overwrite ? fs::copy_options::overwrite_existing : fs::copy_options::none);
 }
 
+void file::resize_file(const std::string &path, std::uintmax_t new_sz) {
+  file::resize_file(path, new_sz);
+}
+
+void file::resize_file(const std::string &path) {
+  fs::resize_file({path}, 0);
+}
+
 bool file::create_file(const std::string &path) {
   std::ofstream{fs::path(path)};
   return true;

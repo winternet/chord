@@ -20,6 +20,9 @@ namespace file {
 
   void copy(const std::string &from, const std::string& to);
 
+  void resize_file(const std::string &path, std::uintmax_t);
+  void resize_file(const std::string &path);
+
   bool copy_file(const std::string &from, const std::string& to, const bool overwrite=false);
 
   bool is_empty(const std::string& path);
