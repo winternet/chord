@@ -37,6 +37,7 @@ commands:
     steps:
       - run:
           command: |
+            whoami
             cd $CIRCLE_WORKING_DIRECTORY
             mkdir build && cd build
             conan config set general.revisions_enabled=True
@@ -48,6 +49,7 @@ commands:
     steps:
       - run:
           command: |
+            whoami
             cd $CIRCLE_WORKING_DIRECTORY/build
             cmake .. \
               -DENABLE_COVERAGE:BOOL=FALSE \
@@ -62,6 +64,7 @@ commands:
     steps:
       - run:
           command: |
+            whoami
             cd $CIRCLE_WORKING_DIRECTORY/build
             cmake .. \
               -DENABLE_COVERAGE:BOOL=TRUE \
