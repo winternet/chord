@@ -109,12 +109,6 @@ jobs:
             - conan-cache-v2--{{ checksum "conanfile.txt" }}
             - conan-cache-v2
       - prepare-project
-      - save_cache:
-          paths:
-            - ~/.conan
-          key: conan-cache-v2--{{ checksum "conanfile.txt" }}
-      - build-project-tests
-
       - run:
           name: Run tests
           command: |
@@ -125,6 +119,11 @@ jobs:
           path: build/gtest-out
       - store_artifacts:
           path: build/gtest-out
+      - save_cache:
+          paths:
+            - ~/.conan
+          key: conan-cache-v2--{{ checksum "conanfile.txt" }}
+      - build-project-tests
 
   docker-build:
     executor: docker-publisher
