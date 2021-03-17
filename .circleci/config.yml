@@ -26,6 +26,7 @@ commands:
                        cmake \
                        autoconf \
                        fuse3 \
+                       tree \
                        libfuse3-dev \
                        pkg-config \
                        python3 \
@@ -65,6 +66,8 @@ commands:
       - run:
           command: |
             whoami
+            ls -al ~
+            tree $CIRCLE_WORKING_DIRECTORY
             cd $CIRCLE_WORKING_DIRECTORY/build
             cmake .. \
               -DENABLE_COVERAGE:BOOL=TRUE \
