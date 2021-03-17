@@ -48,8 +48,7 @@ commands:
     steps:
       - run:
           command: |
-            whoami
-            cd $CIRCLE_WORKING_DIRECTORY/build
+            cd build
             cmake .. \
               -DENABLE_COVERAGE:BOOL=FALSE \
               -DCMAKE_BUILD_TYPE:STRING=Release \
@@ -63,11 +62,7 @@ commands:
     steps:
       - run:
           command: |
-            whoami
-            pwd
-            ls -al ~
-            tree $CIRCLE_WORKING_DIRECTORY
-            cd $CIRCLE_WORKING_DIRECTORY/build
+            cd build
             cmake .. \
               -DENABLE_COVERAGE:BOOL=TRUE \
               -Dchord_USE_CCACHE:BOOL=FALSE \
