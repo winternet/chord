@@ -1,22 +1,23 @@
 version: 2.1
-executors:
-  docker-publisher:
-    environment:
-      IMAGE_NAME: winternet1337/chord
-    docker:
-      - image: circleci/buildpack-deps:stretch
-jobs:
-  build:
-    machine:
-      image: ubuntu-2004:202101-01
-      #docker:
-      #  - image: ubuntu:20.04
-    environment:
-      DEBIAN_FRONTEND: noninteractive
+commands:
+  setup-centos:
+    description: "Setup CentOS"
     steps:
-      - checkout
       - run:
-          name: Setup
+          command: |
+            sudo dnf -y install curl \
+                       git \
+                       cmake \
+                       rpm-build \
+                       fuse3 \
+                       python3 \
+                       gcc-c++
+            pip3 install conan
+
+  setup-ubuntu:
+    description: "Setup Ubuntu"
+    steps:
+      - run:
           command: |
             sudo apt-get update
             sudo apt-get -y install build-essential \
@@ -31,19 +32,35 @@ jobs:
                        python3-pip
             pip3 install conan
 
-      - restore_cache:
-          keys:
-            - conan-cache-v2--{{ checksum "conanfile.txt" }}
-            - conan-cache-v2
+  prepare-project:
+    description: "Prepare project for build"
+    steps:
       - run:
-          name: Install chord
           command: |
-            export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/libfswatch"
             mkdir build && cd build
             conan config set general.revisions_enabled=True
             conan remote add winternet-conan-virt https://winternet.jfrog.io/artifactory/api/conan/conan-virt || true
             conan install .. --build=missing -s compiler.libcxx=libstdc++11 
-            CXX=g++-9 CC=gcc-9 cmake .. \
+
+  build-project-release:
+    description: "Build the project (release)"
+    steps:
+      - run:
+          command: |
+            cmake .. \
+              -DENABLE_COVERAGE:BOOL=FALSE \
+              -DCMAKE_BUILD_TYPE:STRING=Release \
+              -Dchord_BUILD_TESTS:BOOL=OFF \
+              -Dchord_BUILD_INTEGRATION_TESTS:BOOL=OFF \
+              -Dchord_BUILD_FUSE_ADAPTER:BOOL=ON
+            cmake --build . -- -j1
+
+  build-project-tests:
+    description: "Build the project (with tests)"
+    steps:
+      - run:
+          command: |
+            cmake .. \
               -DENABLE_COVERAGE:BOOL=TRUE \
               -Dchord_USE_CCACHE:BOOL=FALSE \
               -DCMAKE_BUILD_TYPE:STRING=Release \
@@ -52,10 +69,51 @@ jobs:
               -Dchord_BUILD_FUSE_ADAPTER:BOOL=ON
             cmake --build . -- -j1
 
+
+executors:
+  docker-publisher:
+    environment:
+      IMAGE_NAME: winternet1337/chord
+    docker:
+      - image: circleci/buildpack-deps:stretch
+jobs:
+  package-deb:
+    docker:
+      - image: ubuntu-2004:202101-01
+    steps:
+      - checkout
+      - setup-ubuntu
+      - prepare-project
+      - build-project-release
+  package-rpm:
+    docker:
+      - image: dokken/centos-stream-8
+    steps:
+      - checkout
+      - setup-centos
+      - prepare-project
+      - build-project-release
+
+  build:
+    machine:
+      image: ubuntu-2004:202101-01
+      #docker:
+      #  - image: ubuntu:20.04
+    environment:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - checkout
+      - setup-ubuntu
+      - restore_cache:
+          keys:
+            - conan-cache-v2--{{ checksum "conanfile.txt" }}
+            - conan-cache-v2
+      - prepare-project
       - save_cache:
           paths:
             - ~/.conan
           key: conan-cache-v2--{{ checksum "conanfile.txt" }}
+      - build-project-tests
 
       - run:
           name: Run tests
@@ -67,7 +125,6 @@ jobs:
           path: build/gtest-out
       - store_artifacts:
           path: build/gtest-out
-
 
   docker-build:
     executor: docker-publisher
@@ -133,6 +190,13 @@ workflows:
               only: 
                 - main
                 - feature/fuse
+                - feature/packages
+      - package-deb:
+          requires:
+            - build
+      - package-rpm:
+          requires:
+            - build
       - docker-build:
           context: docker-context
           requires:
@@ -145,7 +209,6 @@ workflows:
       - docker-publish-latest:
           context: docker-context
           requires:
-            - build
             - docker-build
           filters:
             branches:

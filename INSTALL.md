@@ -39,7 +39,9 @@ $ apt-get -y install build-essential \
             cmake \
             autoconf \
             python3\
-            python3-pip
+            python3-pip \
+            fuse3-devel \
+            fuse3
 $ pip install conan && source ~/.profile
 $ conan config set general.revisions_enabled=True
 $ conan remote add winternet-conan-virt https://winternet.jfrog.io/artifactory/api/conan/conan-virt
@@ -50,7 +52,7 @@ $ conan remote add winternet-conan-virt https://winternet.jfrog.io/artifactory/a
 ```sh
  $ git clone https://github.com/winternet/chord.git /opt/chord && cd /opt/chord
  $ mkdir build && cd build
- $ conan install .. -s compiler.cppstd=17 --build=missing && cmake ..
+ $ conan install .. --build=missing -s compiler.libcxx=libstdc++11 && cmake ..
  $ cmake --build . -- -j4 
 ```
 

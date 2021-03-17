@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.10)
 
 set(PROJECT "chord")
 project(${PROJECT} VERSION "0.0.1")
@@ -12,6 +12,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_PROJECT_HOMEPAGE_URL "https://github.com/winternet/chord")
 
 set(ProtoPath "${CMAKE_CURRENT_SOURCE_DIR}/proto")
 set(ProtoGenerateTargetPath "./gen")
@@ -170,3 +171,27 @@ endif()
 if(chord_BUILD_INTEGRATION_TESTS)
   include(integration_tests)
 endif()
+
+
+#
+# cpack
+#
+install(TARGETS ${PROJECT_NAME} DESTINATION "/usr/bin/")
+#install(FILES "config.yml" DESTINATION "/etc/chord/")
+
+set(CPACK_GENERATOR "DEB;RPM")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Experimental layered distributed peer to peer overlay filesystem")
+#set(CPACK_PACKAGE_DESCRIPTION_FILE "${PROJECT_SOURCE_DIR}/README.md")
+#set(CPACK_RESOURCE_FILE_README "${PROJECT_SOURCE_DIR}/README.md")
+set(CPACK_PACKAGE_VENDOR "winternet")
+
+# DEB
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "winternet") # required
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "fuse3, libfuse3-3")
+
+# RPM
+set(CPACK_RPM_PACKAGE_REQUIRES "fuse3")
+
+include(InstallRequiredSystemLibraries)
+include(CPack)
+
