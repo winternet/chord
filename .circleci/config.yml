@@ -37,6 +37,7 @@ commands:
     steps:
       - run:
           command: |
+            cd $CIRCLE_WORKING_DIRECTORY
             mkdir build && cd build
             conan config set general.revisions_enabled=True
             conan remote add winternet-conan-virt https://winternet.jfrog.io/artifactory/api/conan/conan-virt || true
@@ -47,6 +48,7 @@ commands:
     steps:
       - run:
           command: |
+            cd $CIRCLE_WORKING_DIRECTORY/build
             cmake .. \
               -DENABLE_COVERAGE:BOOL=FALSE \
               -DCMAKE_BUILD_TYPE:STRING=Release \
@@ -60,6 +62,7 @@ commands:
     steps:
       - run:
           command: |
+            cd $CIRCLE_WORKING_DIRECTORY/build
             cmake .. \
               -DENABLE_COVERAGE:BOOL=TRUE \
               -Dchord_USE_CCACHE:BOOL=FALSE \
@@ -109,21 +112,22 @@ jobs:
             - conan-cache-v2--{{ checksum "conanfile.txt" }}
             - conan-cache-v2
       - prepare-project
+      - save_cache:
+          paths:
+            - ~/.conan
+          key: conan-cache-v2--{{ checksum "conanfile.txt" }}
+      - build-project-tests
+
       - run:
           name: Run tests
           command: |
-            cd build
+            cd $CIRCLE_WORKING_DIRECTORY/build
             ctest --verbose #-E chord_test_fuse # docker container would require more privileges
             bash <(curl -s https://codecov.io/bash) -t 8811a299-c05a-4c37-8d1d-c5bac9cca1fe
       - store_test_results:
           path: build/gtest-out
       - store_artifacts:
           path: build/gtest-out
-      - save_cache:
-          paths:
-            - ~/.conan
-          key: conan-cache-v2--{{ checksum "conanfile.txt" }}
-      - build-project-tests
 
   docker-build:
     executor: docker-publisher
