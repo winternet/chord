@@ -38,8 +38,6 @@ commands:
     steps:
       - run:
           command: |
-            whoami
-            cd $CIRCLE_WORKING_DIRECTORY
             mkdir build && cd build
             conan config set general.revisions_enabled=True
             conan remote add winternet-conan-virt https://winternet.jfrog.io/artifactory/api/conan/conan-virt || true
@@ -66,6 +64,7 @@ commands:
       - run:
           command: |
             whoami
+            pwd
             ls -al ~
             tree $CIRCLE_WORKING_DIRECTORY
             cd $CIRCLE_WORKING_DIRECTORY/build
