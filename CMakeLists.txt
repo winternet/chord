@@ -17,10 +17,12 @@ set(CMAKE_PROJECT_HOMEPAGE_URL "https://github.com/winternet/chord")
 set(ProtoPath "${CMAKE_CURRENT_SOURCE_DIR}/proto")
 set(ProtoGenerateTargetPath "./gen")
 
+set(chord_FUSE_VERSION 35 CACHE STRING "propagate to fuse use version")
 option(chord_BUILD_FUSE_ADAPTER "build fuse adapter" ON)
 option(chord_BUILD_TESTS "build unit tests" OFF)
 option(chord_BUILD_INTEGRATION_TESTS "build integration tests" OFF)
 option(chord_USE_CCACHE "use ccache for subsequent builds" ON)
+
 
 if(CMAKE_COMPILER_IS_GNUCC)
   option(ENABLE_COVERAGE "enable coverage reporting for gcc/clang" FALSE)

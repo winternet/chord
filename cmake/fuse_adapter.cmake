@@ -20,7 +20,11 @@ target_link_libraries(${FUSE_TARGET}
   debug asan
   general ${PROJECT_NAME}++ ${signals_LIBRARY} ${CONAN_LIBS} ${FUSE_LIBRARIES})
 target_include_directories(${FUSE_TARGET} PRIVATE ${FUSE_INCLUDE_DIRS})
-target_compile_definitions(${FUSE_TARGET} PRIVATE FUSE_USE_VERSION=30)
+
+if(chord_FUSE_VERSION)
+  message(STATUS "Using fuse api version ${chord_FUSE_VERSION}")
+  target_compile_definitions(${FUSE_TARGET} PRIVATE FUSE_USE_VERSION=${chord_FUSE_VERSION})
+endif()
 #set_target_properties(${FUSE_TARGET} PROPERTIES COMPILE_FLAGS "-D_FILE_OFFSET_BITS=64")
 
 if(CMAKE_COMPILER_IS_GNUCC AND ENABLE_COVERAGE AND chord_BUILD_FUSE_ADAPTER)

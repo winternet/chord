@@ -45,6 +45,10 @@ commands:
 
   build-project-release:
     description: "Build the project (release)"
+    parameters:
+      fuse-api-version:
+        default: "35"
+        type: string
     steps:
       - run:
           command: |
@@ -54,7 +58,8 @@ commands:
               -DCMAKE_BUILD_TYPE:STRING=Release \
               -Dchord_BUILD_TESTS:BOOL=OFF \
               -Dchord_BUILD_INTEGRATION_TESTS:BOOL=OFF \
-              -Dchord_BUILD_FUSE_ADAPTER:BOOL=ON
+              -Dchord_BUILD_FUSE_ADAPTER:BOOL=ON \
+              -Dchord_FUSE_VERSION=<<parameters.fuse-api-version>>
             cmake --build . -- -j1
 
   build-project-tests:
@@ -95,7 +100,8 @@ jobs:
       - checkout
       - setup-centos
       - prepare-project
-      - build-project-release
+      - build-project-release:
+          fuse-api-version: "30"
 
   build:
     machine:
