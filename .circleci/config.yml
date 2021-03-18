@@ -87,7 +87,10 @@ executors:
 jobs:
   package-deb:
     docker:
-      - image: ubuntu-2004:202101-01
+      - image: winternet.jfrog.io/winternet-docker/ubuntu:20.04
+        auth:
+          username: $WINTERNET_DOCKER_USER
+          password: $WINTERNET_DOCKER_PASS
     steps:
       - checkout
       - setup-ubuntu
@@ -95,7 +98,10 @@ jobs:
       - build-project-release
   package-rpm:
     docker:
-      - image: dokken/centos-stream-8
+      - image: winternet.jfrog.io/winternet-docker/centos:8
+        auth:
+          username: $WINTERNET_DOCKER_USER
+          password: $WINTERNET_DOCKER_PASS
     steps:
       - checkout
       - setup-centos
@@ -193,6 +199,8 @@ workflows:
   build-main:
     jobs:
       - build:
+          context:
+            - winternet-docker-context
           filters:
             branches:
               only: 
