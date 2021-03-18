@@ -208,9 +208,13 @@ workflows:
                 - feature/fuse
                 - feature/packages
       - package-deb:
+          context:
+            - winternet-docker-context
           requires:
             - build
       - package-rpm:
+          context:
+            - winternet-docker-context
           requires:
             - build
       - docker-build:
