@@ -127,7 +127,6 @@ jobs:
       - run:
           name: Run tests
           command: |
-            cd $CIRCLE_WORKING_DIRECTORY/build
             ctest --verbose #-E chord_test_fuse # docker container would require more privileges
             bash <(curl -s https://codecov.io/bash) -t 8811a299-c05a-4c37-8d1d-c5bac9cca1fe
       - store_test_results:
