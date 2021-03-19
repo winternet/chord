@@ -5,7 +5,7 @@ commands:
     steps:
       - run:
           command: |
-            sudo dnf -y install curl \
+            dnf -y install curl \
                        git \
                        cmake \
                        rpm-build \
@@ -19,8 +19,8 @@ commands:
     steps:
       - run:
           command: |
-            sudo apt-get update
-            sudo apt-get -y install build-essential \
+            apt-get update
+            apt-get -y install build-essential \
                        curl \
                        git \
                        cmake \
