@@ -10,6 +10,7 @@ commands:
                        cmake \
                        rpm-build \
                        fuse3 \
+                       fuse3-devel \
                        python3 \
                        gcc-c++
             pip3 install conan
@@ -96,6 +97,8 @@ jobs:
         auth:
           username: $WINTERNET_DOCKER_USER
           password: $WINTERNET_DOCKER_PASS
+    environment:
+      DEBIAN_FRONTEND: noninteractive
     steps:
       - checkout
       - setup-ubuntu
@@ -117,8 +120,6 @@ jobs:
   build:
     machine:
       image: ubuntu-2004:202101-01
-      #docker:
-      #  - image: ubuntu:20.04
     environment:
       DEBIAN_FRONTEND: noninteractive
     steps:
@@ -127,13 +128,13 @@ jobs:
           sudo: true # machine requires sudo
       - restore_cache:
           keys:
-            - conan-cache-v2--{{ checksum "conanfile.txt" }}
-            - conan-cache-v2
+            - conan-cache-v3--{{ checksum "conanfile.txt" }}
+            - conan-cache-v3
       - prepare-project
       - save_cache:
           paths:
             - ~/.conan
-          key: conan-cache-v2--{{ checksum "conanfile.txt" }}
+          key: conan-cache-v3--{{ checksum "conanfile.txt" }}
       - build-project-tests
 
       - run:
