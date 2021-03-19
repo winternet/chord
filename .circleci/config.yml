@@ -16,11 +16,16 @@ commands:
 
   setup-ubuntu:
     description: "Setup Ubuntu"
+    parameters:
+      sudo:
+        description: "prepend sudo for apt commands"
+        default: false
+        type: boolean
     steps:
       - run:
           command: |
-            apt-get update
-            apt-get -y install build-essential \
+            <<# parameters.sudo >> sudo <</ parameters.sudo >> apt-get update
+            <<# parameters.sudo >> sudo <</ parameters.sudo >> apt-get -y install build-essential \
                        curl \
                        git \
                        cmake \
@@ -118,7 +123,8 @@ jobs:
       DEBIAN_FRONTEND: noninteractive
     steps:
       - checkout
-      - setup-ubuntu
+      - setup-ubuntu:
+          sudo: true # machine requires sudo
       - restore_cache:
           keys:
             - conan-cache-v2--{{ checksum "conanfile.txt" }}
