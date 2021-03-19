@@ -1,17 +1,18 @@
 version: 2.1
 commands:
   setup-centos:
-    description: "Setup CentOS"
+    description: "Setup openSUSE"
     steps:
       - run:
           command: |
-            dnf -y install curl \
+            zypper -n install curl \
                        git \
                        cmake \
                        rpm-build \
                        fuse3 \
                        fuse3-devel \
                        python3 \
+                       python3-pip \
                        gcc-c++
             pip3 install conan
 
@@ -30,6 +31,7 @@ commands:
                        curl \
                        git \
                        cmake \
+                       make \
                        autoconf \
                        fuse3 \
                        tree \
@@ -47,7 +49,7 @@ commands:
             mkdir build && cd build
             conan config set general.revisions_enabled=True
             conan remote add winternet-conan-virt https://winternet.jfrog.io/artifactory/api/conan/conan-virt || true
-            conan install .. --build=missing -s compiler.libcxx=libstdc++11 
+            conan install .. --build=missing -s compiler.libcxx=libstdc++11
 
   build-project-release:
     description: "Build the project (release)"
@@ -104,9 +106,13 @@ jobs:
       - setup-ubuntu
       - prepare-project
       - build-project-release
+      - run:
+          name: Create DEB package
+          command: |
+            cpack -G DEB
   package-rpm:
     docker:
-      - image: winternet.jfrog.io/winternet-docker/centos:8
+      - image: winternet.jfrog.io/winternet-docker/opensuse/tumbleweed
         auth:
           username: $WINTERNET_DOCKER_USER
           password: $WINTERNET_DOCKER_PASS
@@ -114,8 +120,11 @@ jobs:
       - checkout
       - setup-centos
       - prepare-project
-      - build-project-release:
-          fuse-api-version: "30"
+      - build-project-release
+      - run:
+          name: Create RPM package
+          command: |
+            cpack -G RPM
 
   build:
     machine:
