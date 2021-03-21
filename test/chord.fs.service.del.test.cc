@@ -86,8 +86,8 @@ TEST_F(FilesystemServiceDelTest, del_file) {
   EXPECT_CALL(*self->service, successor(_))
     .WillOnce(Return(make_entry(self->context.node())))  // client - remove file
     .WillOnce(Return(make_entry(self->context.node())))  // initial delete - flag (handle_del_file)
-    .WillOnce(Return(make_entry(self->context.node())))  // client - remove empty folder
-    .WillOnce(Return(make_entry(self->context.node()))); // initial delete - flag (handle_del_dir)
+    .WillOnce(Return(make_entry(self->context.node()))); // client - remove empty folder
+    //.WillOnce(Return(make_entry(self->context.node()))); // initial delete - flag (handle_del_dir)
     //.WillOnce(Return(make_entry(self->context.node()))); // forward delete until not_found
 
   //--- delete file
@@ -105,15 +105,19 @@ TEST_F(FilesystemServiceDelTest, del_file) {
   //--- delete folder
   Metadata metadata_dir(".", "", "", perms::none, type::directory, {}, {}, {});
   Metadata metadata_parent("..", "", "", perms::none, type::directory, {}, {}, {});
+  /*
   EXPECT_CALL(*self->metadata_mgr, get(root_uri))
     .WillOnce(Return(std::set<Metadata>{metadata_dir, metadata_parent}))  // within del
     .WillOnce(Return(std::set<Metadata>{metadata_dir, metadata_parent})); // within del_handle_recursive
+    */
     //.WillOnce(Return(std::set<Metadata>{metadata_dir}))  // within handle_del_dir
     //.WillOnce(Return(std::set<Metadata>()));             // forwarded delete -> not_found
   EXPECT_CALL(*self->metadata_mgr, del(root_uri, std::set<Metadata>{metadata}, false))
     .WillOnce(Return(std::set<Metadata>{}));
+  /*
   EXPECT_CALL(*self->metadata_mgr, del(root_uri))
     .WillOnce(Return(std::set<Metadata>{metadata}));
+    */
 
   TmpFile target_file(self->context.data_directory / "file");
   ASSERT_TRUE(chord::file::exists(target_file.path));
@@ -123,5 +127,6 @@ TEST_F(FilesystemServiceDelTest, del_file) {
 
   ASSERT_TRUE(status.ok());
   ASSERT_FALSE(chord::file::exists(target_file.path));
-  ASSERT_FALSE(chord::file::exists(self->context.data_directory));
+  //parent_directory is not deleted in case its empty
+  ASSERT_TRUE(chord::file::exists(self->context.data_directory));
 }

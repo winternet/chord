@@ -89,7 +89,7 @@ test_touch_empty_file() {
 
   assertFalse 'file already exists' '[ -f $FILE_PATH ]'
   _ "touch $FILE_PATH" 
-  assertTrue 'file does not exists' '[ -f $FILE_PATH ]'
+  assertTrue 'expected file to exist' '[ -f $FILE_PATH ]'
 
   _ "ls $FILE_PATH" RET
   assertContains "$RET" "$FILE_PATH"
@@ -108,7 +108,7 @@ test_touch_file_with_contents() {
 
   assertFalse 'file already exists' '[ -f $FILE_PATH ]'
   echo "file with contents" > $FILE_PATH
-  assertTrue 'file does not exists' '[ -f $FILE_PATH ]'
+  assertTrue 'expected file to exist' '[ -f $FILE_PATH ]'
 
   _ "ls -al $CHORD_FUSE_MOUNTPOINT" RET
   assertContains "$RET" "$FILENAME"
@@ -161,7 +161,7 @@ test_add_file_to_empty_dir() {
 
   assertFalse 'file already exists' '[ -f $FILE_PATH ]'
   _ "touch $FILE_PATH"
-  assertTrue 'file does not exist' '[ -f $FILE_PATH ]'
+  assertTrue 'expected file to exist' '[ -f $FILE_PATH ]'
 
   _ "ls -al $PARENT_PATH" RET
   assertContains "$RET" "$FILENAME"
@@ -173,7 +173,7 @@ test_append_content_to_subfile() {
   local PARENT_PATH="$CHORD_FUSE_MOUNTPOINT/folder"
   local FILE_PATH="$PARENT_PATH/$FILENAME"
 
-  assertTrue 'file does not exist' '[ -f $FILE_PATH ]'
+  assertTrue 'expected file to exist' '[ -f $FILE_PATH ]'
   echo "foobar" >> $FILE_PATH
 
   _ "stat -c%s $FILE_PATH" RET
@@ -194,12 +194,25 @@ test_truncate_file() {
   local PARENT_PATH="$CHORD_FUSE_MOUNTPOINT/folder"
   local FILE_PATH="$PARENT_PATH/$FILENAME"
 
-  assertTrue "file does not exist" '[ -f $FILE_PATH ]'
+  assertTrue 'expected file to exist' '[ -f $FILE_PATH ]'
   : > $FILE_PATH
   echo "❱ : > $FILE_PATH"
   _ "stat -c%s $FILE_PATH" RET
 
   assertTrue 'expected file to be truncated to 0' '[ $RET -eq 0 ]'
+}
+
+test_remove_file() {
+  local RET
+  local FILENAME="subfile.md"
+  local PARENT_PATH="$CHORD_FUSE_MOUNTPOINT/folder"
+  local FILE_PATH="$PARENT_PATH/$FILENAME"
+
+  assertTrue 'expected file to exist' '[ -f $FILE_PATH ]'
+  _ "rm $FILE_PATH" RET
+  _ "ls -al $PARENT_PATH" RET
+
+  assertFalse 'file should have been removed' '[ -f $FILE_PATH ]'
 }
 
 source $WORKDIR/shunit2

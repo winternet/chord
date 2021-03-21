@@ -111,10 +111,10 @@ Status Service::handle_meta_del(ServerContext *serverContext, const MetaRequest 
    * NOTE this will invoke a del_dir request on the uri since it is empty now.
    */
   {
-    const auto metadata_set = metadata_mgr->get(uri);
-    if(is_empty(metadata_set)) {
-      make_client()->del(uri, false, clear_source(options));
-    }
+    //const auto metadata_set = metadata_mgr->get(uri);
+    //if(is_empty(metadata_set)) {
+    //  make_client()->del(uri, false, clear_source(options));
+    //}
   }
 
   return Status::OK;
@@ -302,6 +302,8 @@ Status Service::put(ServerContext *serverContext, ServerReader<PutRequest> *read
       } else do {
         const auto data = req.data().data();
         const auto len = req.size();
+        // TODO use file.seekp(req.offset()) before writing
+        // however hasher will fail if not the whole file is written
         hasher(data, len);
         file.write(data, static_cast<std::streamsize>(len));
       } while (reader->Read(&req));
@@ -435,7 +437,7 @@ Status Service::handle_del_dir(ServerContext *serverContext, const chord::fs::De
 
   // if already locally deleted or ...
   if(/*!exists || */(!is_empty && req->recursive())) {
-    return handle_del_recursive(serverContext, req);
+    /*return*/ handle_del_recursive(serverContext, req);
   } 
 
   // directory was recursively emptied and handle_del_dir was called remotely
