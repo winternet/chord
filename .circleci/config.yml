@@ -125,6 +125,18 @@ jobs:
 
 workflows:
   version: 2
+  weekly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * 0" # weekly build on SUN
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - build
+      - docker-build
+
   build-main:
     jobs:
       - build:
