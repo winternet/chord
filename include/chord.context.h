@@ -41,7 +41,7 @@ struct Context {
   int client_timeout_ms{4000};
 
   //--- replication / striping
-  std::uint32_t replication_cnt{1}; //default replication factor if not overriden
+  std::int32_t replication_cnt{1}; //default replication factor if not overriden
 
   //--- logging
   log::Logging logging;

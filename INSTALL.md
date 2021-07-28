@@ -50,7 +50,7 @@ $ conan remote add winternet-conan-virt https://winternet.jfrog.io/artifactory/a
 ```sh
  $ git clone https://github.com/winternet/chord.git /opt/chord && cd /opt/chord
  $ mkdir build && cd build
- $ conan install .. -s compiler.cppstd=17 --build=missing && cmake ..
+ $ conan install .. -s cppstd=17 --build=missing && cmake ..
  $ cmake --build . -- -j4 
 ```
 

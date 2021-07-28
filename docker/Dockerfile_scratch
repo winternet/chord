@@ -12,7 +12,8 @@ RUN apt-get update \
             libfuse3-dev \
             pkg-config \
             python3 \
-            python3-pip && pip3 install conan
+            python3-pip && pip3 install conan \
+    && git clone https://github.com/winternet/conan-fusepp && cd conan-fusepp && conan install . && cd -
 
 #
 # build project
@@ -22,7 +23,8 @@ WORKDIR /opt/chord
 
 RUN rm -rf build && mkdir build && cd build \
     && conan config set general.revisions_enabled=True \
-    && conan remote add winternet-conan-virt https://winternet.jfrog.io/artifactory/api/conan/conan-virt \
+    && conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan \
+    && conan config set general.revisions_enabled=1 \
     && conan install .. --build=missing -s compiler.libcxx=libstdc++11 \
     && cmake .. \
         -DBUILD_GMOCK=OFF \

@@ -40,8 +40,8 @@ class IClient {
 
   virtual grpc::Status successor(const chord::SuccessorRequest *req, chord::SuccessorResponse *res) =0;
 
-  virtual signal<void(const node)>& on_successor_fail() = 0;
-  virtual signal<void(const node)>& on_predecessor_fail() = 0;
+  virtual signal<const node>& on_successor_fail() = 0;
+  virtual signal<const node>& on_predecessor_fail() = 0;
 
 };
 

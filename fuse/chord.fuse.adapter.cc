@@ -118,14 +118,28 @@ int Adapter::access(const char *path, int mask) {
   }
 }
 
-int Adapter::rename(const char* from, const char* to, unsigned int) {
+int Adapter::rename(const char* from, const char* to, unsigned int flags) {
   auto logger = this_()->logger;
   auto fs = this_()->filesystem();
+
+  const auto force = !(flags & RENAME_NOREPLACE);
 
   logger->info("rename {} -> {}", from, to);
   const auto src = chord::utils::as_uri(from);
   const auto dst = chord::utils::as_uri(to);
-  return 0;
+
+  const auto status = fs->move(src, dst, force);
+
+  switch(status.error_code()) {
+    case grpc::StatusCode::ALREADY_EXISTS:
+      return -EEXIST;
+    case grpc::StatusCode::NOT_FOUND:
+      return -ENOENT;
+    case grpc::StatusCode::OK:
+      return 0;
+    default:
+      return -EAGAIN;
+  }
 }
 
 int Adapter::mkdir(const char *path, [[maybe_unused]] mode_t mode) {

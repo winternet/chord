@@ -22,8 +22,8 @@ namespace chord {
 class ChordFacade {
   static constexpr auto logger_name = "chord.facade";
 public:
-  using event_binary_t = signal<void(const node, const node)>;
-  using event_unary_t = signal<void(const node)>;
+  using event_binary_t = signal<const node, const node>;
+  using event_unary_t = signal<const node>;
 
  private:
   size_t next{0};

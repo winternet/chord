@@ -44,11 +44,11 @@ void Peer::start_server() {
 
 void Peer::init() {
   const auto fs = filesystem.get();
-  chord->on_join().connect(fs, &chord::fs::Facade::on_join);
-  chord->on_leave().connect(fs, &chord::fs::Facade::on_leave);
-  chord->on_predecessor_update().connect(fs, &chord::fs::Facade::on_predecessor_update);
-  chord->on_predecessor_fail().connect(fs, &chord::fs::Facade::on_predecessor_fail);
-  chord->on_successor_fail().connect(fs, &chord::fs::Facade::on_successor_fail);
+  chord->on_join().connect(&chord::fs::Facade::on_join, fs);
+  chord->on_leave().connect(&chord::fs::Facade::on_leave, fs);
+  chord->on_predecessor_update().connect(&chord::fs::Facade::on_predecessor_update, fs);
+  chord->on_predecessor_fail().connect(&chord::fs::Facade::on_predecessor_fail, fs);
+  chord->on_successor_fail().connect(&chord::fs::Facade::on_successor_fail, fs);
 }
 
 Peer::Peer()

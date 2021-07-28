@@ -215,6 +215,60 @@ test_remove_file() {
   assertFalse 'file should have been removed' '[ -f $FILE_PATH ]'
 }
 
+test_mv_file() {
+  local RET
+  local FILENAME="mv_file.md"
+  local PARENT_PATH="$CHORD_FUSE_MOUNTPOINT"
+  local FILE_PATH="$PARENT_PATH/$FILENAME"
+  local MOVED_PATH="$PARENT_PATH/$FILENAME.moved"
+
+  assertFalse 'file already exists' '[ -f $FILE_PATH ]'
+  assertFalse 'file already exists' '[ -f $MOVED_PATH ]'
+
+  _ "touch $FILE_PATH"
+  echo "foobarbaz" >> $FILE_PATH
+  assertTrue 'expected file to exist' '[ -f $FILE_PATH ]'
+
+  _ "mv $FILE_PATH $MOVED_PATH" RET
+  _ "ls -al $PARENT_PATH" RET
+
+  assertFalse 'file still exists' '[ -f $FILE_PATH ]'
+  assertTrue 'expected file to exist' '[ -f $MOVED_PATH ]'
+
+  _ "cat $MOVED_PATH" RET
+  assertSame "foobarbaz" "$RET" 
+
+}
+
+test_mv_file_to_existing_target() {
+  local RET
+  local FILENAME="mv_file_to_existing_target.md"
+  local PARENT_PATH="$CHORD_FUSE_MOUNTPOINT"
+  local FILE_PATH="$PARENT_PATH/$FILENAME"
+  local MOVED_PATH="$PARENT_PATH/$FILENAME.moved"
+
+  assertFalse 'file already exists' '[ -f $FILE_PATH ]'
+  assertFalse 'file already exists' '[ -f $MOVED_PATH ]'
+
+  _ "touch $FILE_PATH"
+  _ "touch $MOVED_PATH"
+
+  echo "foobarbaz" >> $FILE_PATH
+  assertTrue 'expected file to exist' '[ -f $FILE_PATH ]'
+  assertTrue 'expected file to exist' '[ -f $MOVED_PATH ]'
+
+  _ "mv $FILE_PATH $MOVED_PATH" RET
+  _ "ls -al $PARENT_PATH" RET
+
+  assertFalse 'file still exists' '[ -f $FILE_PATH ]'
+  assertTrue 'expected file to exist' '[ -f $MOVED_PATH ]'
+
+  _ "ls -al $PARENT_PATH" RET
+  _ "cat $MOVED_PATH" RET
+  assertSame "foobarbaz" "$RET" 
+
+}
+
 source $WORKDIR/shunit2
 
 #oneTimeSetUp

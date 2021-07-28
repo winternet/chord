@@ -56,11 +56,11 @@ private:
   void init();
   void cleanup();
 
-  signal<void(const node)> event_successor_fail;
-  signal<void(const node)> event_predecessor_fail;
+  signal<const node> event_successor_fail;
+  signal<const node> event_predecessor_fail;
 
-  signal<void(const node, const node)> event_successor_update;
-  signal<void(const node, const node)> event_predecessor_update;
+  signal<const node, const node> event_successor_update;
+  signal<const node, const node> event_predecessor_update;
 
 
 protected:
@@ -82,9 +82,9 @@ public:
   bool has_successor() const;
   bool has_predecessor() const;
 
-  inline signal<void(const node)>& on_successor_fail() { return event_successor_fail; }
-  inline signal<void(const node)>& on_predecessor_fail() { return event_predecessor_fail; }
-  inline signal<void(const node, const node)>& on_predecessor_update() { return event_predecessor_update; }
+  inline signal<const node>& on_successor_fail() { return event_successor_fail; }
+  inline signal<const node>& on_predecessor_fail() { return event_predecessor_fail; }
+  inline signal<const node, const node>& on_predecessor_update() { return event_predecessor_update; }
 
   void update(const std::set<chord::node>&);
   bool update(const node&);

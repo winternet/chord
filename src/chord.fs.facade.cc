@@ -43,7 +43,7 @@ Facade::Facade(Context& context, ChordFacade* chord, ChannelPool* channel_pool)
       logger{context.logging.factory().get_or_create(logger_name)}
 {
   if(monitor) {
-    monitor->events().connect(this, &Facade::on_fs_event);
+    monitor->events().connect(&Facade::on_fs_event, this);
   }
 }
 

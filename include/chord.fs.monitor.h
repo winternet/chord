@@ -106,7 +106,7 @@ public:
     }
   };
 
-  using event_t = signal<void(std::vector<event>)>;
+  using event_t = signal<std::vector<event>>;
 
 private:
   fsw::monitor* _monitor = nullptr;

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <signals.h>
+#include <sigslot/signal.hpp>
 
 namespace chord {
 
-template<class T>
-using signal = vdk::signal<T>;
+template<typename... T>
+using signal = sigslot::signal<T...>;
 
 } // namespace chord

@@ -31,9 +31,9 @@ class MockService : public IService {
 
   MOCK_METHOD1(fix_fingers, void(size_t index));
 
-  MOCK_METHOD0(on_leave, signal<void(const node, const node)>&(void));
+  MOCK_METHOD0(on_leave, signal<const node, const node>&(void));
 
-  MOCK_METHOD0(on_predecessor_update, signal<void(const node, const node)>&(void));
+  MOCK_METHOD0(on_predecessor_update, signal<const node, const node>&(void));
 
   MOCK_METHOD0(grpc_service, ::grpc::Service*(void));
 

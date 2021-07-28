@@ -36,8 +36,8 @@ class Client : public IClient {
 
   StubFactory make_stub;
 
-  signal<void(const node)> event_predecessor_fail;
-  signal<void(const node)> event_successor_fail;
+  signal<const node> event_predecessor_fail;
+  signal<const node> event_successor_fail;
 
   std::shared_ptr<spdlog::logger> logger;
 
@@ -53,8 +53,8 @@ class Client : public IClient {
 
   void leave() override;
 
-  signal<void(const node)>& on_predecessor_fail() override;
-  signal<void(const node)>& on_successor_fail() override;
+  signal<const node>& on_predecessor_fail() override;
+  signal<const node>& on_successor_fail() override;
 
   grpc::Status join(const endpoint& addr) override;
   grpc::Status join(const JoinRequest *req, JoinResponse *res) override;
