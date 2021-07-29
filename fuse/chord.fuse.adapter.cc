@@ -130,6 +130,13 @@ int Adapter::rename(const char* from, const char* to, unsigned int flags) {
 
   const auto status = fs->move(src, dst, force);
 
+  if(status.ok()) {
+    auto journal_path = chord::fs::util::as_journal_path(this_()->options.context, src);
+    chord::file::remove(journal_path);
+    journal_path = chord::fs::util::as_journal_path(this_()->options.context, dst);
+    chord::file::remove(journal_path);
+  }
+
   switch(status.error_code()) {
     case grpc::StatusCode::ALREADY_EXISTS:
       return -EEXIST;
@@ -168,6 +175,9 @@ int Adapter::open(const char* path, struct fuse_file_info *fi) {
   const auto uri = chord::utils::as_uri(path);
   const auto journal_path = chord::fs::util::as_journal_path(this_()->options.context, uri);
 
+  //chord::file::remove(journal_path);
+  // NOTE: we re-use files from journal, in order to operate on the latest version all other operations
+  // like delete and move have to assert that they clear the cache accordingly
   if(!chord::file::exists(journal_path)) {
     const auto status = this_()->filesystem()->get(uri, journal_path);
     if(!status.ok()) {
@@ -183,13 +193,14 @@ int Adapter::release(const char *path, struct fuse_file_info *fi) {
   this_()->logger->info("release {}", path);
   //FIXME: called once for each file, replace with put
   const auto status = Adapter::flush(path, fi);
-  //FIXME cleanup journal
-  //if(status != 0) {
-  //  //TODO cleanup recursively
-  //  const auto journal_path = chord::fs::util::as_journal_path(this_()->options.context, chord::path{path});
-  //  chord::file::remove(journal_path);
-  //}
+
   //TODO error handling
+  if(!status) return -ENOENT;
+
+  const auto uri = chord::utils::as_uri(path);
+  const auto journal_path = chord::fs::util::as_journal_path(this_()->options.context, uri);
+  chord::file::remove(journal_path);
+
   return 0;
 }
 
@@ -244,8 +255,12 @@ int Adapter::unlink(const char* path) {
 
   const auto uri = chord::utils::as_uri(path);
   const auto status = fs->del(uri);
-  if(status.ok()) return 0;
-  return -ENOENT;
+  if(!status.ok()) return -ENOENT;
+
+  const auto journal_path = chord::fs::util::as_journal_path(this_()->options.context, uri);
+  chord::file::remove_all(journal_path);
+
+  return 0;
 }
 
 } // namespace fuse
