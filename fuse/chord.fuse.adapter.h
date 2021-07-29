@@ -25,6 +25,8 @@ private:
   }
 
   int open_local(const char*, struct fuse_file_info*, mode_t);
+  bool clean_journal(const char*) const;
+  bool clean_journal(const chord::uri&) const;
 
 public:
   Adapter(int argc, char* arv[]);

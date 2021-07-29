@@ -118,6 +118,16 @@ int Adapter::access(const char *path, int mask) {
   }
 }
 
+bool Adapter::clean_journal(const char* path) const {
+  const auto uri = chord::utils::as_uri(path);
+  return clean_journal(uri);
+}
+
+bool Adapter::clean_journal(const chord::uri& uri) const {
+  const auto journal_path = chord::fs::util::as_journal_path(this_()->options.context, uri);
+  return chord::file::remove_all(journal_path);
+}
+
 int Adapter::rename(const char* from, const char* to, unsigned int flags) {
   auto logger = this_()->logger;
   auto fs = this_()->filesystem();
@@ -131,10 +141,8 @@ int Adapter::rename(const char* from, const char* to, unsigned int flags) {
   const auto status = fs->move(src, dst, force);
 
   if(status.ok()) {
-    auto journal_path = chord::fs::util::as_journal_path(this_()->options.context, src);
-    chord::file::remove(journal_path);
-    journal_path = chord::fs::util::as_journal_path(this_()->options.context, dst);
-    chord::file::remove(journal_path);
+    this_()->clean_journal(src);
+    this_()->clean_journal(dst);
   }
 
   switch(status.error_code()) {
@@ -175,7 +183,6 @@ int Adapter::open(const char* path, struct fuse_file_info *fi) {
   const auto uri = chord::utils::as_uri(path);
   const auto journal_path = chord::fs::util::as_journal_path(this_()->options.context, uri);
 
-  //chord::file::remove(journal_path);
   // NOTE: we re-use files from journal, in order to operate on the latest version all other operations
   // like delete and move have to assert that they clear the cache accordingly
   if(!chord::file::exists(journal_path)) {
@@ -197,9 +204,8 @@ int Adapter::release(const char *path, struct fuse_file_info *fi) {
   //TODO error handling
   if(!status) return -ENOENT;
 
-  const auto uri = chord::utils::as_uri(path);
-  const auto journal_path = chord::fs::util::as_journal_path(this_()->options.context, uri);
-  chord::file::remove(journal_path);
+  // cleanup journal
+  this_()->clean_journal(path);
 
   return 0;
 }
@@ -257,8 +263,7 @@ int Adapter::unlink(const char* path) {
   const auto status = fs->del(uri);
   if(!status.ok()) return -ENOENT;
 
-  const auto journal_path = chord::fs::util::as_journal_path(this_()->options.context, uri);
-  chord::file::remove_all(journal_path);
+  this_()->clean_journal(uri);
 
   return 0;
 }
