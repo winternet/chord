@@ -13,6 +13,8 @@ if(FUSE_FOUND)
 endif()
 
 file(GLOB SOURCES fuse/*.cc)
+string(REPLACE ";" "\n--   " SOURCES_OUT "${SOURCES}")
+message(STATUS "Found fuse source files:\n--   ${SOURCES_OUT}")
 
 add_executable(${FUSE_TARGET} ${SOURCES})
 
