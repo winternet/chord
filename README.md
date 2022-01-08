@@ -13,14 +13,15 @@ _/        _/    _/  _/    _/  _/        _/    _/
 
 ## Overview
 
-This is an experimental distributed peer to peer overlay filesystem based on distributed hashtables (DHTs). The implementation is heavily based on the paper ["Chord: A Scalable Peer-to-peer Lookup Protocol for Internet Applications"](https://pdos.csail.mit.edu/papers/ton:chord/paper-ton.pdf) by Ion Stoica et al. See [Wikipedia](<https://en.wikipedia.org/wiki/Chord_(peer-to-peer)>) for more information.
+This is an experimental layered distributed peer to peer overlay filesystem based on distributed hashtables (DHTs). The implementation is heavily based on the paper ["Chord: A Scalable Peer-to-peer Lookup Protocol for Internet Applications"](https://pdos.csail.mit.edu/papers/ton:chord/paper-ton.pdf) by Ion Stoica et al. See [Wikipedia](<https://en.wikipedia.org/wiki/Chord_(peer-to-peer)>) for more information.
 
 ![Architectural Overview](/doc/overview.svg)
 
 ## Fuse Adapter
 
-The project comes with an optional, incomplete and even more experimental adapter for fuse (c.f. [libfuse](https://github.com/libfuse/libfuse/)) to mount the distributed filesystem:
-[demo](chord_demo.gif)
+# The project comes with an optional, incomplete and even more experimental adapter for fuse (c.f. [libfuse](https://github.com/libfuse/libfuse/)) to mount the distributed filesystem:
+
+![demo](chord_demo.gif)
 
 ## Installation
 
