@@ -20,7 +20,7 @@ This is an experimental distributed peer to peer overlay filesystem based on dis
 ## Fuse Adapter
 
 The project comes with an optional, incomplete and even more experimental adapter for fuse (c.f. [libfuse](https://github.com/libfuse/libfuse/)) to mount the distributed filesystem:
-[![demo](chord_demo.gif)]
+[demo](chord_demo.gif)
 
 ## Installation
 
