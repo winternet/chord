@@ -1,21 +1,26 @@
 ```
-                                                      
-     _/_/_/  _/                                  _/   
-  _/        _/_/_/      _/_/    _/  _/_/    _/_/_/    
- _/        _/    _/  _/    _/  _/_/      _/    _/     
-_/        _/    _/  _/    _/  _/        _/    _/      
- _/_/_/  _/    _/    _/_/    _/          _/_/_/       
-                                                      
-                                                      
+
+     _/_/_/  _/                                  _/
+  _/        _/_/_/      _/_/    _/  _/_/    _/_/_/
+ _/        _/    _/  _/    _/  _/_/      _/    _/
+_/        _/    _/  _/    _/  _/        _/    _/
+ _/_/_/  _/    _/    _/_/    _/          _/_/_/
+
+
 ```
 
 [![Build Status](https://circleci.com/gh/winternet/chord/tree/main.svg?style=shield&circle-token=06884550effac32786aa01b3638bdd15e8baa03b)](https://circleci.com/gh/winternet/chord) [![codecov](https://codecov.io/gh/winternet/chord/branch/main/graph/badge.svg)](https://codecov.io/gh/winternet/chord)
 
 ## Overview
 
-This is an experimental distributed peer to peer overlay filesystem based on distributed hashtables (DHTs). The implementation is heavily based on the paper ["Chord: A Scalable Peer-to-peer Lookup Protocol for Internet Applications"](https://pdos.csail.mit.edu/papers/ton:chord/paper-ton.pdf) by Ion Stoica et al. See [Wikipedia](https://en.wikipedia.org/wiki/Chord_(peer-to-peer)) for more information.
+This is an experimental distributed peer to peer overlay filesystem based on distributed hashtables (DHTs). The implementation is heavily based on the paper ["Chord: A Scalable Peer-to-peer Lookup Protocol for Internet Applications"](https://pdos.csail.mit.edu/papers/ton:chord/paper-ton.pdf) by Ion Stoica et al. See [Wikipedia](<https://en.wikipedia.org/wiki/Chord_(peer-to-peer)>) for more information.
 
 ![Architectural Overview](/doc/overview.svg)
+
+## Fuse Adapter
+
+The project comes with an optional, incomplete and even more experimental adapter for fuse (c.f. [libfuse](https://github.com/libfuse/libfuse/)) to mount the distributed filesystem:
+[![demo](chord_demo.gif)]
 
 ## Installation
 
@@ -29,9 +34,10 @@ See [INSTALL.md](INSTALL.md) for more detailed installation instructions, e.g. h
 
 ## Usage
 
-To run a node in interactive mode and cleanup automatically afterwards issue `$ docker run -ti --rm winternet1337/chord`. This command will bootstrap the container with random node uuid on default port `50050`.  To stop the container issue `Ctrl+C`.
+To run a node in interactive mode and cleanup automatically afterwards issue `$ docker run -ti --rm winternet1337/chord`. This command will bootstrap the container with random node uuid on default port `50050`. To stop the container issue `Ctrl+C`.
 
-In order to print chord's help just append the `--help` argument (`-h` for short): 
+In order to print chord's help just append the `--help` argument (`-h` for short):
+
 ```sh
  $ docker run -ti --rm winternet1337/chord --help
  [program options]:
@@ -45,7 +51,6 @@ In order to print chord's help just append the `--help` argument (`-h` for short
 ```
 
 To configure our node we could pass some of the arguments to the container, however, it is far more convenient and powerful to use a configuration file. For this to work, we create one on our docker host machine and mount the volume within the docker container.
-
 
 ### The node configuration
 
@@ -96,7 +101,7 @@ The configuration should be quite self-explanatory. A more detailed description 
 
 ### Starting configured node
 
-To start the node with the yaml configuration file, we need to mount it to the container. 
+To start the node with the yaml configuration file, we need to mount it to the container.
 
 ```sh
  $ docker run -ti --rm \
@@ -125,7 +130,7 @@ To wire our different nodes locally we will exploit docker's `--net=host` option
         winternet1337/chord -c /etc/chord/node0.yml
 ```
 
-Copy the `/tmp/chord/config/node0.yml` to `/tmp/chord/config/node1.yml` and change the uuid to a value near `(2^256)/2` so that all files are distributed equally across the cluster. Also change the bind address to `bind-addr: "0.0.0.0:50051"` and the join address to `join-addr: "0.0.0.0:50050"`. 
+Copy the `/tmp/chord/config/node0.yml` to `/tmp/chord/config/node1.yml` and change the uuid to a value near `(2^256)/2` so that all files are distributed equally across the cluster. Also change the bind address to `bind-addr: "0.0.0.0:50051"` and the join address to `join-addr: "0.0.0.0:50050"`.
 
 On a different shell start another docker instance with our second configuration and different (meta-)data directories.
 
