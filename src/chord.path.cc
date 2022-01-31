@@ -1,8 +1,9 @@
 #include "chord.path.h"
 
 #include <iostream>
-#include <string_view>
 #include <regex>
+#include <string_view>
+#include <utility>
 
 #include "chord.file.h"
 
@@ -11,8 +12,8 @@ namespace fs = std::filesystem;
 
 namespace chord {
 
-path::path(const fs::path &other)
-    : _path{other} {}
+path::path(fs::path other)
+    : _path{std::move(other)} {}
 
 path path::filename() const { return path{_path.filename()}; }
 

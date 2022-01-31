@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <memory>
+#include <utility>
 
 #include <grpcpp/channel.h>
 #include <grpcpp/create_channel.h>
@@ -34,7 +35,7 @@ Client::Client() : make_stub{
 }{}
 
 Client::Client(ControlStubFactory make_stub)
-    : make_stub{make_stub} {
+    : make_stub{std::move(make_stub)} {
 }
 
 grpc::Status Client::control(const endpoint& address, const string &command) {

@@ -1,8 +1,10 @@
 #include "chord.fs.metadata.h"
+
+#include <utility>
 #include "chord.context.h"
-#include "chord.utils.h"
-#include "chord.uri.h"
 #include "chord.path.h"
+#include "chord.uri.h"
+#include "chord.utils.h"
 
 using std::begin;
 using std::end;
@@ -11,14 +13,14 @@ namespace chord {
 namespace fs {
 
 Metadata::Metadata(std::string name, std::string owner, std::string group, perms permissions, type file_type, size file_size, std::optional<chord::uuid> file_hash, std::optional<chord::node> node_ref, chord::fs::Replication replication)
-  : name{name},
-    owner{owner},
-    group{group},
+  : name{std::move(name)},
+    owner{std::move(owner)},
+    group{std::move(group)},
     permissions{permissions},
     file_type{file_type},
     file_size{file_size},
-    file_hash{file_hash},
-    node_ref{node_ref},
+    file_hash{std::move(file_hash)},
+    node_ref{std::move(node_ref)},
     replication{replication}
     {}
 

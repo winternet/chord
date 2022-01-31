@@ -56,7 +56,7 @@ Client::Client(const Context &context, Router *router, ChannelPool* channel_pool
       logger{context.logging.factory().get_or_create(logger_name)} {}
 
 Client::Client(const Context &context, Router *router, ChannelPool* channel_pool, StubFactory make_stub)
-    : context{context}, router{router}, channel_pool{channel_pool}, make_stub{make_stub}, logger{context.logging.factory().get_or_create(logger_name)} {}
+    : context{context}, router{router}, channel_pool{channel_pool}, make_stub{std::move(make_stub)}, logger{context.logging.factory().get_or_create(logger_name)} {}
 
 void Client::init_context([[maybe_unused]] ClientContext& client_context) {
   // left blank intentionally

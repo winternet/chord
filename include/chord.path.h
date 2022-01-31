@@ -18,7 +18,7 @@ class path {
 
   path(const chord::path &other) = default;
 
-  path(const std::filesystem::path &path);
+  path(std::filesystem::path path);
 
   virtual ~path() = default;
 

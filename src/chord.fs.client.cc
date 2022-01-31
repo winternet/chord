@@ -6,10 +6,11 @@
 #include <grpcpp/impl/codegen/sync_stream.h>
 #include <grpcpp/security/credentials.h>
 #include <array>
+#include <cstddef>
 #include <fstream>
 #include <memory>
-#include <cstddef>
 #include <string>
+#include <utility>
 
 #include "chord_fs.grpc.pb.h"
 #include "chord_fs.pb.h"
@@ -64,7 +65,7 @@ Client::Client(Context &context, ChordFacade *chord, IMetadataManager* metadata_
 Client::Client(Context &context, ChordFacade *chord, StubFactory make_stub)
     : context{context},
       chord{chord},
-      make_stub{make_stub},
+      make_stub{std::move(make_stub)},
       logger{context.logging.factory().get_or_create(logger_name)} {}
 
 void Client::init_context(ClientContext& client_context, const client::options& options) {

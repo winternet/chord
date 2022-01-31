@@ -1,5 +1,6 @@
 #include "chord.log.h"
 
+#include <utility>
 #include <vector>
 
 #include "chord.exception.h"
@@ -27,7 +28,7 @@ std::set<SinkType>& SinkType::types() {
 }
 
 SinkType::SinkType(std::string mappedType) noexcept
-  : mappedType{mappedType} {
+  : mappedType{std::move(mappedType)} {
   types().insert(*this);
 }
 

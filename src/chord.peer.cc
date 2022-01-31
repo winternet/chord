@@ -7,6 +7,9 @@
 #include <grpc++/server_builder.h>
 #include <grpc++/server_context.h>
 
+#include <libfswatch/c++/monitor_factory.hpp>
+#include <utility>
+#include "chord.channel.pool.h"
 #include "chord.controller.service.h"
 #include "chord.fs.facade.h"
 #include "chord.log.factory.h"
@@ -14,8 +17,6 @@
 #include "chord.node.h"
 #include "chord.shutdown.handler.h"
 #include "chord.uuid.h"
-#include "chord.channel.pool.h"
-#include <libfswatch/c++/monitor_factory.hpp>
 
 using grpc::ServerBuilder;
 using namespace std;
@@ -56,7 +57,7 @@ Peer::Peer()
 { }
 
 Peer::Peer(Context ctx)
-    : context{ctx},
+    : context{std::move(ctx)},
       channel_pool{make_unique<chord::ChannelPool>(context)},
       chord{make_unique<chord::ChordFacade>(context, channel_pool.get())},
       filesystem{make_unique<chord::fs::Facade>(context, chord.get(), channel_pool.get())},
