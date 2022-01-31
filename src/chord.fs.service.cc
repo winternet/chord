@@ -61,7 +61,7 @@ Service::Service(Context &context, ChordFacade* chord, IMetadataManager* metadat
       make_client {[this]{ return this->client; }},
       logger{context.logging.factory().get_or_create(logger_name)} { }
 
-Status Service::is_valid(ServerContext* serverContext, const RequestType req_type) {
+Status Service::is_valid(ServerContext* serverContext, [[maybe_unused]] const RequestType req_type) {
   const auto options = ContextMetadata::from(serverContext);
   const bool src_equals_this = options.source == context.uuid();
   if(src_equals_this) {
@@ -173,7 +173,7 @@ Status Service::handle_meta_add(ServerContext *serverContext, const MetaRequest 
   return Status::OK;
 }
 
-Status Service::mov([[maybe_unused]] ServerContext *serverContext, const MovRequest *req, MovResponse *res) {
+Status Service::mov([[maybe_unused]] ServerContext *serverContext, const MovRequest *req, [[maybe_unused]] MovResponse *res) {
   {
     const auto status = is_valid(serverContext, RequestType::MOV);
     if(!status.ok()) {

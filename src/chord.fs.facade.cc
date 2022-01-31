@@ -207,7 +207,10 @@ Status Facade::move(const chord::uri& source, const chord::uri& target, const bo
   auto m = *metadata.begin();
   m.name = target.path().filename();
   //---
-  return fs_client->mov(source, target);
+  client::options options;
+  options.force = force;
+
+  return fs_client->mov(source, target, options);
   //return Status::OK;
 }
 
@@ -384,7 +387,7 @@ void Facade::on_predecessor_update(const chord::node from_node, const chord::nod
 }
 
 // called from the leaving node
-void Facade::on_leave(const chord::node predecessor, const chord::node successor) {
+void Facade::on_leave(const chord::node predecessor, [[maybe_unused]] const chord::node successor) {
   logger->debug("[on_leave] node leaving: informing predecessor {}", predecessor);
   if(predecessor == context.node()) {
     logger->debug("[on_leave] node leaving - no node left but self - aborting.");

@@ -181,6 +181,7 @@ Status Client::mov(const chord::node& node, const chord::uri& src, const chord::
 
   req.set_src(src);
   req.set_dst(dst);
+  req.set_force(options.force);
 
   const auto status = make_stub(node.endpoint)->mov(&clientContext, req, &res);
 

@@ -207,7 +207,7 @@ uuid Router::get(const size_t index) const {
 std::set<node> Router::get() const {
   std::scoped_lock<mutex_t> lock(mtx);
   std::set<node> ret;
-  for(const auto entry:successors) {
+  for(const auto& entry:successors) {
     if(entry.valid()) ret.insert(entry.node());
   }
 
@@ -223,7 +223,7 @@ std::string Router::print() const {
 std::ostream& Router::print(std::ostream& os) const {
   size_t beg = 0, end = 0;
   auto curr = successors.front();
-  for(const auto successor:successors) {
+  for(const auto& successor:successors) {
     if(curr.valid() ^ successor.valid() || (curr.valid() && successor.valid() && curr.node() != successor.node())) {
       os << "\nrouter[" << beg << ".." << end-1 << "]: "; curr.print(os);
       curr = successor;

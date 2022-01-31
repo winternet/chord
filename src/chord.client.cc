@@ -85,7 +85,7 @@ Status Client::inform_successor_about_leave() {
   set_source(req, context);
 
   auto entries = req.mutable_entries();
-  for(const auto node : router->get()) {
+  for(const auto& node : router->get()) {
    entries->Add(make_entry(node));
   }
   return make_stub(successor_node->endpoint)->leave(&clientContext, req, &res);
@@ -110,7 +110,7 @@ Status Client::inform_predecessor_about_leave() {
   logger->trace("[leave] informing predecessor {}", predecessor_node);
 
   auto entries = req.mutable_entries();
-  for(const auto node : router->get()) {
+  for(const auto& node : router->get()) {
    entries->Add(make_entry(node));
   }
   return make_stub(predecessor_node->endpoint)->leave(&clientContext, req, &res);
@@ -176,7 +176,7 @@ Status Client::join(ClientContext *clientContext, const JoinRequest *req, JoinRe
 
   const auto predecessors = router->closest_preceding_nodes(uuid_t(req->header().src().uuid()));
 
-  for(const auto predecessor:predecessors) {
+  for(const auto& predecessor:predecessors) {
     logger->trace("forwarding request to {}", predecessor);
     const auto status = make_stub(predecessor.endpoint)->join(clientContext, copy, res);
     if(status.ok()) return status;
@@ -289,7 +289,7 @@ Status Client::successor([[maybe_unused]] ClientContext *clientContext, const Su
   copy.mutable_header()->CopyFrom(make_header(context));
 
   const auto predecessors = router->closest_preceding_nodes(uuid{req->id()});
-  for(const auto predecessor : predecessors) {
+  for(const auto& predecessor : predecessors) {
     ClientContext ctxt;
     const auto status = make_stub(predecessor.endpoint)->successor(&ctxt, copy, res);
     if(status.ok()) return status;

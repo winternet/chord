@@ -66,7 +66,7 @@ path path::canonical() const {
       //ignore
     } else {
       auto str = dir.string();
-      auto pos = str.rfind(fs::path::preferred_separator);
+      //auto pos = str.rfind(fs::path::preferred_separator);
       // note: because std::path allows //<part>, we have to remove preceding separators
       result /= dir;
       //result /= (pos != string::npos) ? path{str.substr(pos)} : dir;

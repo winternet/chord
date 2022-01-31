@@ -16,6 +16,7 @@ namespace client {
       bool recursive = false; // del
       bool rebalance; // put
     };
+    bool force; // mov / put
 
     options() = default;
     explicit options(const Replication& replication) : replication{replication} {}

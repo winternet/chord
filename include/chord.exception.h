@@ -20,7 +20,7 @@ class exception : public std::runtime_error {
     // inherit ctors
     using std::runtime_error::runtime_error;
     explicit exception(const std::string& message, std::string t_file, size_t t_line)
-        : runtime_error(message), file{t_file}, line{t_line}, msg{this->message()} {
+        : runtime_error(message), file{t_file}, line{t_line}, msg{message} {
         }
 
     virtual std::string message() const {

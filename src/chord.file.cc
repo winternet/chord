@@ -53,7 +53,7 @@ bool file::copy_file(const std::string &from, const std::string& to, bool overwr
 }
 
 void file::resize_file(const std::string &path, std::uintmax_t new_sz) {
-  file::resize_file(path, new_sz);
+  fs::resize_file(path, new_sz);
 }
 
 void file::resize_file(const std::string &path) {

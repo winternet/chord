@@ -59,7 +59,7 @@ class MetadataManager : public IMetadataManager {
     db.reset(db_tmp);
 
     // make root
-    add(chord::utils::as_uri("/"), {{".", "", "", perms::all, type::directory}});
+    __add(chord::utils::as_uri("/"), {{".", "", "", perms::all, type::directory}});
   }
 
   void __del(const chord::uri& uri) {
@@ -136,7 +136,7 @@ class MetadataManager : public IMetadataManager {
     throw__exception(std::string{"failed to dir: "} + status.ToString());
   }
 
-  bool add(const chord::uri& directory, const std::set<Metadata>& metadata) override {
+  bool __add(const chord::uri& directory, const std::set<Metadata>& metadata) {
     std::string value;
     const auto path = directory.path().canonical().string();
     const auto status = db->Get(rocksdb::ReadOptions(), path, &value);
@@ -171,6 +171,10 @@ class MetadataManager : public IMetadataManager {
     check_status(db->Put(rocksdb::WriteOptions(), path, value));
 
     return added;
+  }
+
+  bool add(const chord::uri& directory, const std::set<Metadata>& metadata) override {
+    return __add(directory, metadata);
   }
 
   uri_meta_map_desc get_all() override {
