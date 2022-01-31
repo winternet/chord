@@ -18,12 +18,12 @@
 
 namespace chord {
 
-Router::Router(chord::Context &context)
+Router::Router(chord::Context &context) noexcept
   : context{context}, logger{context.logging.factory().get_or_create(logger_name)} {
     init();
     context.set_router(this);
 }
-Router::~Router() {
+Router::~Router() noexcept {
   init();
   spdlog::drop(logger_name);
 }

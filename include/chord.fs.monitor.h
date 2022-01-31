@@ -28,16 +28,16 @@ public:
       private:
         fsw_event_flag _flag;
         std::string _string;
-        explicit flag(fsw_event_flag f, const std::string& str) : _flag{f}, _string{str} {}
+        explicit flag(fsw_event_flag f, const std::string& str) noexcept : _flag{f}, _string{str} {}
 
       public:
-        flag(const flag& other) : _flag{other._flag}, _string{other._string} {}
-        flag& operator=(const flag& other) {
+        flag(const flag& other) noexcept : _flag{other._flag}, _string{other._string} {}
+        flag& operator=(const flag& other) noexcept {
           _flag = other._flag;
           _string = other._string;
           return *this;
         }
-        ~flag() = default;
+        ~flag() noexcept = default;
 
         inline std::string name() const { return _string; }
         inline fsw_event_flag mapped_type() const { return _flag; }

@@ -99,7 +99,7 @@ Status Service::join([[maybe_unused]] ServerContext *serverContext, const JoinRe
 
 RouterEntry Service::successor(const uuid_t &uuid) {
   ServerContext serverContext;
-  SuccessorRequest req = make_request<SuccessorRequest>(context);
+  auto req = make_request<SuccessorRequest>(context);
   SuccessorResponse res;
 
   req.set_id(uuid);

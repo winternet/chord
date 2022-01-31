@@ -70,9 +70,9 @@ protected:
 public:
   explicit Router(const chord::Router&) = delete;
 
-  explicit Router(chord::Context &context);
+  explicit Router(chord::Context &context) noexcept;
 
-  virtual ~Router();
+  virtual ~Router() noexcept;
 
   static uuid calc_successor_uuid_for_index(const uuid&, const size_t i);
   uuid calc_successor_uuid_for_index(const size_t i) const;

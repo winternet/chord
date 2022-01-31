@@ -85,7 +85,7 @@ Replication max_replication(const std::set<Metadata>& metadata) {
 Replication max_replication_index_zero(const std::set<Metadata>& metadata) {
   const auto repl = max_replication(metadata);
   if(repl) {
-    return Replication(0, repl.count);
+    return {0, repl.count};
   }
   return repl;
 }

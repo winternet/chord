@@ -87,18 +87,18 @@ Status Client::put(const chord::node& node, const chord::uri& uri, const chord::
 
     return put(node, uri, file, options);
   } catch (const std::ios_base::failure& exception) {
-    return Status(grpc::StatusCode::CANCELLED, "failed to put", exception.what());
+    return {StatusCode::CANCELLED, "failed to put", exception.what()};
   }
 }
 
 Status Client::put(const chord::node& node, const chord::uri &uri, istream &istream, const client::options& options) {
 
   if(node == context.node() && options.source && *options.source == context.uuid()) {
-    return Status{StatusCode::ALREADY_EXISTS, "trying to issue request from self - aborting."};
+    return {StatusCode::ALREADY_EXISTS, "trying to issue request from self - aborting."};
   }
 
   //TODO make configurable
-  constexpr size_t len = 512*1024; // 512k
+  constexpr size_t len = static_cast<long>(512)*1024; // 512k
   std::array<char, len> buffer;
 
   ClientContext clientContext;

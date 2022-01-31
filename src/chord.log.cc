@@ -26,7 +26,7 @@ std::set<SinkType>& SinkType::types() {
   return sinkTypes;
 }
 
-SinkType::SinkType(std::string mappedType) 
+SinkType::SinkType(std::string mappedType) noexcept
   : mappedType{mappedType} {
   types().insert(*this);
 }

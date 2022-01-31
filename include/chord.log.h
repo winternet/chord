@@ -30,7 +30,7 @@ struct SinkType final {
   private:
   std::string mappedType;
 
-  SinkType(std::string mappedType);
+  SinkType(std::string mappedType) noexcept;
   static std::set<SinkType>& types();
 
   public:

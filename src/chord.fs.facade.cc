@@ -219,7 +219,7 @@ Status Facade::get_file(const chord::uri& source, const chord::path& target) {
 
     return fs_client->get(source, target);
   } catch (const std::ios_base::failure& exception) {
-    return Status(StatusCode::INTERNAL, "failed to issue get_file ", exception.what());
+    return {StatusCode::INTERNAL, "failed to issue get_file ", exception.what()};
   }
 }
 
@@ -310,7 +310,7 @@ Status Facade::put_file_journal(const path& data_path) {
   chord::file::rename(data_path, journal_path);
 
   const auto target = chord::utils::as_uri(relative_path);
-  const auto status = this->put(journal_path, target, Replication{context.replication_cnt});
+  const auto status = this->put(journal_path, target, Replication{static_cast<uint32_t>(context.replication_cnt)});
   if(status.ok()) {
     logger->info("successfully put after fs_event, removing {}", journal_path);
     chord::file::remove(journal_path);

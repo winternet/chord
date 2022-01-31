@@ -67,7 +67,7 @@ Status Service::is_valid(ServerContext* serverContext, const RequestType req_typ
   if(src_equals_this) {
     const auto message = "received request from self.";
     logger->info(message);
-    return Status(StatusCode::ALREADY_EXISTS, message);
+    return {StatusCode::ALREADY_EXISTS, message};
   }
   return Status::OK;
 }
@@ -82,7 +82,7 @@ Status Service::handle_meta_dir([[maybe_unused]] ServerContext *serverContext, c
   if(!metadata_mgr->exists(uri)) {
     const auto message = "not found: " + to_string(uri);
     logger->info(message);
-    return Status{StatusCode::NOT_FOUND, message};
+    return {StatusCode::NOT_FOUND, message};
   }
 
   const auto meta = metadata_mgr->get(uri);
@@ -615,18 +615,19 @@ Status Service::get([[maybe_unused]] ServerContext *serverContext, const GetRequ
   }
 
   //TODO make configurable (see chord.client)
-  constexpr size_t len = 512*1024; // 512k
-  char buffer[len];
+  constexpr size_t len = static_cast<long>(512)*1024; // 512k
+  std::array<char, len> buffer;
+  //char buffer[len];
   size_t offset = 0,
          read = 0;
   do {
-    read = static_cast<size_t>(file.readsome(buffer, len));
+    read = static_cast<size_t>(file.readsome(buffer.data(), len));
     if (read == 0) break;
 
     GetResponse res;
     //TODO validate hashes
     res.set_id(req->id());
-    res.set_data(buffer, read);
+    res.set_data(buffer.data(), read);
     res.set_offset(offset);
     res.set_size(read);
     //TODO write implicit string conversion

@@ -17,10 +17,10 @@ struct Replication {
   std::uint32_t index;
   std::uint32_t count;  
   
-  Replication();
-  Replication(const Replication& repl);
-  explicit Replication(std::uint32_t count);
-  Replication(std::uint32_t index, std::uint32_t count);
+  Replication() noexcept;
+  Replication(const Replication& repl) noexcept;
+  explicit Replication(std::uint32_t count) noexcept;
+  Replication(std::uint32_t index, std::uint32_t count) noexcept;
 
   Replication& operator=(Replication rhs);
   Replication& operator++();

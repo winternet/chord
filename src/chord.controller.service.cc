@@ -55,7 +55,7 @@ Status Service::parse_command(const ControlRequest* req, ControlResponse* res) {
 
   if (token.empty()) {
     res->set_result("no commands received.");
-    return Status(grpc::StatusCode::INVALID_ARGUMENT, "no commands received");
+    return {grpc::StatusCode::INVALID_ARGUMENT, "no commands received"};
   }
 
   const string& cmd = token.at(0);
@@ -74,7 +74,7 @@ Status Service::parse_command(const ControlRequest* req, ControlResponse* res) {
   }
 
   res->set_result("unknown error.");
-  return Status(grpc::StatusCode::INVALID_ARGUMENT, "failed to handle command", cmd);
+  return {grpc::StatusCode::INVALID_ARGUMENT, "failed to handle command", cmd};
 }
 
 Status Service::handle_del(const vector<string>& token, ControlResponse* res) {
@@ -136,7 +136,7 @@ Status Service::handle_mov(const vector<string>& token, ControlResponse* res) {
   const bool force = vm.count("force");
   if(tokens.size() < 3) {
     res->set_result("invalid arguments.");
-    return Status(grpc::StatusCode::INVALID_ARGUMENT, "failed to handle mov", "expecting >= 3 arguments");
+    return {grpc::StatusCode::INVALID_ARGUMENT, "failed to handle mov", "expecting >= 3 arguments"};
   }
   // END: parse
 
@@ -175,7 +175,7 @@ Status Service::handle_mkdir(const vector<string>& token, ControlResponse* res) 
   const auto repl = vm["repl"].as<std::uint32_t>();
   if(tokens.size() < 2) {
     res->set_result("invalid arguments.");
-    return Status(grpc::StatusCode::INVALID_ARGUMENT, "failed to handle mkdir", "expecting >= 2 arguments");
+    return {grpc::StatusCode::INVALID_ARGUMENT, "failed to handle mkdir", "expecting >= 2 arguments"};
   }
   // END: parse
   
@@ -207,7 +207,7 @@ Status Service::handle_put(const vector<string>& token, ControlResponse* res) {
   const auto repl = vm["repl"].as<std::uint32_t>();
   if(tokens.size() < 3) {
     res->set_result("invalid arguments.");
-    return Status(grpc::StatusCode::INVALID_ARGUMENT, "failed to handle put", "expecting >= 3 arguments");
+    return {grpc::StatusCode::INVALID_ARGUMENT, "failed to handle put", "expecting >= 3 arguments"};
   }
   // END: parse
 
@@ -228,7 +228,7 @@ Status Service::handle_get(const vector<string>& token, ControlResponse* res) {
   //TODO support multiple sources
   if (token.size() < 3) {
     res->set_result("invalid arguments.");
-    return Status(grpc::StatusCode::INVALID_ARGUMENT, "failed to handle get", "expecting >= 3 arguments");
+    return {grpc::StatusCode::INVALID_ARGUMENT, "failed to handle get", "expecting >= 3 arguments"};
   }
 
   const auto target_it = prev(token.end());
@@ -247,7 +247,7 @@ Status Service::handle_get(const vector<string>& token, ControlResponse* res) {
 Status Service::handle_dir(const vector<string>& token, ControlResponse* res) {
   if (token.size() != 2) {
     res->set_result("invalid arguments.");
-    return Status(grpc::StatusCode::INVALID_ARGUMENT, "failed to handle dir", "expecting == 2 arguments");
+    return {grpc::StatusCode::INVALID_ARGUMENT, "failed to handle dir", "expecting == 2 arguments"};
   }
 
   const auto directory = token.at(1);

@@ -71,7 +71,7 @@ Status Client::inform_successor_about_leave() {
 
   if(!successor_node || successor_node == context.node()) {
     logger->info("[leave] no successor - shutting down");
-    return Status(grpc::StatusCode::NOT_FOUND, "no successor found.");
+    return {grpc::StatusCode::NOT_FOUND, "no successor found."};
   }
 
   // inform successor
@@ -98,13 +98,13 @@ Status Client::inform_predecessor_about_leave() {
 
   if(!predecessor_node) {
     logger->info("[leave] no predecessor - shutting down");
-    return Status(grpc::StatusCode::NOT_FOUND, "no predecessor found.");
+    return {grpc::StatusCode::NOT_FOUND, "no predecessor found."};
   }
 
   // inform predecessor
   ClientContext clientContext;
   init_context(clientContext);
-  LeaveRequest req = make_request<LeaveRequest>(context);
+  auto req = make_request<LeaveRequest>(context);
   LeaveResponse res;
 
   logger->trace("[leave] informing predecessor {}", predecessor_node);
@@ -141,7 +141,7 @@ Status Client::join(const endpoint& addr) {
   logger->debug("joining {}", addr);
 
   ClientContext clientContext;
-  JoinRequest req = make_request<JoinRequest>(context);
+  auto req = make_request<JoinRequest>(context);
 
   JoinResponse res;
   const auto status = make_stub(addr)->join(&clientContext, req, &res);
@@ -189,7 +189,7 @@ Status Client::join(ClientContext *clientContext, const JoinRequest *req, JoinRe
 void Client::stabilize() {
   ClientContext clientContext;
   init_context(clientContext);
-  StabilizeRequest req = make_request<StabilizeRequest>(context);
+  auto req = make_request<StabilizeRequest>(context);
   StabilizeResponse res;
 
   const auto successor = router->successor();
@@ -237,7 +237,7 @@ Status Client::notify(const node& target, const node& old_node, const node& new_
 
   ClientContext clientContext;
   init_context(clientContext);
-  NotifyRequest req = make_request<NotifyRequest>(context);
+  auto req = make_request<NotifyRequest>(context);
   NotifyResponse res;
 
   logger->trace("calling notify on address {}@{}", successor, endpoint);
@@ -263,7 +263,7 @@ Status Client::notify() {
 
   ClientContext clientContext;
   init_context(clientContext);
-  NotifyRequest req = make_request<NotifyRequest>(context);
+  auto req = make_request<NotifyRequest>(context);
   NotifyResponse res;
 
   logger->trace("calling notify on address {}", successor);
@@ -274,7 +274,7 @@ Status Client::notify() {
 Status Client::ping(const endpoint& endpoint) {
   ClientContext clientContext;
   init_context(clientContext);
-  PingRequest req = make_request<PingRequest>(context);
+  auto req = make_request<PingRequest>(context);
   PingResponse res;
 
   logger->trace("[ping] {}", endpoint);
@@ -306,7 +306,7 @@ Status Client::successor(const SuccessorRequest *req, SuccessorResponse *res) {
 
 RouterEntry Client::successor(const uuid_t &uuid) {
   ClientContext clientContext;
-  SuccessorRequest req = make_request<SuccessorRequest>(context);
+  auto req = make_request<SuccessorRequest>(context);
   req.set_id(uuid);
   SuccessorResponse res;
 
@@ -331,7 +331,7 @@ void Client::check() {
   }
 
   ClientContext clientContext;
-  PingRequest req = make_request<PingRequest>(context);
+  auto req = make_request<PingRequest>(context);
   PingResponse res;
 
   const auto endpoint = predecessor->endpoint;//router->get(predecessor);

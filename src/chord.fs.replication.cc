@@ -8,10 +8,10 @@
 namespace chord {
 namespace fs {
   
-Replication::Replication() : index{0}, count{1} {}
-Replication::Replication(const Replication& repl) : index{repl.index}, count{repl.count} {}
-Replication::Replication(std::uint32_t count) : index{0}, count{count} {}
-Replication::Replication(std::uint32_t index, std::uint32_t count) : index{index}, count{count} {}
+Replication::Replication() noexcept: index{0}, count{1} {}
+Replication::Replication(const Replication& repl) noexcept = default;
+Replication::Replication(std::uint32_t count) noexcept : index{0}, count{count} {}
+Replication::Replication(std::uint32_t index, std::uint32_t count) noexcept : index{index}, count{count} {}
 
 Replication& Replication::operator=(Replication rhs) {
     std::swap(rhs.count, count);
