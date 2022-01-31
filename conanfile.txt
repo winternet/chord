@@ -1,13 +1,13 @@
 [requires]
-spdlog/1.9.0
+spdlog/1.9.2
 yaml-cpp/0.7.0
 rocksdb/6.20.3
 gtest/1.11.0
-boost/1.76.0
+boost/1.78.0
 fswatch/1.14.0@bincrafters/stable
-grpc/1.38.0
+grpc/1.43.0
 fusepp/3.0.0
-sigslot/1.2.0
+sigslot/1.2.1
 
 [generators]
 cmake
