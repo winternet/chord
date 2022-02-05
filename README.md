@@ -25,7 +25,7 @@ The project comes with an optional, incomplete and even more experimental adapte
 
 ## Disclaimer
 
-This software is highly experimental and data-loss is very likely - do NOT use this project except for experiments or educational purposes (see [LICENSE](LICENSE)).
+**This software is highly experimental and data-loss is very likely - do NOT use this project except for experiments or educational purposes (see [LICENSE](LICENSE)).**
 
 ## Installation
 
