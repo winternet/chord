@@ -29,7 +29,7 @@ The project comes with an optional, incomplete and even more experimental adapte
 
 ## Installation
 
-The easiest way to get started is to download the package from the releases page. Currently there are _deb_ _rpm_ as well as _tgz_ packages provided (see [Packaging](#packaging)-section). Download and install the package using your favorite package managers, e.g.:
+The easiest way to get started is to download the package from the [Releases page](https://github.com/winternet/chord/releases). Download and install the package using your favorite package managers, e.g.:
 
 ```sh
 $ # debian / ubuntu / ...
