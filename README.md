@@ -25,7 +25,7 @@ The project comes with an optional, incomplete and even more experimental adapte
 
 ## Disclaimer
 
-This software is highly experimental and data-loss is very likely - do NOT use this project except for experiments or educational purposes (see [LICENSE](LICENSE.md)).
+This software is highly experimental and data-loss is very likely - do NOT use this project except for experiments or educational purposes (see [LICENSE](LICENSE)).
 
 ## Installation
 
@@ -61,7 +61,7 @@ See [INSTALL.md](INSTALL.md) for more detailed installation instructions, e.g. h
 
 Mounting the experimental overlay filesystem will require you to use a configuration file. The installer packages provide you with two example configurations under _/etc/node.yml_ and _/etc/fuse_node0.yml_. Latter can be used in conjunction with fuse.
 
-````sh
+```sh
 $ chord_fuse -s <absolute-path> -- --config /etc/fuse_node0.yml
 ```
 
@@ -85,7 +85,7 @@ In order to print chord's help just append the `--help` argument (`-h` for short
   -n [ --no-controller ]  do not start the controller.
   -u [ --uuid ] arg       client uuid.
   --bind arg              bind address that is promoted to clients.
-````
+```
 
 To configure our node we could pass some of the arguments to the container, however, it is far more convenient and powerful to use a configuration file. For this to work, we create one on our docker host machine and mount the volume within the docker container.
 
@@ -206,7 +206,7 @@ Since the (meta-)data directories are mounted on the host filesystem the files h
 
 ## Packaging
 
-### Build tgz pacakge
+### Build tgz package
 
 ```sh
 $ cd build
@@ -215,7 +215,7 @@ $ cpack -G TGZ
 $ tar -tf ../packages/chord_*.tgz
 ```
 
-### Build deb pacakge
+### Build deb package
 
 Given `dpkg` executable is installed (arch: community/dpkg)
 
@@ -226,7 +226,7 @@ $ cpack -G DEB
 $ dpkg-deb -c ../packages/chord_*.deb
 ```
 
-### Build rpm pacakge
+### Build rpm package
 
 Given `rpmbuild` executable is installed (arch: community/rpm-tools)
 
