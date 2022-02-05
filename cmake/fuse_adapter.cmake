@@ -17,6 +17,10 @@ string(REPLACE ";" "\n--   " SOURCES_OUT "${SOURCES}")
 message(STATUS "Found fuse source files:\n--   ${SOURCES_OUT}")
 
 add_executable(${FUSE_TARGET} ${SOURCES})
+install(
+  TARGETS ${FUSE_TARGET} 
+  DESTINATION bin
+)
 
 target_link_libraries(${FUSE_TARGET}
   debug asan

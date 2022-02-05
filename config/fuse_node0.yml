@@ -1,22 +1,22 @@
 #
-# This file may be used for chord executable (only)
-# the monitor flag will start the fswatch on the data
-# folder which will result in a race condition when this
-# configuration is used with chord_fuse.
+# This file may be used for chord_fuse executable
+# the monitor flag as well as the shutdown handler
+# are disabled since fuse will notify chord about
+# filesystem changes - otherwise the monitor will
+# race with fuse.
 #
 version: 1
 
 ##shutdown handler
-# gracefuly leave the ring
-register_shutdown_handler: Yes
+register_shutdown_handler: No
 
 ##data
 # enable fswatch to watch changes within data-directory
-monitor: Yes 
+monitor: No
 # directory where the data is stored
-data-directory: "./data0"
+data-directory: "/tmp/data0"
 # directory where the metadata is stored (rocksdb)
-meta-directory: "./meta0"
+meta-directory: "/tmp/meta0"
 
 ##networking
 # advertise address to cluster members
@@ -60,7 +60,7 @@ logging:
       type: "console"
     FILE_SINK:
       type: "file-rotating"
-      path: "logs/chord0.log"
+      path: "/tmp/chord_fuse.log"
   loggers:
     CHORD_LOG:
       sinks: [FILE_SINK]

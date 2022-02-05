@@ -23,9 +23,31 @@ The project comes with an optional, incomplete and even more experimental adapte
 
 ![demo](chord_demo.gif)
 
+## Disclaimer
+
+This software is highly experimental and data-loss is very likely - do NOT use this project except for experiments or educational purposes (see [LICENSE](LICENSE.md)).
+
 ## Installation
 
-The easiest way to get started with chord is using a small docker image (~8 MB) built from scratch provided by the repository `winternet1337/chord`. The images are automatically built and pushed to docker hub after each commit - provided all tests passed successfully. To pull the image issue
+The easiest way to get started is to download the package from the releases page. Currently there are _deb_ _rpm_ as well as _tgz_ packages provided (see [Packaging](#packaging)-section). Download and install the package using your favorite package managers, e.g.:
+
+```sh
+$ # debian / ubuntu / ...
+$ apt install ./chord*.deb libfuse3-3
+$ apt-get install ./chord*.deb libfuse3-3
+$ # fedora / centos / ...
+$ dnf install chord*.rpm
+$ rpm -i chord*.rpm
+$ yum install chord*.rpm
+```
+
+Otherwise download and untar the `tgz`:
+
+```sh
+$ tar xvzf chord*.tgz
+```
+
+Another way to try out chord is using a small docker image (~20 MB) built from scratch provided by the repository `winternet1337/chord`. The images are automatically built and pushed to docker hub after each commit - provided all tests passed successfully. To pull the image issue:
 
 ```sh
 $ docker pull winternet1337/chord:latest
@@ -34,6 +56,20 @@ $ docker pull winternet1337/chord:latest
 See [INSTALL.md](INSTALL.md) for more detailed installation instructions, e.g. how to build the project from sources.
 
 ## Usage
+
+### Mount the Filesystem (fuse)
+
+Mounting the experimental overlay filesystem will require you to use a configuration file. The installer packages provide you with two example configurations under _/etc/node.yml_ and _/etc/fuse_node0.yml_. Latter can be used in conjunction with fuse.
+
+````sh
+$ chord_fuse -s <absolute-path> -- --config /etc/fuse_node0.yml
+```
+
+Note that the configuration has to be adapted for further nodes (uuid,join-addr,data-directory,meta-directory).
+
+After mounting the filesystem, optionally joining some more nodes to the ring, you should be able to issue basic file system operations in the mounted folder using bash or your favorite file explorer (e.g. nautilus).
+
+### Chord Client
 
 To run a node in interactive mode and cleanup automatically afterwards issue `$ docker run -ti --rm winternet1337/chord`. This command will bootstrap the container with random node uuid on default port `50050`. To stop the container issue `Ctrl+C`.
 
@@ -49,7 +85,7 @@ In order to print chord's help just append the `--help` argument (`-h` for short
   -n [ --no-controller ]  do not start the controller.
   -u [ --uuid ] arg       client uuid.
   --bind arg              bind address that is promoted to clients.
-```
+````
 
 To configure our node we could pass some of the arguments to the container, however, it is far more convenient and powerful to use a configuration file. For this to work, we create one on our docker host machine and mount the volume within the docker container.
 
@@ -167,3 +203,36 @@ d---------   .
 Note that the put commands are currently always sent to `127.0.0.1:50050` and issued locally on that node, i.e. the files on the node are uploaded since only nodes participating in the cluster can upload their directories and files.
 
 Since the (meta-)data directories are mounted on the host filesystem the files hosted on the DHT are inside host's `/tmp/chord/data?` directories. The database storing the metadata is located under `/tmp/chord/meta?`.
+
+## Packaging
+
+### Build tgz pacakge
+
+```sh
+$ cd build
+$ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+$ cpack -G TGZ
+$ tar -tf ../packages/chord_*.tgz
+```
+
+### Build deb pacakge
+
+Given `dpkg` executable is installed (arch: community/dpkg)
+
+```sh
+$ cd build
+$ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+$ cpack -G DEB
+$ dpkg-deb -c ../packages/chord_*.deb
+```
+
+### Build rpm pacakge
+
+Given `rpmbuild` executable is installed (arch: community/rpm-tools)
+
+```sh
+$ cd build
+$ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+$ cpack -G RPM
+$ rpm -qlp ../packages/chord_*.rpm
+```

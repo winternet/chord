@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.14)
 
 set(PROJECT "chord")
-project(${PROJECT} VERSION "0.0.1")
+project(${PROJECT} 
+  VERSION "0.0.1" 
+  HOMEPAGE_URL "https://github.com/winternet/chord"
+  DESCRIPTION "Highly experimental layered distributed peer to peer overlay filesystem based on distributed hashtables (DHTs)."
+)
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
@@ -121,24 +125,22 @@ include_directories(${CONAN_INCLUDE_DIRS})
 # create shared library chord++
 #
 add_library(${PROJECT_NAME}++ STATIC ${SOURCES} ${SOURCES_GEN} ${ProtoSources} ${ProtoHeaders} ${GrpcSources} ${GrpcHeaders})
-#conan_target_link_libraries(${PROJECT_NAME}++ ${CONAN_LIBS} GENERAL stdc++fs)
 target_link_libraries(${PROJECT_NAME}++ ${CONAN_LIBS} stdc++fs --coverage)
-#target_link_libraries(${PROJECT_NAME}++)
-#install(TARGETS ${PROJECT_NAME}++ LIBRARY DESTINATION lib)
+#install(
+#  TARGETS ${PROJECT_NAME}++ 
+#  LIBRARY 
+#  DESTINATION lib
+#)
 
 
 #
 # compile executable
 # 
 add_executable(${PROJECT_NAME} src/chord.cc)
-
-##
-## libsignals library (CMakeLists-Externals)
-##
-#ExternalProject_Get_Property(signals BINARY_DIR)
-#set(signals_LIBRARY "${BINARY_DIR}/libsignals.a")
-#set(signals_INCLUDE_DIR "${EXTERNAL_PROJECTS}/signals/include")
-#include_directories(${signals_INCLUDE_DIR})
+install(
+  TARGETS ${PROJECT_NAME} 
+  DESTINATION bin
+)
 
 
 #
@@ -146,7 +148,7 @@ add_executable(${PROJECT_NAME} src/chord.cc)
 #
 target_link_libraries(${PROJECT_NAME} 
   debug asan
-  general ${PROJECT_NAME}++) # ${signals_LIBRARY})
+  general ${PROJECT_NAME}++)
 
 
 #
@@ -170,3 +172,5 @@ endif()
 if(chord_BUILD_INTEGRATION_TESTS)
   include(integration_tests)
 endif()
+
+include(cpack)
