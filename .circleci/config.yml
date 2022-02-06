@@ -102,11 +102,9 @@ jobs:
       - run:
           name: "Publish Release on GitHub"
           command: |
-            #go get github.com/tcnksm/ghr
-            du -hd2 /tmp/workspace
             go install github.com/tcnksm/ghr@v0.14.0
             VERSION="main-snapshot"
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} /tmp/workspace/packages
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete -prerelease ${VERSION} /tmp/workspace/packages 
 
 
 
