@@ -221,7 +221,7 @@ Given `dpkg` executable is installed (arch: community/dpkg)
 
 ```sh
 $ cd build
-$ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+$ cmake -DCPACK_PACKAGING_INSTALL_PREFIX=/ -G Ninja -DCMAKE_BUILD_TYPE=Release ..
 $ cpack -G DEB
 $ dpkg-deb -c ../packages/chord_*.deb
 ```
@@ -232,7 +232,7 @@ Given `rpmbuild` executable is installed (arch: community/rpm-tools)
 
 ```sh
 $ cd build
-$ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+$ cmake -DCPACK_PACKAGING_INSTALL_PREFIX=/ -G Ninja -DCMAKE_BUILD_TYPE=Release ..
 $ cpack -G RPM
 $ rpm -qlp ../packages/chord_*.rpm
 ```

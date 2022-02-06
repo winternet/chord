@@ -32,7 +32,7 @@ if(RPMBUILD_FOUND)
 endif()
 
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/config/fuse_node0.yml DESTINATION /etc/chord/)
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/config/node0.yml DESTINATION /etc/chord/)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/config/fuse_node0.yml DESTINATION etc/chord/)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/config/node0.yml DESTINATION etc/chord/)
 
 include(CPack)

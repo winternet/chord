@@ -173,4 +173,4 @@ if(chord_BUILD_INTEGRATION_TESTS)
   include(integration_tests)
 endif()
 
-include(cpack)
+include(package)

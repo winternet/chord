@@ -16,7 +16,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Setup
+          name: "Setup"
           command: |
             sudo apt-get update
             sudo apt-get -y install build-essential \
@@ -37,7 +37,7 @@ jobs:
             - conan-cache-v2--{{ checksum "conanfile.txt" }}
             - conan-cache-v2
       - run:
-          name: Install chord
+          name: "Install chord"
           command: |
             export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/libfswatch"
             mkdir build && cd build
@@ -61,7 +61,7 @@ jobs:
           key: conan-cache-v2--{{ checksum "conanfile.txt" }}
 
       - run:
-          name: Run tests
+          name: "Run tests"
           command: |
             cd build
             ctest --verbose #-E chord_test_fuse # docker container would require more privileges
@@ -71,6 +71,33 @@ jobs:
       - store_artifacts:
           path: build/gtest-out
 
+      - run:
+          name: "Build artifacts"
+          command: |
+            cmake -DCPACK_PACKAGING_INSTALL_PREFIX=/ -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+            cpack -G DEB
+            dpkg-deb -c ../packages/chord*.deb
+            apt -y install rpm
+            cpack -G RPM
+            rpm -qlp ../packages/chord*.rpm
+            cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+            cpack -G TGZ
+            tar -tf ../packages/chord*.tgz
+
+  publish-artifacts:
+    docker:
+      - image: cimg/go:1.17.6
+    steps:
+      - attach_workspace:
+          at: ./packages
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            go get github.com/tcnksm/ghr
+            VERSION="main-snapshot"
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./packages
+
+
 
   docker-build:
     executor: docker-publisher
@@ -78,11 +105,11 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Build docker image
+          name: "Build docker image"
           command: |
             docker build -t $IMAGE_NAME:latest -f docker/Dockerfile_scratch .
       - run:
-          name: Archive docker image
+          name: "Archive docker image"
           command: |
             docker save -o image.tar $IMAGE_NAME
       - persist_to_workspace:
@@ -97,10 +124,10 @@ jobs:
           at: /tmp/workspace
       - setup_remote_docker
       - run:
-          name: Load archived docker image
+          name: "Load archived docker image"
           command: docker load -i /tmp/workspace/image.tar
       - run:
-          name: Publish docker image to docker hub
+          name: "Publish docker image to docker hub"
           command: |
             echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
             IMAGE_TAG="build-${CIRCLE_BUILD_NUM}"
@@ -115,10 +142,10 @@ jobs:
           at: /tmp/workspace
       - setup_remote_docker
       - run:
-          name: Load archived docker image
+          name: "Load archived docker image"
           command: docker load -i /tmp/workspace/image.tar
       - run:
-          name: Publish docker image to docker hub
+          name: "Publish docker image to docker hub"
           command: |
             echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
             IMAGE_TAG=${CIRCLE_TAG/v/''}
@@ -148,6 +175,13 @@ workflows:
               only: 
                 - main
                 - feature/fuse
+      - publish-artifacts:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - main
       - docker-build:
           context: docker-context
           requires:
