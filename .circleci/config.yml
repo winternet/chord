@@ -74,6 +74,7 @@ jobs:
       - run:
           name: "Build artifacts"
           command: |
+            cd build
             cmake -DCPACK_PACKAGING_INSTALL_PREFIX=/ -G Ninja -DCMAKE_BUILD_TYPE=Release ..
             cpack -G DEB
             dpkg-deb -c ../packages/chord*.deb
