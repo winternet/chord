@@ -75,13 +75,13 @@ jobs:
           name: "Build artifacts"
           command: |
             cd build
-            cmake -DCPACK_PACKAGING_INSTALL_PREFIX=/ -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+            cmake -DCPACK_PACKAGING_INSTALL_PREFIX=/ -DCMAKE_BUILD_TYPE=Release ..
             cpack -G DEB
             dpkg-deb -c ../packages/chord*.deb
             apt -y install rpm
             cpack -G RPM
             rpm -qlp ../packages/chord*.rpm
-            cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+            cmake -DCMAKE_BUILD_TYPE=Release ..
             cpack -G TGZ
             tar -tf ../packages/chord*.tgz
 
