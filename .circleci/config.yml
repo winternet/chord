@@ -83,7 +83,7 @@ jobs:
             rpm -qlp ../packages/chord*.rpm
             cmake -DCMAKE_BUILD_TYPE=Release ..
             cpack -G TGZ
-            tar -tf ../packages/chord*.tgz
+            tar -tf ../packages/chord*.gz
 
   publish-artifacts:
     docker:
