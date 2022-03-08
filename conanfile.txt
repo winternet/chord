@@ -6,7 +6,7 @@ gtest/1.11.0
 boost/1.78.0
 fswatch/1.14.0@bincrafters/stable
 grpc/1.43.0
-fusepp/3.0.0
+fusepp/cci.20210820
 sigslot/1.2.1
 
 [generators]
