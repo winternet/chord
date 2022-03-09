@@ -31,7 +31,6 @@ jobs:
                        python3-pip \
                        rpm
             pip3 install conan
-            git clone https://github.com/winternet/conan-fusepp && cd conan-fusepp && conan create . && cd -
 
       - restore_cache:
           keys:
