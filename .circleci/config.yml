@@ -23,9 +23,9 @@ jobs:
                        curl \
                        git \
                        cmake \
+                       ninja-build \
                        autoconf \
                        fuse3 \
-                       libfuse3-dev \
                        pkg-config \
                        python3 \
                        python3-pip \
