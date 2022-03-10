@@ -26,6 +26,7 @@ RUN rm -rf build && mkdir build && cd build \
     && conan config set general.revisions_enabled=1 \
     && conan install .. --build=missing -s compiler.libcxx=libstdc++11 \
     && cmake .. \
+        -G Ninja \
         -DBUILD_GMOCK=OFF \
         -DBUILD_TESTING=OFF \
         -DINSTALL_GTEST=OFF \

@@ -47,6 +47,7 @@ jobs:
             conan config set general.revisions_enabled=1
             conan install .. --build=missing -s compiler.libcxx=libstdc++11 
             CXX=g++-9 CC=gcc-9 cmake .. \
+              -G Ninja \
               -DENABLE_COVERAGE:BOOL=TRUE \
               -Dchord_USE_CCACHE:BOOL=FALSE \
               -DCMAKE_BUILD_TYPE:STRING=Release \
@@ -75,7 +76,7 @@ jobs:
           name: "Build artifacts"
           command: |
             cd build
-            cmake -DCPACK_PACKAGING_INSTALL_PREFIX=/ -DCMAKE_BUILD_TYPE=Release ..
+            cmake -G Ninja -DCPACK_PACKAGING_INSTALL_PREFIX=/ -DCMAKE_BUILD_TYPE=Release ..
             cpack -G DEB
             dpkg-deb -c ../packages/chord*.deb
             cpack -G RPM
