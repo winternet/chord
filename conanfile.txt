@@ -10,7 +10,7 @@ fusepp/cci.20210820
 sigslot/1.2.1
 
 [generators]
-cmake
+cmake_find_package_multi
 
 [options]
 *:fpic=True

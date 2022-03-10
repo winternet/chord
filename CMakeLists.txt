@@ -16,6 +16,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_PREFIX_PATH CMAKE_BINARY_DIR)
 
 set(ProtoPath "${CMAKE_CURRENT_SOURCE_DIR}/proto")
 set(ProtoGenerateTargetPath "./gen")
@@ -68,11 +69,6 @@ if (CMAKE_BUILD_TYPE_LOWER STREQUAL "Debug")
   # compile with address sanitizer (2x slowdown)
   add_compile_options(-fsanitize=address)
 endif()
-
-#
-# external dependencies
-#
-#include(CMakeLists-Externals.txt)
 
 
 #
