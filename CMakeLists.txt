@@ -7,166 +7,58 @@ project(${PROJECT}
   DESCRIPTION "Highly experimental layered distributed peer to peer overlay filesystem based on distributed hashtables (DHTs)."
 )
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
-
 configure_file(${CMAKE_SOURCE_DIR}/cmake/project.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/project.h)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
-
-set(ProtoPath "${CMAKE_CURRENT_SOURCE_DIR}/proto")
-set(ProtoGenerateTargetPath "./gen")
-
+option(chord_BUILD_NODE "build the node binary" ON)
 option(chord_BUILD_FUSE_ADAPTER "build fuse adapter" ON)
 option(chord_BUILD_TESTS "build unit tests" OFF)
 option(chord_BUILD_INTEGRATION_TESTS "build integration tests" OFF)
 option(chord_USE_CCACHE "use ccache for subsequent builds" ON)
 
-if(CMAKE_COMPILER_IS_GNUCC)
-  option(ENABLE_COVERAGE "enable coverage reporting for gcc/clang" FALSE)
-  if(ENABLE_COVERAGE)
-    add_compile_options(--coverage -O0)
-  endif()
-endif()
 
-#
-# enable ccache
-#
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND AND chord_USE_CCACHE)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-endif()
-
-add_compile_options(
-  -Wall
-  -Wextra
-  -Wnon-virtual-dtor
-  -Wold-style-cast
-  -Wunused
-  -Woverloaded-virtual
-  -Wconversion
-  -Wmisleading-indentation
-  -Wduplicated-cond
-  -Wduplicated-branches
-  -Wlogical-op
-  -Wnull-dereference
-  -Wdouble-promotion
-  -Wformat=2
-)
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wlifetime)
-  add_compile_options(-Weverything)
-endif()
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
-if (CMAKE_BUILD_TYPE_LOWER STREQUAL "Debug")
-  # compile with address sanitizer (2x slowdown)
-  add_compile_options(-fsanitize=address)
-endif()
+#
+# custom modules / conan
+#
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})  # required for conan find_package
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})  # required for conan find_package
+string(REPLACE ";" "\n--   " CMAKE_MODULE_PATH_OUT "${CMAKE_MODULE_PATH}")
+message(STATUS "Including cmake modules from: \n--   ${CMAKE_MODULE_PATH_OUT}")
 
 
 #
-# custom modules
+# add includes
 #
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-message(STATUS "Including custom cmake modules from ${CMAKE_MODULE_PATH}")
-
-include(grpc)
-include(protobuf)
-include(CTest)
+include(compile)
 include(cppcheck)
 include(clang-tidy)
-
-set(PROTOBUF_GENERATE_CPP_APPEND_PATH ON)
-set(PROTOBUF_PROTOC_EXECUTABLE ${CONAN_BIN_DIRS_PROTOBUF}/protoc)
-set(GRPC_CPP_PLUGIN ${CONAN_BIN_DIRS_GRPC}/grpc_cpp_plugin)
-
-#
-# generate messages and services
-#
-file(GLOB ProtoFiles "${ProtoPath}/*.proto")
-string(REPLACE ";" "\n--   " PROTO_FILES_OUT "${ProtoFiles}")
-message(STATUS "Found proto files: \n--   ${PROTO_FILES_OUT}")
-protobuf_generate_cpp_with_path(${ProtoGenerateTargetPath} ProtoSources ProtoHeaders ${ProtoFiles})
-
-message(STATUS "Generating protobuf messages")
-protobuf_generate_grpc_cpp_with_path(${ProtoGenerateTargetPath} GrpcSources GrpcHeaders ${ProtoFiles})
-message(STATUS "Generating grpc services")
-include_directories(SYSTEM ${ProtoGenerateTargetPath})
-message(STATUS "Including generated header files: ${ProtoGenerateTargetPath}")
-
-file(GLOB SOURCES_GEN ${CMAKE_CURRENT_BINARY_DIR}/gen/*)
-string(REPLACE ";" "\n--   " SOURCES_GEN_OUT "${SOURCES_GEN}")
-message(STATUS "Found generated source files:\n--   ${SOURCES_GEN_OUT}")
+include(package)
 
 
 #
-# add source files
+# generate messages and stubs
 #
-file(GLOB SOURCES src/*.cc)
-include_directories(include)
-# use SYSTEM symbol to suppress warnings within generated code
-include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}/gen")
-
-include_directories(${CONAN_INCLUDE_DIRS})
-
+add_subdirectory(proto)
 
 #
-# create shared library chord++
+# build library and node
 #
-add_library(${PROJECT_NAME}++ STATIC ${SOURCES} ${SOURCES_GEN} ${ProtoSources} ${ProtoHeaders} ${GrpcSources} ${GrpcHeaders})
-target_link_libraries(${PROJECT_NAME}++ ${CONAN_LIBS} stdc++fs --coverage)
-#install(
-#  TARGETS ${PROJECT_NAME}++ 
-#  LIBRARY 
-#  DESTINATION lib
-#)
-
+add_subdirectory(src)
 
 #
-# compile executable
-# 
-add_executable(${PROJECT_NAME} src/chord.cc)
-install(
-  TARGETS ${PROJECT_NAME} 
-  DESTINATION bin
-)
-
-
-#
-# add libraries for executable (chord++)
-#
-target_link_libraries(${PROJECT_NAME} 
-  debug asan
-  general ${PROJECT_NAME}++)
-
-
-#
-# fuse adapter
+# build fuse adapter
 #
 if(chord_BUILD_FUSE_ADAPTER)
-  include(fuse_adapter)
-  include(fuse_tests)
+  add_subdirectory(fuse)
 endif()
 
 #
-# tests
+# build tests (unit/integration/fuse)
 #
 if(chord_BUILD_TESTS)
-  include(tests)
+  enable_testing()
+  add_subdirectory(test)
 endif()
 
-#
-# integration tests
-#
-if(chord_BUILD_INTEGRATION_TESTS)
-  include(integration_tests)
-endif()
-
-include(package)

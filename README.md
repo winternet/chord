@@ -29,6 +29,9 @@ The project comes with an optional, incomplete and even more experimental adapte
 
 ## Installation
 
+
+### Pre-built packages
+
 The easiest way to get started is to download the package from the [Releases page](https://github.com/winternet/chord/releases). Download and install the package using your favorite package managers, e.g.:
 
 ```sh
@@ -47,6 +50,8 @@ Otherwise download and untar the `tgz`:
 $ tar xvzf chord*.tgz
 ```
 
+### Docker
+
 Another way to try out chord is using a small docker image (~20 MB) built from scratch provided by the repository `winternet1337/chord`. The images are automatically built and pushed to docker hub after each commit - provided all tests passed successfully. To pull the image issue:
 
 ```sh
@@ -54,6 +59,17 @@ $ docker pull winternet1337/chord:latest
 ```
 
 See [INSTALL.md](INSTALL.md) for more detailed installation instructions, e.g. how to build the project from sources.
+
+### Build from Source
+
+The build process requires [conan](https://www.conan.io). After installation of `conan` build chord using the following commands:
+
+```sh
+$ conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan
+$ git clone https://github.com/winternet/chord.git
+$ cd chord && mkdir build && cd build
+$ conan install .. --build=missing && cmake .. && cmake --build . -j4
+```
 
 ## Usage
 

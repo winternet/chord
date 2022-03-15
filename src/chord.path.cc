@@ -62,7 +62,7 @@ path path::canonical() const {
       result = result.parent_path();
     } else if (dir==".") {
       //ignore
-    } else if (dir=="/" && result.string().back() == '/') {
+    } else if (dir=="/" && !result.string().empty() && result.string().back() == '/') {
       //ignore
     } else {
       auto str = dir.string();

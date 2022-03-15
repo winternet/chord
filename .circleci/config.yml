@@ -42,7 +42,6 @@ jobs:
             export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/libfswatch"
             mkdir build && cd build
             conan config set general.revisions_enabled=True
-            # conan remote add winternet-conan-virt https://winternet.jfrog.io/artifactory/api/conan/conan-virt || true
             conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan || true
             conan config set general.revisions_enabled=1
             conan install .. --build=missing -s compiler.libcxx=libstdc++11 
@@ -54,7 +53,7 @@ jobs:
               -Dchord_BUILD_TESTS:BOOL=ON \
               -Dchord_BUILD_INTEGRATION_TESTS:BOOL=ON \
               -Dchord_BUILD_FUSE_ADAPTER:BOOL=ON
-            cmake --build . -- -j1
+            cmake --build . -j1
 
       - save_cache:
           paths:
