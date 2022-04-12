@@ -14,6 +14,7 @@ build
 externals/
 test_data/
 .ccls-cache
+.cache
 compile_commands.json
 demo
 packages

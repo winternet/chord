@@ -43,6 +43,7 @@ class Client : public IClient {
 
   grpc::Status inform_predecessor_about_leave();
   grpc::Status inform_successor_about_leave();
+  grpc::Status inform_about_leave(const node& node);
 
   void init_context(grpc::ClientContext&);
 

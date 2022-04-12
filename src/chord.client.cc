@@ -64,23 +64,14 @@ void Client::init_context([[maybe_unused]] ClientContext& client_context) {
   client_context.set_deadline(deadline);
 }
 
-Status Client::inform_successor_about_leave() {
-  // get successor
-  const auto successor_node = router->successor();
-  const auto predecessor_node = router->predecessor();
-
-  if(!successor_node || successor_node == context.node()) {
-    logger->info("[leave] no successor - shutting down");
-    return {grpc::StatusCode::NOT_FOUND, "no successor found."};
-  }
-
-  // inform successor
+Status Client::inform_about_leave(const node& node) {
+  // inform node (successor || predecessor)
   ClientContext clientContext;
   init_context(clientContext);
-  LeaveRequest req;
+  auto req = make_request<LeaveRequest>(context);
   LeaveResponse res;
 
-  logger->trace("[leave] informing successor {}", successor_node);
+  logger->trace("[leave] informing node about leave {}", node);
 
   set_source(req, context);
 
@@ -88,7 +79,21 @@ Status Client::inform_successor_about_leave() {
   for(const auto& node : router->get()) {
    entries->Add(make_entry(node));
   }
-  return make_stub(successor_node->endpoint)->leave(&clientContext, req, &res);
+  return make_stub(node.endpoint)->leave(&clientContext, req, &res);
+}
+
+Status Client::inform_successor_about_leave() {
+  // get successor
+  const auto successor_node = router->successor();
+  //const auto predecessor_node = router->predecessor();
+
+  if(!successor_node || successor_node == context.node()) {
+    logger->info("[leave] no successor - shutting down");
+    return {grpc::StatusCode::NOT_FOUND, "no successor found."};
+  }
+
+  // inform successor
+  return inform_about_leave(*successor_node);
 }
 
 //! TODO merge with inform successor about leave
@@ -102,18 +107,7 @@ Status Client::inform_predecessor_about_leave() {
   }
 
   // inform predecessor
-  ClientContext clientContext;
-  init_context(clientContext);
-  auto req = make_request<LeaveRequest>(context);
-  LeaveResponse res;
-
-  logger->trace("[leave] informing predecessor {}", predecessor_node);
-
-  auto entries = req.mutable_entries();
-  for(const auto& node : router->get()) {
-   entries->Add(make_entry(node));
-  }
-  return make_stub(predecessor_node->endpoint)->leave(&clientContext, req, &res);
+  return inform_about_leave(*predecessor_node);
 }
 
 void Client::leave() {
