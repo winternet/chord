@@ -7,6 +7,8 @@
 #include <set>
 #include <string>
 #include <optional>
+#include <fmt/ostream.h>
+#include <spdlog/fmt/ostr.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -171,3 +173,5 @@ void serialize(Archive & ar, chord::fs::Replication &replication, [[maybe_unused
 }
 }  // namespace serialization
 }  // namespace boost
+
+template<> struct fmt::formatter<chord::fs::Metadata> : ostream_formatter {};

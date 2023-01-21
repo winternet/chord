@@ -8,6 +8,8 @@
 #include <vector>
 #include <functional>
 #include <libfswatch/c++/monitor_factory.hpp>
+#include <fmt/ostream.h>
+#include <spdlog/fmt/ostr.h>
 
 #include "chord.signal.h"
 #include "chord.scheduler.h"
@@ -150,3 +152,4 @@ std::ostream& operator<<(std::ostream&, const chord::fs::monitor::event::flag&);
 } //namespace chord
 
 
+template<> struct fmt::formatter<chord::fs::monitor::event> : ostream_formatter {};

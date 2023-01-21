@@ -109,3 +109,5 @@ public:
 
 };
 }  // namespace chord
+
+template<> struct fmt::formatter<chord::Router> : ostream_formatter {};

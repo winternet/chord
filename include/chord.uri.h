@@ -5,6 +5,8 @@
 #include <regex>
 #include <string>
 #include <optional>
+#include <fmt/ostream.h>
+#include <spdlog/fmt/ostr.h>
 
 #include "chord.path.h"
 
@@ -140,3 +142,5 @@ class uri {
   friend std::string to_string(const uri &uri);
 };
 }  // namespace chord
+
+template<> struct fmt::formatter<chord::uri> : ostream_formatter {};

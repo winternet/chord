@@ -155,3 +155,5 @@ public:
 }  // namespace chord
 
 using uuid_t = chord::uuid;
+
+template<> struct fmt::formatter<chord::uuid> : ostream_formatter {};

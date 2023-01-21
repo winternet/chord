@@ -20,4 +20,4 @@ message(STATUS "Found generated source files:\n--   ${SOURCES_GEN_OUT}")
 #
 add_library(${PROJECT_NAME}_grpc ${ProtoSources} ${ProtoHeaders})
 target_include_directories(${PROJECT_NAME}_grpc PUBLIC "${ProtoGenerateTargetPath}")
-target_link_libraries(${PROJECT_NAME}_grpc gRPC::grpc++)
+target_link_libraries(${PROJECT_NAME}_grpc PUBLIC gRPC::grpc++)

@@ -5,6 +5,8 @@
 #include <set>
 #include <string>
 #include <string_view>
+#include <fmt/ostream.h>
+#include <spdlog/fmt/ostr.h>
 
 namespace chord {
 
@@ -66,3 +68,5 @@ class path {
 };
 
 } //namespace chord
+ 
+template<> struct fmt::formatter<chord::path> : ostream_formatter {};
