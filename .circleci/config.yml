@@ -44,6 +44,7 @@ jobs:
             conan config set general.revisions_enabled=True
             conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan || true
             conan config set general.revisions_enabled=1
+            conan profile new default --detect --force
             conan profile update settings.compiler.libcxx=libstdc++11 default
             conan install .. --build=missing
             CXX=g++-9 CC=gcc-9 cmake .. \
