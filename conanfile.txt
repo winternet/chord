@@ -2,7 +2,7 @@
 spdlog/1.11.0
 yaml-cpp/0.7.0
 rocksdb/6.29.5
-gtest/1.12.1
+gtest/1.13.0
 boost/1.81.0
 fswatch/1.14.0@bincrafters/stable
 grpc/1.50.1
