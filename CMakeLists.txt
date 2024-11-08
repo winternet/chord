@@ -7,6 +7,12 @@ project(${PROJECT}
   DESCRIPTION "Highly experimental layered distributed peer to peer overlay filesystem based on distributed hashtables (DHTs)."
 )
 
+#
+# load conan's toolchain file
+#
+include("${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
+
+
 configure_file(${CMAKE_SOURCE_DIR}/cmake/project.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/project.h)
 
 option(chord_BUILD_NODE "build the node binary" ON)

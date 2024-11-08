@@ -33,7 +33,7 @@ target_link_libraries(${TEST_TARGET}
   debug asan
   ${PROJECT_NAME}++
   ${PROJECT_NAME}_test_util
-  GTest::GTest
+  gtest::gtest
   # TODO remove --coverage(enabled globally)
   --coverage
 )
