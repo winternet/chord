@@ -50,7 +50,28 @@ $ conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/cona
 ```sh
  $ git clone https://github.com/winternet/chord.git /opt/chord && cd /opt/chord
  $ mkdir build && cd build
- $ conan install .. -s cppstd=17 --build=missing && cmake ..
+ $ conan install .. -s compiler.cppstd=17 --build=missing && cmake ..
  $ cmake --build . -- -j4 
 ```
 
+#### Release version
+
+```sh
+$ git clone https://github.com/winternet/chord.git /opt/chord && cd /opt/chord
+$ conan install . --build=missing --output-folder=build
+$ cd build
+$ cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+$ cmake --build . -- -j4 
+```
+
+#### Debug version
+
+https://github.com/conan-io/conan/issues/13478#issuecomment-1475389368
+
+```sh
+$ git clone https://github.com/winternet/chord.git /opt/chord && cd /opt/chord
+$ conan install . --build=missing --output-folder=build -s build_type=Debug -s "&:build_type=Debug
+$ cd build
+$ cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Debug
+$ cmake --build . -- -j4 
+```
