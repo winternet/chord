@@ -1,17 +1,21 @@
 [requires]
-spdlog/1.11.0
-yaml-cpp/0.7.0
-rocksdb/6.29.5
-gtest/1.13.0
-boost/1.81.0
-fswatch/1.14.0@bincrafters/stable
-grpc/1.50.1
+spdlog/1.14.1
+yaml-cpp/0.8.0
+rocksdb/9.7.3
+gtest/1.15.0
+boost/1.86.0
+fswatch/1.17.1-36
+grpc/1.67.1
 fusepp/cci.20210820
-sigslot/1.2.1
-zlib/1.2.13
+sigslot/1.2.2
+zlib/1.3.1
+
+[tool_requires]
+protobuf/5.27.0
 
 [generators]
-cmake_find_package
+CMakeDeps
+CMakeToolchain
 
 [options]
 *:fpic=True

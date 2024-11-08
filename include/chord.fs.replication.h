@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <fmt/ostream.h>
 #include <utility>
 
 namespace chord {
@@ -43,3 +44,5 @@ struct Replication {
 
 } // namespace fs
 } // namespace chord
+
+template<> struct fmt::formatter<chord::fs::Replication> : ostream_formatter {};

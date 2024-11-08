@@ -1,4 +1,3 @@
-
 #
 # compile the proto idl
 #

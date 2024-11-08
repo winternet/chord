@@ -1,4 +1,4 @@
-find_package(Protobuf REQUIRED)
+find_package(Protobuf REQUIRED CONFIG)
 find_package(gRPC REQUIRED)
 
 message(STATUS "the plugin program: ${GRPC_CPP_PLUGIN_PROGRAM}")

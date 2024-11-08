@@ -5,6 +5,10 @@ file(GLOB SOURCES *.cc)
 string(REPLACE ";" "\n--   " SOURCES_OUT "${SOURCES}")
 message(STATUS "Found sources:\n--   ${SOURCES_OUT}")
 
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
+
 
 #
 # add dependencies
@@ -30,7 +34,7 @@ target_link_libraries(${PROJECT_NAME}++
   Boost::serialization
   Boost::program_options
   Pal::Sigslot
-  RocksDB::RocksDB
+  RocksDB::rocksdb
   stdc++fs 
   # TODO remove
   --coverage)
