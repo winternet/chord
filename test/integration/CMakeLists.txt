@@ -14,7 +14,7 @@ add_executable(${TEST_TARGET} ${INTEGRATION_TEST_SOURCES})
 target_link_libraries(${TEST_TARGET}
   ${PROJECT_NAME}++
   ${PROJECT_NAME}_test_util
-  GTest::GTest
+  gtest::gtest
   --coverage
 )
 
