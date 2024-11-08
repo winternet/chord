@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(PROJECT "chord")
-project(${PROJECT} 
+project(chord
   VERSION "0.0.1" 
   HOMEPAGE_URL "https://github.com/winternet/chord"
   DESCRIPTION "Highly experimental layered distributed peer to peer overlay filesystem based on distributed hashtables (DHTs)."
