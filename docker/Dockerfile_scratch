@@ -20,13 +20,11 @@ RUN apt-get update \
 COPY . /opt/chord
 WORKDIR /opt/chord
 
-RUN rm -rf build && mkdir build && cd build \
-    && conan config set general.revisions_enabled=True \
-    && conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan \
-    && conan config set general.revisions_enabled=1 \
+RUN rm -rf build \
     && conan profile new default --detect --force \
     && conan profile update settings.compiler.libcxx=libstdc++11 default \
-    && conan install .. --build=missing \
+    && conan install .. --build=missing --output-folder=build \
+    && cd build \
     && cmake .. \
         -G Ninja \
         -DBUILD_GMOCK=OFF \

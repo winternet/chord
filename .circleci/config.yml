@@ -40,13 +40,14 @@ jobs:
           name: "Install chord"
           command: |
             export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/libfswatch"
-            mkdir build && cd build
-            conan config set general.revisions_enabled=True
-            conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan || true
-            conan config set general.revisions_enabled=1
-            conan profile new default --detect --force
-            conan profile update settings.compiler.libcxx=libstdc++11 default
-            conan install .. --build=missing
+            # mkdir build && cd build
+            # conan config set general.revisions_enabled=True
+            # conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan || true
+            # conan config set general.revisions_enabled=1
+            # conan profile update settings.compiler.libcxx=libstdc++11 default
+            conan profile detect -f
+            conan install . --build=missing --output-folder=build
+            cd build
             CXX=g++-9 CC=gcc-9 cmake .. \
               -G Ninja \
               -DENABLE_COVERAGE:BOOL=TRUE \

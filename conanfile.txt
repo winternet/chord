@@ -4,7 +4,7 @@ yaml-cpp/0.8.0
 rocksdb/9.7.3
 gtest/1.15.0
 boost/1.86.0
-fswatch/1.17.1-36
+fswatch/1.17.1.cci.20220902
 grpc/1.67.1
 fusepp/cci.20210820
 sigslot/1.2.2
