@@ -13,7 +13,7 @@
 using namespace chord::fs;
 
 #ifdef CHORD_GCOV_FLUSH
-extern "C" void __gcov_flush();
+extern "C" void __gcov_dump();
 #endif
 
 namespace chord {
@@ -26,7 +26,7 @@ Adapter::Adapter(int argc, char* argv[]):
 
 Adapter::~Adapter() {
 #ifdef CHORD_GCOV_FLUSH
-  ::__gcov_flush();
+  ::__gcov_dump();
 #endif
 }
 
