@@ -4,15 +4,17 @@ FROM ubuntu:24.04 AS build
 # install dependencies
 #
 ENV DEBIAN_FRONTEND=noninteractive 
-RUN apt-get update \
-    && apt-get -y install build-essential \
+RUN apt update \
+    && apt -y install build-essential \
             git \
             cmake \
             ninja-build \
             autoconf \
             pkg-config \
-            python3 \
-            python3-pip && pip3 install conan
+            pipx \
+    && pipx ensurepath \
+    && source ~/.profile \
+    && pipx install conan \
 
 #
 # build project
