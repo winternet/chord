@@ -11,10 +11,7 @@ RUN apt update \
             ninja-build \
             autoconf \
             pkg-config \
-            pipx \
-    && pipx ensurepath \
-    && . ~/.profile \
-    && pipx install conan \
+            pipx 
 
 #
 # build project
@@ -22,7 +19,10 @@ RUN apt update \
 COPY . /opt/chord
 WORKDIR /opt/chord
 
-RUN rm -rf build \
+RUN pipx ensurepath \
+    && . ~/.profile \
+    && pipx install conan \
+    && rm -rf build \
     && conan profile detect -f \
     && conan install . --build=missing --output-folder=build \
     && cd build \
