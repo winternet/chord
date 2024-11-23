@@ -13,7 +13,7 @@ RUN apt update \
             pkg-config \
             pipx \
     && pipx ensurepath \
-    && source ~/.profile \
+    && . ~/.profile \
     && pipx install conan \
 
 #
