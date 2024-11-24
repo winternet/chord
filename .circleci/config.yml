@@ -182,6 +182,7 @@ workflows:
                 - main
                 - feature/fuse
       - publish-artifacts:
+          context: github-artifact-context
           requires:
             - build
           filters:
