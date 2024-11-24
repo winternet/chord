@@ -5,12 +5,14 @@ executors:
       IMAGE_NAME: winternet1337/chord
     docker:
       - image: circleci/buildpack-deps:stretch
+    parallelism: 4
+    resource_class: large
 jobs:
   build:
     machine:
       image: ubuntu-2204:current
-      #docker:
-      #  - image: ubuntu:20.04
+    parallelism: 4
+    resource_class: large
     environment:
       DEBIAN_FRONTEND: noninteractive
     steps:
