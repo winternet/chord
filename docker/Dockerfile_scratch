@@ -11,7 +11,8 @@ RUN apt update \
             ninja-build \
             autoconf \
             pkg-config \
-            pipx 
+            pipx \
+            python3-jinja2
 
 #
 # build project
