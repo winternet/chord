@@ -1,6 +1,6 @@
 version: 2.1
-orbs:
-  codecov: codecov/codecov@5.0.3
+# orbs:
+#   codecov: codecov/codecov@5.0.3
 executors:
   docker-publisher:
     environment:
@@ -43,13 +43,13 @@ jobs:
           command: |
             export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/libfswatch"
             conan profile detect -f
-            conan install . --build=missing --output-folder=build
+            conan install . --build=missing --output-folder=build --settings=build_type=Debug
             cd build
             cmake .. \
               -G Ninja \
               -DENABLE_COVERAGE:BOOL=TRUE \
               -Dchord_USE_CCACHE:BOOL=FALSE \
-              -DCMAKE_BUILD_TYPE:STRING=Release \
+              -DCMAKE_BUILD_TYPE:STRING=Debug \
               -Dchord_BUILD_TESTS:BOOL=ON \
               -Dchord_BUILD_INTEGRATION_TESTS:BOOL=ON \
               -Dchord_BUILD_FUSE_ADAPTER:BOOL=ON
@@ -74,7 +74,7 @@ jobs:
           path: build/test/gtest-out
       - store_artifacts:
           path: build/test/integration/gtest-out
-      - codecov/upload
+      #- codecov/upload
 
       - run:
           name: "Build artifacts"
