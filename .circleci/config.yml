@@ -1,4 +1,6 @@
 version: 2.1
+orbs:
+  codecov: codecov/codecov@5.0.3
 executors:
   docker-publisher:
     environment:
@@ -10,7 +12,6 @@ jobs:
   build:
     machine:
       image: ubuntu-2204:current
-    parallelism: 4
     resource_class: large
     environment:
       DEBIAN_FRONTEND: noninteractive
@@ -66,9 +67,14 @@ jobs:
             ctest --verbose #-E chord_test_fuse # docker container would require more privileges
             bash <(curl -s https://codecov.io/bash) -t 8811a299-c05a-4c37-8d1d-c5bac9cca1fe
       - store_test_results:
-          path: build/gtest-out
+          path: build/test/gtest-out
+      - store_test_results:
+          path: build/test/integration/gtest-out
       - store_artifacts:
-          path: build/gtest-out
+          path: build/test/gtest-out
+      - store_artifacts:
+          path: build/test/integration/gtest-out
+      - codecov/upload
 
       - run:
           name: "Build artifacts"
