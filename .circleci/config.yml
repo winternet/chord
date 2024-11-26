@@ -66,13 +66,9 @@ jobs:
             cd build
             ctest --verbose #-E chord_test_fuse # docker container would require more privileges
       - store_test_results:
-          path: build/test/gtest-out
+          path: build/test/gtest-out/chord_test.xml
       - store_test_results:
-          path: build/test/integration/gtest-out
-      - store_artifacts:
-          path: build/test/gtest-out
-      - store_artifacts:
-          path: build/test/integration/gtest-out
+          path: build/test/integration/gtest-out/chord_integration_test.xml
       - codecov/upload
 
       - run:
