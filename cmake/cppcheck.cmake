@@ -2,7 +2,7 @@ find_program(CPPCHECK cppcheck)
 
 set(CPPCHECK_ARGS 
           --enable=all
-          --std=c++11
+          --std=c++23
           --language=c++
           --inline-suppr
           --suppress=noExplicitConstructor

@@ -130,7 +130,7 @@ TEST_F(FilesystemFacadeJoinTest, on_join__handle_local_files__shallow_copies) {
     .WillOnce(Return(metadata));
 
   InSequence in_seq;
-  for(const auto [uri, set] : metadata) {
+  for(const auto& [uri, set] : metadata) {
     EXPECT_CALL(*peer_2.metadata_mgr, del(uri)).WillOnce(Return(set));
     
     if(is_directory(set)) {

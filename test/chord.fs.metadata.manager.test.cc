@@ -23,7 +23,7 @@ TEST(MetadataManager, sorted_returns) {
   map[ee];
 
   std::vector<chord::uri> keys;
-  for(const auto [k,_]:map) { keys.push_back(k); }
+  for(const auto& [k,_]:map) { keys.push_back(k); }
 
   ASSERT_THAT(keys, ElementsAre(ee, cc, bb, aa, root));
 }
