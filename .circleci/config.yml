@@ -57,7 +57,7 @@ jobs:
 
       - save_cache:
           paths:
-            - ~/.conan
+            - ~/.conan2
           key: conan-cache-v2--{{ checksum "conanfile.txt" }}
 
       - run:
