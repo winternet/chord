@@ -40,17 +40,16 @@ $ apt-get -y install build-essential \
             autoconf \
             python3\
             python3-pip
-$ pip install conan && source ~/.profile
-$ conan config set general.revisions_enabled=True
-$ conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan
+$ pip3 install conan && source ~/.profile
+$ conan profile detect -e
 ```
 
 ### Install chord
 
 ```sh
  $ git clone https://github.com/winternet/chord.git /opt/chord && cd /opt/chord
- $ mkdir build && cd build
- $ conan install .. -s compiler.cppstd=17 --build=missing && cmake ..
+ $ conan install . --build=missing --output-folder=build --settings=build_type=Debug 
+ $ cd build && cmake ..
  $ cmake --build . -- -j4 
 ```
 
@@ -58,9 +57,8 @@ $ conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/cona
 
 ```sh
 $ git clone https://github.com/winternet/chord.git /opt/chord && cd /opt/chord
-$ conan install . --build=missing --output-folder=build
-$ cd build
-$ cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+$ conan install . --build=missing --output-folder=build --settings=build_type=Release
+$ cd build && cmake .. -DCMAKE_BUILD_TYPE=Release
 $ cmake --build . -- -j4 
 ```
 

@@ -65,10 +65,10 @@ See [INSTALL.md](INSTALL.md) for more detailed installation instructions, e.g. h
 The build process requires [conan](https://www.conan.io). After installation of `conan` build chord using the following commands:
 
 ```sh
-$ conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan
-$ git clone https://github.com/winternet/chord.git
-$ cd chord && mkdir build && cd build
-$ conan install .. --build=missing && cmake .. && cmake --build . -j4
+$ git clone https://github.com/winternet/chord.git && cd chord
+$ conan profile detect -e
+$ conan install . --build=missing --output-folder=build --settings=build_type=Debug 
+$ cd build && cmake .. && cmake --build . -j4
 ```
 
 ## Usage
