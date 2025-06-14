@@ -9,7 +9,7 @@ _/        _/    _/  _/    _/  _/        _/    _/
 
 ```
 
-[![Build Status](https://dl.circleci.com/status-badge/img/gh/winternet/chord/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/winternet/chord/tree/main) [![codecov](https://codecov.io/gh/winternet/chord/branch/main/graph/badge.svg)](https://codecov.io/gh/winternet/chord)
+[![Build Status](https://dl.circleci.com/status-badge/img/gh/winternet/chord/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/winternet/chord/tree/main) [![codecov](https://codecov.io/gh/winternet/chord/graph/badge.svg?token=Y7BPJkcR3H)](https://codecov.io/gh/winternet/chord)
 
 ## Overview
 
