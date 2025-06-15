@@ -26,6 +26,18 @@ chord::common::Header make_header(const Context &context) {
   return header;
 }
 
+chord::node make_node(const grpc::ServerContext* context, const RouterEntry& entry) {
+  const auto host = entry.endpoint();
+  const auto pos = host.rfind(':');
+  if(pos != std::string::npos) {
+    const auto advertised_port = host.substr(pos+1);
+    const auto peer = context->peer();
+    return {uuid_t{entry.uuid()}, peer.substr(0, peer.rfind(':')) + ":" + advertised_port};
+  }
+  const auto peer = context->peer();
+  return {uuid_t{entry.uuid()}, entry.endpoint() };
+}
+
 chord::node make_node(const RouterEntry& entry) {
   return {uuid_t{entry.uuid()}, entry.endpoint()};
 }

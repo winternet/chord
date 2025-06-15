@@ -11,8 +11,7 @@
 
 namespace chord {
 
-using StubFactory = std::function<std::unique_ptr<chord::Chord::StubInterface>(
-    const endpoint &)>;
+using StubFactory = std::function<std::unique_ptr<chord::Chord::StubInterface>(const node &)>;
 
 class IClient {
 
@@ -25,7 +24,7 @@ class IClient {
   virtual grpc::Status join(const JoinRequest *req, JoinResponse *res) =0;
   virtual grpc::Status join(grpc::ClientContext *clientContext, const JoinRequest *req, JoinResponse *res) =0;
 
-  virtual grpc::Status ping(const endpoint& addr) =0;
+  virtual grpc::Status ping(const node& addr) =0;
 
   virtual void stabilize() =0;
 

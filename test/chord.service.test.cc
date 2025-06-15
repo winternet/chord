@@ -115,7 +115,7 @@ TEST(ServiceTest, successor_single_node) {
 	MockClient client;
   Service service(context, &router, &client);
 
-  EXPECT_CALL(client, ping(context.advertise_addr))
+  EXPECT_CALL(client, ping(context.node()))
     .WillOnce(Return(Status::OK));
 
   const auto router_entry = service.successor({10});
@@ -136,9 +136,10 @@ TEST(ServiceTest, successor_two_nodes) {
 	MockClient client;
 
   const auto successor = "0.0.0.0:50055";
-  router.update({5, successor});
+  const node node = {5, successor};
+  router.update(node);
 
-  EXPECT_CALL(client, ping(successor))
+  EXPECT_CALL(client, ping(node))
     .WillOnce(Return(Status::OK));
 
   Service service(context, &router, &client);
@@ -162,14 +163,17 @@ TEST(ServiceTest, successor_three_nodes_first_successor_down) {
 	MockClient client;
 
   const auto successor_1 = "0.0.0.0:50055";
-  router.update({5, successor_1});
-  const auto successor_2 = "0.0.0.0:50060";
-  router.update({10, successor_2});
+  const node successor_1_node = {5, successor_1};
+  router.update(successor_1_node);
 
-  EXPECT_CALL(client, ping(successor_1))
+  const auto successor_2 = "0.0.0.0:50060";
+  const node successor_2_node = {10, successor_2};
+  router.update(successor_2_node);
+
+  EXPECT_CALL(client, ping(successor_1_node))
     .WillOnce(Return(Status::CANCELLED));
   // fallback to next known successor
-  EXPECT_CALL(client, ping(successor_2))
+  EXPECT_CALL(client, ping(successor_2_node))
     .WillOnce(Return(Status::OK));
 
   Service service(context, &router, &client);
@@ -192,11 +196,12 @@ TEST(ServiceTest, successor_two_nodes_mod) {
 	MockClient client;
 
   const auto successor = "0.0.0.0:50050";
-  router.update({0, successor});
+  const node successor_node = {0, successor};
+  router.update(successor_node);
 
   chord::Service service(context, &router, &client);
 
-  EXPECT_CALL(client, ping(successor))
+  EXPECT_CALL(client, ping(successor_node))
     .WillOnce(Return(Status::OK));
 
   const auto entry = service.successor({10});
@@ -335,7 +340,7 @@ TEST(ServiceTest, successor_two_nodes_modulo) {
   //--- stub's mocked return parameter
   SuccessorResponse mocked_response;
 
-  auto stub_factory = [&]([[maybe_unused]] const endpoint& endpoint) {
+  auto stub_factory = [&]([[maybe_unused]] const node& node) {
     auto stub = std::make_unique<NiceMock<MockStub>>();
     
     ON_CALL(*stub, successor(_, _, _))

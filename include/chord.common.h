@@ -1,5 +1,6 @@
 #pragma once
 
+#include <grpcpp/server_context.h>
 #include "chord.pb.h"
 #include "chord.context.h"
 
@@ -17,11 +18,17 @@ chord::common::Header make_header(const Context &context);
 
 chord::node make_node(const RouterEntry& entry);
 
+chord::node make_node(const grpc::ServerContext*, const RouterEntry& entry);
+
 RouterEntry make_entry(const chord::node& node);
 
 template<typename T>
 chord::node source_of(const T* req) {
   return make_node(req->header().src());
+}
+template<typename T>
+chord::node source_of(const grpc::ServerContext* context, const T* req) {
+  return make_node(context, req->header().src());
 }
 template<typename T>
 void set_source(T* res, const Context& context) {

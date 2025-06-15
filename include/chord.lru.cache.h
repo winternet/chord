@@ -71,11 +71,11 @@ class LRUCache {
 
   private:
     bool _erase(const K& k) {
-      return _erase(_map.find(k));
+      return _erase(static_cast<map_const_iterator_t>(_map.find(k)));
     }
 
     void _put(const K& k, const V& v) {
-      _erase(_map.find(k));
+      _erase(static_cast<map_const_iterator_t>(_map.find(k)));
 
       const auto it = _list.insert(_list.begin(), std::make_pair(k,v));
       _map.insert(std::make_pair(k, it));

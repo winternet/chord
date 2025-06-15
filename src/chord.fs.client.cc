@@ -29,6 +29,7 @@
 #include "chord.node.h"
 #include "chord.uuid.h"
 #include "chord.fs.client.options.h"
+#include "chord.channel.pool.h"
 
 using grpc::ClientContext;
 using grpc::Status;
@@ -56,9 +57,10 @@ Client::Client(Context &context, ChordFacade *chord, IMetadataManager* metadata_
       channel_pool{channel_pool},
       metadata_mgr{metadata_mgr},
       make_stub{//--- default stub factory
-                [](const endpoint& endpoint) {
-                  return chord::fs::Filesystem::NewStub(grpc::CreateChannel(
-                      endpoint, grpc::InsecureChannelCredentials()));
+                [&, channel_pool](const node& node) { return chord::fs::Filesystem::NewStub(channel_pool->get(node));
+                  //return chord::fs::Filesystem::NewStub(grpc::CreateChannel(
+                  //    endpoint, grpc::InsecureChannelCredentials()));
+  //const auto stub = Filesystem::NewStub(grpc::CreateChannel(node.endpoint, grpc::InsecureChannelCredentials()));
                 }},
       logger{context.logging.factory().get_or_create(logger_name)} {}
 
@@ -183,7 +185,7 @@ Status Client::mov(const chord::node& node, const chord::uri& src, const chord::
   req.set_dst(dst);
   req.set_force(options.force);
 
-  const auto status = make_stub(node.endpoint)->mov(&clientContext, req, &res);
+  const auto status = make_stub(node)->mov(&clientContext, req, &res);
 
   return status;
 }
@@ -238,7 +240,7 @@ grpc::Status Client::meta(const chord::node& target, const chord::uri &uri, cons
       return Status::CANCELLED;
   }
 
-  const auto status = make_stub(target.endpoint)->meta(&clientContext, req, &res);
+  const auto status = make_stub(target)->meta(&clientContext, req, &res);
 
   return status;
 }
@@ -254,7 +256,7 @@ Status Client::del(const chord::node& node, const DelRequest* req, const client:
   ClientContext clientContext;
   init_context(clientContext, options);
   DelResponse res;
-  return make_stub(endpoint)->del(&clientContext, *req, &res);
+  return make_stub(node)->del(&clientContext, *req, &res);
 }
 
 Status Client::del(const chord::node& node, const chord::uri &uri, const bool recursive, const client::options& options) {
@@ -272,7 +274,7 @@ Status Client::del(const chord::node& node, const chord::uri &uri, const bool re
   req.set_uri(uri);
   req.set_recursive(recursive);
 
-  const auto status = make_stub(endpoint)->del(&clientContext, req, &res);
+  const auto status = make_stub(node)->del(&clientContext, req, &res);
 
   return status;
 }
@@ -288,7 +290,7 @@ grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata, co
   //--- find responsible node
   const auto meta_uri = uri::builder{uri.scheme(), uri.path().canonical()}.build();
   const auto hash = chord::crypto::sha256(meta_uri);
-  const auto endpoint = chord->successor(hash).endpoint;
+  const auto node = chord->successor(hash);
 
   logger->trace("[dir] {} ({})", meta_uri, hash);
 
@@ -304,7 +306,7 @@ grpc::Status Client::dir(const chord::uri &uri, std::set<Metadata> &metadata, co
   req.set_uri(meta_uri);
   req.set_action(DIR);
 
-  const auto status = make_stub(endpoint)->meta(&clientContext, req, &res);
+  const auto status = make_stub(node)->meta(&clientContext, req, &res);
 
   const auto meta_res = MetadataBuilder::from(res);
   metadata.insert(meta_res.begin(), meta_res.end());
@@ -356,7 +358,8 @@ Status Client::get(const chord::uri &uri, const chord::node& node, std::ostream 
   req.set_uri(uri);
 
   // cannot be mocked since make_stub returns unique_ptr<StubInterface> (!)
-  const auto stub = Filesystem::NewStub(grpc::CreateChannel(node.endpoint, grpc::InsecureChannelCredentials()));
+  auto channel = channel_pool->get(node);
+  const auto stub = Filesystem::NewStub(channel);
   unique_ptr<ClientReader<GetResponse> > reader(stub->get(&clientContext, req));
 
   while (reader->Read(&res)) {

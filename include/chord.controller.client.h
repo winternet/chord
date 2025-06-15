@@ -4,12 +4,12 @@
 #include <memory>
 #include <string>
 
+#include "chord.node.h"
 #include "chord.types.h"
 #include "chord_controller.grpc.pb.h"
 
 using ControlStubFactory =
-    std::function<std::shared_ptr<chord::controller::Control::StubInterface>(
-        const chord::endpoint& endpoint)>;
+    std::function<std::shared_ptr<chord::controller::Control::StubInterface>(const chord::endpoint& endpoint)>;
 
 namespace chord {
 namespace controller {

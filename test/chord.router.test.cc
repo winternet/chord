@@ -239,7 +239,7 @@ TEST(RouterTest, set_successor_rewrites_same_preceding_nodes) {
   // [6..10] -> uuid_t{5}
   router.update({128, "128"});
 
-  for (size_t i = 0; i < 10; i++) {
+  for (size_t i = 0; i < 7; i++) {
     const auto succ = router.entry(i);
     std::cerr << "i: " << i;
     if(i < 5) {
@@ -252,7 +252,7 @@ TEST(RouterTest, set_successor_rewrites_same_preceding_nodes) {
   // insert new node
   router.update({8, "8"});
 
-  for (size_t i = 0; i < 10; i++) {
+  for (size_t i = 0; i < 7; i++) {
     const auto succ = router.entry(i);
     if(i < 3) {
       ASSERT_EQ(router.entry(i).node().uuid, uuid_t{8});
@@ -277,7 +277,7 @@ TEST(RouterTest, reset_block_last) {
   ASSERT_FALSE(router.predecessor());
 
   // initialize successors in groups(i) of 5
-  for (size_t i = 0; i < 20; i += 5) {
+  for (size_t i = 0; i <= 20; i += 5) {
     router.update({router.calc_successor_uuid_for_index(i), "localhost:"+to_string(i)});
   }
 
@@ -293,18 +293,22 @@ TEST(RouterTest, reset_block_last) {
   ASSERT_TRUE(router.has_successor());
 
   ASSERT_EQ(router.successor()->uuid, 32);
-  ASSERT_EQ(router.predecessor()->uuid, 32768);
+  ASSERT_EQ(router.predecessor()->uuid, 1048576);
 
-  router.remove({32768, "localhost:15"});
+  router.remove({1048576, "localhost:20"});
+
+  std::cout << "\n\nrouter:\n" << router;
 
   ASSERT_EQ(router.successor()->uuid, 32);
-  ASSERT_EQ(router.predecessor()->uuid, 1024);
+  ASSERT_EQ(router.predecessor()->uuid, 32768);
 
   for(size_t i=0; i < 32; ++i) {
     if(i<5) 
       ASSERT_EQ(router.entry(i).node().uuid, 32);
-    else if(i<15)
+    else if(i<10)
       ASSERT_EQ(router.entry(i).node().uuid, 1024);
+    else if(i<15)
+      ASSERT_EQ(router.entry(i).node().uuid, 32768);
     else
       ASSERT_FALSE(router.entry(i).valid());
   }

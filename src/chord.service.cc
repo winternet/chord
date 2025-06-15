@@ -44,39 +44,49 @@ Service::Service(Context &context, Router *router, IClient* client)
 Status Service::join([[maybe_unused]] ServerContext *serverContext, const JoinRequest *req, JoinResponse *res) {
 
   if(!has_valid_header(req)) return Status::CANCELLED;
+  const auto peer = serverContext->peer();
 
-  const auto node = source_of(req);
+  const auto node = source_of(serverContext, req);
 
   logger->trace("join request from {}", node);
+
+  if(client->ping(node).ok())
+    logger->trace("[+] verified reverse connection to {}", node);
+  else {
+    logger->trace("[-] node is not reachable ({}) - continue.", node);
+    //return Status::CANCELLED;
+  }
   /**
    * find successor
    */
   const auto& src = node.uuid;
 
   const auto pred = router->predecessor();
-  const auto succ = router->successor();
+  const auto succ = router->successor_or_self();
 
   /**
    * initialize the ring
    */
-  if (!pred && (!succ || succ->uuid == context.uuid())) {
+  if (!pred && (succ.uuid == context.uuid())) {
     logger->info("first node joining, waiting for notify from joined node");
   }
   /**
    * forward request to successor
    */
-  else if(pred && !uuid::between(context.uuid(), src, succ->uuid) 
+  else if(pred && !uuid::between(context.uuid(), src, succ.uuid) 
       && !uuid::between(pred->uuid, src, context.uuid())) {
     return client->join(req, res);
   }
 
   auto* res_succ = res->mutable_successor();
   auto* res_pred = res->mutable_predecessor();
-  if(uuid::between(context.uuid(), src, succ->uuid)) {
+  if(uuid::between(context.uuid(), src, succ.uuid)) {
     // successor
-    const auto succ_or_self = succ.value_or(context.node());
-    res_succ->set_uuid(succ_or_self.uuid);
-    res_succ->set_endpoint(succ_or_self.endpoint);
+    //const auto succ_or_self = succ.value_or(context.node());
+    //res_succ->set_uuid(succ_or_self.uuid);
+    //res_succ->set_endpoint(succ_or_self.endpoint);
+    res_succ->set_uuid(succ.uuid);
+    res_succ->set_endpoint(succ.endpoint);
     // predecessor
     const auto self = context.node();
     res_pred->set_uuid(self.uuid);
@@ -125,7 +135,7 @@ Status Service::successor([[maybe_unused]] ServerContext *serverContext, const S
 
   auto successor = router->successor_or_self();
 
-  while(!client->ping(successor.endpoint).ok()) {
+  while(!client->ping(successor).ok()) {
     router->remove(successor);
     successor = router->successor_or_self();
   }
@@ -180,7 +190,7 @@ Status Service::leave([[maybe_unused]] ServerContext *serverContext, const Leave
   // no need to signal fails of predecessor
   router->remove(leaving_node, false);
   for(auto entry:req->entries()) {
-    router->update(make_node(entry));
+    router->update(make_node(serverContext, entry));
   }
 
   return Status::OK;
@@ -218,8 +228,8 @@ Status Service::notify([[maybe_unused]] ServerContext *serverContext, const Noti
   router->update(source);
 
   if(req->has_old_node() && req->has_new_node()) {
-    const auto old_node_ = make_node(req->old_node());
-    const auto new_node_ = make_node(req->new_node());
+    const auto old_node_ = make_node(serverContext, req->old_node());
+    const auto new_node_ = make_node(serverContext, req->new_node());
     router->update(old_node_);
     router->update(new_node_);
   }

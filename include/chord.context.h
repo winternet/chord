@@ -33,6 +33,7 @@ struct Context {
   //--- promoted endpoint
   chord::endpoint bind_addr{"0.0.0.0:50050"};
   chord::endpoint advertise_addr{bind_addr};
+  //chord::endpoint advertise_addr{":50050"};
   chord::endpoint join_addr; //{"0.0.0.0:50050"};
 
   //--- scheduling

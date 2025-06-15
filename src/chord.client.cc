@@ -52,7 +52,7 @@ Client::Client(const Context &context, Router *router, ChannelPool* channel_pool
       router{router},
       channel_pool{channel_pool},
       make_stub{//--- default stub factory
-                [&, channel_pool](const endpoint endpoint) { return Chord::NewStub(channel_pool->get(endpoint)); }},
+                [&, channel_pool](const node& node) { return Chord::NewStub(channel_pool->get(node)); }},
       logger{context.logging.factory().get_or_create(logger_name)} {}
 
 Client::Client(const Context &context, Router *router, ChannelPool* channel_pool, StubFactory make_stub)
@@ -79,7 +79,7 @@ Status Client::inform_about_leave(const node& node) {
   for(const auto& node : router->get()) {
    entries->Add(make_entry(node));
   }
-  return make_stub(node.endpoint)->leave(&clientContext, req, &res);
+  return make_stub(node)->leave(&clientContext, req, &res);
 }
 
 Status Client::inform_successor_about_leave() {
@@ -134,11 +134,13 @@ signal<const node>& Client::on_successor_fail() {
 Status Client::join(const endpoint& addr) {
   logger->debug("joining {}", addr);
 
+
   ClientContext clientContext;
   auto req = make_request<JoinRequest>(context);
+  auto stub = Chord::NewStub(ChannelPool::create_channel(addr));
 
   JoinResponse res;
-  const auto status = make_stub(addr)->join(&clientContext, req, &res);
+  const auto status = stub->join(&clientContext, req, &res);
 
   if (!status.ok() || !res.has_successor()) {
     logger->info("Failed to join {}", addr);
@@ -172,7 +174,7 @@ Status Client::join(ClientContext *clientContext, const JoinRequest *req, JoinRe
 
   for(const auto& predecessor:predecessors) {
     logger->trace("forwarding request to {}", predecessor);
-    const auto status = make_stub(predecessor.endpoint)->join(clientContext, copy, res);
+    const auto status = make_stub(predecessor)->join(clientContext, copy, res);
     if(status.ok()) return status;
   }
 
@@ -197,7 +199,7 @@ void Client::stabilize() {
   const auto endpoint = successor->endpoint;
 
   logger->trace("[stabilize] calling stabilize on successor {}", endpoint);
-  const auto status = make_stub(endpoint)->stabilize(&clientContext, req, &res);
+  const auto status = make_stub(*successor)->stabilize(&clientContext, req, &res);
 
   if (!status.ok()) {
     logger->warn("[stabilize] failed - removing endpoint {}?", endpoint);
@@ -243,7 +245,7 @@ Status Client::notify(const node& target, const node& old_node, const node& new_
   const auto new_node_ = req.mutable_new_node();
   new_node_->set_uuid(new_node.uuid);
   new_node_->set_endpoint(new_node.endpoint);
-  return make_stub(endpoint)->notify(&clientContext, req, &res);
+  return make_stub(target)->notify(&clientContext, req, &res);
 }
 
 Status Client::notify() {
@@ -262,18 +264,18 @@ Status Client::notify() {
 
   logger->trace("calling notify on address {}", successor);
 
-  return make_stub(successor->endpoint)->notify(&clientContext, req, &res);
+  return make_stub(*successor)->notify(&clientContext, req, &res);
 }
 
-Status Client::ping(const endpoint& endpoint) {
+Status Client::ping(const node& node) {
   ClientContext clientContext;
   init_context(clientContext);
   auto req = make_request<PingRequest>(context);
   PingResponse res;
 
-  logger->trace("[ping] {}", endpoint);
+  logger->trace("[ping] {}", node);
 
-  return make_stub(endpoint)->ping(&clientContext, req, &res);
+  return make_stub(node)->ping(&clientContext, req, &res);
 }
 
 Status Client::successor([[maybe_unused]] ClientContext *clientContext, const SuccessorRequest *req, SuccessorResponse *res) {
@@ -285,7 +287,7 @@ Status Client::successor([[maybe_unused]] ClientContext *clientContext, const Su
   const auto predecessors = router->closest_preceding_nodes(uuid{req->id()});
   for(const auto& predecessor : predecessors) {
     ClientContext ctxt;
-    const auto status = make_stub(predecessor.endpoint)->successor(&ctxt, copy, res);
+    const auto status = make_stub(predecessor)->successor(&ctxt, copy, res);
     if(status.ok()) return status;
   }
 
@@ -331,7 +333,7 @@ void Client::check() {
   const auto endpoint = predecessor->endpoint;//router->get(predecessor);
 
   logger->trace("[check] checking predecessor {}", *predecessor);
-  const auto status = make_stub(endpoint)->ping(&clientContext, req, &res);
+  const auto status = make_stub(*predecessor)->ping(&clientContext, req, &res);
 
   if (!status.ok()) {
     logger->warn("[check] predecessor failed.");

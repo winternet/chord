@@ -30,8 +30,7 @@ namespace spdlog {
 namespace chord {
 namespace fs {
 
-using StubFactory = std::function<std::unique_ptr<chord::fs::Filesystem::StubInterface>(
-    const endpoint& endpoint)>;
+using StubFactory = std::function<std::unique_ptr<chord::fs::Filesystem::StubInterface>(const node&)>;
 
 class Client {
  public:

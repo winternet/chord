@@ -118,7 +118,7 @@ bool Router::remove(const chord::uuid& uuid, const bool signal) {
   bool changed = false;
   auto replacement = successors.rbegin();
 
-  if(replacement->node().uuid == uuid && replacement->node().uuid != context.uuid())
+  if(!replacement->valid() || (replacement->node().uuid == uuid && replacement->node().uuid != context.uuid()))
     //replacement->_node.reset();
     replacement = successors.rend();
 
@@ -148,9 +148,7 @@ bool Router::remove(const chord::uuid& uuid, const bool signal) {
       } else {
         it->_node.reset();
       }
-    }
-
-    if(it->node().uuid != uuid && it->node().uuid != context.uuid())
+    } else if(it->node().uuid != uuid && it->node().uuid != context.uuid())
       replacement = it;
   }
 

@@ -23,8 +23,7 @@ namespace spdlog { class logger; }
 
 namespace chord {
 
-using StubFactory = std::function<std::unique_ptr<chord::Chord::StubInterface>(
-    const endpoint &)>;
+//using StubFactory = std::function<std::unique_ptr<chord::Chord::StubInterface>(const endpoint &)>;
 
 class Client : public IClient {
   static constexpr auto logger_name = "chord.client";
@@ -63,7 +62,7 @@ class Client : public IClient {
 
   void stabilize() override;
 
-  grpc::Status ping(const endpoint& addr) override;
+  grpc::Status ping(const node&) override;
 
   grpc::Status notify() override;
   grpc::Status notify(const node&, const node&, const node&) override;

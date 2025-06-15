@@ -5,9 +5,11 @@
 #include <grpcpp/channel.h>
 #include <grpcpp/completion_queue.h>
 
+#include "chord.node.h"
 #include "chord.router.h"
 #include "chord.types.h"
 #include "chord.lru.cache.h"
+#include "chord.uuid.h"
 
 namespace chord { struct Context; }
 
@@ -22,7 +24,7 @@ public:
   using mutex_t = std::recursive_mutex;
 
 protected:
-  chord::LRUCache<endpoint, std::shared_ptr<grpc::Channel>> channels{Router::BITS};
+  chord::LRUCache<uuid_t, std::shared_ptr<grpc::Channel>> channels{Router::BITS};
 
 private:
   static constexpr auto logger_name = "chord.channel.pool";
@@ -38,8 +40,11 @@ public:
   virtual ~ChannelPool() = default;
   ChannelPool& operator=(const ChannelPool&) = delete;
 
-  void put(const endpoint& endpoint, std::shared_ptr<grpc::Channel> channel);
-  std::shared_ptr<grpc::Channel> get(const endpoint&);
+  void put(const node& node, std::shared_ptr<grpc::Channel> channel);
+  //std::shared_ptr<grpc::Channel> get(const endpoint&);
+  std::shared_ptr<grpc::Channel> get(const node&);
+
+  static std::shared_ptr<grpc::Channel> create_channel(const endpoint&);
 };
 
 }  // namespace chord
