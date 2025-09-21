@@ -1,4 +1,6 @@
 #include <array>
+#include <print>
+#include <optional>
 
 #include "chord.utils.h"
 #include "chord.context.h"
@@ -6,6 +8,7 @@
 
 #include <grpcpp/impl/codegen/status.h>
 #include <boost/program_options.hpp>
+#include <boost/asio.hpp>
 
 namespace chord {
 namespace utils {
@@ -20,6 +23,19 @@ uri as_uri(const char* p) {
 
 uri as_uri(const path& p) {
   return {"chord", p};
+}
+
+std::optional<std::string> port(const std::string& address) {
+  const auto pos = address.rfind(':');
+  if(pos == std::string::npos) {
+    return {};
+  }
+  return {address.substr(pos+1)};
+}
+
+std::string port(const chord::Context& context) {
+  const std::optional<std::string> port = chord::utils::port(context.advertise_addr);
+  return port.value_or(Context::default_port);
 }
 
 uri as_uri(const std::string& p) {

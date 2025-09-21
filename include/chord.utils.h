@@ -64,5 +64,8 @@ namespace utils {
 
   Options parse_program_options(int ac, char *av[]);
 
+  std::optional<std::string> port(const std::string& address);
+  std::string port(const chord::Context& context);
+
 }  // namespace utils
 }  // namespace chord

@@ -29,6 +29,33 @@ To configure our node we could pass some of the arguments to the container, howe
 
 If you prefer a manual installation, have a look at the following instructions which are mainly copied from the [cirecleci configuration](https://github.com/winternet/chord/blob/main/.circleci/config.yml).
 
+### Configure conan2
+
+The following section explains how to configure conan2 to be able to compile the sources and its dependencies.
+
+#### Missing uint64_t errors
+
+Some of the dependencies are not ready for modern `gcc/libstdc++` because of missing `cstdint` includes. To fix this add the following tool configuration to your conan profile, e.g. `~/.conan2/profiles/default`:
+```
+[conf]
+tools.build:cxxflags=["-include", "cstdint"]
+```
+
+#### Boost failing to compile due to PCH: No such file or directory
+
+If you encounter the follwing issues during compilation of `boost`,
+
+```<command-line>: fatal error: ~/.conan2/p/b/boostcd0368e70ce3f/b/build-debug/boost/bin.v2/libs/math/build/gcc-15/dbg/x86_6/cxstd-2b-iso/lnk-sttc/nm-on/thrd-mlt/vsblt-hdn/pch: No such file or directory compilation terminated.
+
+...failed updating 0 target...
+```
+
+disable using pre-compiled headers (PCH) in the conan profile, e.g. `~/.conan2/profiles/default`:
+```
+[conf]
+tools.build:cxxflags=["-DBOOST_NO_PCH"]
+```
+
 ### Installing all dependencies
 
 * Install common dependencies

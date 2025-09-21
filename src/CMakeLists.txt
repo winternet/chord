@@ -19,6 +19,7 @@ find_package(fswatch REQUIRED)
 find_package(RocksDB REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(Boost COMPONENTS serialization program_options REQUIRED)
+find_package(miniupnpc REQUIRED)
 
 
 #
@@ -36,6 +37,7 @@ target_link_libraries(${PROJECT_NAME}++
   Pal::Sigslot
   RocksDB::rocksdb
   stdc++fs 
+  miniupnpc::miniupnpc
   # TODO remove
   --coverage)
 

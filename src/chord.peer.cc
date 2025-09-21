@@ -17,6 +17,7 @@
 #include "chord.node.h"
 #include "chord.shutdown.handler.h"
 #include "chord.uuid.h"
+#include "chord.upnp.h"
 
 using grpc::ServerBuilder;
 using namespace std;
@@ -25,6 +26,11 @@ namespace chord {
 
 void Peer::start_server() {
   const auto bind_addr = context.bind_addr;
+
+
+  upnp::setup_upnp_port_forwarding(context);
+
+
   ServerBuilder builder;
   builder.AddListeningPort(bind_addr, grpc::InsecureServerCredentials());
   builder.RegisterService(chord->grpc_service());

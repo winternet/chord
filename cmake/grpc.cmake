@@ -1,9 +1,8 @@
-find_package(Protobuf REQUIRED CONFIG)
-find_package(gRPC REQUIRED)
+find_package(gRPC REQUIRED CONFIG)
+#find_package(Protobuf REQUIRED CONFIG)
 
-message(STATUS "the plugin program: ${GRPC_CPP_PLUGIN_PROGRAM}")
-# Get plugin directory
-get_filename_component(GRPC_PLUGIN_DIRECTORY ${GRPC_CPP_PLUGIN_PROGRAM} DIRECTORY)
+message(STATUS "using grpc plugin program: ${GRPC_CPP_PLUGIN_PROGRAM}")
+message(STATUS "using protoc plugin program: ${PROTOC_PROGRAM}")
 
 set(_gRPC_PROTO_GENS_DIR ${ProtoGenerateTargetPath})
 file(MAKE_DIRECTORY ${_gRPC_PROTO_GENS_DIR})
