@@ -67,8 +67,9 @@ The build process requires [conan](https://www.conan.io). After installation of 
 ```sh
 $ git clone https://github.com/winternet/chord.git && cd chord
 $ conan profile detect -e
-$ conan install . --build=missing --output-folder=build --settings=build_type=Debug 
-$ cd build && cmake .. && cmake --build . -j4
+$ conan install . --build=missing --output-folder=build -s build_type=Debug 
+$ cmake --preset conan-debug
+$ cmake --build build -j4 
 ```
 
 ## Usage

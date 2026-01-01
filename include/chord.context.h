@@ -19,6 +19,8 @@ struct Context {
 
   Context() = default;
 
+  static constexpr std::string default_port = "50050";
+
   //--- uuid
   uuid_t _uuid{chord::uuid::random()};
   //--- program options
