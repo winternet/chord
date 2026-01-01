@@ -2,7 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>
+#include <string>
 
 #include "chord.log.h"
 #include "chord.node.h"
