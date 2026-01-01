@@ -11,7 +11,7 @@ executors:
 jobs:
   build:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu-2404:current
     resource_class: large
     environment:
       DEBIAN_FRONTEND: noninteractive
