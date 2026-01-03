@@ -18,3 +18,13 @@ test_data/
 compile_commands.json
 demo
 packages
+
+### chord files
+config/
+logs/
+meta0/
+meta1/
+metadata/
+
+### tidy
+*.log
