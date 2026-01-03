@@ -169,6 +169,7 @@ void operator>>(const YAML::Node& node, Context& context) {
   read(node, "advertise-addr", context.advertise_addr, context.bind_addr);
   read(node, "join-addr", context.join_addr);
   read(node, "bootstrap", context.bootstrap);
+  read(node, "upnp", context.upnp);
   read(node, "no-controller", context.no_controller);
   read(node, "monitor", context.monitor);
   read(node, "register_shutdown_handler", context.register_shutdown_handler);

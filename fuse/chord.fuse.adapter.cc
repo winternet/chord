@@ -2,9 +2,7 @@
 
 #include <set>
 #include <string>
-#include <iostream>
 
-#include "Fuse-impl.h"
 #include "chord.utils.h"
 #include "chord.fs.util.h"
 #include "chord.fs.metadata.h"

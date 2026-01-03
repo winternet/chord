@@ -25,6 +25,7 @@ struct Context {
   uuid_t _uuid{chord::uuid::random()};
   //--- program options
   bool bootstrap{false};
+  bool upnp{false};
   bool no_controller{false};
   bool register_shutdown_handler{false};
   //--- paths / monitoring

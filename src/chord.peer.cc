@@ -1,6 +1,5 @@
 #include "chord.peer.h"
 
-#include <stdexcept>
 #include <memory> 
 #include <grpcpp/security/server_credentials.h>
 #include <grpc++/server.h>
@@ -14,10 +13,7 @@
 #include "chord.fs.facade.h"
 #include "chord.log.factory.h"
 #include "chord.log.h"
-#include "chord.node.h"
 #include "chord.shutdown.handler.h"
-#include "chord.uuid.h"
-#include "chord.upnp.h"
 
 using grpc::ServerBuilder;
 using namespace std;
@@ -26,9 +22,6 @@ namespace chord {
 
 void Peer::start_server() {
   const auto bind_addr = context.bind_addr;
-
-
-  upnp::setup_upnp_port_forwarding(context);
 
 
   ServerBuilder builder;
@@ -40,6 +33,7 @@ void Peer::start_server() {
   builder.RegisterService(filesystem->grpc_service());
 
   server = builder.BuildAndStart();
+  //TODO: replace advertisement with upnp / hole-punching
   logger->debug("server listening on {}, advertising {}", bind_addr, context.advertise_addr);
 
   // initialize || join

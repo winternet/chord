@@ -59,6 +59,8 @@ Context make_context(const uuid self, const endpoint bind_addr, const std::share
   context.advertise_addr = bind_addr;
   context.join_addr = join_addr;
   context.bootstrap = bootstrap;
+  // upnp is slow and leads to timeouts during tests
+  context.upnp = false;
   return context;
 }
 

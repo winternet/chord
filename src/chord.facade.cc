@@ -15,6 +15,7 @@
 #include "chord.service.h"
 #include "chord.types.h"
 #include "chord.utils.h"
+#include "chord.upnp.h"
 
 using namespace std;
 
@@ -61,6 +62,9 @@ void ChordFacade::stop_scheduler() {
 void ChordFacade::start() {
   logger->trace("peer with client-id {}", context.uuid());
 
+  if (context.upnp) {
+    upnp::setup_upnp_port_forwarding(context);
+  }
   if (context.bootstrap) {
     create();
   } else {
