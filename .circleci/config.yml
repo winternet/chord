@@ -44,16 +44,14 @@ jobs:
             export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/libfswatch"
             conan profile detect -f
             conan install . --build=missing --output-folder=build --settings=build_type=Debug
-            cd build
-            cmake .. \
-              -G Ninja \
+            cmake --preset conan-debug \
               -DENABLE_COVERAGE:BOOL=TRUE \
               -Dchord_USE_CCACHE:BOOL=FALSE \
               -DCMAKE_BUILD_TYPE:STRING=Debug \
               -Dchord_BUILD_TESTS:BOOL=ON \
               -Dchord_BUILD_INTEGRATION_TESTS:BOOL=ON \
               -Dchord_BUILD_FUSE_ADAPTER:BOOL=ON
-            cmake --build . -j1
+            cmake --build build -j1
 
       - save_cache:
           paths:
