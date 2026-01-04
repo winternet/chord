@@ -51,7 +51,7 @@ jobs:
               -Dchord_BUILD_TESTS:BOOL=ON \
               -Dchord_BUILD_INTEGRATION_TESTS:BOOL=ON \
               -Dchord_BUILD_FUSE_ADAPTER:BOOL=ON
-            cmake --build build -j1
+            cmake --build build
 
       - save_cache:
           paths:
@@ -72,13 +72,21 @@ jobs:
       - run:
           name: "Build artifacts"
           command: |
+            conan install . --build=missing --output-folder=build --settings=build_type=Release
+            cmake --preset conan-release \
+                  -DCPACK_PACKAGING_INSTALL_PREFIX=/
+                  -DENABLE_COVERAGE:BOOL=FALSE \
+                  -Dchord_USE_CCACHE:BOOL=TRUE \
+                  -DCMAKE_BUILD_TYPE:STRING=Release \
+                  -Dchord_BUILD_TESTS:BOOL=OFF \
+                  -Dchord_BUILD_INTEGRATION_TESTS:BOOL=OFF \
+                  -Dchord_BUILD_FUSE_ADAPTER:BOOL=ON
+            cmake --build build
             cd build
-            cmake -G Ninja -DCPACK_PACKAGING_INSTALL_PREFIX=/ -DCMAKE_BUILD_TYPE=Release ..
             cpack -G DEB
             dpkg-deb -c ../packages/chord*.deb
             cpack -G RPM
             rpm -qlp ../packages/chord*.rpm
-            cmake -DCMAKE_BUILD_TYPE=Release ..
             cpack -G TGZ
             tar -tf ../packages/chord*gz
 
